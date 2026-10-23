@@ -5,10 +5,10 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 
 import * as yaml from 'js-yaml'
 
-import { OpenApiModule } from './openapi.module'
+import { AppModule } from './app/app.module'
 
 async function generateOpenApiSpec() {
-  const app = await NestFactory.create(OpenApiModule, {
+  const app = await NestFactory.create(AppModule, {
     logger: false,
   })
 

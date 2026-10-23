@@ -36,6 +36,8 @@ jobs:
 
       - name: Generate OpenAPI spec
         run: yarn generate:openapi
+        env:
+          DATABASE_URL: postgresql://fake:fake@localhost:5432/fake
 
       - name: Generate API client
         run: yarn generate:api
