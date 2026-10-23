@@ -31,6 +31,9 @@ jobs:
       - name: Generate Prisma Client
         run: yarn db:generate
 
+      - name: Build packages
+        run: yarn build
+
       - name: Generate OpenAPI spec
         run: yarn generate:openapi
 
@@ -45,6 +48,3 @@ jobs:
 
       - name: Type check
         run: yarn typecheck
-
-      - name: Build
-        run: yarn build
