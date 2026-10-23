@@ -1,0 +1,12 @@
+node_modules
+dist
+.turbo
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+*.log
+logs.txt
+.claude_sessions
+plans

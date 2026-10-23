@@ -1,0 +1,280 @@
+openapi: 3.0.0
+paths:
+  /:
+    get:
+      operationId: AppController_ping
+      parameters: []
+      responses:
+        '200':
+          description: ''
+      tags:
+        - App
+  /products:
+    get:
+      operationId: ProductController_findAll
+      parameters:
+        - name: page
+          required: false
+          in: query
+          x-nestjs_zod-uses-3-point-1-syntax: true
+          schema:
+            maximum: 9007199254740991
+            exclusiveMinimum: true
+            default: 1
+            type: integer
+            minimum: 0
+        - name: limit
+          required: false
+          in: query
+          x-nestjs_zod-uses-3-point-1-syntax: true
+          schema:
+            maximum: 100
+            exclusiveMinimum: true
+            default: 10
+            type: integer
+            minimum: 0
+      responses:
+        '200':
+          description: Return all products with pagination
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductListResponseDto'
+      security:
+        - bearer: []
+      summary: Get all products
+      tags:
+        - products
+    post:
+      operationId: ProductController_create
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProductDto'
+      responses:
+        '201':
+          description: The product has been successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponseDto'
+        '400':
+          description: Bad request
+      security:
+        - bearer: []
+      summary: Create a new product
+      tags:
+        - products
+  /products/{id}:
+    get:
+      operationId: ProductController_findOne
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Return the product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponseDto'
+        '404':
+          description: Product not found
+      security:
+        - bearer: []
+      summary: Get product by ID
+      tags:
+        - products
+    patch:
+      operationId: ProductController_update
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProductDto'
+      responses:
+        '200':
+          description: The product has been successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponseDto'
+        '404':
+          description: Product not found
+      security:
+        - bearer: []
+      summary: Update a product
+      tags:
+        - products
+    delete:
+      operationId: ProductController_remove
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '204':
+          description: The product has been successfully deleted
+        '404':
+          description: Product not found
+      security:
+        - bearer: []
+      summary: Delete a product
+      tags:
+        - products
+info:
+  title: Vyrak API
+  description: Vyrak API documentation
+  version: '1.0'
+  contact: {}
+tags: []
+servers:
+  - url: http://localhost:3000
+    description: Development
+components:
+  securitySchemes:
+    bearer:
+      scheme: bearer
+      bearerFormat: JWT
+      type: http
+  schemas:
+    ProductResponseDto:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        price:
+          type: number
+        stock:
+          type: number
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - name
+        - description
+        - price
+        - stock
+        - createdAt
+        - updatedAt
+    ProductListResponseDto:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              description:
+                type: string
+                nullable: true
+              price:
+                type: number
+              stock:
+                type: number
+              createdAt:
+                type: string
+              updatedAt:
+                type: string
+            required:
+              - id
+              - name
+              - description
+              - price
+              - stock
+              - createdAt
+              - updatedAt
+        meta:
+          type: object
+          properties:
+            page:
+              type: number
+            limit:
+              type: number
+            total:
+              type: number
+            totalPages:
+              type: number
+          required:
+            - page
+            - limit
+            - total
+            - totalPages
+          x-nestjs_zod-self-required: true
+      required:
+        - data
+        - meta
+    CreateProductDto:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          x-nestjs_zod-uses-3-point-1-syntax: true
+        description:
+          x-nestjs_zod-uses-3-point-1-syntax: true
+          type: string
+          nullable: true
+        price:
+          type: number
+          exclusiveMinimum: true
+          x-nestjs_zod-uses-3-point-1-syntax: true
+          minimum: 0
+        stock:
+          default: 0
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+          x-nestjs_zod-uses-3-point-1-syntax: true
+      required:
+        - name
+        - price
+    UpdateProductDto:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          x-nestjs_zod-uses-3-point-1-syntax: true
+        description:
+          x-nestjs_zod-uses-3-point-1-syntax: true
+          type: string
+          nullable: true
+        price:
+          type: number
+          exclusiveMinimum: true
+          x-nestjs_zod-uses-3-point-1-syntax: true
+          minimum: 0
+        stock:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+          x-nestjs_zod-uses-3-point-1-syntax: true

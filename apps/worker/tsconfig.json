@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.dev.json",
+  "compilerOptions": {
+    "outDir": "../../dist/apps/worker",
+    "rootDir": "../../",
+    "noEmit": true,
+    "composite": false
+  },
+  "include": ["src/**/*", "../../libs/**/*"],
+  "exclude": ["node_modules"]
+}

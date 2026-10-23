@@ -1,0 +1,69 @@
+# See http://help.github.com/ignore-files/ for more about ignoring files.
+
+# compiled output
+dist
+tmp
+/out-tsc
+
+# dependencies
+node_modules
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# misc
+/.sass-cache
+/connect.lock
+/coverage
+/libpeerconnection.log
+npm-debug.log
+yarn-error.log
+testem.log
+/typings
+
+# System Files
+.DS_Store
+Thumbs.db
+
+# Turborepo
+.turbo
+
+# Environment
+.env
+.env.*
+!.env.example
+
+config/local.yaml*
+
+# Logs
+logs.txt
+*.log
+
+# claude code agent sessions
+/plans
+.claude_sessions
+.serena/cache
+.claude
+.opencode
+docs
+AGENTS.md
+release-manifest.json
+
+repomix-output*
+
+# Prisma generated client
+libs/database/src/generated/
+**/coverage

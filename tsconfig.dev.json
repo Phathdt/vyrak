@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@vyrak/custom-config": ["./libs/custom-config/src/index"],
+      "@vyrak/custom-logger": ["./libs/custom-logger/src/index"],
+      "@vyrak/database": ["./libs/database/src/index"],
+      "@vyrak/shared": ["./libs/shared/src/index"],
+      "@vyrak/product": ["./libs/product/src/index"]
+    }
+  }
+}

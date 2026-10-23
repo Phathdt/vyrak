@@ -1,0 +1,21 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../libs/database/src/generated/prisma"
+  moduleFormat = "commonjs"
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  name        String   @db.VarChar(255)
+  description String?  @db.Text
+  price       Decimal  @db.Decimal(10, 2)
+  stock       Int      @default(0)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("products")
+}

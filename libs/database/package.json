@@ -1,0 +1,26 @@
+{
+  "name": "@vyrak/database",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "rolldown -c && tsc --emitDeclarationOnly",
+    "dev": "rolldown -c --watch"
+  },
+  "dependencies": {
+    "@vyrak/custom-config": "*",
+    "@nestjs/common": "^12.2.0",
+    "@prisma/adapter-pg": "^7.10.1",
+    "@prisma/client": "^7.10.1",
+    "pg": "8.23.1",
+    "prisma": "^7.10.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "@types/node": "~26.6.5",
+    "@types/pg": "^8.23.1",
+    "typescript": "~7.0.2"
+  }
+}

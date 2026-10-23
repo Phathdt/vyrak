@@ -1,0 +1,85 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "daemon": false,
+  "globalDependencies": ["**/.env.*local", ".env"],
+  "tasks": {
+    "@apps/api-server#build": {
+      "dependsOn": ["^build"],
+      "outputs": ["../../dist/apps/api-server/**"],
+      "outputLogs": "errors-only",
+      "env": ["NODE_ENV"]
+    },
+    "@apps/api-server#build:prod": {
+      "dependsOn": ["^build", "@apps/api-server#typecheck", "@apps/api-server#build"],
+      "outputs": ["../../dist/apps/api-server/**"],
+      "outputLogs": "errors-only",
+      "env": ["NODE_ENV"]
+    },
+    "@apps/worker#build": {
+      "dependsOn": ["^build"],
+      "outputs": ["../../dist/apps/worker/**"],
+      "outputLogs": "errors-only",
+      "env": ["NODE_ENV"]
+    },
+    "@apps/worker#build:prod": {
+      "dependsOn": ["^build", "@apps/worker#typecheck", "@apps/worker#build"],
+      "outputs": ["../../dist/apps/worker/**"],
+      "outputLogs": "errors-only",
+      "env": ["NODE_ENV"]
+    },
+    "@apps/web#build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"],
+      "outputLogs": "errors-only",
+      "env": ["NODE_ENV"]
+    },
+    "@apps/web#build:prod": {
+      "dependsOn": ["^build", "@apps/web#typecheck", "@apps/web#build"],
+      "outputs": ["dist/**"],
+      "outputLogs": "errors-only",
+      "env": ["NODE_ENV"]
+    },
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["../../dist/**"],
+      "outputLogs": "errors-only",
+      "env": ["NODE_ENV"]
+    },
+    "dev": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "persistent": true
+    },
+    "start": {
+      "dependsOn": ["build"],
+      "cache": false,
+      "persistent": true
+    },
+    "test": {
+      "dependsOn": ["build"],
+      "outputs": [],
+      "env": ["CI", "NODE_ENV"]
+    },
+    "lint": {
+      "outputs": []
+    },
+    "typecheck": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "db:generate": {
+      "cache": false,
+      "outputs": ["node_modules/.prisma/**"]
+    },
+    "db:push": {
+      "cache": false
+    },
+    "db:migrate": {
+      "cache": false
+    },
+    "clean": {
+      "cache": false
+    }
+  },
+  "globalEnv": ["DATABASE_URL", "NODE_ENV", "PORT", "REDIS_HOST", "REDIS_PORT", "REDIS_PASSWORD", "REDIS_URL"]
+}

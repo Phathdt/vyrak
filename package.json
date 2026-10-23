@@ -1,0 +1,97 @@
+{
+  "name": "vyrak",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "yarn@1.22.22",
+  "workspaces": [
+    "apps/*",
+    "libs/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "dev:api": "turbo run dev --filter=@apps/api-server",
+    "dev:worker": "turbo run dev --filter=@apps/worker",
+    "dev:web": "turbo run dev --filter=@apps/web",
+    "start": "turbo run start",
+    "start:api": "turbo run start --filter=@apps/api-server",
+    "start:worker": "turbo run start --filter=@apps/worker",
+    "start:web": "turbo run start --filter=@apps/web",
+    "build": "turbo run build",
+    "build:prod": "turbo run build:prod",
+    "generate:openapi": "yarn workspace @apps/api-server build && node dist/apps/api-server/generate-openapi.js",
+    "generate:api": "yarn workspace @apps/web generate:api",
+    "generate": "yarn generate:api && yarn generate:api && yarn db:generate",
+    "test": "vitest run",
+    "test:ci": "vitest run --coverage",
+    "test:watch": "vitest",
+    "lint": "oxlint --config oxlint.json apps libs --fix",
+    "lint:ci": "oxlint --config oxlint.json apps libs --deny-warnings",
+    "typecheck": "turbo run typecheck",
+    "format": "prettier --write \"**/*.{ts,tsx,json}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,json}\" --no-error-on-unmatched-pattern || true",
+    "clean": "rm -rf dist .turbo node_modules",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "docker:ps": "docker-compose ps",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push --config=prisma/prisma.config.ts",
+    "db:migrate": "prisma migrate dev --config=prisma/prisma.config.ts",
+    "db:migrate:create": "prisma migrate dev --create-only --config=prisma/prisma.config.ts",
+    "db:migrate:deploy": "prisma migrate deploy --config=prisma/prisma.config.ts",
+    "db:status": "prisma migrate status --config=prisma/prisma.config.ts",
+    "db:studio": "prisma studio",
+    "ctix": "node generate-indexes.js",
+    "prepare": "husky",
+    "commit": "git-cz",
+    "check:unused": "node unused-detector.js",
+    "check:unused:ci": "node unused-detector.js --exit-code",
+    "sync:deps": "npx ts-node scripts/sync-package-deps.ts",
+    "sync:deps:dry": "npx ts-node scripts/sync-package-deps.ts --dry-run",
+    "sync:deps:strict": "npx ts-node scripts/sync-package-deps.ts --strict --check-versions"
+  },
+  "resolutions": {
+    "pg": "8.17.2"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^21.2.4",
+    "@commitlint/config-conventional": "^21.2.4",
+    "@ianvs/prettier-plugin-sort-imports": "^4.7.1",
+    "@types/node": "~26.6.5",
+    "@vitest/coverage-v8": "^5.0.5",
+    "commitizen": "^4.3.2",
+    "cz-conventional-changelog": "^3.3.0",
+    "dotenv": "^18.0.9",
+    "git-cz": "^4.9.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.6.0",
+    "oxlint": "^1.89.0",
+    "prettier": "^3.9.10",
+    "prisma": "^7.10.1",
+    "rolldown": "^1.2.15",
+    "ts-node": "10.9.2",
+    "turbo": "^2.11.10",
+    "typescript": "~7.0.2",
+    "vitest": "^5.0.5"
+  },
+  "dependencies": {
+    "@nestjs/cache-manager": "^12.0.1",
+    "@oxc-project/runtime": "^0.155.0",
+    "cache-manager": "^7.2.9"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  },
+  "lint-staged": {
+    "*.{js,ts,tsx}": [
+      "oxlint --fix",
+      "prettier --write"
+    ]
+  },
+  "engines": {
+    "node": ">=22.0.0",
+    "yarn": ">=1.22.0"
+  }
+}

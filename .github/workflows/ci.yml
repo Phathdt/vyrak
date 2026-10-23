@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  quality:
+    name: Quality Checks
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [24.x]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        run: yarn db:generate
+
+      # Skip format check due to prettier-plugin-sort-imports parsing issues
+      # Run manually with: yarn format
+
+      - name: Lint
+        run: yarn lint:ci
+
+      - name: Type check
+        run: yarn typecheck
+
+      - name: Build
+        run: yarn build

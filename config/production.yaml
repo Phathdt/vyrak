@@ -1,0 +1,12 @@
+host:
+  port: 3000
+
+database:
+  url: replace_me
+
+redis:
+  url: replace_me
+
+log:
+  level: info
+  enable_json_format: true

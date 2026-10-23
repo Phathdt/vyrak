@@ -1,0 +1,24 @@
+{
+  "name": "@vyrak/shared",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "rolldown -c && tsc --emitDeclarationOnly",
+    "dev": "rolldown -c --watch"
+  },
+  "dependencies": {
+    "@nestjs/common": "^12.2.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^11.0.0",
+    "rxjs": "^7.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "~26.6.5",
+    "typescript": "~7.0.2"
+  }
+}

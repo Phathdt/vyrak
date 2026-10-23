@@ -1,0 +1,30 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["import", "typescript"],
+  "rules": {
+    "import/no-duplicates": "error",
+    "@typescript-eslint/no-explicit-any": "error",
+    "no-unsafe-declaration-merging": "off",
+    "no-unused-vars": [
+      "error",
+      {
+        "vars": "all",
+        "args": "after-used",
+        "argsIgnorePattern": "^_",
+        "ignoreRestSiblings": true,
+        "caughtErrors": "all",
+        "caughtErrorsIgnorePattern": "^_"
+      }
+    ]
+  },
+  "ignorePatterns": [
+    "**/dist/**",
+    "**/node_modules/**",
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "**/*.js",
+    ".turbo/**",
+    "prisma/prisma.config.ts",
+    "**/generated/**"
+  ]
+}

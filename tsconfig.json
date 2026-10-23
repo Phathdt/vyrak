@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "commonjs",
+    "lib": ["ES2022"],
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "strictPropertyInitialization": false,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "paths": {
+      "@vyrak/custom-config": ["./dist/libs/custom-config/index"],
+      "@vyrak/custom-logger": ["./dist/libs/custom-logger/index"],
+      "@vyrak/database": ["./dist/libs/database/index"],
+      "@vyrak/shared": ["./dist/libs/shared/index"]
+    }
+  },
+  "exclude": ["node_modules", "dist", "build", "coverage"]
+}
