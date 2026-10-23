@@ -50,9 +50,6 @@
     "sync:deps:dry": "npx ts-node scripts/sync-package-deps.ts --dry-run",
     "sync:deps:strict": "npx ts-node scripts/sync-package-deps.ts --strict --check-versions"
   },
-  "resolutions": {
-    "pg": "8.17.2"
-  },
   "devDependencies": {
     "@commitlint/cli": "^21.2.4",
     "@commitlint/config-conventional": "^21.2.4",
