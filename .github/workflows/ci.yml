@@ -31,14 +31,17 @@ jobs:
       - name: Generate Prisma Client
         run: yarn db:generate
 
-      - name: Build packages
-        run: yarn build
+      - name: Build backend packages (libs + api-server)
+        run: turbo run build --filter='!@apps/web'
 
       - name: Generate OpenAPI spec
         run: yarn generate:openapi
 
       - name: Generate API client
         run: yarn generate:api
+
+      - name: Build frontend
+        run: yarn workspace @apps/web build
 
       # Skip format check due to prettier-plugin-sort-imports parsing issues
       # Run manually with: yarn format
