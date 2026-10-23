@@ -31,6 +31,12 @@ jobs:
       - name: Generate Prisma Client
         run: yarn db:generate
 
+      - name: Generate OpenAPI spec
+        run: yarn generate:openapi
+
+      - name: Generate API client
+        run: yarn generate:api
+
       # Skip format check due to prettier-plugin-sort-imports parsing issues
       # Run manually with: yarn format
 
