@@ -1,14 +1,5 @@
 openapi: 3.0.0
 paths:
-  /:
-    get:
-      operationId: AppController_ping
-      parameters: []
-      responses:
-        '200':
-          description: ''
-      tags:
-        - App
   /products:
     get:
       operationId: ProductController_findAll
