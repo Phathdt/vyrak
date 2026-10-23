@@ -4,7 +4,7 @@ import { CustomConfigService } from '@vyrak/custom-config'
 
 import { Pool } from 'pg'
 
-import { PrismaClient } from './generated'
+import { PrismaClient } from './generated/prisma/client'
 
 type QueryType = 'SELECT' | 'INSERT' | 'UPDATE' | 'DELETE'
 
