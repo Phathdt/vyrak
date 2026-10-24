@@ -137,6 +137,299 @@ paths:
       summary: Delete a product
       tags:
         - products
+  /api/auth/me:
+    get:
+      operationId: AuthController_getCurrentUser
+      parameters: []
+      responses:
+        '200':
+          description: ''
+      summary: Get current user with organization
+      tags:
+        - auth
+  /api/organizations:
+    post:
+      operationId: OrganizationsController_create
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrganizationDto'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationResponse'
+      security:
+        - bearer: []
+      summary: Create new organization
+      tags:
+        - organizations
+    get:
+      operationId: OrganizationsController_findAll
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrganizationResponse'
+      security:
+        - bearer: []
+      summary: List all organizations for current user
+      tags:
+        - organizations
+  /api/organizations/{id}:
+    get:
+      operationId: OrganizationsController_findOne
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationResponse'
+      security:
+        - bearer: []
+      summary: Get organization details
+      tags:
+        - organizations
+    patch:
+      operationId: OrganizationsController_update
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateOrganizationDto'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationResponse'
+      security:
+        - bearer: []
+      summary: Update organization (admin/owner only)
+      tags:
+        - organizations
+    delete:
+      operationId: OrganizationsController_delete
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '204':
+          description: ''
+      security:
+        - bearer: []
+      summary: Delete organization (owner only)
+      tags:
+        - organizations
+  /api/organizations/{id}/members:
+    get:
+      operationId: OrganizationsController_listMembers
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MemberResponse'
+      security:
+        - bearer: []
+      summary: List organization members
+      tags:
+        - organizations
+  /api/organizations/{id}/members/{memberId}:
+    patch:
+      operationId: OrganizationsController_updateMemberRole
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: memberId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMemberRoleDto'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberResponse'
+      security:
+        - bearer: []
+      summary: Update member role (owner/admin only)
+      tags:
+        - organizations
+    delete:
+      operationId: OrganizationsController_removeMember
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: memberId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+      security:
+        - bearer: []
+      summary: Remove member (owner/admin only)
+      tags:
+        - organizations
+  /api/organizations/{id}/invitations:
+    post:
+      operationId: OrganizationsController_inviteMember
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InviteMemberDto'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvitationResponse'
+      security:
+        - bearer: []
+      summary: Invite member to organization (admin/owner only)
+      tags:
+        - organizations
+    get:
+      operationId: OrganizationsController_listInvitations
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InvitationResponse'
+      security:
+        - bearer: []
+      summary: List pending invitations (admin/owner only)
+      tags:
+        - organizations
+  /api/invitations/pending:
+    get:
+      operationId: InvitationsController_listUserInvitations
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InvitationResponse'
+      security:
+        - bearer: []
+      summary: List user pending invitations
+      tags:
+        - invitations
+  /api/invitations/{id}/accept:
+    post:
+      operationId: InvitationsController_accept
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvitationResponse'
+      security:
+        - bearer: []
+      summary: Accept invitation
+      tags:
+        - invitations
+  /api/invitations/{id}/reject:
+    post:
+      operationId: InvitationsController_reject
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+      security:
+        - bearer: []
+      summary: Reject invitation
+      tags:
+        - invitations
 info:
   title: Vyrak API
   description: Vyrak API documentation
@@ -158,6 +451,8 @@ components:
       properties:
         id:
           type: string
+        organizationId:
+          type: string
         name:
           type: string
         description:
@@ -173,6 +468,7 @@ components:
           type: string
       required:
         - id
+        - organizationId
         - name
         - description
         - price
@@ -189,6 +485,8 @@ components:
             properties:
               id:
                 type: string
+              organizationId:
+                type: string
               name:
                 type: string
               description:
@@ -204,6 +502,7 @@ components:
                 type: string
             required:
               - id
+              - organizationId
               - name
               - description
               - price
@@ -233,6 +532,11 @@ components:
     CreateProductDto:
       type: object
       properties:
+        organizationId:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          x-nestjs_zod-uses-3-point-1-syntax: true
         name:
           type: string
           minLength: 1
@@ -254,11 +558,17 @@ components:
           maximum: 9007199254740991
           x-nestjs_zod-uses-3-point-1-syntax: true
       required:
+        - organizationId
         - name
         - price
     UpdateProductDto:
       type: object
       properties:
+        organizationId:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          x-nestjs_zod-uses-3-point-1-syntax: true
         name:
           type: string
           minLength: 1
@@ -278,3 +588,235 @@ components:
           minimum: 0
           maximum: 9007199254740991
           x-nestjs_zod-uses-3-point-1-syntax: true
+    CreateOrganizationDto:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: Acme Inc
+          description: Organization name
+        slug:
+          type: string
+          minLength: 3
+          maxLength: 50
+          pattern: ^[a-z0-9-]+$
+          example: acme-inc
+          description: Unique organization slug (lowercase, alphanumeric, hyphens only)
+        logo:
+          type: string
+          format: uri
+          example: https://example.com/logo.png
+          description: Organization logo URL
+      required:
+        - name
+        - slug
+    OrganizationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: uuid-here
+          description: Organization ID
+        name:
+          type: string
+          example: Acme Inc
+          description: Organization name
+        slug:
+          type: string
+          example: acme-inc
+          description: Organization slug
+        logo:
+          type: string
+          example: https://example.com/logo.png
+          description: Organization logo URL
+          nullable: true
+        role:
+          type: string
+          example: owner
+          description: Current user role in organization
+        memberCount:
+          type: number
+          example: 5
+          description: Number of members
+        createdAt:
+          format: date-time
+          type: string
+          example: '2024-10-24T10:00:00Z'
+          description: Creation timestamp
+        updatedAt:
+          format: date-time
+          type: string
+          example: '2024-10-24T10:00:00Z'
+          description: Last update timestamp
+      required:
+        - id
+        - name
+        - slug
+        - role
+        - memberCount
+        - createdAt
+        - updatedAt
+    UpdateOrganizationDto:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: Acme Corporation
+          description: Organization name
+        logo:
+          type: string
+          format: uri
+          example: https://example.com/logo.png
+          description: Organization logo URL
+    MemberUserResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: uuid-here
+          description: User ID
+        name:
+          type: string
+          example: John Doe
+          description: User name
+          nullable: true
+        email:
+          type: string
+          example: john@example.com
+          description: User email
+        image:
+          type: string
+          example: https://example.com/avatar.png
+          description: User avatar URL
+          nullable: true
+      required:
+        - id
+        - email
+    MemberResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: uuid-here
+          description: Membership ID
+        role:
+          type: string
+          example: owner
+          description: Member role
+          enum:
+            - owner
+            - admin
+            - member
+        createdAt:
+          format: date-time
+          type: string
+          example: '2024-10-24T10:00:00Z'
+          description: Join timestamp
+        user:
+          $ref: '#/components/schemas/MemberUserResponse'
+      required:
+        - id
+        - role
+        - createdAt
+        - user
+    UpdateMemberRoleDto:
+      type: object
+      properties:
+        role:
+          type: string
+          enum:
+            - owner
+            - admin
+            - member
+          example: admin
+          description: New role for the member
+      required:
+        - role
+    InviteMemberDto:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          pattern: ^(?:[A-Za-z0-9_'+\-]+\.)*[A-Za-z0-9_'+\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$
+          example: john@example.com
+          description: Email address of the user to invite
+        role:
+          type: string
+          enum:
+            - admin
+            - member
+          example: member
+          description: Role to assign to the invited user
+      required:
+        - email
+        - role
+    OrganizationSummaryResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: uuid-here
+          description: Organization ID
+        name:
+          type: string
+          example: Acme Inc
+          description: Organization name
+        slug:
+          type: string
+          example: acme-inc
+          description: Organization slug
+      required:
+        - id
+        - name
+        - slug
+    InvitationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: uuid-here
+          description: Invitation ID
+        email:
+          type: string
+          example: john@example.com
+          description: Invitee email
+        role:
+          type: string
+          example: member
+          description: Role to assign
+          enum:
+            - admin
+            - member
+        status:
+          type: string
+          example: pending
+          description: Invitation status
+          enum:
+            - pending
+            - accepted
+            - rejected
+            - cancelled
+        expiresAt:
+          format: date-time
+          type: string
+          example: '2024-10-26T10:00:00Z'
+          description: Expiration timestamp
+        createdAt:
+          format: date-time
+          type: string
+          example: '2024-10-24T10:00:00Z'
+          description: Creation timestamp
+        organization:
+          $ref: '#/components/schemas/OrganizationSummaryResponse'
+      required:
+        - id
+        - email
+        - role
+        - status
+        - expiresAt
+        - createdAt

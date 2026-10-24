@@ -15,10 +15,12 @@ import {
   type CreateProductForm,
   type UpdateProductForm,
 } from '../lib/schemas/product-schema'
+import { useOrganization } from '../contexts/organization-context'
 
 export function ProductsPage() {
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null)
   const [isCreating, setIsCreating] = useState(false)
+  const { activeOrgId } = useOrganization()
 
   // Create form
   const createForm = useForm<CreateProductForm>({
@@ -63,8 +65,18 @@ export function ProductsPage() {
   }, [selectedProduct, updateForm])
 
   const handleCreate: SubmitHandler<CreateProductForm> = async (data) => {
+    if (!activeOrgId) {
+      console.error('No active organization selected')
+      return
+    }
+
     try {
-      await createMutation.mutateAsync({ data })
+      await createMutation.mutateAsync({
+        data: {
+          ...data,
+          organizationId: activeOrgId,
+        },
+      })
       createForm.reset()
       setIsCreating(false)
     } catch (error) {

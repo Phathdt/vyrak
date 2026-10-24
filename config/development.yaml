@@ -2,7 +2,7 @@ host:
   port: 3000
 
 database:
-  url: postgresql://postgres:123123123@localhost:5432/vyrak
+  url: postgresql://postgres:123123123@localhost:5433/vyrak
 
 redis:
   url: redis://vyrak-redis-master.database.svc.cluster.local:6379

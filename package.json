@@ -37,9 +37,9 @@
     "docker:down": "docker-compose down",
     "docker:logs": "docker-compose logs -f",
     "docker:ps": "docker-compose ps",
-    "db:generate": "prisma generate",
+    "db:generate": "prisma generate --config=prisma/prisma.config.ts",
     "db:push": "prisma db push --config=prisma/prisma.config.ts",
-    "db:migrate": "prisma migrate dev --config=prisma/prisma.config.ts",
+    "db:migrate": "prisma generate --config=prisma/prisma.config.ts && prisma migrate dev --config=prisma/prisma.config.ts",
     "db:migrate:create": "prisma migrate dev --create-only --config=prisma/prisma.config.ts",
     "db:migrate:deploy": "prisma migrate deploy --config=prisma/prisma.config.ts",
     "db:status": "prisma migrate status --config=prisma/prisma.config.ts",
@@ -76,6 +76,7 @@
   "dependencies": {
     "@nestjs/cache-manager": "^12.0.1",
     "@oxc-project/runtime": "^0.155.0",
+    "better-auth": "^1.7.12",
     "cache-manager": "^7.2.9"
   },
   "config": {

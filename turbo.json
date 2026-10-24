@@ -81,5 +81,5 @@
       "cache": false
     }
   },
-  "globalEnv": ["DATABASE_URL", "NODE_ENV", "PORT", "REDIS_HOST", "REDIS_PORT", "REDIS_PASSWORD", "REDIS_URL"]
+  "globalEnv": ["DATABASE__URL", "NODE_ENV", "PORT", "REDIS_HOST", "REDIS_PORT", "REDIS_PASSWORD", "REDIS_URL"]
 }

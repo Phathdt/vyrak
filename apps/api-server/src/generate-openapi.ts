@@ -8,9 +8,9 @@ import * as yaml from 'js-yaml'
 import { AppModule } from './app/app.module'
 
 async function generateOpenApiSpec() {
-  // Set fake DATABASE_URL if not provided (needed for module initialization, not actual connection)
-  if (!process.env.DATABASE_URL) {
-    process.env.DATABASE_URL = 'postgresql://localhost:5432/fake'
+  // Set fake DATABASE__URL if not provided (needed for module initialization, not actual connection)
+  if (!process.env.DATABASE__URL) {
+    process.env.DATABASE__URL = 'postgresql://localhost:5432/fake'
   }
 
   // Skip database connection during OpenAPI generation

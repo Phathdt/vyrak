@@ -8,14 +8,240 @@ generator client {
   moduleFormat = "commonjs"
 }
 
+// Existing Models
 model Product {
-  id          String   @id @default(uuid())
-  name        String   @db.VarChar(255)
-  description String?  @db.Text
-  price       Decimal  @db.Decimal(10, 2)
-  stock       Int      @default(0)
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id             String   @id @default(uuid())
+  organizationId String   @map("organization_id")
+  name           String   @db.VarChar(255)
+  description    String?  @db.Text
+  price          Decimal  @db.Decimal(10, 2)
+  stock          Int      @default(0)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
   @@map("products")
+}
+
+// Better Auth Models
+model User {
+  id            String   @id @default(uuid())
+  name          String?
+  email         String   @unique
+  emailVerified Boolean  @default(false) @map("email_verified")
+  image         String?
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  sessions Session[]
+  accounts Account[]
+  members  Member[]
+
+  @@map("user")
+}
+
+model Session {
+  id                   String   @id @default(uuid())
+  expiresAt            DateTime @map("expires_at")
+  token                String   @unique
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+  ipAddress            String?  @map("ip_address")
+  userAgent            String?  @map("user_agent")
+  userId               String   @map("user_id")
+  activeOrganizationId String?  @map("active_organization_id")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id @default(uuid())
+  accountId             String    @map("account_id")
+  providerId            String    @map("provider_id")
+  userId                String    @map("user_id")
+  accessToken           String?   @map("access_token")
+  refreshToken          String?   @map("refresh_token")
+  idToken               String?   @map("id_token")
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at")
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at")
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, accountId])
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id @default(uuid())
+  identifier String
+  value      String
+  expiresAt  DateTime @map("expires_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@unique([identifier, value])
+  @@map("verification")
+}
+
+// Organization Models
+model Organization {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  logo      String?
+  metadata  String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  members         Member[]
+  invitations     Invitation[]
+  products        Product[]
+  projects        Project[]
+  gitRepositories GitRepository[]
+  workflowRuns    WorkflowRun[]
+  agentTasks      AgentTask[]
+  artifacts       Artifact[]
+
+  @@map("organizations")
+}
+
+model Member {
+  id             String   @id @default(uuid())
+  organizationId String   @map("organization_id")
+  userId         String   @map("user_id")
+  role           String
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+  @@index([organizationId])
+  @@map("member")
+}
+
+model Invitation {
+  id             String   @id @default(uuid())
+  organizationId String   @map("organization_id")
+  email          String
+  role           String
+  status         String   @default("pending")
+  inviterId      String   @map("inviter_id")
+  expiresAt      DateTime @map("expires_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, email])
+  @@index([email])
+  @@map("invitation")
+}
+
+// Multi-Tenancy Business Models
+model Project {
+  id             String   @id @default(uuid())
+  organizationId String   @map("organization_id")
+  name           String
+  slug           String
+  description    String?
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization    Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  gitRepositories GitRepository[]
+  workflowRuns    WorkflowRun[]
+
+  @@unique([organizationId, slug])
+  @@index([organizationId])
+  @@map("projects")
+}
+
+model GitRepository {
+  id             String   @id @default(uuid())
+  projectId      String   @map("project_id")
+  organizationId String   @map("organization_id")
+  name           String
+  url            String
+  branch         String   @default("main")
+  provider       String   @default("github") // github, gitlab, bitbucket
+  status         String   @default("active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  project      Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([organizationId])
+  @@map("git_repositories")
+}
+
+model WorkflowRun {
+  id             String    @id @default(uuid())
+  projectId      String    @map("project_id")
+  organizationId String    @map("organization_id")
+  status         String    @default("pending")
+  result         String?   @db.Text
+  startedAt      DateTime  @default(now()) @map("started_at")
+  completedAt    DateTime? @map("completed_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  project      Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  agentTasks   AgentTask[]
+  artifacts    Artifact[]
+
+  @@index([projectId])
+  @@index([organizationId])
+  @@index([status])
+  @@map("workflow_runs")
+}
+
+model AgentTask {
+  id             String   @id @default(uuid())
+  runId          String   @map("run_id")
+  organizationId String   @map("organization_id")
+  taskType       String   @map("task_type")
+  status         String   @default("pending")
+  input          String?  @db.Text
+  output         String?  @db.Text
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  run          WorkflowRun  @relation(fields: [runId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([runId])
+  @@index([organizationId])
+  @@map("agent_tasks")
+}
+
+model Artifact {
+  id             String   @id @default(uuid())
+  runId          String   @map("run_id")
+  organizationId String   @map("organization_id")
+  filePath       String   @map("file_path")
+  content        String   @db.Text
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  run          WorkflowRun  @relation(fields: [runId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([runId])
+  @@index([organizationId])
+  @@map("artifacts")
 }

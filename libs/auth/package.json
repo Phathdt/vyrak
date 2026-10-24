@@ -1,0 +1,23 @@
+{
+  "name": "@vyrak/auth",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "rolldown -c && tsc --emitDeclarationOnly",
+    "dev": "rolldown -c --watch"
+  },
+  "dependencies": {
+    "@nestjs/common": "^12.2.0",
+    "@vyrak/database": "*",
+    "better-auth": "^1.5.2",
+    "nestjs-zod": "^3.0.0",
+    "reflect-metadata": "^0.2.2",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "~26.6.5",
+    "typescript": "~7.0.2"
+  }
+}

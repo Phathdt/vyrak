@@ -4,16 +4,17 @@ import { Module, NestModule } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { APP_INTERCEPTOR } from '@nestjs/core'
 import { ScheduleModule } from '@nestjs/schedule'
+import { AuthModule } from '@vyrak/auth'
 import { CustomConfigModule } from '@vyrak/custom-config'
 import { CustomLoggerModule } from '@vyrak/custom-logger'
 import { DatabaseModule } from '@vyrak/database'
-import { ProductModule } from '@vyrak/product'
 
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
+import { AuthController } from './controllers'
 
-import { ProductController } from '../controllers'
 import { ResponseInterceptor, TraceIdInterceptor } from '../interceptors'
+import { OrganizationsModule } from '../organizations'
 
 @Module({
   imports: [
@@ -38,9 +39,10 @@ import { ResponseInterceptor, TraceIdInterceptor } from '../interceptors'
     BullModule.registerQueue({
       name: 'example',
     }),
-    ProductModule,
+    AuthModule,
+    OrganizationsModule,
   ],
-  controllers: [AppController, ProductController],
+  controllers: [AppController, AuthController],
   providers: [
     AppService,
     {
