@@ -9,6 +9,6 @@ import { defineConfig } from 'prisma/config'
 export default defineConfig({
   schema: path.join(import.meta.dirname, 'schema.prisma'),
   datasource: {
-    url: process.env.DATABASE__URL!,
+    url: process.env.DATABASE__URL || 'postgresql://postgres:postgres@localhost:5433/vyrak',
   },
 })

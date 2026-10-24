@@ -4,8 +4,6 @@ services:
     container_name: vyrak-redis
     ports:
       - "6379:6379"
-    volumes:
-      - redis_data:/data
     command: redis-server --appendonly yes
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -22,79 +20,81 @@ services:
       POSTGRES_DB: vyrak
     ports:
       - "5433:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 3s
       retries: 5
 
-  bullboard:
-    image: deadly0/bull-board
-    container_name: vyrak-bullboard
+  mailcrab:
+    image: marlonb/mailcrab:latest
+    container_name: vyrak-mailcrab
     ports:
-      - "4000:3000"
-    environment:
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ""
-      BULL_PREFIX: bull
-    depends_on:
-      redis:
-        condition: service_healthy
+      - "1080:1080"  # Web interface
+      - "1025:1025"  # SMTP server
     restart: unless-stopped
 
-  api:
-    build:
-      context: .
-      dockerfile: apps/api-server/Dockerfile
-    container_name: vyrak-api
-    ports:
-      - "3000:3000"
-    environment:
-      NODE_ENV: production
-      PORT: 3000
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/vyrak
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ""
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    restart: unless-stopped
+  # bullboard:
+  #   image: deadly0/bull-board
+  #   container_name: vyrak-bullboard
+  #   ports:
+  #     - "4000:3000"
+  #   environment:
+  #     REDIS_HOST: redis
+  #     REDIS_PORT: 6379
+  #     REDIS_PASSWORD: ""
+  #     BULL_PREFIX: bull
+  #   depends_on:
+  #     redis:
+  #       condition: service_healthy
+  #   restart: unless-stopped
 
-  worker:
-    build:
-      context: .
-      dockerfile: apps/worker/Dockerfile
-    container_name: vyrak-worker
-    environment:
-      NODE_ENV: production
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/vyrak
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ""
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    restart: unless-stopped
+  # api:
+  #   build:
+  #     context: .
+  #     dockerfile: apps/api-server/Dockerfile
+  #   container_name: vyrak-api
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     NODE_ENV: production
+  #     PORT: 3000
+  #     DATABASE__URL: postgresql://postgres:postgres@postgres:5432/vyrak
+  #     REDIS_HOST: redis
+  #     REDIS_PORT: 6379
+  #     REDIS_PASSWORD: ""
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #   restart: unless-stopped
 
-  web:
-    build:
-      context: .
-      dockerfile: apps/web/Dockerfile
-    container_name: vyrak-web
-    ports:
-      - "80:80"
-    depends_on:
-      - api
-    restart: unless-stopped
+  # worker:
+  #   build:
+  #     context: .
+  #     dockerfile: apps/worker/Dockerfile
+  #   container_name: vyrak-worker
+  #   environment:
+  #     NODE_ENV: production
+  #     DATABASE__URL: postgresql://postgres:postgres@postgres:5432/vyrak
+  #     REDIS_HOST: redis
+  #     REDIS_PORT: 6379
+  #     REDIS_PASSWORD: ""
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #   restart: unless-stopped
 
-volumes:
-  redis_data:
-  postgres_data:
+  # web:
+  #   build:
+  #     context: .
+  #     dockerfile: apps/web/Dockerfile
+  #   container_name: vyrak-web
+  #   ports:
+  #     - "80:80"
+  #   depends_on:
+  #     - api
+  #   restart: unless-stopped

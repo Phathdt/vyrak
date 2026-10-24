@@ -4,6 +4,7 @@ import { CustomConfigService } from '@vyrak/custom-config'
 
 import { Pool } from 'pg'
 
+import { createTenantFilterExtension } from './extensions'
 import { PrismaClient } from './generated/prisma/client'
 
 type QueryType = 'SELECT' | 'INSERT' | 'UPDATE' | 'DELETE'
@@ -31,11 +32,20 @@ const COLORS = {
   gray: '\x1b[90m',
 }
 
+interface TenantFilterContext {
+  organizationId?: string
+  bypassTenantFilter?: boolean
+}
+
 @Injectable()
-export class DatabaseService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
+export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(DatabaseService.name)
   private readonly enableColors: boolean
   private readonly pool: Pool
+  private readonly prismaClient: PrismaClient
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private readonly extendedClient: any
+  private tenantContext: TenantFilterContext = {}
 
   constructor(configService: CustomConfigService) {
     // Create pg Pool for health checks (bypassing Prisma adapter)
@@ -52,13 +62,74 @@ export class DatabaseService extends PrismaClient implements OnModuleInit, OnMod
     // Create driver adapter for Prisma 7
     const adapter = new PrismaPg(pool)
 
-    super({
+    // Create base Prisma client
+    this.prismaClient = new PrismaClient({
       adapter,
       log: prismaLogLevels,
     })
 
+    // Extend with tenant filter
+    this.extendedClient = this.prismaClient.$extends(createTenantFilterExtension(() => this.tenantContext))
+
     this.pool = pool
     this.enableColors = !configService.log.enableJsonFormat
+  }
+
+  /**
+   * Get the tenant-aware Prisma client
+   */
+  get client() {
+    return this.extendedClient
+  }
+
+  /**
+   * Access to transaction API
+   */
+  get $transaction() {
+    return this.extendedClient.$transaction.bind(this.extendedClient)
+  }
+
+  /**
+   * Set tenant context for current operation
+   */
+  setTenantContext(organizationId: string): void {
+    this.tenantContext = {
+      organizationId,
+      bypassTenantFilter: false,
+    }
+  }
+
+  /**
+   * Clear tenant context
+   */
+  clearTenantContext(): void {
+    this.tenantContext = {}
+  }
+
+  /**
+   * Execute operation with specific organization context
+   */
+  async withOrganization<T>(organizationId: string, fn: () => Promise<T>): Promise<T> {
+    const previousContext = { ...this.tenantContext }
+    this.setTenantContext(organizationId)
+    try {
+      return await fn()
+    } finally {
+      this.tenantContext = previousContext
+    }
+  }
+
+  /**
+   * Execute system operation bypassing tenant filter
+   */
+  async withSystemAccess<T>(fn: () => Promise<T>): Promise<T> {
+    const previousBypass = this.tenantContext.bypassTenantFilter
+    this.tenantContext.bypassTenantFilter = true
+    try {
+      return await fn()
+    } finally {
+      this.tenantContext.bypassTenantFilter = previousBypass
+    }
   }
 
   /**
@@ -104,11 +175,11 @@ export class DatabaseService extends PrismaClient implements OnModuleInit, OnMod
       return
     }
 
-    await this.$connect()
+    await this.prismaClient.$connect()
 
     // Enhanced SQL query logging
     // @ts-expect-error - Prisma $on typing issue with event names
-    this.$on('query', (e: PrismaQueryEvent) => {
+    this.prismaClient.$on('query', (e: PrismaQueryEvent) => {
       const queryType = e.query.split(' ')[0].toUpperCase() as QueryType
       const formattedQuery = this.formatQuery(e.query)
       const parsedParams = this.parseParams(e.params)
@@ -141,7 +212,7 @@ export class DatabaseService extends PrismaClient implements OnModuleInit, OnMod
   }
 
   async onModuleDestroy() {
-    await this.$disconnect()
+    await this.prismaClient.$disconnect()
     await this.pool.end()
   }
 

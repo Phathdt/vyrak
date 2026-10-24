@@ -23,6 +23,7 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "paths": {
+      "@vyrak/auth": ["./dist/libs/auth/index"],
       "@vyrak/custom-config": ["./dist/libs/custom-config/index"],
       "@vyrak/custom-logger": ["./dist/libs/custom-logger/index"],
       "@vyrak/database": ["./dist/libs/database/index"],

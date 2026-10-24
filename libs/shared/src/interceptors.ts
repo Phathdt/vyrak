@@ -11,9 +11,17 @@ export class SnakeToCamelInterceptor implements NestInterceptor {
   }
 
   private convertToSnakeCase(obj: any): any {
+    // Handle null, undefined, or primitive values
+    if (obj === null || obj === undefined || typeof obj !== 'object') {
+      return obj
+    }
+
     if (Array.isArray(obj)) {
       return obj.map((v) => this.convertToSnakeCase(v))
-    } else if (obj !== null && obj.constructor === Object) {
+    }
+
+    // Only transform plain objects (not class instances, Dates, etc.)
+    if (obj.constructor === Object) {
       return Object.keys(obj).reduce(
         (result, key) => ({
           ...result,
@@ -22,6 +30,8 @@ export class SnakeToCamelInterceptor implements NestInterceptor {
         {}
       )
     }
+
+    // Return non-plain objects as-is (class instances, Dates, etc.)
     return obj
   }
 

@@ -11,6 +11,7 @@ This file provides guidance to Claude Code when working with code in this reposi
 ## Architecture
 
 ### Monorepo Structure
+
 ```
 vyrak/
 ├── apps/
@@ -31,6 +32,7 @@ vyrak/
 **CRITICAL RULE:** All new business modules MUST be created in `libs/` following the hexagonal architecture pattern demonstrated by `libs/product/`. Only controllers and processors/consumers belong in `api-server` and `worker`.
 
 **Module Structure (libs/{module-name}/):**
+
 ```
 libs/{module-name}/
 ├── src/
@@ -92,6 +94,7 @@ libs/{module-name}/
    - Export service for controller injection
 
 **Dependency Flow:**
+
 ```
 Domain (contracts) ← Application (orchestration) ← Infrastructure (implementation)
                                                  ↑
@@ -104,6 +107,7 @@ Domain (contracts) ← Application (orchestration) ← Infrastructure (implement
 ### Tech Stack
 
 **Backend:**
+
 - NestJS with TypeScript 7.0
 - Prisma ORM for PostgreSQL
 - nestjs-zod for validation
@@ -111,6 +115,7 @@ Domain (contracts) ← Application (orchestration) ← Infrastructure (implement
 - Rolldown for production builds
 
 **Frontend:**
+
 - React 19 with Vite
 - TanStack Query (React Query v5) for data fetching
 - React Hook Form + Zod for form validation
@@ -118,6 +123,7 @@ Domain (contracts) ← Application (orchestration) ← Infrastructure (implement
 - Axios with Bearer token interceptors
 
 **DevOps:**
+
 - Turborepo for monorepo management
 - Docker Compose for local PostgreSQL
 - Oxlint for fast linting
@@ -136,6 +142,7 @@ This project follows a strict type-safe workflow from backend to frontend:
 4. **Frontend:** Use generated hooks with full TypeScript inference
 
 **Example:**
+
 ```typescript
 // Backend: apps/api-server/src/products/products.dto.ts
 export const CreateProductSchema = z.object({
@@ -151,19 +158,27 @@ const { mutateAsync } = useProductsControllerCreate()
 ### Key Commands
 
 **Development:**
+
 - `yarn dev` - Start all apps (API on :3000, Web on :5173)
 - `yarn dev:api` / `yarn dev:web` / `yarn dev:worker` - Start individual apps
 
 **API Generation:**
+
 - `yarn generate:openapi` - Generate OpenAPI spec from NestJS
 - `yarn generate:api` - Generate React Query hooks from OpenAPI spec
 
+**Code Generation:**
+
+- `yarn ctix` - Auto-generate index.ts exports for all modules (run after adding/removing files)
+
 **Quality:**
+
 - `yarn lint` - Auto-fix with Oxlint
 - `yarn typecheck` - TypeScript check all packages
 - `yarn test` - Run Vitest tests
 
 **Database:**
+
 - `yarn db:generate` - Generate Prisma client
 - `yarn db:migrate` - Run migrations
 - `yarn db:push` - Push schema without migration
@@ -171,18 +186,30 @@ const { mutateAsync } = useProductsControllerCreate()
 ## Code Conventions
 
 ### File Naming
+
 - **kebab-case** for TypeScript files: `product-schema.ts`, `api-client.ts`
 - **PascalCase** for React components: `ProductsPage.tsx`
 - **kebab-case** for directories: `products/`, `lib/schemas/`
 
+### Module Exports
+
+- **DO NOT manually maintain `index.ts` files** - they are auto-generated
+- Run `yarn ctix` to regenerate all `index.ts` barrel exports after adding/removing files
+- The script processes `libs/` (full recursive exports) and `apps/` (subdirectories only)
+- Ignored patterns: `*.spec.ts`, `*.test.ts`, `.{hidden}`, `typechains/`, `factories/`
+- Ignored modules: `contracts`, `database`, `web`
+
 ### Import Order
+
 Using `@ianvs/prettier-plugin-sort-imports`:
+
 1. Node built-ins (`crypto`, `path`)
 2. External packages (`@nestjs/*`, `react`)
 3. Internal packages (`@vyrak/*`)
 4. Relative imports (`./`, `../`)
 
 ### TypeScript
+
 - **Strict mode enabled** with TypeScript 7.0
 - **moduleResolution: bundler** (no baseUrl)
 - **Explicit return types** for public methods
@@ -190,6 +217,7 @@ Using `@ianvs/prettier-plugin-sort-imports`:
 - **Zod schemas** for runtime validation
 
 ### NestJS API
+
 - Use `nestjs-zod` for DTOs with OpenAPI decorators
 - Export interfaces from services for controller return types
 - Use `@ApiProperty()` with explicit `type`, `nullable`, `required` for nullable fields
@@ -197,6 +225,7 @@ Using `@ianvs/prettier-plugin-sort-imports`:
 - Use conventional HTTP status codes
 
 ### React
+
 - **React 19** features enabled
 - **React Hook Form** with `zodResolver` for all forms
 - **TanStack Query** for server state management
@@ -204,6 +233,7 @@ Using `@ianvs/prettier-plugin-sort-imports`:
 - Extract reusable logic into custom hooks
 
 ### Styling
+
 - Dark theme with stepped tonal surfaces: `#05070C` → `#1E2636`
 - Accent color: `#38BDF8` (cyan)
 - CSS Grid for layout, Flexbox for components
@@ -218,10 +248,11 @@ Using `@ianvs/prettier-plugin-sort-imports`:
 2. **Match existing style** - Follow the project's conventions and patterns
 3. **Follow hexagonal architecture** - Create new business modules in `libs/` following the `libs/product/` pattern
 4. **Controllers and processors belong in apps/** - Only controllers go in `api-server/`, only processors/consumers in `worker/`
-5. **Regenerate API** - After changing DTOs/controllers, ALWAYS run `yarn generate:openapi` then `yarn generate:api`
-6. **Never write manual React Query hooks** - Use generated hooks from Orval in `apps/web/src/api/generated/`
-7. **Verify types** - Run `yarn typecheck` before claiming completion
-8. **Update docs** - Update relevant docs when changing architecture or workflows
+5. **DO NOT manually edit index.ts files** - Run `yarn ctix` to regenerate barrel exports
+6. **Regenerate API** - After changing DTOs/controllers, run `yarn ctix` then `yarn generate:openapi` then `yarn generate:api`
+7. **Never write manual React Query hooks** - Use generated hooks from Orval in `apps/web/src/api/generated/`
+8. **Verify types** - Run `yarn typecheck` before claiming completion
+9. **Update docs** - Update relevant docs when changing architecture or workflows
 
 ### When Adding Features
 
@@ -234,7 +265,10 @@ Using `@ianvs/prettier-plugin-sort-imports`:
    - Module: NestJS module with DI wiring
 4. **Add controller to api-server** - Create lightweight controller in `apps/api-server/src/{module}/` that injects and calls the service from `libs/{module}/`
 5. **Add processor to worker (if needed)** - Create processor/consumer in `apps/worker/src/{module}/` for background jobs
-6. **Generate types** - Run `yarn generate:openapi` then `yarn generate:api`
+6. **Run code generation**:
+   - `yarn ctix` - Regenerate index.ts barrel exports
+   - `yarn generate:openapi` - Generate OpenAPI spec
+   - `yarn generate:api` - Generate React Query hooks
 7. **Use generated hooks** - NEVER write React Query hooks manually, always use Orval-generated hooks from `apps/web/src/api/generated/`
 8. **Frontend validation** - Add Zod schemas in `lib/schemas/` for form validation only (not for API calls)
 9. **Test endpoints** - Verify API works before integrating frontend
@@ -251,22 +285,26 @@ Using `@ianvs/prettier-plugin-sort-imports`:
 ## Common Pitfalls
 
 ### Module Organization
+
 - **Business logic in api-server**: DO NOT put services, repositories, or business logic in `apps/api-server/`. They belong in `libs/{module}/`
 - **Controllers in libs**: DO NOT put controllers in libs. Controllers are HTTP adapters and belong in `apps/api-server/src/{module}/`
 - **Missing layers**: Always implement all three layers (domain, application, infrastructure) for consistency
 - **Direct Prisma in services**: Services should depend on repository interfaces, NOT Prisma directly
 
 ### OpenAPI Generation
+
 - **Nullable types**: Use `@ApiProperty({ type: String, nullable: true })` not `@ApiPropertyOptional()`
 - **Return types**: Export interfaces and add explicit return types to prevent TS4053 errors
 - **Date serialization**: Return ISO strings from services, not Date objects
 
 ### React Patterns
+
 - **Infinite loops**: Never call state setters or form.reset() directly in render body, use useEffect
 - **Query keys**: Include dependencies in queryKey for React Query to refetch on changes
 - **Form defaults**: Reset forms in useEffect when data changes, not in render
 
 ### TypeScript 7.0
+
 - **No baseUrl**: All paths must be relative with `./` or use workspace packages
 - **moduleResolution: bundler**: Required for TypeScript 7.0
 - **Explicit exports**: Export types/interfaces that are used in public APIs
@@ -274,6 +312,7 @@ Using `@ianvs/prettier-plugin-sort-imports`:
 ## Environment Setup
 
 ### Required
+
 - Node.js >= 22.0.0
 - Yarn >= 1.22.0
 - Docker & Docker Compose
@@ -281,13 +320,15 @@ Using `@ianvs/prettier-plugin-sort-imports`:
 ### Environment Files
 
 **apps/api-server/.env:**
+
 ```env
 NODE_ENV=development
 PORT=3000
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/vyrak
+DATABASE__URL=postgresql://postgres:postgres@localhost:5432/vyrak
 ```
 
 **apps/web/.env:**
+
 ```env
 VITE_API_BASE_URL=http://localhost:3000
 ```
@@ -295,16 +336,19 @@ VITE_API_BASE_URL=http://localhost:3000
 ## Testing Strategy
 
 ### Unit Tests
+
 - Vitest for all packages
 - Mock database calls in services
 - Test business logic, not framework code
 
 ### Integration Tests
+
 - Test API endpoints with real HTTP requests
 - Use test database (separate from development)
 - Clean up test data after each test
 
 ### E2E Tests
+
 - Test critical user flows
 - Use Playwright or Cypress (to be added)
 - Run against staging environment
@@ -312,12 +356,14 @@ VITE_API_BASE_URL=http://localhost:3000
 ## Documentation
 
 ### Keep Updated
+
 - `README.md` - Setup and getting started
 - `CLAUDE.md` (this file) - AI agent guidance
 - `AGENTS.md` - OpenCode specific instructions
 - `docs/openapi-orval-setup.md` - API generation workflow
 
 ### Reference
+
 - `libs/product/` - Reference implementation for hexagonal architecture
 - NestJS: https://docs.nestjs.com
 - Prisma: https://www.prisma.io/docs
@@ -328,18 +374,22 @@ VITE_API_BASE_URL=http://localhost:3000
 ## Git Workflow
 
 ### Commits
+
 - Use `yarn commit` for interactive Commitizen
 - Follow conventional commits: `feat:`, `fix:`, `docs:`, `chore:`
 - Keep commits atomic and focused
 
 ### Branches
+
 - `main` - Stable production code
 - `develop` - Integration branch (if needed)
 - `feat/*` - Feature branches
 - `fix/*` - Bug fix branches
 
 ### Pre-commit Hooks
+
 Lefthook manages git hooks with these checks:
+
 - **pre-commit**: Runs `yarn ci:lint` and `yarn ci:format` on staged files
 - **commit-msg**: Validates commit message format with commitlint
 - **pre-push**: Runs `yarn ci:typecheck` before pushing
@@ -349,18 +399,21 @@ To skip hooks temporarily: `LEFTHOOK=0 git commit`
 ## Performance Considerations
 
 ### Backend
+
 - Use Prisma select to fetch only needed fields
 - Implement pagination for list endpoints
 - Cache frequently accessed data
 - Use database indexes appropriately
 
 ### Frontend
+
 - Code split with React.lazy() and Suspense
 - Optimize React Query staleTime and cacheTime
 - Use React.memo for expensive components
 - Lazy load images and heavy dependencies
 
 ### Build
+
 - Turborepo caching for faster builds
 - Rolldown for optimized production bundles
 - Minimize bundle size with tree-shaking
@@ -393,5 +446,5 @@ To skip hooks temporarily: `LEFTHOOK=0 git commit`
 
 ---
 
-*Last updated: 2026-10-23*
-*For OpenCode-specific instructions, see AGENTS.md*
+_Last updated: 2026-10-23_
+_For OpenCode-specific instructions, see AGENTS.md_
