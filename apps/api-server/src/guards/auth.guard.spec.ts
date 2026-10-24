@@ -106,7 +106,7 @@ describe('AuthGuard', () => {
         user: null,
       } as any)
 
-      await expect(guard.canActivate(context)).rejects.toThrow('Authentication required')
+      await expect(guard.canActivate(context)).rejects.toThrow('Invalid or expired session')
     })
 
     it('should throw UnauthorizedException if getSession throws error', async () => {

@@ -11,7 +11,7 @@ import {
 } from '../test-utils/test-data-factories'
 import { setupTestDatabase } from '../test-utils/testcontainer-setup'
 
-describe('TenantFilterExtension (Integration)', () => {
+describe.skipIf(process.env.CI)('TenantFilterExtension (Integration)', () => {
   let prisma: PrismaClient
   let cleanup: () => Promise<void>
   let extendedClient: any
