@@ -8,6 +8,11 @@ import * as yaml from 'js-yaml'
 import { AppModule } from './app/app.module'
 
 async function generateOpenApiSpec() {
+  // Set fake DATABASE_URL if not provided (needed for module initialization, not actual connection)
+  if (!process.env.DATABASE_URL) {
+    process.env.DATABASE_URL = 'postgresql://localhost:5432/fake'
+  }
+
   const app = await NestFactory.create(AppModule, {
     logger: false,
   })
