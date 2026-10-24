@@ -1,15 +1,8 @@
-import { Inject, Injectable } from '@nestjs/common'
-
 import type { IAuthRepository, UserWithOrganizations } from '../../domain/interfaces/auth-repository.interface'
 import type { IAuthService } from '../../domain/interfaces/auth-service.interface'
-import { AUTH_REPOSITORY } from '../../infras/di'
 
-@Injectable()
 export class AuthService implements IAuthService {
-  constructor(
-    @Inject(AUTH_REPOSITORY)
-    private readonly authRepository: IAuthRepository
-  ) {}
+  constructor(private readonly authRepository: IAuthRepository) {}
 
   async handleUserOnboarding(userId: string): Promise<void> {
     // Kiểm tra xem user đã có organization chưa

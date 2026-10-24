@@ -9,9 +9,7 @@ import type { AuthRepository } from '../ports/auth.repository'
  * @pure - No framework dependencies, testable without DI container
  */
 export class HandleUserOnboardingUseCase {
-  constructor(
-    private readonly authRepository: AuthRepository
-  ) {}
+  constructor(private readonly authRepository: AuthRepository) {}
 
   /**
    * Execute the use case
