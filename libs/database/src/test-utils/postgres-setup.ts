@@ -33,6 +33,7 @@ const PROJECT_ROOT = findProjectRoot()
  */
 let globalContainer: StartedPostgreSqlContainer | null = null
 let globalPrisma: PrismaClient | null = null
+let globalPool: pg.Pool | null = null
 
 /**
  * Start the global PostgreSQL Testcontainer.
@@ -83,8 +84,8 @@ export async function startPostgres(): Promise<void> {
     console.log('Database schema synchronized successfully')
 
     // Create Prisma client
-    const pool = new pg.Pool({ connectionString })
-    const adapter = new PrismaPg(pool)
+    globalPool = new pg.Pool({ connectionString })
+    const adapter = new PrismaPg(globalPool)
 
     globalPrisma = new PrismaClient({
       adapter,
@@ -114,6 +115,11 @@ export async function stopPostgres(): Promise<void> {
   if (globalPrisma) {
     await globalPrisma.$disconnect()
     globalPrisma = null
+  }
+
+  if (globalPool) {
+    await globalPool.end()
+    globalPool = null
   }
 
   if (globalContainer) {

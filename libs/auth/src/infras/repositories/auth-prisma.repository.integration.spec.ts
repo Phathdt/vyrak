@@ -29,10 +29,15 @@ describe('AuthPrismaRepository (Integration)', () => {
   })
 
   afterAll(async () => {
-    if (prisma) {
-      await prisma.$disconnect()
+    try {
+      if (prisma) {
+        await prisma.$disconnect()
+      }
+    } catch (error) {
+      // Ignore disconnect errors during cleanup
+    } finally {
+      await stopPostgres()
     }
-    await stopPostgres()
   })
 
   beforeEach(async () => {

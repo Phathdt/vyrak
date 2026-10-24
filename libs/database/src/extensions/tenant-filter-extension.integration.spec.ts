@@ -26,7 +26,11 @@ describe('TenantFilterExtension (Integration)', () => {
 
       // Create a FRESH Prisma client (not adapter-based) for extension testing
       prisma = new PrismaClient({
-        datasourceUrl: connectionString,
+        datasources: {
+          db: {
+            url: connectionString,
+          },
+        },
         log: process.env['TEST_LOG_QUERIES'] === 'true' ? ['query', 'error', 'warn'] : ['error'],
       })
 
@@ -47,10 +51,15 @@ describe('TenantFilterExtension (Integration)', () => {
   })
 
   afterAll(async () => {
-    if (prisma) {
-      await prisma.$disconnect()
+    try {
+      if (prisma) {
+        await prisma.$disconnect()
+      }
+    } catch (error) {
+      // Ignore disconnect errors during cleanup
+    } finally {
+      await stopPostgres()
     }
-    await stopPostgres()
   })
 
   beforeEach(async () => {
