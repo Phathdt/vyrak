@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, type RenderOptions } from '@testing-library/react'
+
 import { type ReactElement, type ReactNode } from 'react'
 import { BrowserRouter } from 'react-router-dom'
 

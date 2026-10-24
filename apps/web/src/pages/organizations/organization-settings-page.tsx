@@ -1,17 +1,18 @@
-import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
+
+import { UpdateMemberRoleDtoRole } from '@/api/generated/models'
 import {
   useOrganizationsControllerFindOne,
-  useOrganizationsControllerUpdate,
-  useOrganizationsControllerListMembers,
   useOrganizationsControllerInviteMember,
-  useOrganizationsControllerUpdateMemberRole,
+  useOrganizationsControllerListMembers,
   useOrganizationsControllerRemoveMember,
+  useOrganizationsControllerUpdate,
+  useOrganizationsControllerUpdateMemberRole,
 } from '@/api/generated/organizations/organizations'
-import { UpdateMemberRoleDtoRole } from '@/api/generated/models'
+import { useEffect, useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { useNavigate, useParams } from 'react-router-dom'
+import { z } from 'zod'
 
 const updateOrgSchema = z.object({
   name: z.string().min(1).max(100).optional(),
