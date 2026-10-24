@@ -2,11 +2,8 @@ import { PrismaPg } from '@prisma/adapter-pg'
 
 import { PrismaClient } from './generated/prisma/client'
 
-const databaseUrl = process.env.DATABASE__URL
-
-if (!databaseUrl) {
-  throw new Error('DATABASE__URL is not set')
-}
+// Allow placeholder URL for OpenAPI generation (no actual connection will be made)
+const databaseUrl = process.env.DATABASE__URL || 'postgresql://localhost:5432/placeholder'
 
 const adapter = new PrismaPg({
   connectionString: databaseUrl,

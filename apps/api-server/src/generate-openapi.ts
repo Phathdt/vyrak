@@ -1,3 +1,28 @@
+/**
+ * OpenAPI Specification Generator
+ *
+ * This script generates the OpenAPI specification (openapi.yml) from NestJS decorators
+ * without requiring a real database connection.
+ *
+ * How it works:
+ * 1. Set SKIP_DB_CONNECTION=true to prevent DatabaseService from connecting
+ * 2. Set placeholder DATABASE__URL to bypass Prisma client initialization check
+ * 3. Create NestJS app (controllers will be instantiated with their dependencies,
+ *    but no actual database operations will occur)
+ * 4. Extract OpenAPI metadata from controller decorators using SwaggerModule
+ * 5. Write the specification to openapi.yml
+ *
+ * This approach allows CI/CD to generate API docs without database setup,
+ * while keeping all service implementations intact (no mocking needed).
+ */
+
+// IMPORTANT: Set environment flags BEFORE any imports
+// This prevents database connection attempts during module initialization
+process.env.SKIP_DB_CONNECTION = 'true'
+if (!process.env.DATABASE__URL) {
+  process.env.DATABASE__URL = 'postgresql://localhost:5432/placeholder'
+}
+
 import { writeFileSync } from 'fs'
 import { join } from 'path'
 import { NestFactory } from '@nestjs/core'
@@ -8,14 +33,6 @@ import * as yaml from 'js-yaml'
 import { AppModule } from './app/app.module'
 
 async function generateOpenApiSpec() {
-  // Set fake DATABASE__URL if not provided (needed for module initialization, not actual connection)
-  if (!process.env.DATABASE__URL) {
-    process.env.DATABASE__URL = 'postgresql://localhost:5432/fake'
-  }
-
-  // Skip database connection during OpenAPI generation
-  process.env.SKIP_DB_CONNECTION = 'true'
-
   const app = await NestFactory.create(AppModule, {
     logger: false,
   })
