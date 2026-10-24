@@ -46,7 +46,7 @@ vyrak/
 - Docker Compose for local PostgreSQL
 - Oxlint for fast linting
 - Vitest for testing
-- Husky + Commitizen for git workflow
+- Lefthook + Commitizen for git workflow
 
 ## Development Workflow
 
@@ -244,9 +244,12 @@ VITE_API_BASE_URL=http://localhost:3000
 - `fix/*` - Bug fix branches
 
 ### Pre-commit Hooks
-- Oxlint auto-fix
-- Prettier formatting
-- TypeScript type checking (recommended to add)
+Lefthook manages git hooks with these checks:
+- **pre-commit**: Runs `yarn ci:lint` and `yarn ci:format` on staged files
+- **commit-msg**: Validates commit message format with commitlint
+- **pre-push**: Runs `yarn ci:typecheck` before pushing
+
+To skip hooks temporarily: `LEFTHOOK=0 git commit`
 
 ## Performance Considerations
 

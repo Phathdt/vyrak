@@ -3717,11 +3717,6 @@ human-signals@^8.0.1:
   resolved "https://registry.yarnpkg.com/human-signals/-/human-signals-8.0.1.tgz#f08bb593b6d1db353933d06156cedec90abe51fb"
   integrity sha512-eKCa6bwnJhvxj14kZk5NCPc6Hb6BdsU9DZcOnmQKSnO1VKrfV0zCvtttPZUsBvjmNDn8rpcJfpwSYnHBjc95MQ==
 
-husky@^9.1.7:
-  version "9.1.7"
-  resolved "https://registry.yarnpkg.com/husky/-/husky-9.1.7.tgz#d46a38035d101b46a70456a850ff4201344c0b2d"
-  integrity sha512-5gs5ytaNjBrh5Ow3zrvdUUY+0VxIuWVL4i9irt6friV+BqdCfmV11CQTWMiBYWHbXhco+J1kHfTOUkePhCDvMA==
-
 iconv-lite@^0.7.0, iconv-lite@^0.7.2, iconv-lite@^0.7.3, iconv-lite@~0.7.0:
   version "0.7.3"
   resolved "https://registry.yarnpkg.com/iconv-lite/-/iconv-lite-0.7.3.tgz#84ee12f963e7de50bc01a13e160a078b3b0f415f"
@@ -3977,6 +3972,78 @@ keyv@^6.1.0:
   dependencies:
     hookified "^3.0.3"
 
+lefthook-android-arm64@2.2.2:
+  version "2.2.2"
+  resolved "https://registry.yarnpkg.com/lefthook-android-arm64/-/lefthook-android-arm64-2.2.2.tgz#53689859d22d48f0cdc3b4a278236cb216ea0d01"
+  integrity sha512-wb9rQQFLX7u1dJLxvMrq9VUfMYi5kxM7tJQ6Y4mWEOwaU+SmIm2wjoT/nromKq27Y8fh2Qd7FgCD3G1wfW8CnQ==
+
+lefthook-darwin-arm64@2.2.2:
+  version "2.2.2"
+  resolved "https://registry.yarnpkg.com/lefthook-darwin-arm64/-/lefthook-darwin-arm64-2.2.2.tgz#e6ee0c36818b8028b681c8de158023747901972a"
+  integrity sha512-6V8D3bLnD/60Xhqn0o2EQD6H3Fe/U9LGkt4WF1O/3eBHbux+5ZJqoH0hfrC+Bi9Dy1Ve1AWxiAY7U2asYl8qVA==
+
+lefthook-darwin-x64@2.2.2:
+  version "2.2.2"
+  resolved "https://registry.yarnpkg.com/lefthook-darwin-x64/-/lefthook-darwin-x64-2.2.2.tgz#3a0fc33c4f644b391cb0e460e9e11061ed4bb516"
+  integrity sha512-fH/kArZ9ZZ65wCFtvBMgGcq25qwQpkQ5jp93ba+8wpjgxxzjczYGluwHvM/NQDJWLOFXuKXW0yFs76SramQkyQ==
+
+lefthook-freebsd-arm64@2.2.2:
+  version "2.2.2"
+  resolved "https://registry.yarnpkg.com/lefthook-freebsd-arm64/-/lefthook-freebsd-arm64-2.2.2.tgz#d1efa5546e910f3acfc60019acc4fffe9db3c34a"
+  integrity sha512-MCRsU01ju989QQffOfS3gCeFfyVDXs5B/FzR65fmrNvqcxb98fldvfzzoAbnK2q6SBJlRT3QT1tNEMCxddCwlA==
+
+lefthook-freebsd-x64@2.2.2:
+  version "2.2.2"
+  resolved "https://registry.yarnpkg.com/lefthook-freebsd-x64/-/lefthook-freebsd-x64-2.2.2.tgz#7423a786490e1e774410d3dc5b2df0a01c4f4030"
+  integrity sha512-LkKuJU0S2oLimeoHwPTy1TLWB6GcN0t5lLxiXNlsBKUkr6R47QRcvPMZMoXmu3IetQtd+WliXMLE8qTwi2fqBg==
+
+lefthook-linux-arm64@2.2.2:
+  version "2.2.2"
+  resolved "https://registry.yarnpkg.com/lefthook-linux-arm64/-/lefthook-linux-arm64-2.2.2.tgz#0122d35efa3d89d63e4e4ee786ac38fd5f5a1489"
+  integrity sha512-d+HFtS2DEKaOnD7vRU0tUz8pNgHwsUYmQ22+1dyXpOrXGyzNXR0AqX5KsIRF36JGhVvO5X5Anw5QYgR3mxVSuA==
+
+lefthook-linux-x64@2.2.2:
+  version "2.2.2"
+  resolved "https://registry.yarnpkg.com/lefthook-linux-x64/-/lefthook-linux-x64-2.2.2.tgz#ed669c891d9bca70dd9a5c3f597a6944b0c42966"
+  integrity sha512-N/OlQyAhcU6RAXjrwFxLsh70sn96rBoi+XkuLJ8CVBkk9Ci3VDXQayDZTNz5B1xML8RwoMcV8Wblniy1xFOmSA==
+
+lefthook-openbsd-arm64@2.2.2:
+  version "2.2.2"
+  resolved "https://registry.yarnpkg.com/lefthook-openbsd-arm64/-/lefthook-openbsd-arm64-2.2.2.tgz#42e62d8f197f5e279f4779e3c3cbffb06c77e9b9"
+  integrity sha512-6G/gKXcpIwC+XcODg7ELZYP/hIrVIHQxhy2GoRdVyecmpGMFj+BZo3iqcUmeWusQMuL+UdNexbkrUaeJalIkNw==
+
+lefthook-openbsd-x64@2.2.2:
+  version "2.2.2"
+  resolved "https://registry.yarnpkg.com/lefthook-openbsd-x64/-/lefthook-openbsd-x64-2.2.2.tgz#c69b7621dd1240fd25f0dd8047b5a44ef6b36162"
+  integrity sha512-eMJGi3/tqKEqu7XCZlqwQWRtK5JlL/9diaqqgRlEdlRD7GxwzHZN21z6awbITum9emea3lALvXFe6V8odQLGOA==
+
+lefthook-windows-arm64@2.2.2:
+  version "2.2.2"
+  resolved "https://registry.yarnpkg.com/lefthook-windows-arm64/-/lefthook-windows-arm64-2.2.2.tgz#54ec3469b8a5842dc82a3d2a0ba36fc63cfdc2f8"
+  integrity sha512-4P1EaQb5xG1zhYD1RLJ6TEGdFkmHkB+Slqx6yRDPKuBDNxMiD0+kTAAdUY2E8xPuRR35xHpVPR+b3/HtzPrjQQ==
+
+lefthook-windows-x64@2.2.2:
+  version "2.2.2"
+  resolved "https://registry.yarnpkg.com/lefthook-windows-x64/-/lefthook-windows-x64-2.2.2.tgz#a2d5af792df1c15774add5184b3512cc0166595e"
+  integrity sha512-9Ck4zancQilBfXT3ZeRipm7Lcq4RQfxyMpy8SAVINw0t/BrbjsT25V46ZuziERcwdajnE4myfMzC33GoCBwr7g==
+
+lefthook@^2.2.2:
+  version "2.2.2"
+  resolved "https://registry.yarnpkg.com/lefthook/-/lefthook-2.2.2.tgz#5c14e9031ccc40be28f026e40462bc8770ebda21"
+  integrity sha512-37fYHAhL12r1twaEV0PA5TwoIT491eTGGYjhhXxlYNMq3DSkiGZBQ++Jfk5maXj0vq52NRauLtMikBKtbNJs3Q==
+  optionalDependencies:
+    lefthook-android-arm64 "2.2.2"
+    lefthook-darwin-arm64 "2.2.2"
+    lefthook-darwin-x64 "2.2.2"
+    lefthook-freebsd-arm64 "2.2.2"
+    lefthook-freebsd-x64 "2.2.2"
+    lefthook-linux-arm64 "2.2.2"
+    lefthook-linux-x64 "2.2.2"
+    lefthook-openbsd-arm64 "2.2.2"
+    lefthook-openbsd-x64 "2.2.2"
+    lefthook-windows-arm64 "2.2.2"
+    lefthook-windows-x64 "2.2.2"
+
 lightningcss-android-arm64@1.32.0:
   version "1.32.0"
   resolved "https://registry.yarnpkg.com/lightningcss-android-arm64/-/lightningcss-android-arm64-1.32.0.tgz#f033885116dfefd9c6f54787523e3514b61e1968"
@@ -4129,17 +4196,6 @@ lines-and-columns@^1.1.6:
   version "1.2.4"
   resolved "https://registry.yarnpkg.com/lines-and-columns/-/lines-and-columns-1.2.4.tgz#eca284f75d2965079309dc0ad9255abb2ebc1632"
   integrity sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==
-
-lint-staged@^17.6.0:
-  version "17.6.0"
-  resolved "https://registry.yarnpkg.com/lint-staged/-/lint-staged-17.6.0.tgz#756fa50b4d4d9032ab05f64ef899eee81e44d421"
-  integrity sha512-nOhBfYkZEwkFtNzD5pK9s9LkcWoxJ+whLzEnhqi9nl7zTB5n7tg8+9iYgMGx2Wm3VlLu8cbNj0RACzY+nWi5iQ==
-  dependencies:
-    picomatch "^4.0.7"
-    string-argv "^0.3.2"
-    tinyexec "^1.3.1"
-  optionalDependencies:
-    yaml "^2.9.1"
 
 load-esm@1.0.3:
   version "1.0.3"
@@ -5800,7 +5856,7 @@ y18n@^5.0.5:
   resolved "https://registry.yarnpkg.com/y18n/-/y18n-5.0.8.tgz#7f4934d0f7ca8c56f95314939ddcd2dd91ce1d55"
   integrity sha512-0pfFzegeDWJHJIAmTLRP2DwHjdF5s7jo9tuztdQxAhINCdvS+3nGINqPd00AphqJR/0LhANUS6/+7SCb98YOfA==
 
-yaml@^2.9.0, yaml@^2.9.1:
+yaml@^2.9.0:
   version "2.9.1"
   resolved "https://registry.yarnpkg.com/yaml/-/yaml-2.9.1.tgz#c16233fb31944e705cfefaff38795587f57588ce"
   integrity sha512-3NxN8+78OdzbT7C/WjGsyfPAtJaN3FNDsWxv7Y7mcDsT/oOmgW8BpyQQFFBnvZE3j9Y2Sdz1ULFLezL7Eb2yFw==

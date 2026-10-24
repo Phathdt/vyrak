@@ -13,7 +13,7 @@ A comprehensive TypeScript monorepo boilerplate for building professional full-s
 - 🔐 **Authentication Ready** - Bearer token auth with axios interceptors
 - 📦 **Shared Libraries** - Custom config, logger, database, and utilities
 - 🐳 **Docker Support** - Docker Compose for PostgreSQL
-- ✅ **Modern Tooling** - Oxlint, Prettier, Husky, Commitizen
+- ✅ **Modern Tooling** - Oxlint, Prettier, Lefthook, Commitizen
 
 ## Architecture
 
@@ -56,7 +56,7 @@ vyrak/
 - **Prettier** - Code formatter
 - **Vitest** - Fast unit test framework
 - **Docker** - Containerization
-- **Husky** - Git hooks
+- **Lefthook** - Fast and powerful git hooks manager
 - **Commitizen** - Conventional commits
 
 ## Prerequisites
@@ -157,7 +157,7 @@ yarn generate:api
 
 ### Git
 - `yarn commit` - Interactive commit with Commitizen
-- `yarn prepare` - Setup Husky git hooks
+- `yarn prepare` - Setup Lefthook git hooks
 
 ## Type-Safe API Workflow
 
