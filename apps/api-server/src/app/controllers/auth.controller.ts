@@ -61,9 +61,22 @@ export class AuthController {
         body = JSON.stringify(req.body)
       }
 
+      // Properly format headers for Web Request - Express headers may have lowercase keys
+      const headers = new Headers()
+      Object.entries(req.headers).forEach(([key, value]) => {
+        if (value) {
+          // In development, rewrite origin to match baseURL to bypass Better Auth origin check
+          if (key.toLowerCase() === 'origin' && process.env.NODE_ENV !== 'production') {
+            headers.set(key, process.env.BETTER_AUTH_URL || 'http://localhost:3000')
+          } else {
+            headers.set(key, Array.isArray(value) ? value[0] : value)
+          }
+        }
+      })
+
       const webRequest = new globalThis.Request(url.toString(), {
         method: req.method,
-        headers: req.headers as Record<string, string>,
+        headers,
         body,
       })
 
