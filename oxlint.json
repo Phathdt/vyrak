@@ -21,10 +21,13 @@
     "**/dist/**",
     "**/node_modules/**",
     "**/*.spec.ts",
+    "**/*.spec.tsx",
     "**/*.test.ts",
+    "**/*.test.tsx",
     "**/*.js",
     ".turbo/**",
     "prisma/prisma.config.ts",
-    "**/generated/**"
+    "**/generated/**",
+    "**/test/**"
   ]
 }
