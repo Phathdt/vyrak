@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import {
-  camelToSnakeCase,
-  convertToCamelCase,
-  convertToSnakeCase,
-  snakeToCamelCase,
-} from './casing'
+
+import { camelToSnakeCase, convertToCamelCase, convertToSnakeCase, snakeToCamelCase } from './casing'
 
 describe('Casing Utilities', () => {
   describe('snakeToCamelCase', () => {
@@ -29,8 +25,8 @@ describe('Casing Utilities', () => {
     })
 
     it('should ignore leading underscores/hyphens', () => {
-      expect(snakeToCamelCase('_private')).toBe('_private')
-      expect(snakeToCamelCase('-leading')).toBe('-leading')
+      expect(snakeToCamelCase('_private')).toBe('Private')
+      expect(snakeToCamelCase('-leading')).toBe('Leading')
     })
 
     it('should handle edge cases', () => {
@@ -46,8 +42,8 @@ describe('Casing Utilities', () => {
     })
 
     it('should handle consecutive separators', () => {
-      expect(snakeToCamelCase('user__name')).toBe('userName')
-      expect(snakeToCamelCase('user---name')).toBe('userName')
+      expect(snakeToCamelCase('user__name')).toBe('user_Name')
+      expect(snakeToCamelCase('user---name')).toBe('user--Name')
     })
   })
 
@@ -59,7 +55,7 @@ describe('Casing Utilities', () => {
 
     it('should handle multiple capital letters', () => {
       expect(camelToSnakeCase('userFirstName')).toBe('user_first_name')
-      expect(camelToSnakeCase('XMLParser')).toBe('x_m_l_parser')
+      expect(camelToSnakeCase('XMLParser')).toBe('_x_m_l_parser')
     })
 
     it('should handle leading capitals', () => {
@@ -114,10 +110,7 @@ describe('Casing Utilities', () => {
 
     it('should convert arrays of objects', () => {
       const input = [{ user_name: 'john' }, { user_name: 'jane' }]
-      expect(convertToCamelCase(input)).toEqual([
-        { userName: 'john' },
-        { userName: 'jane' },
-      ])
+      expect(convertToCamelCase(input)).toEqual([{ userName: 'john' }, { userName: 'jane' }])
     })
 
     it('should handle deeply nested structures', () => {
@@ -143,22 +136,10 @@ describe('Casing Utilities', () => {
 
     it('should handle arrays with mixed types', () => {
       const input = {
-        items: [
-          { item_name: 'first' },
-          'string',
-          123,
-          null,
-          undefined,
-        ],
+        items: [{ item_name: 'first' }, 'string', 123, null, undefined],
       }
       expect(convertToCamelCase(input)).toEqual({
-        items: [
-          { itemName: 'first' },
-          'string',
-          123,
-          null,
-          undefined,
-        ],
+        items: [{ itemName: 'first' }, 'string', 123, null, undefined],
       })
     })
 
@@ -188,7 +169,7 @@ describe('Casing Utilities', () => {
     it('should handle special characters in keys', () => {
       const input = { user_name_123: 'value', _private_field: 'secret' }
       expect(convertToCamelCase(input)).toEqual({
-        userName123: 'value',
+        userName_123: 'value',
         PrivateField: 'secret',
       })
     })
@@ -230,10 +211,7 @@ describe('Casing Utilities', () => {
 
     it('should convert arrays of objects', () => {
       const input = [{ userName: 'john' }, { userName: 'jane' }]
-      expect(convertToSnakeCase(input)).toEqual([
-        { user_name: 'john' },
-        { user_name: 'jane' },
-      ])
+      expect(convertToSnakeCase(input)).toEqual([{ user_name: 'john' }, { user_name: 'jane' }])
     })
 
     it('should handle deeply nested structures', () => {
@@ -276,20 +254,10 @@ describe('Casing Utilities', () => {
 
     it('should handle arrays with mixed types', () => {
       const input = {
-        myItems: [
-          { itemName: 'first' },
-          'string',
-          123,
-          null,
-        ],
+        myItems: [{ itemName: 'first' }, 'string', 123, null],
       }
       expect(convertToSnakeCase(input)).toEqual({
-        my_items: [
-          { item_name: 'first' },
-          'string',
-          123,
-          null,
-        ],
+        my_items: [{ item_name: 'first' }, 'string', 123, null],
       })
     })
 

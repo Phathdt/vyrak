@@ -1,6 +1,8 @@
-import { describe, expect, it, beforeEach } from 'vitest'
 import { CallHandler, ExecutionContext } from '@nestjs/common'
+
 import { of } from 'rxjs'
+import { beforeEach, describe, expect, it } from 'vitest'
+
 import { SnakeToCamelInterceptor } from './interceptors'
 
 describe('SnakeToCamelInterceptor', () => {
@@ -20,9 +22,7 @@ describe('SnakeToCamelInterceptor', () => {
         handle: () => of(responseData),
       } as CallHandler
 
-      const result = await interceptor
-        .intercept(mockContext, mockHandler)
-        .toPromise()
+      const result = await interceptor.intercept(mockContext, mockHandler).toPromise()
 
       expect(result).toEqual({
         user_name: 'john',
@@ -42,9 +42,7 @@ describe('SnakeToCamelInterceptor', () => {
         handle: () => of(responseData),
       } as CallHandler
 
-      const result = await interceptor
-        .intercept(mockContext, mockHandler)
-        .toPromise()
+      const result = await interceptor.intercept(mockContext, mockHandler).toPromise()
 
       expect(result).toEqual({
         user_name: 'john',
@@ -56,22 +54,14 @@ describe('SnakeToCamelInterceptor', () => {
     })
 
     it('should handle arrays of objects', async () => {
-      const responseData = [
-        { userName: 'john' },
-        { userName: 'jane' },
-      ]
+      const responseData = [{ userName: 'john' }, { userName: 'jane' }]
       mockHandler = {
         handle: () => of(responseData),
       } as CallHandler
 
-      const result = await interceptor
-        .intercept(mockContext, mockHandler)
-        .toPromise()
+      const result = await interceptor.intercept(mockContext, mockHandler).toPromise()
 
-      expect(result).toEqual([
-        { user_name: 'john' },
-        { user_name: 'jane' },
-      ])
+      expect(result).toEqual([{ user_name: 'john' }, { user_name: 'jane' }])
     })
 
     it('should preserve primitive values', async () => {
@@ -80,9 +70,7 @@ describe('SnakeToCamelInterceptor', () => {
         handle: () => of(responseData),
       } as CallHandler
 
-      const result = await interceptor
-        .intercept(mockContext, mockHandler)
-        .toPromise()
+      const result = await interceptor.intercept(mockContext, mockHandler).toPromise()
 
       expect(result).toEqual({
         id: 123,
@@ -97,9 +85,7 @@ describe('SnakeToCamelInterceptor', () => {
         handle: () => of(responseData),
       } as CallHandler
 
-      const result = await interceptor
-        .intercept(mockContext, mockHandler)
-        .toPromise()
+      const result = await interceptor.intercept(mockContext, mockHandler).toPromise()
 
       expect(result).toEqual({
         user_name: null,
@@ -113,9 +99,7 @@ describe('SnakeToCamelInterceptor', () => {
         handle: () => of(responseData),
       } as CallHandler
 
-      const result = await interceptor
-        .intercept(mockContext, mockHandler)
-        .toPromise()
+      const result = await interceptor.intercept(mockContext, mockHandler).toPromise()
 
       expect(result).toEqual({
         user_name: undefined,
@@ -128,9 +112,7 @@ describe('SnakeToCamelInterceptor', () => {
         handle: () => of('string'),
       } as CallHandler
 
-      const result = await interceptor
-        .intercept(mockContext, mockHandler)
-        .toPromise()
+      const result = await interceptor.intercept(mockContext, mockHandler).toPromise()
 
       expect(result).toBe('string')
     })
@@ -140,9 +122,7 @@ describe('SnakeToCamelInterceptor', () => {
         handle: () => of(null),
       } as CallHandler
 
-      const result = await interceptor
-        .intercept(mockContext, mockHandler)
-        .toPromise()
+      const result = await interceptor.intercept(mockContext, mockHandler).toPromise()
 
       expect(result).toBe(null)
     })
@@ -152,9 +132,7 @@ describe('SnakeToCamelInterceptor', () => {
         handle: () => of(42),
       } as CallHandler
 
-      const result = await interceptor
-        .intercept(mockContext, mockHandler)
-        .toPromise()
+      const result = await interceptor.intercept(mockContext, mockHandler).toPromise()
 
       expect(result).toBe(42)
     })
@@ -174,9 +152,7 @@ describe('SnakeToCamelInterceptor', () => {
         handle: () => of(responseData),
       } as CallHandler
 
-      const result = await interceptor
-        .intercept(mockContext, mockHandler)
-        .toPromise()
+      const result = await interceptor.intercept(mockContext, mockHandler).toPromise()
 
       expect(result).toEqual({
         level_one: {
@@ -199,9 +175,7 @@ describe('SnakeToCamelInterceptor', () => {
         handle: () => of(user),
       } as CallHandler
 
-      const result = await interceptor
-        .intercept(mockContext, mockHandler)
-        .toPromise()
+      const result = await interceptor.intercept(mockContext, mockHandler).toPromise()
 
       expect(result).toBe(user)
       expect(result.userName).toBe('value')
@@ -214,9 +188,7 @@ describe('SnakeToCamelInterceptor', () => {
         handle: () => of(responseData),
       } as CallHandler
 
-      const result = await interceptor
-        .intercept(mockContext, mockHandler)
-        .toPromise()
+      const result = await interceptor.intercept(mockContext, mockHandler).toPromise()
 
       expect(result).toEqual({ created_at: date })
       expect(result.created_at).toBe(date)
@@ -227,9 +199,7 @@ describe('SnakeToCamelInterceptor', () => {
         handle: () => of({}),
       } as CallHandler
 
-      const result = await interceptor
-        .intercept(mockContext, mockHandler)
-        .toPromise()
+      const result = await interceptor.intercept(mockContext, mockHandler).toPromise()
 
       expect(result).toEqual({})
     })
@@ -239,39 +209,23 @@ describe('SnakeToCamelInterceptor', () => {
         handle: () => of([]),
       } as CallHandler
 
-      const result = await interceptor
-        .intercept(mockContext, mockHandler)
-        .toPromise()
+      const result = await interceptor.intercept(mockContext, mockHandler).toPromise()
 
       expect(result).toEqual([])
     })
 
     it('should handle arrays with mixed types', async () => {
       const responseData = {
-        myItems: [
-          { itemName: 'first' },
-          'string',
-          123,
-          null,
-          true,
-        ],
+        myItems: [{ itemName: 'first' }, 'string', 123, null, true],
       }
       mockHandler = {
         handle: () => of(responseData),
       } as CallHandler
 
-      const result = await interceptor
-        .intercept(mockContext, mockHandler)
-        .toPromise()
+      const result = await interceptor.intercept(mockContext, mockHandler).toPromise()
 
       expect(result).toEqual({
-        my_items: [
-          { item_name: 'first' },
-          'string',
-          123,
-          null,
-          true,
-        ],
+        my_items: [{ item_name: 'first' }, 'string', 123, null, true],
       })
     })
 
@@ -281,9 +235,7 @@ describe('SnakeToCamelInterceptor', () => {
         handle: () => of(responseData),
       } as CallHandler
 
-      const result = await interceptor
-        .intercept(mockContext, mockHandler)
-        .toPromise()
+      const result = await interceptor.intercept(mockContext, mockHandler).toPromise()
 
       expect(result).toEqual({
         user_i_d: 'test',
@@ -319,16 +271,14 @@ describe('SnakeToCamelInterceptor', () => {
         handle: () => of(responseData),
       } as CallHandler
 
-      const result = await interceptor
-        .intercept(mockContext, mockHandler)
-        .toPromise()
+      const result = await interceptor.intercept(mockContext, mockHandler).toPromise()
 
       expect(result.status_code).toBe(200)
       expect(result.response_data.user_id).toBe(1)
       expect(result.response_data.user_profile.first_name).toBe('John')
       expect(result.response_data.contact_list[0].contact_type).toBe('email')
     })
-  }))
+  })
 
   describe('camelToSnakeCase private method', () => {
     it('should convert camelCase to snake_case', () => {

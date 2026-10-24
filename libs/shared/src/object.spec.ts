@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+
 import { toObject, toString } from './object'
 
 describe('Object Utilities', () => {
@@ -168,16 +169,14 @@ describe('Object Utilities', () => {
     })
 
     it('should handle deeply nested structures with BigInt', () => {
-      const json =
-        '{"level1":{"level2":{"level3":{"level4":{"value":{"$bigint":"123456"}}}}}}'
+      const json = '{"level1":{"level2":{"level3":{"level4":{"value":{"$bigint":"123456"}}}}}}'
       const result = toObject(json)
       expect(typeof result.level1.level2.level3.level4.value).toBe('bigint')
       expect(result.level1.level2.level3.level4.value).toBe(BigInt(123456))
     })
 
     it('should deserialize multiple BigInts in single object', () => {
-      const json =
-        '{"id":{"$bigint":"1"},"count":{"$bigint":"100"},"timestamp":{"$bigint":"1704067200000"}}'
+      const json = '{"id":{"$bigint":"1"},"count":{"$bigint":"100"},"timestamp":{"$bigint":"1704067200000"}}'
       const result = toObject(json)
       expect(result.id).toBe(BigInt(1))
       expect(result.count).toBe(BigInt(100))
@@ -311,9 +310,7 @@ describe('Object Utilities', () => {
     })
 
     it('should handle very large BigInts', () => {
-      const hugeBigInt = BigInt(
-        '99999999999999999999999999999999999999999999999999'
-      )
+      const hugeBigInt = BigInt('99999999999999999999999999999999999999999999999999')
       const obj = { huge: hugeBigInt }
       const serialized = toString(obj)
       const deserialized = toObject(serialized)
