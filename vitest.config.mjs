@@ -14,6 +14,7 @@ export default defineConfig({
         '**/*.test.ts',
         '**/index.ts',
         '**/*.config.ts',
+        '**/*.config.mjs',
         '**/*.d.ts',
         '**/generated/**',
         '**/migrations/**',
