@@ -14,15 +14,91 @@ This file provides guidance to Claude Code when working with code in this reposi
 ```
 vyrak/
 ├── apps/
-│   ├── api-server/     # NestJS REST API with OpenAPI
+│   ├── api-server/     # NestJS REST API - Controllers ONLY
 │   ├── web/            # React + Vite frontend
-│   └── worker/         # BullMQ background worker
+│   └── worker/         # BullMQ background worker - Processors/Consumers ONLY
 ├── libs/
 │   ├── custom-config/  # Environment configuration
 │   ├── custom-logger/  # Logging utilities
 │   ├── database/       # Prisma ORM client
-│   └── shared/         # Shared utilities and types
+│   ├── shared/         # Shared utilities and types
+│   └── product/        # Product domain module (reference implementation)
 └── docs/               # Documentation
+```
+
+### Hexagonal Architecture Pattern (libs/)
+
+**CRITICAL RULE:** All new business modules MUST be created in `libs/` following the hexagonal architecture pattern demonstrated by `libs/product/`. Only controllers and processors/consumers belong in `api-server` and `worker`.
+
+**Module Structure (libs/{module-name}/):**
+```
+libs/{module-name}/
+├── src/
+│   ├── {module-name}.module.ts    # NestJS module (DI container)
+│   ├── index.ts                   # Public API barrel export
+│   ├── domain/                    # Business contracts (framework-independent)
+│   │   ├── index.ts
+│   │   ├── entities/
+│   │   │   ├── index.ts
+│   │   │   └── {entity}.entity.ts      # Entity type + Zod schema
+│   │   ├── interfaces/
+│   │   │   ├── index.ts
+│   │   │   ├── {module}.repository.interface.ts
+│   │   │   └── {module}.service.interface.ts
+│   │   └── schemas/
+│   │       ├── index.ts
+│   │       └── {module}.schemas.ts     # DTOs (CreateDto, UpdateDto, ResponseDto)
+│   ├── application/               # Business logic orchestration
+│   │   ├── index.ts
+│   │   └── services/
+│   │       ├── index.ts
+│   │       └── {module}.service.ts     # Implements I{Module}Service
+│   └── infras/                    # Framework & external system implementations
+│       ├── index.ts
+│       ├── di/
+│       │   ├── index.ts
+│       │   └── di.ts                   # Symbol-based injection tokens
+│       └── repositories/
+│           ├── index.ts
+│           └── {module}-prisma.repository.ts  # Implements I{Module}Repository
+├── package.json
+├── tsconfig.json
+└── rolldown.config.mjs
+```
+
+**Layer Responsibilities:**
+
+1. **Domain Layer** (`/domain`) - Business rules and contracts
+   - **entities/**: Domain entity types with Zod schemas for runtime validation
+   - **interfaces/**: Abstract contracts for repository and service
+   - **schemas/**: Request/response DTOs using `nestjs-zod` with OpenAPI decorators
+   - NO framework dependencies, NO external system calls
+
+2. **Application Layer** (`/application`) - Business logic orchestration
+   - **services/**: Implement service interfaces, depend on repository abstractions
+   - Orchestrate domain logic, pagination, error handling
+   - Maps repository data to service responses
+   - Throws domain exceptions (NotFoundException, etc.)
+
+3. **Infrastructure Layer** (`/infras`) - Framework-specific implementations
+   - **repositories/**: Implement repository interfaces with Prisma
+   - **di/**: Symbol-based DI tokens (e.g., `PRODUCT_REPOSITORY`)
+   - Handle Prisma exceptions and type mapping
+   - Direct database/external service calls
+
+4. **Module** (`{module}.module.ts`) - NestJS wiring
+   - Import dependencies (DatabaseModule, etc.)
+   - Register services and repositories with DI
+   - Export service for controller injection
+
+**Dependency Flow:**
+```
+Domain (contracts) ← Application (orchestration) ← Infrastructure (implementation)
+                                                 ↑
+                                            Module (DI wiring)
+                                                 ↑
+                                          Controller (api-server)
+                                          Processor (worker)
 ```
 
 ### Tech Stack
@@ -140,17 +216,29 @@ Using `@ianvs/prettier-plugin-sort-imports`:
 
 1. **Read before modifying** - Always read existing files to understand patterns
 2. **Match existing style** - Follow the project's conventions and patterns
-3. **Regenerate API** - After changing DTOs/controllers, run both generation scripts
-4. **Verify types** - Run `yarn typecheck` before claiming completion
-5. **Update docs** - Update relevant docs when changing architecture or workflows
+3. **Follow hexagonal architecture** - Create new business modules in `libs/` following the `libs/product/` pattern
+4. **Controllers and processors belong in apps/** - Only controllers go in `api-server/`, only processors/consumers in `worker/`
+5. **Regenerate API** - After changing DTOs/controllers, ALWAYS run `yarn generate:openapi` then `yarn generate:api`
+6. **Never write manual React Query hooks** - Use generated hooks from Orval in `apps/web/src/api/generated/`
+7. **Verify types** - Run `yarn typecheck` before claiming completion
+8. **Update docs** - Update relevant docs when changing architecture or workflows
 
 ### When Adding Features
 
-1. **Backend first** - Start with NestJS DTOs and OpenAPI decorators
-2. **Generate types** - Run `yarn generate:openapi` then `yarn generate:api`
-3. **Frontend validation** - Add Zod schemas in `lib/schemas/` for form validation
-4. **Test endpoints** - Verify API works before integrating frontend
-5. **Update examples** - Keep product CRUD as reference implementation
+1. **Create business module in libs/** - All new domain modules go in `libs/{module-name}/` following hexagonal architecture
+2. **Follow the product module pattern** - Use `libs/product/` as reference implementation
+3. **Structure layers correctly**:
+   - Domain layer: entities (Zod schemas), interfaces, DTOs with OpenAPI decorators
+   - Application layer: service implementation with business logic
+   - Infrastructure layer: repository implementation (Prisma), DI tokens
+   - Module: NestJS module with DI wiring
+4. **Add controller to api-server** - Create lightweight controller in `apps/api-server/src/{module}/` that injects and calls the service from `libs/{module}/`
+5. **Add processor to worker (if needed)** - Create processor/consumer in `apps/worker/src/{module}/` for background jobs
+6. **Generate types** - Run `yarn generate:openapi` then `yarn generate:api`
+7. **Use generated hooks** - NEVER write React Query hooks manually, always use Orval-generated hooks from `apps/web/src/api/generated/`
+8. **Frontend validation** - Add Zod schemas in `lib/schemas/` for form validation only (not for API calls)
+9. **Test endpoints** - Verify API works before integrating frontend
+10. **Update examples** - Keep product CRUD as reference implementation
 
 ### When Debugging
 
@@ -161,6 +249,12 @@ Using `@ianvs/prettier-plugin-sort-imports`:
 5. **Review logs** - Check console and server logs for errors
 
 ## Common Pitfalls
+
+### Module Organization
+- **Business logic in api-server**: DO NOT put services, repositories, or business logic in `apps/api-server/`. They belong in `libs/{module}/`
+- **Controllers in libs**: DO NOT put controllers in libs. Controllers are HTTP adapters and belong in `apps/api-server/src/{module}/`
+- **Missing layers**: Always implement all three layers (domain, application, infrastructure) for consistency
+- **Direct Prisma in services**: Services should depend on repository interfaces, NOT Prisma directly
 
 ### OpenAPI Generation
 - **Nullable types**: Use `@ApiProperty({ type: String, nullable: true })` not `@ApiPropertyOptional()`
@@ -224,6 +318,7 @@ VITE_API_BASE_URL=http://localhost:3000
 - `docs/openapi-orval-setup.md` - API generation workflow
 
 ### Reference
+- `libs/product/` - Reference implementation for hexagonal architecture
 - NestJS: https://docs.nestjs.com
 - Prisma: https://www.prisma.io/docs
 - TanStack Query: https://tanstack.com/query/latest/docs/framework/react/overview
