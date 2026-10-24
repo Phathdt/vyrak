@@ -98,6 +98,12 @@ export class DatabaseService extends PrismaClient implements OnModuleInit, OnMod
   }
 
   async onModuleInit() {
+    // Skip database connection if flag is set (e.g., during OpenAPI generation)
+    if (process.env.SKIP_DB_CONNECTION === 'true') {
+      this.logger.log('Skipping database connection (SKIP_DB_CONNECTION=true)')
+      return
+    }
+
     await this.$connect()
 
     // Enhanced SQL query logging

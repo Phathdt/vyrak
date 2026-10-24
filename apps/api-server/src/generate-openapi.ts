@@ -13,6 +13,9 @@ async function generateOpenApiSpec() {
     process.env.DATABASE_URL = 'postgresql://localhost:5432/fake'
   }
 
+  // Skip database connection during OpenAPI generation
+  process.env.SKIP_DB_CONNECTION = 'true'
+
   const app = await NestFactory.create(AppModule, {
     logger: false,
   })
