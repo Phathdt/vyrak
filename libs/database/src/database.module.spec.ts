@@ -1,0 +1,68 @@
+import { Test } from '@nestjs/testing'
+
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import { DatabaseModule } from './database.module'
+import { DatabaseService } from './database.service'
+
+describe('DatabaseModule', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    process.env.SKIP_DB_CONNECTION = 'true'
+  })
+
+  describe('Module Configuration', () => {
+    it('should be defined', () => {
+      expect(DatabaseModule).toBeDefined()
+    })
+
+    it('should export DatabaseService', async () => {
+      const module = await Test.createTestingModule({
+        imports: [DatabaseModule],
+      }).compile()
+
+      const service = module.get(DatabaseService)
+      expect(service).toBeDefined()
+      expect(service instanceof DatabaseService).toBe(true)
+    })
+
+    it('should provide DatabaseService as singleton', async () => {
+      const module = await Test.createTestingModule({
+        imports: [DatabaseModule],
+      }).compile()
+
+      const service1 = module.get(DatabaseService)
+      const service2 = module.get(DatabaseService)
+
+      expect(service1).toBe(service2)
+    })
+
+    it('should support module initialization', async () => {
+      const module = await Test.createTestingModule({
+        imports: [DatabaseModule],
+      }).compile()
+
+      await expect(module.init()).resolves.not.toThrow()
+      await module.close()
+    })
+  })
+
+  describe('Dependency Injection', () => {
+    it('should be injectable by other modules', async () => {
+      const testProvider = {
+        provide: 'TEST_PROVIDER',
+        inject: [DatabaseService],
+        useFactory: (dbService: DatabaseService) => ({ dbService }),
+      }
+
+      const module = await Test.createTestingModule({
+        imports: [DatabaseModule],
+        providers: [testProvider],
+      }).compile()
+
+      const testProviderInstance = module.get('TEST_PROVIDER')
+      expect(testProviderInstance).toBeDefined()
+      expect(testProviderInstance.dbService instanceof DatabaseService).toBe(true)
+    })
+  })
+})

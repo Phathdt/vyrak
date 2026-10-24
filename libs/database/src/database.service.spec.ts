@@ -17,16 +17,18 @@ describe('DatabaseService', () => {
   let service: DatabaseService
 
   beforeEach(() => {
-    // Skip actual database connection
     process.env.SKIP_DB_CONNECTION = 'true'
-    service = new DatabaseService(mockConfigService as any)
+    vi.clearAllMocks()
   })
 
   describe('setTenantContext', () => {
+    beforeEach(() => {
+      service = new DatabaseService(mockConfigService as any)
+    })
+
     it('should set tenant context with organizationId', () => {
       service.setTenantContext('org-123')
 
-      // Access private field for testing
       expect((service as any).tenantContext).toEqual({
         organizationId: 'org-123',
         bypassTenantFilter: false,
@@ -35,6 +37,10 @@ describe('DatabaseService', () => {
   })
 
   describe('clearTenantContext', () => {
+    beforeEach(() => {
+      service = new DatabaseService(mockConfigService as any)
+    })
+
     it('should clear tenant context', () => {
       service.setTenantContext('org-123')
       service.clearTenantContext()
@@ -44,6 +50,10 @@ describe('DatabaseService', () => {
   })
 
   describe('withOrganization', () => {
+    beforeEach(() => {
+      service = new DatabaseService(mockConfigService as any)
+    })
+
     it('should execute callback with organization context', async () => {
       const result = await service.withOrganization('org-456', async () => {
         expect((service as any).tenantContext).toEqual({
@@ -86,6 +96,10 @@ describe('DatabaseService', () => {
   })
 
   describe('withSystemAccess', () => {
+    beforeEach(() => {
+      service = new DatabaseService(mockConfigService as any)
+    })
+
     it('should execute callback with bypass flag set', async () => {
       const result = await service.withSystemAccess(async () => {
         expect((service as any).tenantContext.bypassTenantFilter).toBe(true)
@@ -175,6 +189,63 @@ describe('DatabaseService', () => {
 
       expect(result).toHaveLength(3)
       expect(result).toContainEqual({ emit: 'event', level: 'info' })
+    })
+
+    it('should be case-insensitive for log level input', () => {
+      const resultLower = DatabaseService.mapLogLevelToPrisma('trace')
+      const resultUpper = DatabaseService.mapLogLevelToPrisma('TRACE')
+      const resultMixed = DatabaseService.mapLogLevelToPrisma('TrAcE')
+
+      expect(resultLower).toEqual(resultUpper)
+      expect(resultUpper).toEqual(resultMixed)
+    })
+  })
+
+  describe('Client Access', () => {
+    beforeEach(() => {
+      service = new DatabaseService(mockConfigService as any)
+    })
+
+    it('should have client property', () => {
+      expect(service.client).toBeDefined()
+    })
+
+    it('should have $transaction property', () => {
+      expect(typeof service.$transaction).toBe('function')
+    })
+  })
+
+  describe('Lifecycle Hooks', () => {
+    beforeEach(() => {
+      service = new DatabaseService(mockConfigService as any)
+    })
+
+    it('should skip database connection when SKIP_DB_CONNECTION is set', async () => {
+      process.env.SKIP_DB_CONNECTION = 'true'
+      await expect(service.onModuleInit()).resolves.not.toThrow()
+    })
+
+    it('should implement OnModuleDestroy', async () => {
+      expect(typeof service.onModuleDestroy).toBe('function')
+    })
+
+    it('should handle module destroy without errors', async () => {
+      await expect(service.onModuleDestroy()).resolves.not.toThrow()
+    })
+  })
+
+  describe('Health Check', () => {
+    beforeEach(() => {
+      service = new DatabaseService(mockConfigService as any)
+    })
+
+    it('should have healthCheck method', () => {
+      expect(typeof service.healthCheck).toBe('function')
+    })
+
+    it('should return boolean from health check', async () => {
+      const result = await service.healthCheck()
+      expect(typeof result).toBe('boolean')
     })
   })
 })
