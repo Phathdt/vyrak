@@ -3,7 +3,7 @@ import { Global, Module } from '@nestjs/common'
 import { CustomConfigModule, CustomConfigService } from '@vyrak/custom-config'
 
 import { ClsModule, ClsService } from 'nestjs-cls'
-import { LoggerModule } from 'nestjs-pino'
+import { LoggerModule, PinoLogger } from 'nestjs-pino'
 
 import 'pino-pretty' // Required for pino transport
 
@@ -86,7 +86,15 @@ import { EnhancedLogger } from './enhanced-logger.service'
     }),
   ],
   controllers: [],
-  providers: [EnhancedLogger],
+  providers: [
+    {
+      provide: EnhancedLogger,
+      useFactory: (pinoLogger: PinoLogger, cls: ClsService) => {
+        return new EnhancedLogger(pinoLogger, cls)
+      },
+      inject: [PinoLogger, ClsService],
+    },
+  ],
   exports: [EnhancedLogger],
 })
 export class CustomLoggerModule {}
