@@ -1,8 +1,9 @@
 import { All, Controller, Get, Req, Res } from '@nestjs/common'
 import { ApiExcludeEndpoint, ApiOperation, ApiTags } from '@nestjs/swagger'
-import { auth, AuthService, CurrentUserResponseDto } from '@vyrak/auth'
+import { auth, AuthService, CurrentUserResponseSchema } from '@vyrak/auth'
 
 import { Request, Response } from 'express'
+import { z } from 'zod'
 
 @ApiTags('auth')
 @Controller('api/auth')
@@ -11,7 +12,7 @@ export class AuthController {
 
   @Get('me')
   @ApiOperation({ summary: 'Get current user with organization' })
-  async getCurrentUser(@Req() req: Request): Promise<CurrentUserResponseDto> {
+  async getCurrentUser(@Req() req: Request): Promise<z.infer<typeof CurrentUserResponseSchema>> {
     // Get session from Better Auth
     const session = await auth.api.getSession({ headers: req.headers })
 

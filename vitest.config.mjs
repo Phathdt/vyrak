@@ -4,6 +4,12 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
+    testTimeout: 60_000,
+    hookTimeout: 120_000,
+    // Run tests sequentially in a single worker to allow sharing global test database
+    // Vitest 4+ moved poolOptions to top level
+    pool: 'forks',
+    singleFork: true,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],

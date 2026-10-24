@@ -1,4 +1,4 @@
-import type { Member, Organization, User } from '../generated/prisma/client'
+import type { Member, Organization, PrismaClient, User } from '../generated/prisma/client'
 
 /**
  * Factory functions for creating test data with sensible defaults.
@@ -13,68 +13,94 @@ export function resetCounters() {
   orgCounter = 0
 }
 
-export function createTestUser(override: Partial<User> = {}): Omit<User, 'id' | 'createdAt' | 'updatedAt'> {
+/**
+ * Create a test user in the database
+ */
+export async function createTestUser(
+  prisma: PrismaClient,
+  override: Partial<Omit<User, 'id' | 'createdAt' | 'updatedAt'>> = {}
+): Promise<User> {
   userCounter++
-  return {
-    email: `test-user-${userCounter}@example.com`,
-    name: `Test User ${userCounter}`,
-    emailVerified: false,
-    image: null,
-    ...override,
-  }
+  return await prisma.user.create({
+    data: {
+      email: `test-user-${userCounter}@example.com`,
+      name: `Test User ${userCounter}`,
+      emailVerified: false,
+      image: null,
+      ...override,
+    },
+  })
 }
 
-export function createTestOrganization(
-  override: Partial<Organization> = {}
-): Omit<Organization, 'id' | 'createdAt' | 'updatedAt'> {
+/**
+ * Create a test organization in the database
+ */
+export async function createTestOrganization(
+  prisma: PrismaClient,
+  override: Partial<Omit<Organization, 'id' | 'createdAt' | 'updatedAt'>> = {}
+): Promise<Organization> {
   orgCounter++
-  return {
-    name: `Test Organization ${orgCounter}`,
-    slug: `test-org-${orgCounter}`,
-    logo: null,
-    metadata: null,
-    ...override,
-  }
+  return await prisma.organization.create({
+    data: {
+      name: `Test Organization ${orgCounter}`,
+      slug: `test-org-${orgCounter}`,
+      logo: null,
+      metadata: null,
+      ...override,
+    },
+  })
 }
 
-export function createTestOrganizationMember(
-  override: Partial<Member> = {}
-): Omit<Member, 'id' | 'createdAt' | 'updatedAt'> {
-  return {
-    organizationId: 'org-id',
-    userId: 'user-id',
-    role: 'member',
-    ...override,
-  }
+/**
+ * Create a test member relationship
+ */
+export async function createTestMember(
+  prisma: PrismaClient,
+  data: { organizationId: string; userId: string; role?: 'owner' | 'admin' | 'member' }
+): Promise<Member> {
+  return await prisma.member.create({
+    data: {
+      organizationId: data.organizationId,
+      userId: data.userId,
+      role: data.role ?? 'member',
+    },
+  })
 }
 
 /**
  * Helper to create a full organization with owner member in one transaction.
+ * If user is not provided, creates a new user.
  */
 export async function createTestOrgWithOwner(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  prisma: any,
-  userId: string,
-  orgData: Partial<Organization> = {}
-) {
-  const orgInput = createTestOrganization(orgData)
+  prisma: PrismaClient,
+  user?: User,
+  orgData: Partial<Omit<Organization, 'id' | 'createdAt' | 'updatedAt'>> = {}
+): Promise<{ user: User; organization: Organization; member: Member }> {
+  return await prisma.$transaction(async (tx) => {
+    // Create user if not provided
+    const owner = user ?? (await createTestUser(tx as PrismaClient))
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return await prisma.$transaction(async (tx: any) => {
     // Create organization
-    const org = await tx.organization.create({
-      data: orgInput,
+    orgCounter++
+    const organization = await tx.organization.create({
+      data: {
+        name: `Test Organization ${orgCounter}`,
+        slug: `test-org-${orgCounter}`,
+        logo: null,
+        metadata: null,
+        ...orgData,
+      },
     })
 
     // Create owner membership
-    await tx.organizationMember.create({
+    const member = await tx.member.create({
       data: {
-        organizationId: org.id,
-        userId: userId,
+        organizationId: organization.id,
+        userId: owner.id,
         role: 'owner',
       },
     })
 
-    return org
+    return { user: owner, organization, member }
   })
 }
