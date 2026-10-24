@@ -7,11 +7,11 @@ export const CurrentUserResponseSchema = z.object({
   user: z
     .object({
       id: z.string(),
-      name: z.string().nullable(),
+      name: z.string().or(z.null()),
       email: z.string().email(),
-      image: z.string().nullable(),
+      image: z.string().or(z.null()),
     })
-    .nullable(),
+    .or(z.null()),
   organizations: z.array(
     z.object({
       id: z.string(),

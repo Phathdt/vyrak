@@ -1,17 +1,17 @@
 import { ReactNode } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 
-import { useSession } from '../../lib/auth'
+import { useAuth } from '../../contexts/auth-context'
 
 interface ProtectedRouteProps {
   children: ReactNode
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { data: session, isPending } = useSession()
+  const { user, isLoading } = useAuth()
   const location = useLocation()
 
-  if (isPending) {
+  if (isLoading) {
     return (
       <div
         style={{
@@ -35,7 +35,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     )
   }
 
-  if (!session) {
+  if (!user) {
     return <Navigate to='/login' state={{ from: location }} replace />
   }
 

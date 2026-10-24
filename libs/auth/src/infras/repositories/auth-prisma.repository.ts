@@ -1,9 +1,36 @@
 import type { PrismaClient } from '@vyrak/database'
 
+import type { UserEntity } from '../../domain/entities'
 import type { IAuthRepository, UserWithOrganizations } from '../../domain/interfaces/auth-repository.interface'
 
 export class AuthPrismaRepository implements IAuthRepository {
   constructor(private readonly prisma: PrismaClient) {}
+
+  async findByEmail(email: string): Promise<(UserEntity & { passwordHash: string | null }) | null> {
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { email },
+      })
+
+      if (!user) {
+        return null
+      }
+
+      return {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        emailVerified: user.emailVerified,
+        image: user.image,
+        passwordHash: user.passwordHash,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      }
+    } catch (error) {
+      console.error('[AuthPrismaRepository] findByEmail error:', error)
+      throw error
+    }
+  }
 
   async findUserById(userId: string): Promise<UserWithOrganizations | null> {
     try {
@@ -40,7 +67,7 @@ export class AuthPrismaRepository implements IAuthRepository {
 
   async createPersonalOrganization(userId: string): Promise<{ id: string; name: string; slug: string } | null> {
     try {
-      // Lấy thông tin user
+      // Get user info
       const user = await this.prisma.user.findUnique({
         where: { id: userId },
       })
@@ -49,7 +76,7 @@ export class AuthPrismaRepository implements IAuthRepository {
         throw new Error('User not found')
       }
 
-      // Tạo personal organization
+      // Create personal organization
       const organization = await this.prisma.organization.create({
         data: {
           name: user.name ? `${user.name}'s Workspace` : 'Personal Workspace',

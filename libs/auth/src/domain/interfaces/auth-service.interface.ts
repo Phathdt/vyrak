@@ -2,12 +2,24 @@ import { UserWithOrganizations } from './auth-repository.interface'
 
 export interface IAuthService {
   /**
-   * Xử lý onboarding cho user mới - tạo organization nếu chưa có
+   * Login with email and password
+   */
+  login(
+    email: string,
+    password: string
+  ): Promise<{
+    accessToken: string
+    expiresIn: number
+    user: { id: string; email: string; name: string | null }
+  }>
+
+  /**
+   * Handle onboarding for new user - create organization if not exists
    */
   handleUserOnboarding(userId: string): Promise<void>
 
   /**
-   * Lấy thông tin user hiện tại kèm organizations
+   * Get current user with organizations
    */
   getCurrentUser(userId: string): Promise<UserWithOrganizations | null>
 }
