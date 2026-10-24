@@ -1,9 +1,10 @@
 import { Test } from '@nestjs/testing'
+
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { InvitationsService } from './invitations.service'
 import { MembersService } from './members.service'
-import { OrganizationsController, InvitationsController } from './organizations.controller'
+import { InvitationsController, OrganizationsController } from './organizations.controller'
 import { OrganizationsService } from './organizations.service'
 
 describe('OrganizationsController', () => {
