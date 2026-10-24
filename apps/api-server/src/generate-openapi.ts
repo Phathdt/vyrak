@@ -24,7 +24,6 @@ import 'dotenv/config'
 
 import fs from 'node:fs'
 import path from 'node:path'
-
 import { NestFactory } from '@nestjs/core'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 

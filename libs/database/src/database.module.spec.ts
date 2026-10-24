@@ -1,9 +1,32 @@
 import { Test } from '@nestjs/testing'
+import { CustomConfigService } from '@vyrak/custom-config'
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { DatabaseModule } from './database.module'
 import { DatabaseService } from './database.service'
+
+const mockConfigService = {
+  database: {
+    url: 'postgresql://test:test@localhost:5432/test',
+  },
+  log: {
+    level: 'info',
+    enableJsonFormat: false,
+  },
+  get: vi.fn((key: string) => {
+    if (key === 'database.url') {
+      return 'postgresql://test:test@localhost:5432/test'
+    }
+    if (key === 'log.level') {
+      return 'info'
+    }
+    if (key === 'log.enableJsonFormat') {
+      return false
+    }
+    return undefined
+  }),
+}
 
 describe('DatabaseModule', () => {
   beforeEach(() => {
@@ -19,7 +42,10 @@ describe('DatabaseModule', () => {
     it('should export DatabaseService', async () => {
       const module = await Test.createTestingModule({
         imports: [DatabaseModule],
-      }).compile()
+      })
+        .overrideProvider(CustomConfigService)
+        .useValue(mockConfigService)
+        .compile()
 
       const service = module.get(DatabaseService)
       expect(service).toBeDefined()
@@ -29,7 +55,10 @@ describe('DatabaseModule', () => {
     it('should provide DatabaseService as singleton', async () => {
       const module = await Test.createTestingModule({
         imports: [DatabaseModule],
-      }).compile()
+      })
+        .overrideProvider(CustomConfigService)
+        .useValue(mockConfigService)
+        .compile()
 
       const service1 = module.get(DatabaseService)
       const service2 = module.get(DatabaseService)
@@ -40,7 +69,10 @@ describe('DatabaseModule', () => {
     it('should support module initialization', async () => {
       const module = await Test.createTestingModule({
         imports: [DatabaseModule],
-      }).compile()
+      })
+        .overrideProvider(CustomConfigService)
+        .useValue(mockConfigService)
+        .compile()
 
       await expect(module.init()).resolves.not.toThrow()
       await module.close()
@@ -58,7 +90,10 @@ describe('DatabaseModule', () => {
       const module = await Test.createTestingModule({
         imports: [DatabaseModule],
         providers: [testProvider],
-      }).compile()
+      })
+        .overrideProvider(CustomConfigService)
+        .useValue(mockConfigService)
+        .compile()
 
       const testProviderInstance = module.get('TEST_PROVIDER')
       expect(testProviderInstance).toBeDefined()
