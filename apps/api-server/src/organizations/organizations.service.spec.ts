@@ -371,5 +371,167 @@ describe('OrganizationsService', () => {
         'Insufficient permissions'
       )
     })
+
+    it('should verify multiple allowed roles correctly', async () => {
+      mockPrisma.client.member.findUnique.mockResolvedValue({
+        id: 'member-1',
+        role: 'owner',
+      })
+
+      const result = await service.verifyMembership('org-123', 'user-123', ['owner', 'admin', 'member'])
+      expect(result.role).toBe('owner')
+    })
+
+    it("should reject when only one role doesn't match", async () => {
+      mockPrisma.client.member.findUnique.mockResolvedValue({
+        id: 'member-1',
+        role: 'moderator',
+      })
+
+      await expect(service.verifyMembership('org-123', 'user-123', ['owner', 'admin'])).rejects.toThrow(
+        ForbiddenException
+      )
+    })
+  })
+
+  describe('Branch Coverage - Error Scenarios', () => {
+    it('create: should handle logo provided in DTO', async () => {
+      mockPrisma.client.organization.findUnique.mockResolvedValue(null)
+      mockPrisma.client.organization.create.mockResolvedValue({
+        id: 'org-123',
+        name: 'Test Org',
+        slug: 'test-org',
+        logo: 'https://example.com/logo.png',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        _count: { members: 1 },
+      })
+
+      const result = await service.create('user-123', {
+        name: 'Test Org',
+        slug: 'test-org',
+        logo: 'https://example.com/logo.png',
+      })
+
+      expect(result.logo).toBe('https://example.com/logo.png')
+      expect(mockPrisma.client.organization.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            logo: 'https://example.com/logo.png',
+          }),
+        })
+      )
+    })
+
+    it('findAllForUser: should map all membership properties correctly', async () => {
+      mockPrisma.client.member.findMany.mockResolvedValue([
+        {
+          id: 'member-1',
+          organizationId: 'org-1',
+          userId: 'user-123',
+          role: 'admin',
+          createdAt: new Date(),
+          organization: {
+            id: 'org-1',
+            name: 'Admin Org',
+            slug: 'admin-org',
+            logo: 'https://example.com/admin-logo.png',
+            createdAt: new Date('2024-01-01'),
+            updatedAt: new Date('2024-06-01'),
+            _count: { members: 10 },
+          },
+        },
+      ])
+
+      const result = await service.findAllForUser('user-123')
+
+      expect(result).toHaveLength(1)
+      expect(result[0]).toMatchObject({
+        id: 'org-1',
+        name: 'Admin Org',
+        slug: 'admin-org',
+        logo: 'https://example.com/admin-logo.png',
+        role: 'admin',
+        memberCount: 10,
+      })
+      expect(result[0].createdAt).toEqual(new Date('2024-01-01'))
+      expect(result[0].updatedAt).toEqual(new Date('2024-06-01'))
+    })
+
+    it('delete: should check workflow runs with correct status filter', async () => {
+      mockPrisma.client.member.findUnique.mockResolvedValue({
+        id: 'member-1',
+        role: 'owner',
+      })
+
+      mockPrisma.client.workflowRun.count.mockResolvedValue(0)
+      mockPrisma.client.organization.delete.mockResolvedValue({})
+
+      await service.delete('org-123', 'user-123')
+
+      expect(mockPrisma.client.workflowRun.count).toHaveBeenCalledWith({
+        where: {
+          organizationId: 'org-123',
+          status: { in: ['pending', 'running'] },
+        },
+      })
+    })
+
+    it('delete: should include error message with active run count', async () => {
+      mockPrisma.client.member.findUnique.mockResolvedValue({
+        id: 'member-1',
+        role: 'owner',
+      })
+
+      mockPrisma.client.workflowRun.count.mockResolvedValue(5)
+
+      const error = service.delete('org-123', 'user-123')
+      await expect(error).rejects.toThrow('Cannot delete organization with 5 active workflow run(s)')
+    })
+
+    it('update: should preserve admin role verification', async () => {
+      mockPrisma.client.member.findUnique.mockResolvedValue({
+        id: 'member-1',
+        role: 'admin',
+      })
+
+      mockPrisma.client.organization.update.mockResolvedValue({
+        id: 'org-123',
+        name: 'Updated',
+        slug: 'updated',
+        logo: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        _count: { members: 1 },
+      })
+
+      const result = await service.update('org-123', 'user-123', { name: 'Updated' })
+
+      expect(result.role).toBe('admin')
+    })
+
+    it('findOne: should handle organization with logo', async () => {
+      mockPrisma.client.member.findUnique.mockResolvedValue({
+        id: 'member-1',
+        organizationId: 'org-123',
+        userId: 'user-123',
+        role: 'member',
+        organization: {
+          id: 'org-123',
+          name: 'Test Org',
+          slug: 'test-org',
+          logo: 'https://example.com/logo.png',
+          createdAt: new Date('2024-01-01'),
+          updatedAt: new Date('2024-06-01'),
+          _count: { members: 5 },
+        },
+      })
+
+      const result = await service.findOne('org-123', 'user-123')
+
+      expect(result.logo).toBe('https://example.com/logo.png')
+      expect(result.role).toBe('member')
+      expect(result.memberCount).toBe(5)
+    })
   })
 })
