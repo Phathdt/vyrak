@@ -1,3 +1,12 @@
+import { writeFileSync } from 'fs'
+import { join } from 'path'
+import { NestFactory } from '@nestjs/core'
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
+
+import * as yaml from 'js-yaml'
+
+import { AppModule } from './app/app.module'
+
 /**
  * OpenAPI Specification Generator
  *
@@ -22,15 +31,6 @@ process.env.SKIP_DB_CONNECTION = 'true'
 if (!process.env.DATABASE__URL) {
   process.env.DATABASE__URL = 'postgresql://localhost:5432/placeholder'
 }
-
-import { writeFileSync } from 'fs'
-import { join } from 'path'
-import { NestFactory } from '@nestjs/core'
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
-
-import * as yaml from 'js-yaml'
-
-import { AppModule } from './app/app.module'
 
 async function generateOpenApiSpec() {
   const app = await NestFactory.create(AppModule, {

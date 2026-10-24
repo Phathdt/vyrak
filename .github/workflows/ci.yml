@@ -48,3 +48,18 @@ jobs:
 
       - name: Type check
         run: yarn typecheck
+
+      - name: Run tests with coverage
+        run: yarn test:ci
+        env:
+          NODE_ENV: test
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          files: ./coverage/coverage-final.json
+          flags: unittests
+          name: codecov-umbrella
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
