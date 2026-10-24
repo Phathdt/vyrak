@@ -1,6 +1,6 @@
 import { execSync } from 'node:child_process'
-import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql'
 import { PrismaPg } from '@prisma/adapter-pg'
+import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql'
 
 import { PrismaClient } from '../generated/prisma/client'
 
@@ -94,4 +94,3 @@ export function createMockPrismaClient(): PrismaClient {
   }
   return client
 }
-
