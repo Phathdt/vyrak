@@ -1,26 +1,18 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { Suspense } from 'react'
+import { Navigate, Route, Routes } from 'react-router-dom'
 
-import { LoginPage, SignupPage } from './pages/auth'
-import { ProductsPage } from './pages/products-page'
-import { OrganizationsPage, OrganizationSettingsPage } from './pages/organizations'
 import { ProtectedRoute } from './components/auth'
+import { ErrorBoundary } from './components/error-boundary'
+import { PageLoading } from './components/page-loading'
 import { OrganizationProvider } from './contexts'
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      retry: 1,
-    },
-  },
-})
+import { LoginPage, SignupPage } from './pages/auth'
+import { OrganizationSettingsPage, OrganizationsPage } from './pages/organizations'
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
+    <ErrorBoundary>
       <OrganizationProvider>
-        <BrowserRouter>
+        <Suspense fallback={<PageLoading />}>
           <Routes>
             <Route path='/login' element={<LoginPage />} />
             <Route path='/signup' element={<SignupPage />} />
@@ -28,7 +20,7 @@ function App() {
               path='/'
               element={
                 <ProtectedRoute>
-                  <ProductsPage />
+                  <OrganizationsPage />
                 </ProtectedRoute>
               }
             />
@@ -50,9 +42,9 @@ function App() {
             />
             <Route path='*' element={<Navigate to='/' replace />} />
           </Routes>
-        </BrowserRouter>
+        </Suspense>
       </OrganizationProvider>
-    </QueryClientProvider>
+    </ErrorBoundary>
   )
 }
 

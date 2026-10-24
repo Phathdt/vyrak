@@ -6,6 +6,6 @@
     "noEmit": true,
     "composite": false
   },
-  "include": ["src/**/*", "../../libs/**/*"],
-  "exclude": ["node_modules"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.ts", "src/test/**", "../../libs/**/test-utils/**"]
 }

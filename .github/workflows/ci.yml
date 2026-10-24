@@ -11,18 +11,14 @@ jobs:
     name: Quality Checks
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [24.x]
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js ${{ matrix.node-version }}
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 24
           cache: 'yarn'
 
       - name: Install dependencies
@@ -48,3 +44,18 @@ jobs:
 
       - name: Type check
         run: yarn typecheck
+
+      - name: Run tests with coverage
+        run: yarn test:ci
+        env:
+          NODE_ENV: test
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          files: ./coverage/coverage-final.json
+          flags: unittests
+          name: codecov-umbrella
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

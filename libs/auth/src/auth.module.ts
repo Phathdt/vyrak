@@ -1,17 +1,22 @@
 import { Module } from '@nestjs/common'
-import { DatabaseModule } from '@vyrak/database'
+import { DatabaseModule, DatabaseService } from '@vyrak/database'
 
 import { AuthService } from './application/services'
-import { AUTH_REPOSITORY } from './infras/di'
 import { AuthPrismaRepository } from './infras/repositories'
 
 @Module({
   imports: [DatabaseModule],
   providers: [
-    AuthService,
     {
-      provide: AUTH_REPOSITORY,
-      useClass: AuthPrismaRepository,
+      provide: AuthService,
+      useFactory: (databaseService: DatabaseService) => {
+        // Instantiate repository with Prisma client
+        const repository = new AuthPrismaRepository(databaseService.client)
+
+        // Instantiate service with repository
+        return new AuthService(repository)
+      },
+      inject: [DatabaseService],
     },
   ],
   exports: [AuthService],

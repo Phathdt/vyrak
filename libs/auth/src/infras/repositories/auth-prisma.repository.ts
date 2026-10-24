@@ -1,13 +1,13 @@
-import { Injectable } from '@nestjs/common'
-import { prisma } from '@vyrak/database'
+import type { PrismaClient } from '@vyrak/database'
 
 import type { IAuthRepository, UserWithOrganizations } from '../../domain/interfaces/auth-repository.interface'
 
-@Injectable()
 export class AuthPrismaRepository implements IAuthRepository {
+  constructor(private readonly prisma: PrismaClient) {}
+
   async findUserById(userId: string): Promise<UserWithOrganizations | null> {
     try {
-      const user = await prisma.user.findUnique({
+      const user = await this.prisma.user.findUnique({
         where: { id: userId },
         include: {
           members: {
@@ -27,7 +27,7 @@ export class AuthPrismaRepository implements IAuthRepository {
 
   async hasAnyOrganization(userId: string): Promise<boolean> {
     try {
-      const membership = await prisma.member.findFirst({
+      const membership = await this.prisma.member.findFirst({
         where: { userId },
       })
 
@@ -41,7 +41,7 @@ export class AuthPrismaRepository implements IAuthRepository {
   async createPersonalOrganization(userId: string): Promise<{ id: string; name: string; slug: string } | null> {
     try {
       // Lấy thông tin user
-      const user = await prisma.user.findUnique({
+      const user = await this.prisma.user.findUnique({
         where: { id: userId },
       })
 
@@ -50,7 +50,7 @@ export class AuthPrismaRepository implements IAuthRepository {
       }
 
       // Tạo personal organization
-      const organization = await prisma.organization.create({
+      const organization = await this.prisma.organization.create({
         data: {
           name: user.name ? `${user.name}'s Workspace` : 'Personal Workspace',
           slug: `personal-${userId.slice(0, 8)}`,

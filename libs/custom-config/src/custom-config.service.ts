@@ -1,13 +1,12 @@
 import * as fs from 'fs'
 import * as path from 'path'
-import { Injectable, Logger } from '@nestjs/common'
+import { Logger } from '@nestjs/common'
 
 import * as yaml from 'js-yaml'
 
 import { AppConfig } from './config.interface'
 import { camelToSnakeCase, convertToCamelCase } from './utils'
 
-@Injectable()
 export class CustomConfigService {
   private readonly logger = new Logger(CustomConfigService.name)
   private _config!: AppConfig

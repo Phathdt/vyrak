@@ -30,5 +30,5 @@
       "@vyrak/shared": ["./dist/libs/shared/index"]
     }
   },
-  "exclude": ["node_modules", "dist", "build", "coverage"]
+  "exclude": ["node_modules", "dist", "build", "coverage", "**/*.spec.ts", "**/*.test.ts"]
 }

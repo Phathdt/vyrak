@@ -1,7 +1,7 @@
 module.exports = {
   vyrak: {
     input: {
-      target: '../api-server/openapi.yml',
+      target: '../../docs/openapi.yaml',
     },
     output: {
       target: './src/api/generated/api.ts',

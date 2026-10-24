@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common'
+import { Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { CustomConfigService } from '@vyrak/custom-config'
 
@@ -37,7 +37,6 @@ interface TenantFilterContext {
   bypassTenantFilter?: boolean
 }
 
-@Injectable()
 export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(DatabaseService.name)
   private readonly enableColors: boolean

@@ -1,8 +1,9 @@
 import { All, Controller, Get, Req, Res } from '@nestjs/common'
 import { ApiExcludeEndpoint, ApiOperation, ApiTags } from '@nestjs/swagger'
-import { auth, AuthService, CurrentUserResponseDto } from '@vyrak/auth'
+import { auth, AuthService, CurrentUserResponseSchema } from '@vyrak/auth'
 
 import { Request, Response } from 'express'
+import { z } from 'zod'
 
 @ApiTags('auth')
 @Controller('api/auth')
@@ -11,7 +12,7 @@ export class AuthController {
 
   @Get('me')
   @ApiOperation({ summary: 'Get current user with organization' })
-  async getCurrentUser(@Req() req: Request): Promise<CurrentUserResponseDto> {
+  async getCurrentUser(@Req() req: Request): Promise<z.infer<typeof CurrentUserResponseSchema>> {
     // Get session from Better Auth
     const session = await auth.api.getSession({ headers: req.headers })
 
@@ -60,9 +61,22 @@ export class AuthController {
         body = JSON.stringify(req.body)
       }
 
+      // Properly format headers for Web Request - Express headers may have lowercase keys
+      const headers = new Headers()
+      Object.entries(req.headers).forEach(([key, value]) => {
+        if (value) {
+          // In development, rewrite origin to match baseURL to bypass Better Auth origin check
+          if (key.toLowerCase() === 'origin' && process.env.NODE_ENV !== 'production') {
+            headers.set(key, process.env.BETTER_AUTH_URL || 'http://localhost:3000')
+          } else {
+            headers.set(key, Array.isArray(value) ? value[0] : value)
+          }
+        }
+      })
+
       const webRequest = new globalThis.Request(url.toString(), {
         method: req.method,
-        headers: req.headers as Record<string, string>,
+        headers,
         body,
       })
 

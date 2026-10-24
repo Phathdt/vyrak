@@ -1,9 +1,8 @@
-import { Injectable, LoggerService } from '@nestjs/common'
+import { LoggerService } from '@nestjs/common'
 
 import { ClsService } from 'nestjs-cls'
 import { PinoLogger } from 'nestjs-pino'
 
-@Injectable()
 export class EnhancedLogger implements LoggerService {
   private metadata: Record<string, unknown> = {}
 

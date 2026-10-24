@@ -38,6 +38,7 @@ model User {
   sessions Session[]
   accounts Account[]
   members  Member[]
+  auditLogs AuditLog[]
 
   @@map("user")
 }
@@ -111,6 +112,7 @@ model Organization {
   workflowRuns    WorkflowRun[]
   agentTasks      AgentTask[]
   artifacts       Artifact[]
+  auditLogs       AuditLog[]
 
   @@map("organizations")
 }
@@ -244,4 +246,27 @@ model Artifact {
   @@index([runId])
   @@index([organizationId])
   @@map("artifacts")
+}
+
+model AuditLog {
+  id             String   @id @default(uuid())
+  organizationId String   @map("organization_id")
+  userId         String   @map("user_id")
+  event          String   // auth.login, organization.created, member.invited, etc.
+  action         String   // create, update, delete, read
+  resource       String   // organization, member, project, workflow
+  resourceId     String?  @map("resource_id")
+  metadata       Json?
+  ipAddress      String?  @map("ip_address")
+  userAgent      String?  @map("user_agent")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([userId])
+  @@index([event])
+  @@index([createdAt])
+  @@map("audit_logs")
 }
