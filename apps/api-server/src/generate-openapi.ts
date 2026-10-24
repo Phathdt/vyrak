@@ -5,18 +5,16 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 
 import * as yaml from 'js-yaml'
 
-import { AppModule } from './app/app.module'
+import { OpenApiModule } from './openapi.module'
 
 async function generateOpenApiSpec() {
-  // Set fake DATABASE__URL if not provided (needed for module initialization, not actual connection)
+  // Set placeholder DATABASE__URL to bypass client initialization check
+  // The actual connection won't be made because we use mock services
   if (!process.env.DATABASE__URL) {
-    process.env.DATABASE__URL = 'postgresql://localhost:5432/fake'
+    process.env.DATABASE__URL = 'postgresql://localhost:5432/placeholder'
   }
 
-  // Skip database connection during OpenAPI generation
-  process.env.SKIP_DB_CONNECTION = 'true'
-
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create(OpenApiModule, {
     logger: false,
   })
 

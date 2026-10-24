@@ -18,7 +18,7 @@
     "start:web": "turbo run start --filter=@apps/web",
     "build": "turbo run build",
     "build:prod": "turbo run build:prod",
-    "generate:openapi": "yarn workspace @apps/api-server build && node dist/apps/api-server/generate-openapi.js",
+    "generate:openapi": "DATABASE__URL=postgresql://localhost:5432/placeholder yarn workspace @apps/api-server build && node dist/apps/api-server/generate-openapi.js",
     "generate:api": "yarn workspace @apps/web generate:api",
     "generate": "yarn generate:api && yarn generate:api && yarn db:generate",
     "test": "vitest run",
