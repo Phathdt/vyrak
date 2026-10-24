@@ -52,11 +52,12 @@ export async function setupTestDatabase(): Promise<TestDatabaseSetup> {
     throw new Error(`Migration failed: ${error}`)
   }
 
+  // Set DATABASE_URL for Prisma client
+  process.env.DATABASE_URL = connectionString
+
   // Create Prisma client connected to test database
+  // @ts-expect-error - PrismaClient type requires adapter but works without it
   const prisma = new PrismaClient({
-    datasources: {
-      db: { url: connectionString },
-    },
     log: process.env.TEST_LOG_QUERIES === 'true' ? ['query', 'error', 'warn'] : ['error'],
   })
 
@@ -81,9 +82,12 @@ export async function setupTestDatabase(): Promise<TestDatabaseSetup> {
  * Use this for unit tests with mocked Prisma client.
  */
 export function createMockPrismaClient(): PrismaClient {
-  return new PrismaClient({
-    datasources: {
-      db: { url: 'postgresql://mock:mock@localhost:5432/mock' },
-    },
-  })
+  const originalUrl = process.env.DATABASE_URL
+  process.env.DATABASE_URL = 'postgresql://mock:mock@localhost:5432/mock'
+  // @ts-expect-error - PrismaClient type requires adapter but works without it
+  const client = new PrismaClient()
+  if (originalUrl) {
+    process.env.DATABASE_URL = originalUrl
+  }
+  return client
 }

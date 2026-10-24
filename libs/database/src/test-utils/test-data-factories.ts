@@ -1,4 +1,4 @@
-import type { Organization, OrganizationMember, User } from '../generated/prisma/client'
+import type { Member, Organization, User } from '../generated/prisma/client'
 
 /**
  * Factory functions for creating test data with sensible defaults.
@@ -38,13 +38,12 @@ export function createTestOrganization(
 }
 
 export function createTestOrganizationMember(
-  override: Partial<OrganizationMember> = {}
-): Omit<OrganizationMember, 'id' | 'createdAt' | 'updatedAt'> {
+  override: Partial<Member> = {}
+): Omit<Member, 'id' | 'createdAt' | 'updatedAt'> {
   return {
     organizationId: 'org-id',
     userId: 'user-id',
     role: 'member',
-    invitedBy: null,
     ...override,
   }
 }

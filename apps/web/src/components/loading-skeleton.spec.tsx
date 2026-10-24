@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { render } from '../../test/test-utils'
+import { render } from '@/test/test-utils'
 import { CardLoadingSkeleton, LoadingSkeleton, TableLoadingSkeleton } from './loading-skeleton'
 
 describe('LoadingSkeleton', () => {
