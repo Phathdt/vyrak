@@ -20,7 +20,7 @@
     "build:prod": "turbo run build:prod",
     "generate:openapi": "yarn workspace @apps/api-server build && node dist/apps/api-server/generate-openapi.js",
     "generate:api": "yarn workspace @apps/web generate:api",
-    "generate": "yarn generate:api && yarn generate:api && yarn db:generate",
+    "generate": "yarn generate:openapi && yarn generate:api && yarn db:generate",
     "test": "vitest run",
     "test:ci": "vitest run --coverage",
     "test:watch": "vitest",

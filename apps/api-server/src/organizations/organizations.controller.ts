@@ -37,8 +37,11 @@ export class OrganizationsController {
   @Get()
   @ApiOperation({ summary: 'List all organizations for current user' })
   @ApiResponse({ status: 200, type: [OrganizationResponse] })
-  findAll(@CurrentUser() userId: string) {
-    return this.organizationsService.findAllForUser(userId)
+  async findAll(@CurrentUser() userId: string) {
+    console.log('[OrganizationsController] findAll called with userId:', userId)
+    const result = await this.organizationsService.findAllForUser(userId)
+    console.log('[OrganizationsController] findAll result:', result)
+    return result
   }
 
   @Get(':id')

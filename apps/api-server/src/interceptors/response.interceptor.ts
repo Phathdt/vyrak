@@ -15,7 +15,12 @@ export class ResponseInterceptor implements NestInterceptor {
         const request = context.switchToHttp().getRequest()
         const traceId = request.traceId
 
-        // Only add traceId to the response, don't wrap in data
+        // Skip adding trace_id to arrays to preserve array structure
+        if (Array.isArray(data)) {
+          return data
+        }
+
+        // Only add traceId to objects
         if (data && typeof data === 'object') {
           return { ...data, trace_id: traceId }
         }

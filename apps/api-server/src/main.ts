@@ -6,7 +6,6 @@
 import { NestFactory } from '@nestjs/core'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { CustomConfigService } from '@vyrak/custom-config'
-import { SnakeToCamelInterceptor } from '@vyrak/shared'
 
 import 'dotenv/config'
 
@@ -32,11 +31,7 @@ async function bootstrap() {
   app.useGlobalFilters(new ResponseExceptionFilter(), new ZodValidationExceptionFilter())
   // TraceIdInterceptor and ResponseInterceptor are registered via APP_INTERCEPTOR in app.module.ts
   // to enable proper dependency injection of ClsService
-  app.useGlobalInterceptors(
-    new ResponseLoggerInterceptor(),
-    new LoggerErrorInterceptor(),
-    new SnakeToCamelInterceptor()
-  )
+  app.useGlobalInterceptors(new ResponseLoggerInterceptor(), new LoggerErrorInterceptor())
 
   app.useLogger(app.get(PinoLogger))
 

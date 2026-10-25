@@ -61,6 +61,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [error, accessToken])
 
   const setAuth = (token: string, userData: AuthResponseDtoUser) => {
+    // IMPORTANT: Set token in axios interceptor FIRST (synchronously)
+    // before updating state to avoid race condition with React Query
+    setAuthToken(token)
     localStorage.setItem(TOKEN_KEY, token)
     setAccessTokenState(token)
     // Convert AuthResponseDtoUser to User format

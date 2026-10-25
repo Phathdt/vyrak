@@ -366,10 +366,13 @@ components:
       properties:
         accessToken:
           type: string
+          description: JWT access token
         expiresIn:
           type: number
+          description: Token expiry time in seconds
         user:
           type: object
+          description: User information
           properties:
             id:
               type: string
@@ -378,10 +381,6 @@ components:
             name:
               type: string
               nullable: true
-          required:
-            - id
-            - email
-            - name
       required:
         - accessToken
         - expiresIn

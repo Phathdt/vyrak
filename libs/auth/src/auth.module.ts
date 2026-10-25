@@ -25,6 +25,6 @@ import { AuthPrismaRepository } from './infras/repositories'
       inject: [DatabaseService, JwtProvider, PasswordService],
     },
   ],
-  exports: [AuthService, JwtProvider],
+  exports: [AuthService, JwtProvider, JwtStrategy, PassportModule],
 })
 export class AuthModule {}
