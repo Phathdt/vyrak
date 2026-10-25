@@ -53,6 +53,7 @@ describe('EventPrismaRepository', () => {
 
       vi.spyOn(db.client, '$transaction').mockImplementation(async (callback: any) => {
         return await callback({
+          $queryRaw: vi.fn().mockResolvedValueOnce([{ sequence: 1 }]),
           workflowEvent: {
             findFirst: vi.fn().mockResolvedValueOnce(null),
             create: vi.fn().mockResolvedValueOnce(mockResult),
@@ -86,6 +87,7 @@ describe('EventPrismaRepository', () => {
 
       vi.spyOn(db.client, '$transaction').mockImplementation(async (callback: any) => {
         return await callback({
+          $queryRaw: vi.fn().mockResolvedValueOnce([{ sequence: 5 }]),
           workflowEvent: {
             findFirst: vi.fn().mockResolvedValueOnce({ sequence: 4 }),
             create: vi.fn().mockResolvedValueOnce(mockResult),
