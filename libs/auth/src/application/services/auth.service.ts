@@ -1,7 +1,8 @@
+import { PasswordService } from './password.service'
+
 import type { IAuthRepository, UserWithOrganizations } from '../../domain/interfaces/auth-repository.interface'
 import type { IAuthService } from '../../domain/interfaces/auth-service.interface'
 import { JwtProvider } from '../../infras/jwt/jwt.provider'
-import { PasswordService } from './password.service'
 
 class UnauthorizedError extends Error {
   constructor(message: string) {

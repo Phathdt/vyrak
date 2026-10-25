@@ -105,3 +105,27 @@ ALTER TABLE "workflow_events" ADD CONSTRAINT "workflow_events_organization_id_fk
 
 -- AddForeignKey
 ALTER TABLE "workflow_events" ADD CONSTRAINT "workflow_events_step_run_id_fkey" FOREIGN KEY ("step_run_id") REFERENCES "workflow_step_runs"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- Create function to atomically get next event sequence for a run
+-- Uses advisory lock to ensure atomicity across concurrent transactions
+CREATE OR REPLACE FUNCTION get_next_event_sequence(p_run_id TEXT)
+RETURNS INTEGER AS $$
+DECLARE
+  next_sequence INTEGER;
+  lock_id INTEGER;
+BEGIN
+  -- Use advisory lock with hash of run_id to prevent concurrent sequence generation
+  -- This ensures only one transaction generates sequence for a given run at a time
+  lock_id := ('x' || substring(md5(p_run_id), 1, 8))::bit(32)::integer;
+
+  PERFORM pg_advisory_lock(lock_id);
+
+  SELECT COALESCE(MAX(sequence), 0) + 1 INTO next_sequence
+  FROM workflow_events
+  WHERE run_id = p_run_id;
+
+  PERFORM pg_advisory_unlock(lock_id);
+
+  RETURN next_sequence;
+END;
+$$ LANGUAGE plpgsql;

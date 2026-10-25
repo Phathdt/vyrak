@@ -212,13 +212,15 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
           this.logger.error(`Error: ${this.colorizeError(e.error)}`)
         }
       } else {
-        this.logger.log(JSON.stringify({
-          message: `[${queryType}] ${performanceLevel} ${e.duration}ms - ${this.summarizeQuery(e.query, tableNames)}`,
-          sqlQuery: formattedQuery,
-          sqlParams: parsedParams,
-          databaseOperation: true,
-          errorMessage: e.error,
-        }))
+        this.logger.log(
+          JSON.stringify({
+            message: `[${queryType}] ${performanceLevel} ${e.duration}ms - ${this.summarizeQuery(e.query, tableNames)}`,
+            sqlQuery: formattedQuery,
+            sqlParams: parsedParams,
+            databaseOperation: true,
+            errorMessage: e.error,
+          })
+        )
       }
     })
   }

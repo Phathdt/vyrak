@@ -60,12 +60,12 @@ export const testData = {
   /**
    * Generate unique organization ID for tests
    */
-  orgId: () => `test-org-${faker.string.uuid()}`,
+  orgId: () => faker.string.uuid(),
 
   /**
    * Generate unique project ID for tests
    */
-  projectId: () => `test-project-${faker.string.uuid()}`,
+  projectId: () => faker.string.uuid(),
 
   /**
    * Generate workflow run input data

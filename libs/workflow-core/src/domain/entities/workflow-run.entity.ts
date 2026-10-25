@@ -15,7 +15,7 @@ export const WorkflowRunSchema = z.object({
   state: z.nativeEnum(WorkflowState),
   currentStepKey: z.string().optional(),
   initiatedByUserId: z.string().uuid(),
-  idempotencyKey: z.string().uuid(),
+  idempotencyKey: z.string().uuid().optional(),
   errorCode: z.string().optional(),
   errorMessage: z.string().optional(),
   createdAt: z.date(),
@@ -47,7 +47,7 @@ export function createWorkflowRun(
   data: Partial<WorkflowRun> &
     Pick<
       WorkflowRun,
-      'id' | 'workflowKey' | 'workflowVersion' | 'organizationId' | 'projectId' | 'initiatedByUserId' | 'idempotencyKey'
+      'id' | 'workflowKey' | 'workflowVersion' | 'organizationId' | 'projectId' | 'initiatedByUserId'
     >
 ): WorkflowRun {
   const now = new Date()

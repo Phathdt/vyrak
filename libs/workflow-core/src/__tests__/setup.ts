@@ -4,8 +4,9 @@
  */
 
 // Load environment variables from root .env files
-import { config } from 'dotenv'
 import { resolve } from 'path'
+
+import { config } from 'dotenv'
 
 // Load from apps/api-server/.env (where DATABASE__URL is defined)
 const envPath = resolve(__dirname, '../../../../apps/api-server/.env')

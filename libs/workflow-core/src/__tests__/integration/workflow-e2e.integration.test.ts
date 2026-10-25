@@ -35,18 +35,19 @@ describe('Workflow E2E Integration Tests', () => {
   beforeEach(async () => {
     orgId = testData.orgId()
     projectId = testData.projectId()
-    userId = `test-user-${Math.random().toString(36).slice(2)}`
+    const userEmail = `test-user-${Math.random().toString(36).slice(2)}@test.com`
 
-    // Setup test user
+    // Setup test user and capture the ID
     await db.withSystemAccess(async () => {
-      await db.client.user.upsert({
-        where: { email: `${userId}@test.com` },
+      const user = await db.client.user.upsert({
+        where: { email: userEmail },
         update: {},
         create: {
-          email: `${userId}@test.com`,
-          name: userId,
+          email: userEmail,
+          name: userEmail.split('@')[0],
         },
       })
+      userId = user.id
     })
 
     // Setup org and project

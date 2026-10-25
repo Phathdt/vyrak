@@ -1,8 +1,8 @@
 import { Queue } from 'bullmq'
 
+import { QueueException, ValidationException } from '../../domain/errors/common.error'
 import type { IJobQueue, JobOptions } from '../../domain/interfaces/job-queue.interface'
 import type { WorkflowJobData } from '../../domain/interfaces/workflow-job-data.interface'
-import { QueueException, ValidationException } from '../../domain/errors/common.error'
 
 /**
  * BullMQ implementation of job queue for workflow execution

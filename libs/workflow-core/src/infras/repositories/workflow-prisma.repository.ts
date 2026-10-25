@@ -1,4 +1,5 @@
 import { DatabaseService, Prisma } from '@vyrak/database'
+import { randomUUID } from 'crypto'
 
 import { WorkflowRun, WorkflowRunSchema } from '../../domain/entities/workflow-run.entity'
 import {
@@ -29,7 +30,7 @@ export class WorkflowPrismaRepository implements IWorkflowRepository {
           workflowKey: params.workflowKey,
           workflowVersion: params.workflowVersion,
           initiatedByUserId: params.initiatedByUserId,
-          idempotencyKey: params.idempotencyKey,
+          idempotencyKey: params.idempotencyKey || randomUUID(),
           input: params.input ? (params.input as Prisma.InputJsonValue) : null,
           status: WorkflowState.QUEUED,
         },
@@ -92,7 +93,7 @@ export class WorkflowPrismaRepository implements IWorkflowRepository {
     try {
       const run = await this.db.client.workflowRun.findUnique({
         where: {
-          workflow_runs_org_idempotency_key: {
+          organizationId_idempotencyKey: {
             organizationId: orgId,
             idempotencyKey: key,
           },

@@ -77,7 +77,7 @@ export function createTenantFilterExtension(getContext: () => TenantFilterContex
   })
 }
 
-function handleFindUnique(args: PrismaArgs, query: QueryFunction, model: string, organizationId?: string) {
+async function handleFindUnique(args: PrismaArgs, query: QueryFunction, model: string, organizationId?: string) {
   if (!organizationId) {
     throw new Error(
       `Tenant context required for ${model}.findUnique. ` + `Use bypassTenantFilter for system operations.`
@@ -90,14 +90,49 @@ function handleFindUnique(args: PrismaArgs, query: QueryFunction, model: string,
       ...(args.where || {}),
       id: organizationId,
     }
-  } else {
-    args.where = {
-      ...(args.where || {}),
-      [ORGANIZATION_ID_FIELD]: organizationId,
-    }
+    return query(args)
   }
 
-  return query(args)
+  const where = args.where as Record<string, unknown>
+
+  // Check if this is a composite key lookup with organizationId
+  // Pattern matches: organizationId_idempotencyKey, organizationId_slug, etc.
+  const compositeKeyPattern = /^(\w+_)*organizationId$/
+  const compositeKeys = Object.keys(where).filter(key => compositeKeyPattern.test(key))
+
+  if (compositeKeys.length > 0) {
+    // For composite keys that include organizationId, validate and inject the context organizationId
+    for (const key of compositeKeys) {
+      const compositeWhere = where[key] as Record<string, unknown>
+      if (compositeWhere && typeof compositeWhere === 'object') {
+        // Validate organizationId matches if it's part of the composite key
+        if (compositeWhere[ORGANIZATION_ID_FIELD] && compositeWhere[ORGANIZATION_ID_FIELD] !== organizationId) {
+          throw new Error(`Tenant isolation violation: ${model} organizationId mismatch`)
+        }
+        // Ensure organizationId is set in composite key
+        compositeWhere[ORGANIZATION_ID_FIELD] = organizationId
+      }
+    }
+    return query(args)
+  }
+
+  // For simple unique lookups (e.g., by id), Prisma silently ignores fields that aren't
+  // part of a unique constraint. We must execute the query and post-filter the result.
+  const result = await query(args)
+
+  // If no result, return null
+  if (!result) {
+    return null
+  }
+
+  // Verify the result belongs to the correct organization
+  const record = result as Record<string, unknown>
+  if (record[ORGANIZATION_ID_FIELD] !== organizationId) {
+    // Tenant isolation: return null for records from other organizations
+    return null
+  }
+
+  return result
 }
 
 function handleFindMany(args: PrismaArgs, query: QueryFunction, model: string, organizationId?: string) {
@@ -122,28 +157,41 @@ function handleFindMany(args: PrismaArgs, query: QueryFunction, model: string, o
 }
 
 function handleCreate(args: PrismaArgs, query: QueryFunction, model: string, organizationId?: string) {
-  if (!organizationId) {
-    throw new Error(`Tenant context required for ${model}.create. ` + `Use bypassTenantFilter for system operations.`)
-  }
-
   const data = args.data as Record<string, unknown>
 
-  // Auto-assign organizationId
-  if (isOrganizationModel(model)) {
-    // Organization creation: validate id matches context
+  // For tenant-owned models, organizationId can come from context OR from the data itself
+  // This supports both normal operations (context set) and transaction operations (data contains organizationId)
+  if (!isOrganizationModel(model)) {
+    const dataOrgId = data[ORGANIZATION_ID_FIELD] as string | undefined
+
+    if (!organizationId && !dataOrgId) {
+      throw new Error(`Tenant context required for ${model}.create. ` + `Use bypassTenantFilter for system operations.`)
+    }
+
+    // If both exist, they must match
+    if (organizationId && dataOrgId && dataOrgId !== organizationId) {
+      throw new Error(`Cannot create ${model} with different organizationId`)
+    }
+
+    // If only context exists, use it
+    if (organizationId && !dataOrgId) {
+      args.data = {
+        ...data,
+        [ORGANIZATION_ID_FIELD]: organizationId,
+      }
+    }
+    // If data already has organizationId, keep it as-is (supports transactions)
+  } else {
+    // Organization creation requires context
+    if (!organizationId) {
+      throw new Error(`Tenant context required for ${model}.create. ` + `Use bypassTenantFilter for system operations.`)
+    }
+
+    // Validate id matches context
     if (data.id && data.id !== organizationId) {
       throw new Error('Organization ID mismatch')
     }
     data.id = organizationId
-  } else {
-    // Auto-assign organizationId for tenant-owned resources
-    if (data[ORGANIZATION_ID_FIELD] && data[ORGANIZATION_ID_FIELD] !== organizationId) {
-      throw new Error(`Cannot create ${model} with different organizationId`)
-    }
-    args.data = {
-      ...data,
-      [ORGANIZATION_ID_FIELD]: organizationId,
-    }
   }
 
   return query(args)

@@ -28,18 +28,19 @@ describe('WorkflowRepository Integration Tests', () => {
   beforeEach(async () => {
     orgId = testData.orgId()
     projectId = testData.projectId()
-    userId = `test-user-${Math.random().toString(36).slice(2)}`
+    const userEmail = `test-user-${Math.random().toString(36).slice(2)}@test.com`
 
-    // Ensure test user exists
+    // Ensure test user exists and capture the ID
     await db.withSystemAccess(async () => {
-      await db.client.user.upsert({
-        where: { email: `${userId}@test.com` },
+      const user = await db.client.user.upsert({
+        where: { email: userEmail },
         update: {},
         create: {
-          email: `${userId}@test.com`,
-          name: userId,
+          email: userEmail,
+          name: userEmail.split('@')[0],
         },
       })
+      userId = user.id
     })
 
     // Ensure org and project exist
@@ -118,7 +119,7 @@ describe('WorkflowRepository Integration Tests', () => {
     })
 
     it('should use provided idempotency key', async () => {
-      const idempotencyKey = `key-${Date.now()}`
+      const idempotencyKey = testData.orgId() // Use UUID for valid idempotency key
       const run = await db.withOrganization(orgId, () =>
         repository.createRun({
           organizationId: orgId,
@@ -134,7 +135,7 @@ describe('WorkflowRepository Integration Tests', () => {
     })
 
     it('should throw error for duplicate idempotency key', async () => {
-      const idempotencyKey = `key-${Date.now()}`
+      const idempotencyKey = testData.orgId() // Use UUID for valid idempotency key
 
       await db.withOrganization(orgId, () =>
         repository.createRun({
@@ -165,7 +166,7 @@ describe('WorkflowRepository Integration Tests', () => {
     it('should allow same idempotency key in different organizations', async () => {
       const orgId2 = testData.orgId()
       const projectId2 = testData.projectId()
-      const idempotencyKey = `key-${Date.now()}`
+      const idempotencyKey = testData.orgId() // Use UUID for valid idempotency key
 
       // Setup second org and project
       await db.withSystemAccess(async () => {
@@ -286,7 +287,7 @@ describe('WorkflowRepository Integration Tests', () => {
 
   describe('findRunByIdempotencyKey', () => {
     it('should find run by idempotency key', async () => {
-      const idempotencyKey = `key-${Date.now()}`
+      const idempotencyKey = testData.orgId() // Use UUID for valid idempotency key
 
       const created = await db.withOrganization(orgId, () =>
         repository.createRun({
@@ -308,14 +309,14 @@ describe('WorkflowRepository Integration Tests', () => {
 
     it('should return null for non-existent idempotency key', async () => {
       const found = await db.withOrganization(orgId, () =>
-        repository.findRunByIdempotencyKey(orgId, 'non-existent-key')
+        repository.findRunByIdempotencyKey(orgId, testData.orgId())
       )
 
       expect(found).toBeNull()
     })
 
     it('should be scoped to organization', async () => {
-      const idempotencyKey = `key-${Date.now()}`
+      const idempotencyKey = testData.orgId() // Use UUID for valid idempotency key
 
       await db.withOrganization(orgId, () =>
         repository.createRun({
@@ -426,7 +427,7 @@ describe('WorkflowRepository Integration Tests', () => {
 
   describe('concurrent operations', () => {
     it('should handle concurrent run creates safely', async () => {
-      const idempotencyKey = `key-${Date.now()}`
+      const idempotencyKey = testData.orgId() // Use UUID for valid idempotency key
       const promises = Array.from({ length: 5 }).map(() =>
         db.withOrganization(orgId, () =>
           repository.createRun({

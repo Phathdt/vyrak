@@ -29,7 +29,10 @@ export const EVENT_REPOSITORY = Symbol('EVENT_REPOSITORY')
 /**
  * Provider factory for step repository
  */
-export function createStepRepositoryProvider(): { provide: typeof STEP_REPOSITORY; useClass: typeof StepPrismaRepository } {
+export function createStepRepositoryProvider(): {
+  provide: typeof STEP_REPOSITORY
+  useClass: typeof StepPrismaRepository
+} {
   return {
     provide: STEP_REPOSITORY,
     useClass: StepPrismaRepository,
@@ -39,7 +42,10 @@ export function createStepRepositoryProvider(): { provide: typeof STEP_REPOSITOR
 /**
  * Provider factory for event repository
  */
-export function createEventRepositoryProvider(): { provide: typeof EVENT_REPOSITORY; useClass: typeof EventPrismaRepository } {
+export function createEventRepositoryProvider(): {
+  provide: typeof EVENT_REPOSITORY
+  useClass: typeof EventPrismaRepository
+} {
   return {
     provide: EVENT_REPOSITORY,
     useClass: EventPrismaRepository,
