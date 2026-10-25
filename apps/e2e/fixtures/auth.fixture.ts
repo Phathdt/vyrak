@@ -18,15 +18,15 @@ export interface AuthFixtures {
 async function login(page: Page, email: string, password: string): Promise<string> {
   await page.goto(URLS.ROUTES.LOGIN)
 
-  await page.getByPlaceholder(/email/i).fill(email)
-  await page.getByPlaceholder(/password/i).fill(password)
-  await page.getByRole('button', { name: /sign in|log in|login/i }).click()
+  await page.getByTestId('login-email-input').fill(email)
+  await page.getByTestId('login-password-input').fill(password)
+  await page.getByRole('button', { name: /sign in/i }).click()
 
   // Wait for redirect after successful login
   await expect(page).not.toHaveURL(/\/login/, { timeout: 10000 })
 
-  // Get token from localStorage
-  const token = await page.evaluate(() => localStorage.getItem('token'))
+  // Get token from localStorage (uses vyrak_access_token key)
+  const token = await page.evaluate(() => localStorage.getItem('vyrak_access_token'))
 
   if (!token) {
     throw new Error('Failed to retrieve auth token after login')
@@ -39,11 +39,11 @@ async function login(page: Page, email: string, password: string): Promise<strin
  * Extended test with authentication fixtures
  */
 export const test = base.extend<AuthFixtures>({
-  testUser: async (_unusedDeps, use) => {
-    // Use env vars or default test user
+  testUser: async ({}, use) => {
+    // Use env vars or default test user credentials
     const user: AuthUser = {
-      email: process.env.TEST_USER_EMAIL || 'test@example.com',
-      password: process.env.TEST_USER_PASSWORD || 'Test123456!',
+      email: process.env.TEST_USER_EMAIL || 'admin@vyrak.dev',
+      password: process.env.TEST_USER_PASSWORD || 'Password123!',
     }
     await use(user)
   },
@@ -60,7 +60,7 @@ export const test = base.extend<AuthFixtures>({
 
       // Verify auth state is valid
       await page.goto(URLS.ROUTES.HOME)
-      const token = await page.evaluate(() => localStorage.getItem('token'))
+      const token = await page.evaluate(() => localStorage.getItem('vyrak_access_token'))
 
       if (!token) {
         throw new Error('Saved auth state is invalid')

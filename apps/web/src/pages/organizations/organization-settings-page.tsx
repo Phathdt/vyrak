@@ -9,6 +9,15 @@ import {
   useOrganizationsControllerUpdate,
   useOrganizationsControllerUpdateMemberRole,
 } from '@/api/generated/organizations/organizations'
+import { LoadingSkeleton } from '@/components/loading-skeleton'
+import { Avatar } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { ErrorMessage, FormField, HelperText, Label } from '@/components/ui/form-field'
+import { Input } from '@/components/ui/input'
+import { Modal, ModalDescription, ModalFooter, ModalHeader, ModalTitle } from '@/components/ui/modal'
+import { useToast } from '@/components/ui/toast'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -31,6 +40,8 @@ export function OrganizationSettingsPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [showInviteForm, setShowInviteForm] = useState(false)
+  const [memberToRemove, setMemberToRemove] = useState<{ id: string; name: string } | null>(null)
+  const { showToast } = useToast()
 
   const {
     data: org,
@@ -42,10 +53,10 @@ export function OrganizationSettingsPage() {
   const { data: members, refetch: refetchMembers } = useOrganizationsControllerListMembers(id!, {
     query: { enabled: !!id },
   })
-  const { mutateAsync: updateOrg } = useOrganizationsControllerUpdate()
-  const { mutateAsync: inviteMember } = useOrganizationsControllerInviteMember()
+  const { mutateAsync: updateOrg, isPending: isUpdating } = useOrganizationsControllerUpdate()
+  const { mutateAsync: inviteMember, isPending: isInviting } = useOrganizationsControllerInviteMember()
   const { mutateAsync: updateMemberRole } = useOrganizationsControllerUpdateMemberRole()
-  const { mutateAsync: removeMember } = useOrganizationsControllerRemoveMember()
+  const { mutateAsync: removeMember, isPending: isRemoving } = useOrganizationsControllerRemoveMember()
 
   const {
     register: registerUpdate,
@@ -69,7 +80,7 @@ export function OrganizationSettingsPage() {
   useEffect(() => {
     if (org) {
       resetUpdate({
-        name: org.name,
+        name: org.name || '',
         logo: org.logo || '',
       })
     }
@@ -81,11 +92,33 @@ export function OrganizationSettingsPage() {
   }
 
   if (isLoading) {
-    return <div className='page-loading'>Loading organization...</div>
+    return (
+      <div className='min-h-screen bg-background'>
+        <div className='max-w-5xl mx-auto p-4 md:p-6 lg:p-8'>
+          <LoadingSkeleton variant='text' className='h-9 w-64 mb-8' />
+          <div className='space-y-6'>
+            <LoadingSkeleton variant='rectangular' className='h-64 rounded-lg' />
+            <LoadingSkeleton variant='rectangular' className='h-96 rounded-lg' />
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (!org) {
-    return <div className='page-error'>Organization not found</div>
+    return (
+      <div className='min-h-screen bg-background flex items-center justify-center'>
+        <Card className='max-w-md'>
+          <CardContent className='p-8 text-center'>
+            <h2 className='text-xl font-semibold mb-2'>Organization not found</h2>
+            <p className='text-muted-foreground mb-4'>
+              The organization you're looking for doesn't exist or you don't have access to it.
+            </p>
+            <Button onClick={() => navigate('/organizations')}>Back to Organizations</Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   const onUpdateSubmit = async (data: UpdateOrgFormData) => {
@@ -98,7 +131,9 @@ export function OrganizationSettingsPage() {
         },
       })
       await refetch()
+      showToast('Organization updated successfully', 'success')
     } catch (err) {
+      showToast('Failed to update organization', 'error')
       console.error('Failed to update organization:', err)
     }
   }
@@ -112,7 +147,9 @@ export function OrganizationSettingsPage() {
       resetInvite()
       setShowInviteForm(false)
       await refetchMembers()
+      showToast('Invitation sent successfully', 'success')
     } catch (err) {
+      showToast('Failed to send invitation', 'error')
       console.error('Failed to invite member:', err)
     }
   }
@@ -125,21 +162,26 @@ export function OrganizationSettingsPage() {
         data: { role: newRole },
       })
       await refetchMembers()
+      showToast('Member role updated', 'success')
     } catch (err) {
+      showToast('Failed to update role', 'error')
       console.error('Failed to update role:', err)
     }
   }
 
-  const handleRemoveMember = async (memberId: string) => {
-    if (!confirm('Are you sure you want to remove this member?')) return
+  const handleRemoveMember = async () => {
+    if (!memberToRemove) return
 
     try {
       await removeMember({
         id: id!,
-        memberId,
+        memberId: memberToRemove.id,
       })
       await refetchMembers()
+      showToast('Member removed successfully', 'success')
+      setMemberToRemove(null)
     } catch (err) {
+      showToast('Failed to remove member', 'error')
       console.error('Failed to remove member:', err)
     }
   }
@@ -147,113 +189,212 @@ export function OrganizationSettingsPage() {
   const canManageMembers = org.role === 'owner' || org.role === 'admin'
 
   return (
-    <div className='org-settings-page'>
-      <header className='page-header'>
-        <h1>Organization Settings</h1>
-        <button onClick={() => navigate('/organizations')} className='btn-secondary'>
-          Back to Organizations
-        </button>
-      </header>
-
-      <section className='settings-section'>
-        <h2>General Settings</h2>
-        <form onSubmit={handleUpdateSubmit(onUpdateSubmit)} className='settings-form'>
-          <div className='form-field'>
-            <label htmlFor='name'>Organization Name</label>
-            <input id='name' type='text' {...registerUpdate('name')} disabled={!canManageMembers} />
-            {updateErrors.name && <span className='error'>{updateErrors.name.message}</span>}
+    <div className='min-h-screen bg-background'>
+      <div className='max-w-5xl mx-auto p-4 md:p-6 lg:p-8'>
+        {/* Header */}
+        <header className='mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
+          <div>
+            <h1 className='text-3xl font-bold tracking-tight'>Organization Settings</h1>
+            <p className='text-muted-foreground mt-1'>Manage {org.name}</p>
           </div>
+          <Button variant='outline' onClick={() => navigate('/organizations')}>
+            <svg className='w-4 h-4 mr-2' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
+              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M10 19l-7-7m0 0l7-7m-7 7h18' />
+            </svg>
+            Back
+          </Button>
+        </header>
 
-          <div className='form-field'>
-            <label htmlFor='slug'>Slug (read-only)</label>
-            <input id='slug' type='text' value={org.slug} disabled />
-          </div>
+        {/* General Settings */}
+        <Card className='mb-6'>
+          <CardHeader>
+            <CardTitle>General Settings</CardTitle>
+            <CardDescription>Update your organization's basic information</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleUpdateSubmit(onUpdateSubmit)} className='space-y-4'>
+              <FormField>
+                <Label htmlFor='name'>Organization Name</Label>
+                <Input
+                  id='name'
+                  {...registerUpdate('name')}
+                  disabled={!canManageMembers || isUpdating}
+                  error={!!updateErrors.name}
+                  aria-describedby={updateErrors.name ? 'name-error' : undefined}
+                />
+                <ErrorMessage id='name-error'>{updateErrors.name?.message}</ErrorMessage>
+              </FormField>
 
-          <div className='form-field'>
-            <label htmlFor='logo'>Logo URL</label>
-            <input id='logo' type='text' {...registerUpdate('logo')} disabled={!canManageMembers} />
-            {updateErrors.logo && <span className='error'>{updateErrors.logo.message}</span>}
-          </div>
+              <FormField>
+                <Label htmlFor='slug'>Slug</Label>
+                <Input id='slug' value={org.slug} disabled />
+                <HelperText>URL-friendly identifier (cannot be changed)</HelperText>
+              </FormField>
 
-          {canManageMembers && (
-            <button type='submit' className='btn-primary'>
-              Save Changes
-            </button>
-          )}
-        </form>
-      </section>
+              <FormField>
+                <Label htmlFor='logo'>Logo URL</Label>
+                <Input
+                  id='logo'
+                  {...registerUpdate('logo')}
+                  disabled={!canManageMembers || isUpdating}
+                  error={!!updateErrors.logo}
+                  aria-describedby={updateErrors.logo ? 'logo-error' : undefined}
+                />
+                <ErrorMessage id='logo-error'>{updateErrors.logo?.message}</ErrorMessage>
+              </FormField>
 
-      <section className='members-section'>
-        <div className='section-header'>
-          <h2>Members ({members?.length || 0})</h2>
-          {canManageMembers && (
-            <button onClick={() => setShowInviteForm(!showInviteForm)} className='btn-primary'>
-              {showInviteForm ? 'Cancel' : 'Invite Member'}
-            </button>
-          )}
-        </div>
+              {canManageMembers && (
+                <Button type='submit' loading={isUpdating}>
+                  Save Changes
+                </Button>
+              )}
+            </form>
+          </CardContent>
+        </Card>
 
-        {showInviteForm && (
-          <form onSubmit={handleInviteSubmit(onInviteSubmit)} className='invite-form'>
-            <div className='form-row'>
-              <div className='form-field'>
-                <label htmlFor='email'>Email</label>
-                <input id='email' type='email' {...registerInvite('email')} placeholder='user@example.com' />
-                {inviteErrors.email && <span className='error'>{inviteErrors.email.message}</span>}
+        {/* Members Section */}
+        <Card>
+          <CardHeader>
+            <div className='flex items-center justify-between'>
+              <div>
+                <CardTitle>Members</CardTitle>
+                <CardDescription>
+                  {members?.length || 0} {members?.length === 1 ? 'member' : 'members'}
+                </CardDescription>
               </div>
-
-              <div className='form-field'>
-                <label htmlFor='role'>Role</label>
-                <select id='role' {...registerInvite('role')}>
-                  <option value='member'>Member</option>
-                  <option value='admin'>Admin</option>
-                </select>
-              </div>
-
-              <button type='submit' className='btn-primary'>
-                Send Invitation
-              </button>
+              {canManageMembers && (
+                <Button onClick={() => setShowInviteForm(!showInviteForm)}>
+                  {showInviteForm ? 'Cancel' : 'Invite Member'}
+                </Button>
+              )}
             </div>
-          </form>
-        )}
+          </CardHeader>
+          <CardContent>
+            {showInviteForm && (
+              <form onSubmit={handleInviteSubmit(onInviteSubmit)} className='mb-6 p-4 bg-muted/50 rounded-lg'>
+                <div className='space-y-4'>
+                  <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                    <FormField>
+                      <Label htmlFor='email' required>
+                        Email
+                      </Label>
+                      <Input
+                        id='email'
+                        type='email'
+                        {...registerInvite('email')}
+                        placeholder='user@example.com'
+                        disabled={isInviting}
+                        error={!!inviteErrors.email}
+                        aria-describedby={inviteErrors.email ? 'email-error' : undefined}
+                      />
+                      <ErrorMessage id='email-error'>{inviteErrors.email?.message}</ErrorMessage>
+                    </FormField>
 
-        <div className='members-list'>
-          {members?.map((member) => (
-            <div key={member.id} className='member-card'>
-              <div className='member-info'>
-                {member.user.image && (
-                  <img src={member.user.image} alt={member.user.name || 'User'} className='avatar' />
-                )}
-                <div className='member-details'>
-                  <p className='member-name'>{member.user.name || 'Unnamed User'}</p>
-                  <p className='member-email'>{member.user.email}</p>
-                </div>
-              </div>
+                    <FormField>
+                      <Label htmlFor='role' required>
+                        Role
+                      </Label>
+                      <select
+                        id='role'
+                        {...registerInvite('role')}
+                        disabled={isInviting}
+                        className='flex w-full rounded-md border border-border bg-input px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring min-h-[44px] md:min-h-[36px]'
+                      >
+                        <option value='member'>Member</option>
+                        <option value='admin'>Admin</option>
+                      </select>
+                    </FormField>
+                  </div>
 
-              <div className='member-actions'>
-                {canManageMembers && member.role !== 'owner' ? (
-                  <>
-                    <select
-                      value={member.role}
-                      onChange={(e) => handleRoleChange(member.id, e.target.value as UpdateMemberRoleDtoRole)}
-                      className='role-select'
+                  <div className='flex gap-3'>
+                    <Button type='submit' loading={isInviting}>
+                      Send Invitation
+                    </Button>
+                    <Button
+                      type='button'
+                      variant='outline'
+                      onClick={() => {
+                        setShowInviteForm(false)
+                        resetInvite()
+                      }}
+                      disabled={isInviting}
                     >
-                      <option value={UpdateMemberRoleDtoRole.member}>Member</option>
-                      <option value={UpdateMemberRoleDtoRole.admin}>Admin</option>
-                      {org.role === 'owner' && <option value={UpdateMemberRoleDtoRole.owner}>Owner</option>}
-                    </select>
-                    <button onClick={() => handleRemoveMember(member.id)} className='btn-danger'>
-                      Remove
-                    </button>
-                  </>
-                ) : (
-                  <span className='role-badge'>{member.role}</span>
-                )}
-              </div>
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              </form>
+            )}
+
+            <div className='space-y-3'>
+              {members?.map((member) => (
+                <div
+                  key={member.id}
+                  className='flex items-center justify-between p-4 rounded-lg border border-border hover:border-border-subtle transition-colors'
+                >
+                  <div className='flex items-center gap-3 flex-1 min-w-0'>
+                    <Avatar
+                      src={member.user.image || undefined}
+                      alt={member.user.name || member.user.email}
+                      fallback={member.user.name?.substring(0, 2) || member.user.email.substring(0, 2)}
+                      size='md'
+                    />
+                    <div className='flex-1 min-w-0'>
+                      <p className='font-medium truncate'>{member.user.name || 'Unnamed User'}</p>
+                      <p className='text-sm text-muted-foreground truncate'>{member.user.email}</p>
+                    </div>
+                  </div>
+
+                  <div className='flex items-center gap-3 ml-4'>
+                    {canManageMembers && member.role !== 'owner' ? (
+                      <>
+                        <select
+                          value={member.role}
+                          onChange={(e) => handleRoleChange(member.id, e.target.value as UpdateMemberRoleDtoRole)}
+                          className='px-3 py-1.5 text-sm rounded-md border border-border bg-input text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+                        >
+                          <option value={UpdateMemberRoleDtoRole.member}>Member</option>
+                          <option value={UpdateMemberRoleDtoRole.admin}>Admin</option>
+                          {org.role === 'owner' && <option value={UpdateMemberRoleDtoRole.owner}>Owner</option>}
+                        </select>
+                        <Button
+                          variant='destructive'
+                          size='sm'
+                          onClick={() =>
+                            setMemberToRemove({ id: member.id, name: member.user.name || member.user.email })
+                          }
+                        >
+                          Remove
+                        </Button>
+                      </>
+                    ) : (
+                      <Badge variant='default'>{member.role}</Badge>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </section>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Remove Member Confirmation Modal */}
+      <Modal open={!!memberToRemove} onClose={() => setMemberToRemove(null)} size='sm'>
+        <ModalHeader onClose={() => setMemberToRemove(null)}>
+          <ModalTitle>Remove Member</ModalTitle>
+          <ModalDescription>
+            Are you sure you want to remove {memberToRemove?.name}? This action cannot be undone.
+          </ModalDescription>
+        </ModalHeader>
+        <ModalFooter>
+          <Button variant='outline' onClick={() => setMemberToRemove(null)} disabled={isRemoving}>
+            Cancel
+          </Button>
+          <Button variant='destructive' onClick={handleRemoveMember} loading={isRemoving}>
+            Remove Member
+          </Button>
+        </ModalFooter>
+      </Modal>
     </div>
   )
 }

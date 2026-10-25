@@ -2,10 +2,10 @@ host:
   port: 3000
 
 database:
-  url: postgresql://postgres:123123123@localhost:5433/vyrak
+  url: replace_me
 
 redis:
-  url: redis://vyrak-redis-master.database.svc.cluster.local:6379
+  url: replace_me
 
 log:
   level: info

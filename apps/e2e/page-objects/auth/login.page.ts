@@ -10,23 +10,23 @@ export class LoginPage extends BasePage {
 
   // Locators
   private get emailInput() {
-    return this.page.getByPlaceholder(/email/i)
+    return this.page.getByTestId('login-email-input')
   }
 
   private get passwordInput() {
-    return this.page.getByPlaceholder(/password/i)
+    return this.page.getByTestId('login-password-input')
   }
 
   private get submitButton() {
-    return this.page.getByRole('button', { name: /sign in|log in|login/i })
+    return this.page.getByRole('button', { name: /sign in/i })
   }
 
   private get registerLink() {
-    return this.page.getByRole('link', { name: /register|sign up|create account/i })
+    return this.page.getByRole('link', { name: /sign up/i })
   }
 
   private get errorMessage() {
-    return this.page.locator('[role="alert"], .error, .alert-error').first()
+    return this.page.locator('[role="alert"]').first()
   }
 
   // Actions

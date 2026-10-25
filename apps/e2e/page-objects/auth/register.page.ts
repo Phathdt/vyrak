@@ -9,20 +9,12 @@ export class RegisterPage extends BasePage {
   }
 
   // Locators
-  private get emailInput() {
-    return this.page.getByPlaceholder(/email/i)
+  private get loginLink() {
+    return this.page.getByRole('link', { name: /sign in/i })
   }
 
-  private get passwordInput() {
-    return this.page.getByPlaceholder(/^password/i).first()
-  }
-
-  private get confirmPasswordInput() {
-    return this.page.getByPlaceholder(/confirm password|password confirmation/i)
-  }
-
-  private get submitButton() {
-    return this.page.getByRole('button', { name: /sign up|register|create account/i })
+  private get disabledMessage() {
+    return this.page.locator('text=Signup is temporarily disabled')
   }
 
   // Actions
@@ -30,43 +22,49 @@ export class RegisterPage extends BasePage {
     await this.goto(URLS.ROUTES.REGISTER)
   }
 
-  async fillRegistrationForm(email: string, password: string): Promise<void> {
-    await this.emailInput.fill(email)
-    await this.passwordInput.fill(password)
+  async clickLoginLink(): Promise<void> {
+    await this.loginLink.click()
+  }
 
-    // Fill confirm password if exists
-    const confirmPasswordVisible = await this.confirmPasswordInput.isVisible().catch(() => false)
-    if (confirmPasswordVisible) {
-      await this.confirmPasswordInput.fill(password)
-    }
+  async registerUser(_email: string, _password: string): Promise<void> {
+    // Signup is disabled in current UI - throw informative error
+    throw new Error('User registration is not available. Signup is currently disabled.')
+  }
+
+  async fillRegistrationForm(_email: string, _password: string): Promise<void> {
+    // Signup is disabled - no form to fill
+    throw new Error('User registration is not available. Signup is currently disabled.')
   }
 
   async clickSubmit(): Promise<void> {
-    await this.submitButton.click()
-  }
-
-  async registerUser(email: string, password: string): Promise<void> {
-    await this.fillRegistrationForm(email, password)
-    await this.clickSubmit()
+    // Signup is disabled - no submit button
+    throw new Error('User registration is not available. Signup is currently disabled.')
   }
 
   // Assertions
   async expectOnRegisterPage(): Promise<void> {
-    await this.expectUrlToMatch(/\/register/)
+    await this.expectUrlToMatch(/\/signup/)
   }
 
-  async expectRedirectedToHome(): Promise<void> {
-    await expect(this.page).not.toHaveURL(/\/register/, {
+  async expectSignupDisabled(): Promise<void> {
+    await expect(this.disabledMessage).toBeVisible({
+      timeout: TEST_TIMEOUTS.ACTION,
+    })
+  }
+
+  async expectRedirectedToLogin(): Promise<void> {
+    await expect(this.page).toHaveURL(/\/login/, {
       timeout: TEST_TIMEOUTS.NAVIGATION,
     })
   }
 
-  async expectErrorVisible(message?: string | RegExp): Promise<void> {
-    const error = this.page.locator('[role="alert"], .error').first()
-    await expect(error).toBeVisible({ timeout: TEST_TIMEOUTS.ACTION })
+  async expectRedirectedToHome(): Promise<void> {
+    // Signup is disabled - can't redirect after registration
+    throw new Error('User registration is not available. Signup is currently disabled.')
+  }
 
-    if (message) {
-      await expect(error).toContainText(message)
-    }
+  async expectErrorVisible(_message?: string | RegExp): Promise<void> {
+    // Signup is disabled - no error messages from form
+    throw new Error('User registration is not available. Signup is currently disabled.')
   }
 }

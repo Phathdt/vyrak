@@ -1,12 +1,12 @@
 import { URLS } from '@config/urls.config'
 import { StorageHelper } from '@helpers/storage.helper'
 import { LoginPage } from '@page-objects/auth/login.page'
-import { expect, test } from '@playwright/test'
+import { expect, test } from '@fixtures/auth.fixture'
 
 test.describe('Session Persistence', () => {
   const testUser = {
-    email: process.env.TEST_USER_EMAIL || 'test@example.com',
-    password: process.env.TEST_USER_PASSWORD || 'Test123456!',
+    email: process.env.TEST_USER_EMAIL || 'admin@vyrak.dev',
+    password: process.env.TEST_USER_PASSWORD || 'Password123!',
   }
 
   test('should persist session after page reload', async ({ page }) => {

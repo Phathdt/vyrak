@@ -7,7 +7,7 @@ export const URLS = {
   ROUTES: {
     HOME: '/',
     LOGIN: '/login',
-    REGISTER: '/register',
+    REGISTER: '/signup',
     DASHBOARD: '/',
   },
   API_ENDPOINTS: {
