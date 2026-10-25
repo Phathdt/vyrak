@@ -1,4 +1,4 @@
-import { WorkflowEventEntity } from '../entities/workflow-event.entity'
+import { WorkflowEventEntity } from '../entities'
 
 /**
  * Repository interface for event operations

@@ -3,13 +3,13 @@ import { DatabaseService, Prisma } from '@vyrak/database'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
+  CreateRunParams,
   WorkflowAlreadyExistsError,
   WorkflowNotFoundError,
   WorkflowRepositoryError,
-} from '../../../domain/errors/common.error'
-import { CreateRunParams } from '../../../domain/interfaces/workflow.repository.interface'
-import { WorkflowState } from '../../../domain/workflow-state'
-import { WorkflowPrismaRepository } from '../../../infras/repositories/workflow-prisma.repository'
+  WorkflowState,
+} from '../../../domain'
+import { WorkflowPrismaRepository } from '../../../infras'
 
 describe('WorkflowPrismaRepository', () => {
   let repository: WorkflowPrismaRepository

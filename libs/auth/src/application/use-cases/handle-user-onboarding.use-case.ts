@@ -1,4 +1,4 @@
-import type { AuthRepository } from '../ports/auth.repository'
+import type { AuthRepository } from '../ports'
 
 /**
  * Use Case: Handle user onboarding

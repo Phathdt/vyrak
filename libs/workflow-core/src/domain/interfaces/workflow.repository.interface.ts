@@ -1,4 +1,4 @@
-import { WorkflowRun } from '../entities/workflow-run.entity'
+import { WorkflowRun } from '../entities'
 import { WorkflowState } from '../workflow-state'
 
 /**

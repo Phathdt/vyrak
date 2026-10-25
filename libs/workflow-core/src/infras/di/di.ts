@@ -1,5 +1,4 @@
-import { EventPrismaRepository } from '../repositories/event-prisma.repository'
-import { StepPrismaRepository } from '../repositories/step-prisma.repository'
+import { EventPrismaRepository, StepPrismaRepository } from '../repositories'
 
 /**
  * Dependency injection tokens for workflow-core infrastructure

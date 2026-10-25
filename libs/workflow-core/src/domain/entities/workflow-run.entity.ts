@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { InvalidWorkflowStateError } from '../errors/invalid-workflow-state.error'
+import { InvalidWorkflowStateError } from '../errors'
 import { WorkflowState, WorkflowStateMachine } from '../workflow-state'
 
 /**

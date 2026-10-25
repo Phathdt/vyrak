@@ -4,9 +4,8 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 
 import { cleanupTestData, IntegrationTestSetup, testData } from './test-utils'
 
-import type { IWorkflowRepository } from '../../domain/interfaces/workflow.repository.interface'
-import { WorkflowState } from '../../domain/workflow-state'
-import { WORKFLOW_REPOSITORY } from '../../infras/di/di'
+import { WorkflowState, type IWorkflowRepository } from '../../domain'
+import { WORKFLOW_REPOSITORY } from '../../infras'
 
 describe('WorkflowRepository Integration Tests', () => {
   let db: DatabaseService

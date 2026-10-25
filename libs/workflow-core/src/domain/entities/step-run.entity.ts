@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { InvalidStepStateError } from '../errors/invalid-step-state.error'
+import { InvalidStepStateError } from '../errors'
 import { StepStatus } from '../step-types'
 
 // Re-export StepStatus for convenience

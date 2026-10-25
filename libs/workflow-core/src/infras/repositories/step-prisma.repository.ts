@@ -1,8 +1,15 @@
 import { DatabaseService } from '@vyrak/database'
 
-import { StepRun, StepRunSchema, StepStatus } from '../../domain/entities/step-run.entity'
-import { StepNotFoundError, WorkflowRepositoryError } from '../../domain/errors/common.error'
-import { CreateStepParams, IStepRepository, StepUpdateResult } from '../../domain/interfaces/step-repository.interface'
+import {
+  CreateStepParams,
+  IStepRepository,
+  StepNotFoundError,
+  StepRun,
+  StepRunSchema,
+  StepStatus,
+  StepUpdateResult,
+  WorkflowRepositoryError,
+} from '../../domain'
 
 export class StepPrismaRepository implements IStepRepository {
   constructor(private readonly db: DatabaseService) {}

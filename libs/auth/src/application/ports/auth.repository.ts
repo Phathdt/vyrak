@@ -1,4 +1,4 @@
-import type { UserWithOrganizations } from '../../domain/interfaces/auth-repository.interface'
+import type { UserWithOrganizations } from '../../domain'
 
 export type { UserWithOrganizations }
 

@@ -1,8 +1,7 @@
 import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common'
 import { DatabaseService, type Member, type Organization } from '@vyrak/database'
 
-import { CreateOrganizationDto } from './dto/create-organization.dto'
-import { UpdateOrganizationDto } from './dto/update-organization.dto'
+import { CreateOrganizationDto, UpdateOrganizationDto } from './dto'
 
 export interface OrganizationWithRole {
   id: string

@@ -4,10 +4,8 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 
 import { cleanupTestData, IntegrationTestSetup, testData } from './test-utils'
 
-import { StepStatus } from '../../domain/entities/step-run.entity'
-import type { IStepRepository } from '../../domain/interfaces/step-repository.interface'
-import type { IWorkflowRepository } from '../../domain/interfaces/workflow.repository.interface'
-import { STEP_REPOSITORY, WORKFLOW_REPOSITORY } from '../../infras/di/di'
+import { StepStatus, type IStepRepository, type IWorkflowRepository } from '../../domain'
+import { STEP_REPOSITORY, WORKFLOW_REPOSITORY } from '../../infras'
 
 describe('StepRepository Integration Tests', () => {
   let db: DatabaseService

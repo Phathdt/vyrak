@@ -1,7 +1,6 @@
 import type { PrismaClient } from '@vyrak/database'
 
-import type { UserEntity } from '../../domain/entities'
-import type { IAuthRepository, UserWithOrganizations } from '../../domain/interfaces/auth-repository.interface'
+import type { IAuthRepository, UserEntity, UserWithOrganizations } from '../../domain'
 
 export class AuthPrismaRepository implements IAuthRepository {
   constructor(private readonly prisma: PrismaClient) {}

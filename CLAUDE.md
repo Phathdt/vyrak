@@ -375,6 +375,54 @@ VITE_API_BASE_URL=http://localhost:3000
 - Use test database (separate from development)
 - Clean up test data after each test
 
+## Testing Strategy
+
+### Test Structure
+
+Tests are split into two categories:
+
+**Unit Tests** (`*.spec.ts`, `*.test.ts` excluding integration):
+- Fast, isolated tests with no external dependencies
+- Run in CI on every push/PR (5-10 seconds)
+- No database or Redis required
+- Mock external dependencies
+- Command: `yarn test:unit`
+
+**Integration Tests** (`*.integration.spec.ts`, `*.integration.test.ts`, `__tests__/integration/*`):
+- Test full module behavior with real database/Redis
+- Run in separate CI workflow on push/PR to main/develop
+- Require PostgreSQL and Redis services
+- Slower but more comprehensive (30-60 seconds)
+- Command: `yarn test:integration`
+
+### Running Tests
+
+**Development:**
+```bash
+yarn test:unit              # Run unit tests once
+yarn test:integration       # Run integration tests (requires Docker)
+yarn test                   # Run all tests
+yarn test:watch             # Watch mode for all tests
+```
+
+**CI:**
+- Unit tests run automatically on all PRs/pushes
+- Integration tests run on push/PR to main/develop branches
+- Coverage reports uploaded to Codecov
+
+### Writing Tests
+
+1. **Unit tests** - Use for services, utilities, and business logic:
+   - Test pure functions and isolated logic
+   - Mock database repositories and external services
+   - Fast execution (< 100ms per test)
+
+2. **Integration tests** - Use for repository implementations and full flows:
+   - Test actual database interactions
+   - Verify tenant isolation and multi-tenancy
+   - Test concurrent operations and race conditions
+   - Use `IntegrationTestSetup` helper from `test-utils.ts`
+
 ### E2E Tests
 
 E2E test suite using **Playwright Test** for critical user flows.

@@ -1,4 +1,4 @@
-import { StepRun, StepStatus } from '../entities/step-run.entity'
+import { StepRun, StepStatus } from '../entities'
 
 /**
  * Repository interface for step run operations

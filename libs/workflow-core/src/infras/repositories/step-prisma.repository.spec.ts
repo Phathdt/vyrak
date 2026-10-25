@@ -4,8 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { StepPrismaRepository } from './step-prisma.repository'
 
-import { StepStatus } from '../../domain/entities/step-run.entity'
-import { StepNotFoundError } from '../../domain/errors/common.error'
+import { StepNotFoundError, StepStatus } from '../../domain'
 
 describe('StepPrismaRepository', () => {
   let repository: StepPrismaRepository

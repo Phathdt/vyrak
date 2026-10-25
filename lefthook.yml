@@ -5,10 +5,10 @@ pre-commit:
   parallel: true
   commands:
     lint:
-      glob: "*.{js,ts,tsx}"
+      glob: '*.{js,ts,tsx}'
       run: yarn ci:lint {staged_files}
     format:
-      glob: "*.{js,ts,tsx,json}"
+      glob: '*.{js,ts,tsx,json}'
       run: yarn ci:format {staged_files}
 
 commit-msg:
@@ -22,4 +22,4 @@ pre-push:
     typecheck:
       run: yarn ci:typecheck
     test:
-      run: yarn test
+      run: yarn test:unit
