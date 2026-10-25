@@ -159,6 +159,9 @@ model WorkflowRun {
   result             String?   @db.Text
   startedAt          DateTime? @map("started_at")
   completedAt        DateTime? @map("completed_at")
+  leaseOwnerId       String?   @map("lease_owner_id")
+  leaseExpiresAt     DateTime? @map("lease_expires_at")
+  lastHeartbeatAt    DateTime? @map("last_heartbeat_at")
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
 
@@ -175,6 +178,8 @@ model WorkflowRun {
   @@index([organizationId])
   @@index([status])
   @@index([initiatedByUserId])
+  @@index([leaseExpiresAt])
+  @@index([lastHeartbeatAt])
   @@map("workflow_runs")
 }
 

@@ -128,6 +128,120 @@ export class WorkflowPrismaRepository implements IWorkflowRepository {
     }
   }
 
+  async acquireLease(runId: string, workerId: string, leaseDurationMs: number): Promise<boolean> {
+    const now = new Date()
+    const expiresAt = new Date(now.getTime() + leaseDurationMs)
+
+    try {
+      // Atomic update: only set lease if no active lease exists
+      const result = await this.prisma.workflowRun.updateMany({
+        where: {
+          id: runId,
+          OR: [{ leaseOwnerId: null }, { leaseExpiresAt: { lt: now } }],
+        },
+        data: {
+          leaseOwnerId: workerId,
+          leaseExpiresAt: expiresAt,
+          lastHeartbeatAt: now,
+        },
+      })
+
+      return result.count > 0
+    } catch (error) {
+      throw new WorkflowRepositoryError(
+        'Failed to acquire lease',
+        error instanceof Error ? error.message : 'Unknown error'
+      )
+    }
+  }
+
+  async renewLease(runId: string, workerId: string, leaseDurationMs: number): Promise<boolean> {
+    const now = new Date()
+    const expiresAt = new Date(now.getTime() + leaseDurationMs)
+
+    try {
+      // Only renew if current owner
+      const result = await this.prisma.workflowRun.updateMany({
+        where: {
+          id: runId,
+          leaseOwnerId: workerId,
+        },
+        data: {
+          leaseExpiresAt: expiresAt,
+          lastHeartbeatAt: now,
+        },
+      })
+
+      return result.count > 0
+    } catch (error) {
+      throw new WorkflowRepositoryError(
+        'Failed to renew lease',
+        error instanceof Error ? error.message : 'Unknown error'
+      )
+    }
+  }
+
+  async releaseLease(runId: string, workerId: string): Promise<void> {
+    try {
+      await this.prisma.workflowRun.updateMany({
+        where: {
+          id: runId,
+          leaseOwnerId: workerId,
+        },
+        data: {
+          leaseOwnerId: null,
+          leaseExpiresAt: null,
+        },
+      })
+    } catch (error) {
+      throw new WorkflowRepositoryError(
+        'Failed to release lease',
+        error instanceof Error ? error.message : 'Unknown error'
+      )
+    }
+  }
+
+  async updateHeartbeat(runId: string, workerId: string): Promise<void> {
+    try {
+      await this.prisma.workflowRun.updateMany({
+        where: {
+          id: runId,
+          leaseOwnerId: workerId,
+        },
+        data: {
+          lastHeartbeatAt: new Date(),
+        },
+      })
+    } catch (error) {
+      throw new WorkflowRepositoryError(
+        'Failed to update heartbeat',
+        error instanceof Error ? error.message : 'Unknown error'
+      )
+    }
+  }
+
+  async findExpiredLeases(limit = 100): Promise<string[]> {
+    try {
+      const now = new Date()
+      const runs = await this.prisma.workflowRun.findMany({
+        where: {
+          leaseOwnerId: { not: null },
+          leaseExpiresAt: { lt: now },
+          status: { in: [WorkflowState.QUEUED, WorkflowState.RUNNING] },
+        },
+        select: { id: true },
+        take: limit,
+      })
+
+      return runs.map((run) => run.id)
+    } catch (error) {
+      throw new WorkflowRepositoryError(
+        'Failed to find expired leases',
+        error instanceof Error ? error.message : 'Unknown error'
+      )
+    }
+  }
+
   /**
    * Map Prisma model to domain entity
    * Validates with Zod schema to ensure data integrity

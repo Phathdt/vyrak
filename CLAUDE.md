@@ -87,12 +87,15 @@ libs/{module-name}/
    - Orchestrate domain logic, pagination, error handling
    - Maps repository data to service responses
    - Throws domain exceptions (NotFoundException, etc.)
+   - **CRITICAL: NO @Injectable() decorator** - Application services must be plain TypeScript classes
+   - **CRITICAL: NO NestJS decorators** - Framework-independent business logic
 
 3. **Infrastructure Layer** (`/infras`) - Framework-specific implementations
    - **repositories/**: Implement repository interfaces with Prisma
    - **di/**: Symbol-based DI tokens (e.g., `PRODUCT_REPOSITORY`)
    - Handle Prisma exceptions and type mapping
    - Direct database/external service calls
+   - **CRITICAL: NO @Injectable() decorator** - Infrastructure implementations must be plain TypeScript classes
 
 4. **Module** (`{module}.module.ts`) - NestJS wiring
    - Import dependencies (DatabaseModule, etc.)
@@ -277,16 +280,17 @@ Using `@ianvs/prettier-plugin-sort-imports`:
 7. **Never write manual React Query hooks** - Use generated hooks from Orval in `apps/web/src/api/generated/`
 8. **Verify types** - Run `yarn typecheck` before claiming completion
 9. **Update docs** - Update relevant docs when changing architecture or workflows
+10. **NEVER use @Injectable() in libs/** - Services, repositories, and use cases in `libs/` MUST be plain TypeScript classes without any NestJS decorators. Only `apps/` code (controllers, processors) and `*.module.ts` files can use NestJS decorators
 
 ### When Adding Features
 
 1. **Create business module in libs/** - All new domain modules go in `libs/{module-name}/` following hexagonal architecture
 2. **Follow the product module pattern** - Use `libs/product/` as reference implementation
 3. **Structure layers correctly**:
-   - Domain layer: entities (Zod schemas), interfaces, DTOs with OpenAPI decorators
-   - Application layer: service implementation with business logic
-   - Infrastructure layer: repository implementation (Prisma), DI tokens
-   - Module: NestJS module with DI wiring
+   - Domain layer: entities (Zod schemas), interfaces, DTOs with OpenAPI decorators - **NO NestJS decorators**
+   - Application layer: service implementation with business logic - **NO @Injectable(), plain TypeScript classes**
+   - Infrastructure layer: repository implementation (Prisma), DI tokens - **NO @Injectable(), plain TypeScript classes**
+   - Module: NestJS module with DI wiring - **ONLY place for @Module() decorator**
 4. **Add controller to api-server** - Create lightweight controller in `apps/api-server/src/{module}/` that injects and calls the service from `libs/{module}/`
 5. **Add processor to worker (if needed)** - Create processor/consumer in `apps/worker/src/{module}/` for background jobs
 6. **Use shared base configs**:
@@ -318,6 +322,7 @@ Using `@ianvs/prettier-plugin-sort-imports`:
 - **Controllers in libs**: DO NOT put controllers in libs. Controllers are HTTP adapters and belong in `apps/api-server/src/{module}/`
 - **Missing layers**: Always implement all three layers (domain, application, infrastructure) for consistency
 - **Direct Prisma in services**: Services should depend on repository interfaces, NOT Prisma directly
+- **@Injectable() in libs**: NEVER use `@Injectable()` decorator in `libs/` code. Services, repositories, and use cases MUST be plain TypeScript classes. Only `apps/` controllers/processors and `*.module.ts` files can use NestJS decorators
 
 ### OpenAPI Generation
 
