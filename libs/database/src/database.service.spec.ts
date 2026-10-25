@@ -315,7 +315,7 @@ describe('DatabaseService', () => {
 
     it('should setup query event listener with colored output', async () => {
       delete process.env.SKIP_DB_CONNECTION
-      const logSpy = vi.spyOn(console, 'log')
+      const logSpy = vi.spyOn(service['logger'], 'log')
       const connectSpy = vi.spyOn(service['prismaClient'], '$connect').mockResolvedValue()
 
       let queryHandler: any
@@ -377,7 +377,7 @@ describe('DatabaseService', () => {
 
     it('should log query events with error', async () => {
       delete process.env.SKIP_DB_CONNECTION
-      const logSpy = vi.spyOn(console, 'log')
+      const logSpy = vi.spyOn(service['logger'], 'log')
       const connectSpy = vi.spyOn(service['prismaClient'], '$connect').mockResolvedValue()
 
       let queryHandler: any

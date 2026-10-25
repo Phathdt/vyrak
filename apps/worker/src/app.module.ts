@@ -34,6 +34,18 @@ import { ExampleProcessor } from './processors'
     BullModule.registerQueue({
       name: 'example',
     }),
+    BullModule.registerQueue({
+      name: 'workflow-execution',
+      defaultJobOptions: {
+        attempts: 3,
+        backoff: {
+          type: 'exponential',
+          delay: 2000,
+        },
+        removeOnComplete: true,
+        removeOnFail: false,
+      },
+    }),
   ],
   providers: [ExampleProcessor],
 })

@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { InvalidStateTransitionError } from './errors/invalid-state-transition.error'
+import { InvalidStateTransitionError } from './errors'
 
 /**
  * Workflow lifecycle states per PRD Section 3 (FR-03)

@@ -1,9 +1,11 @@
-import { LoggerService } from '@nestjs/common'
-
 import { ClsService } from 'nestjs-cls'
 import { PinoLogger } from 'nestjs-pino'
 
-export class EnhancedLogger implements LoggerService {
+/**
+ * Enhanced logger service that wraps PinoLogger with metadata support
+ * Note: This is a NestJS adapter for logging capabilities
+ */
+export class EnhancedLogger {
   private metadata: Record<string, unknown> = {}
 
   constructor(

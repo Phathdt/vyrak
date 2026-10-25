@@ -1,8 +1,7 @@
 import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common'
 import { DatabaseService, type Invitation } from '@vyrak/database'
 
-import { InviteMemberDto } from './dto/invite-member.dto'
-import { InvitationResponse } from './dto/organization-response.dto'
+import { InvitationResponse, InviteMemberDto } from './dto'
 
 @Injectable()
 export class InvitationsService {

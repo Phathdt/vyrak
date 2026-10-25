@@ -1,8 +1,7 @@
 import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common'
 import { DatabaseService, type Member, type User } from '@vyrak/database'
 
-import { MemberResponse } from './dto/organization-response.dto'
-import { UpdateMemberRoleDto } from './dto/update-member-role.dto'
+import { MemberResponse, UpdateMemberRoleDto } from './dto'
 
 @Injectable()
 export class MembersService {

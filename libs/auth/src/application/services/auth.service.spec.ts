@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { AuthService } from './auth.service'
 
-import type { IAuthRepository, UserWithOrganizations } from '../../domain/interfaces/auth-repository.interface'
+import type { IAuthRepository, UserWithOrganizations } from '../../domain'
 
 describe('AuthService', () => {
   let service: AuthService

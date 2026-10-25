@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { InvalidWorkflowStateError } from '../errors/invalid-workflow-state.error'
+import { InvalidWorkflowStateError } from '../errors'
 import { WorkflowState, WorkflowStateMachine } from '../workflow-state'
 
 /**
@@ -15,7 +15,7 @@ export const WorkflowRunSchema = z.object({
   state: z.nativeEnum(WorkflowState),
   currentStepKey: z.string().optional(),
   initiatedByUserId: z.string().uuid(),
-  idempotencyKey: z.string().uuid(),
+  idempotencyKey: z.string().uuid().optional(),
   errorCode: z.string().optional(),
   errorMessage: z.string().optional(),
   createdAt: z.date(),
@@ -45,10 +45,7 @@ function validateWorkflowRun(run: WorkflowRun): void {
  */
 export function createWorkflowRun(
   data: Partial<WorkflowRun> &
-    Pick<
-      WorkflowRun,
-      'id' | 'workflowKey' | 'workflowVersion' | 'organizationId' | 'projectId' | 'initiatedByUserId' | 'idempotencyKey'
-    >
+    Pick<WorkflowRun, 'id' | 'workflowKey' | 'workflowVersion' | 'organizationId' | 'projectId' | 'initiatedByUserId'>
 ): WorkflowRun {
   const now = new Date()
   const run: WorkflowRun = {

@@ -30,7 +30,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { dump as yamlDump } from 'js-yaml'
 import { cleanupOpenApiDoc } from 'nestjs-zod'
 
-import { AppModule } from './app/app.module'
+import { AppModule } from './app'
 
 // IMPORTANT: Set environment flags BEFORE any imports
 // This prevents database connection attempts during module initialization

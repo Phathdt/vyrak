@@ -1,4 +1,4 @@
-import type { AuthRepository, UserWithOrganizations } from '../ports/auth.repository'
+import type { AuthRepository, UserWithOrganizations } from '../ports'
 
 /**
  * Use Case: Get current user

@@ -5,15 +5,15 @@ import { isOrganizationModel, isTenantOwned, ORGANIZATION_ID_FIELD, TENANT_OWNED
 describe('Tenant Models', () => {
   describe('TENANT_OWNED_MODELS Array', () => {
     it('should contain expected tenant models', () => {
-      expect(TENANT_OWNED_MODELS).toContain('organization')
-      expect(TENANT_OWNED_MODELS).toContain('member')
-      expect(TENANT_OWNED_MODELS).toContain('invitation')
-      expect(TENANT_OWNED_MODELS).toContain('product')
-      expect(TENANT_OWNED_MODELS).toContain('project')
-      expect(TENANT_OWNED_MODELS).toContain('gitRepository')
-      expect(TENANT_OWNED_MODELS).toContain('workflowRun')
-      expect(TENANT_OWNED_MODELS).toContain('agentTask')
-      expect(TENANT_OWNED_MODELS).toContain('artifact')
+      expect(TENANT_OWNED_MODELS).toContain('Organization')
+      expect(TENANT_OWNED_MODELS).toContain('Member')
+      expect(TENANT_OWNED_MODELS).toContain('Invitation')
+      expect(TENANT_OWNED_MODELS).toContain('Product')
+      expect(TENANT_OWNED_MODELS).toContain('Project')
+      expect(TENANT_OWNED_MODELS).toContain('GitRepository')
+      expect(TENANT_OWNED_MODELS).toContain('WorkflowRun')
+      expect(TENANT_OWNED_MODELS).toContain('AgentTask')
+      expect(TENANT_OWNED_MODELS).toContain('Artifact')
     })
 
     it('should have at least one tenant model', () => {
@@ -33,15 +33,15 @@ describe('Tenant Models', () => {
 
   describe('isTenantOwned Function', () => {
     it('should return true for tenant-owned models', () => {
-      expect(isTenantOwned('organization')).toBe(true)
-      expect(isTenantOwned('product')).toBe(true)
-      expect(isTenantOwned('project')).toBe(true)
-      expect(isTenantOwned('member')).toBe(true)
-      expect(isTenantOwned('invitation')).toBe(true)
-      expect(isTenantOwned('gitRepository')).toBe(true)
-      expect(isTenantOwned('workflowRun')).toBe(true)
-      expect(isTenantOwned('agentTask')).toBe(true)
-      expect(isTenantOwned('artifact')).toBe(true)
+      expect(isTenantOwned('Organization')).toBe(true)
+      expect(isTenantOwned('Product')).toBe(true)
+      expect(isTenantOwned('Project')).toBe(true)
+      expect(isTenantOwned('Member')).toBe(true)
+      expect(isTenantOwned('Invitation')).toBe(true)
+      expect(isTenantOwned('GitRepository')).toBe(true)
+      expect(isTenantOwned('WorkflowRun')).toBe(true)
+      expect(isTenantOwned('AgentTask')).toBe(true)
+      expect(isTenantOwned('Artifact')).toBe(true)
     })
 
     it('should return false for non-tenant-owned models', () => {
@@ -59,9 +59,9 @@ describe('Tenant Models', () => {
     })
 
     it('should be case-sensitive', () => {
-      expect(isTenantOwned('Product')).toBe(false)
+      expect(isTenantOwned('product')).toBe(false)
       expect(isTenantOwned('PRODUCT')).toBe(false)
-      expect(isTenantOwned('product')).toBe(true)
+      expect(isTenantOwned('Product')).toBe(true)
     })
 
     it('should validate model names correctly', () => {
@@ -73,14 +73,14 @@ describe('Tenant Models', () => {
 
   describe('isOrganizationModel Function', () => {
     it('should return true for organization model', () => {
-      expect(isOrganizationModel('organization')).toBe(true)
+      expect(isOrganizationModel('Organization')).toBe(true)
     })
 
     it('should return false for other tenant-owned models', () => {
-      expect(isOrganizationModel('product')).toBe(false)
-      expect(isOrganizationModel('member')).toBe(false)
-      expect(isOrganizationModel('project')).toBe(false)
-      expect(isOrganizationModel('invitation')).toBe(false)
+      expect(isOrganizationModel('Product')).toBe(false)
+      expect(isOrganizationModel('Member')).toBe(false)
+      expect(isOrganizationModel('Project')).toBe(false)
+      expect(isOrganizationModel('Invitation')).toBe(false)
     })
 
     it('should return false for non-tenant models', () => {
@@ -89,7 +89,7 @@ describe('Tenant Models', () => {
     })
 
     it('should be case-sensitive', () => {
-      expect(isOrganizationModel('Organization')).toBe(false)
+      expect(isOrganizationModel('organization')).toBe(false)
       expect(isOrganizationModel('ORGANIZATION')).toBe(false)
     })
 
@@ -114,11 +114,11 @@ describe('Tenant Models', () => {
 
   describe('Type Safety', () => {
     it('should properly type isTenantOwned as type guard', () => {
-      const model: string = 'product'
+      const model: string = 'Product'
       if (isTenantOwned(model)) {
         // TypeScript should recognize model as TenantOwnedModel here
         const tenantModel: typeof model = model
-        expect(tenantModel).toBe('product')
+        expect(tenantModel).toBe('Product')
       }
     })
 
@@ -144,27 +144,27 @@ describe('Tenant Models', () => {
 
   describe('Model Completeness', () => {
     it('should include core domain models', () => {
-      expect(TENANT_OWNED_MODELS).toContain('organization')
-      expect(TENANT_OWNED_MODELS).toContain('member')
+      expect(TENANT_OWNED_MODELS).toContain('Organization')
+      expect(TENANT_OWNED_MODELS).toContain('Member')
     })
 
     it('should include product and project models', () => {
-      expect(TENANT_OWNED_MODELS).toContain('product')
-      expect(TENANT_OWNED_MODELS).toContain('project')
+      expect(TENANT_OWNED_MODELS).toContain('Product')
+      expect(TENANT_OWNED_MODELS).toContain('Project')
     })
 
     it('should include workflow and automation models', () => {
-      expect(TENANT_OWNED_MODELS).toContain('gitRepository')
-      expect(TENANT_OWNED_MODELS).toContain('workflowRun')
+      expect(TENANT_OWNED_MODELS).toContain('GitRepository')
+      expect(TENANT_OWNED_MODELS).toContain('WorkflowRun')
     })
 
     it('should include agent and artifact models', () => {
-      expect(TENANT_OWNED_MODELS).toContain('agentTask')
-      expect(TENANT_OWNED_MODELS).toContain('artifact')
+      expect(TENANT_OWNED_MODELS).toContain('AgentTask')
+      expect(TENANT_OWNED_MODELS).toContain('Artifact')
     })
 
     it('should include invitation model for access control', () => {
-      expect(TENANT_OWNED_MODELS).toContain('invitation')
+      expect(TENANT_OWNED_MODELS).toContain('Invitation')
     })
   })
 })

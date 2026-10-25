@@ -1,14 +1,13 @@
 import * as fs from 'fs'
 import * as path from 'path'
-import { Logger } from '@nestjs/common'
 
 import * as yaml from 'js-yaml'
 
+import { BootstrapLogger } from './bootstrap-logger'
 import { AppConfig } from './config.interface'
 import { camelToSnakeCase, convertToCamelCase } from './utils'
 
 export class CustomConfigService {
-  private readonly logger = new Logger(CustomConfigService.name)
   private _config!: AppConfig
   private proxyCache = new WeakMap<object, object>()
 
@@ -103,10 +102,10 @@ export class CustomConfigService {
       this._config = convertToCamelCase(rawConfig) as AppConfig
       this.overrideWithEnv(this._config as unknown as Record<string, unknown>)
 
-      this.logger.log(`Configuration loaded successfully from ${path.basename(configPath)} (APP_ENV=${env})`)
+      BootstrapLogger.log(`Configuration loaded successfully from ${path.basename(configPath)} (APP_ENV=${env})`)
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error'
-      this.logger.error(`Failed to load configuration: ${message}`)
+      BootstrapLogger.error(`Failed to load configuration: ${message}`)
       throw new Error(`Failed to load configuration: ${message}`, { cause: error })
     }
   }
@@ -176,11 +175,11 @@ export class CustomConfigService {
 
     if (errors.length > 0) {
       const errorMessage = `Configuration validation failed:\n${errors.map((e) => `  - ${e}`).join('\n')}`
-      this.logger.error(errorMessage)
+      BootstrapLogger.error(errorMessage)
       throw new Error(errorMessage)
     }
 
-    this.logger.log('Configuration validation passed')
+    BootstrapLogger.log('Configuration validation passed')
   }
 
   get<T = unknown>(key: string): T {

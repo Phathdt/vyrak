@@ -1,4 +1,4 @@
-import { Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common'
+import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { CustomConfigService } from '@vyrak/custom-config'
 
@@ -37,6 +37,7 @@ interface TenantFilterContext {
   bypassTenantFilter?: boolean
 }
 
+@Injectable()
 export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(DatabaseService.name)
   private readonly enableColors: boolean
@@ -167,7 +168,19 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  async onModuleInit() {
+  /**
+   * Initialize database connection and set up query logging
+   * NestJS lifecycle hook - called during module initialization
+   */
+  async onModuleInit(): Promise<void> {
+    return this.init()
+  }
+
+  /**
+   * Initialize database connection and set up query logging
+   * Call this explicitly during application startup
+   */
+  private async init(): Promise<void> {
     // Skip database connection if flag is set (e.g., during OpenAPI generation)
     if (process.env.SKIP_DB_CONNECTION === 'true') {
       this.logger.log('Skipping database connection (SKIP_DB_CONNECTION=true)')
@@ -190,27 +203,41 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         const coloredSQL = this.colorizeSQL(formattedQuery, queryType)
         const coloredParams = this.colorizeParams(parsedParams)
 
-        console.log(coloredMessage)
-        console.log(`${COLORS.cyan}SQL:${COLORS.reset} ${coloredSQL}`)
+        this.logger.log(coloredMessage)
+        this.logger.debug(`SQL: ${coloredSQL}`)
         if (parsedParams.length > 0) {
-          console.log(`${COLORS.magenta}Params:${COLORS.reset} ${coloredParams}`)
+          this.logger.debug(`Params: ${coloredParams}`)
         }
         if (e.error) {
-          console.log(`${COLORS.red}Error:${COLORS.reset} ${this.colorizeError(e.error)}`)
+          this.logger.error(`Error: ${this.colorizeError(e.error)}`)
         }
       } else {
-        this.logger.log({
-          message: `[${queryType}] ${performanceLevel} ${e.duration}ms - ${this.summarizeQuery(e.query, tableNames)}`,
-          sqlQuery: formattedQuery,
-          sqlParams: parsedParams,
-          databaseOperation: true,
-          errorMessage: e.error,
-        })
+        this.logger.log(
+          JSON.stringify({
+            message: `[${queryType}] ${performanceLevel} ${e.duration}ms - ${this.summarizeQuery(e.query, tableNames)}`,
+            sqlQuery: formattedQuery,
+            sqlParams: parsedParams,
+            databaseOperation: true,
+            errorMessage: e.error,
+          })
+        )
       }
     })
   }
 
-  async onModuleDestroy() {
+  /**
+   * Disconnect from database and clean up resources
+   * NestJS lifecycle hook - called during module shutdown
+   */
+  async onModuleDestroy(): Promise<void> {
+    return this.destroy()
+  }
+
+  /**
+   * Disconnect from database and clean up resources
+   * Call this explicitly during application shutdown
+   */
+  private async destroy(): Promise<void> {
     await this.prismaClient.$disconnect()
     await this.pool.end()
   }

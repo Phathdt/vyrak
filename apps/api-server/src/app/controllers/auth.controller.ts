@@ -4,7 +4,7 @@ import { AuthResponseDto, AuthService, CurrentUserResponseDto, LoginDto } from '
 
 import { Request } from 'express'
 
-import { JwtAuthGuard } from '../../guards/jwt-auth.guard'
+import { JwtAuthGuard } from '../../guards'
 
 interface RequestWithUser extends Request {
   user: {

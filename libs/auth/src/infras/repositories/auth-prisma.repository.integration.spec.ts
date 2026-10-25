@@ -2,7 +2,6 @@ import type { PrismaClient } from '@vyrak/database'
 import {
   createTestOrgWithOwner,
   createTestUser,
-  getConnectionString,
   getPrismaClient,
   resetCounters,
   startPostgres,
@@ -20,8 +19,7 @@ describe('AuthPrismaRepository (Integration)', () => {
   beforeAll(async () => {
     try {
       await startPostgres()
-      const connectionString = await getConnectionString()
-      prisma = await getPrismaClient(connectionString)
+      prisma = getPrismaClient()
       repository = new AuthPrismaRepository(prisma)
     } catch (error) {
       console.warn('PostgreSQL setup failed, skipping integration tests:', error)

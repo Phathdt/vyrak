@@ -363,17 +363,112 @@ VITE_API_BASE_URL=http://localhost:3000
 
 ## Testing Strategy
 
-### Unit Tests
+### Test Structure
 
-- Vitest for all packages
-- Mock database calls in services
-- Test business logic, not framework code
+Tests are split into two categories to optimize CI speed and developer workflow:
 
-### Integration Tests
+**Unit Tests** (`*.spec.ts`, `*.test.ts` excluding `*.integration.*`):
+- Fast, isolated tests with no external dependencies (5-10 seconds total)
+- Run in CI on every push/PR
+- No database, Redis, or external services required
+- Mock external dependencies
+- Commands:
+  - `yarn test:unit` - Run once
+  - `yarn test:unit:watch` - Watch mode
+  - `yarn test:ci` - CI mode with coverage
 
-- Test API endpoints with real HTTP requests
-- Use test database (separate from development)
-- Clean up test data after each test
+**Integration Tests** (`*.integration.spec.ts`, `*.integration.test.ts`, `**/__tests__/integration/**`):
+- Real database and Redis connections via Testcontainers
+- Run on-demand or scheduled (nightly builds)
+- Use PostgreSQL 17 and Redis 7 Docker containers
+- Each test file gets isolated database instance
+- Commands:
+  - `yarn test:integration` - Run once
+  - `yarn test:integration:watch` - Watch mode
+
+### Writing Tests
+
+**Unit Test Pattern:**
+```typescript
+// product.service.spec.ts
+import { describe, it, expect, vi } from 'vitest'
+
+describe('ProductService', () => {
+  it('should create product', () => {
+    const mockRepo = { create: vi.fn() }
+    const service = new ProductService(mockRepo)
+    // Test with mocks
+  })
+})
+```
+
+**Integration Test Pattern:**
+```typescript
+// product.repository.integration.spec.ts
+import { getPrismaClient, startPostgres, stopPostgres } from '@vyrak/database/test-utils'
+import { beforeAll, afterAll, describe, it, expect } from 'vitest'
+
+describe('ProductRepository Integration', () => {
+  let prisma: PrismaClient
+  let repository: ProductRepository
+
+  beforeAll(async () => {
+    try {
+      await startPostgres()
+      prisma = getPrismaClient()
+      repository = new ProductRepository(prisma)
+    } catch (error) {
+      console.warn('PostgreSQL setup failed, skipping integration tests:', error)
+    }
+  })
+
+  afterAll(async () => {
+    await stopPostgres()
+  })
+
+  it('should create product in real database', async () => {
+    if (!prisma) return // Skip if setup failed
+    
+    const product = await repository.create({ name: 'Test' })
+    expect(product.id).toBeDefined()
+  })
+})
+```
+
+### CI/CD Integration
+
+**Main CI Workflow** (`.github/workflows/ci.yml`):
+- Runs on every push/PR to main/develop
+- Executes unit tests only (fast feedback)
+- No service containers needed
+- Generates coverage reports
+
+**Integration Tests Workflow** (`.github/workflows/integration-tests.yml`):
+- Runs on push/PR to main/develop
+- Uses PostgreSQL 17 and Redis 7 service containers
+- Runs database migrations before tests
+- Takes longer but provides end-to-end validation
+
+### Running Tests Locally
+
+**Development:**
+```bash
+# Unit tests (fast, no Docker needed)
+yarn test:unit              # Run once
+yarn test:unit:watch        # Watch mode
+
+# Integration tests (requires Docker)
+yarn test:integration       # Run once
+yarn test:integration:watch # Watch mode
+
+# All tests
+yarn test                   # Run everything
+yarn test:watch             # Watch all
+```
+**CI:**
+- Unit tests run automatically on all PRs/pushes
+- Integration tests run on push/PR to main/develop branches
+- Coverage reports uploaded to Codecov
 
 ### E2E Tests
 
