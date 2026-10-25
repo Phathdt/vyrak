@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common'
+import { CustomConfigModule, CustomConfigService } from '@vyrak/custom-config'
 import { DatabaseModule, DatabaseService } from '@vyrak/database'
 
-import { ArtifactManager, WorkspaceManager } from './application'
+import { ArtifactManager, MainRepoManager, WorkspaceManager } from './application'
 import type { IArtifactRepository } from './domain'
 import {
   AGENT_EXECUTOR,
@@ -10,6 +11,7 @@ import {
   ArtifactPrismaRepository,
   ClaudeCodeExecutor,
   FakeAgentExecutor,
+  MAIN_REPO_MANAGER,
   WORKSPACE_MANAGER,
 } from './infras'
 
@@ -20,7 +22,7 @@ import {
  * for workflow orchestration and agent-based tasks
  */
 @Module({
-  imports: [DatabaseModule],
+  imports: [DatabaseModule, CustomConfigModule],
   providers: [
     // Artifact repository
     {
@@ -36,11 +38,22 @@ import {
       inject: [ARTIFACT_REPOSITORY],
     },
 
+    // Main repo manager
+    {
+      provide: MAIN_REPO_MANAGER,
+      useFactory: (config: CustomConfigService) => {
+        return new MainRepoManager(config.workspace.mainReposPath)
+      },
+      inject: [CustomConfigService],
+    },
+
     // Workspace manager
     {
       provide: WORKSPACE_MANAGER,
-      useFactory: () => new WorkspaceManager(),
-      inject: [],
+      useFactory: (config: CustomConfigService, mainRepoManager: MainRepoManager) => {
+        return new WorkspaceManager(config.workspace.workspacesPath, mainRepoManager)
+      },
+      inject: [CustomConfigService, MAIN_REPO_MANAGER],
     },
 
     // Agent executor (use fake for testing, Claude for production)

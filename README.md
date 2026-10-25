@@ -85,7 +85,29 @@ yarn install
 yarn docker:up
 ```
 
-### 2. Database Setup
+### 2. Environment Configuration
+
+```bash
+# Copy the example environment file
+cp .env.example .env
+
+# Update the following required variables in .env:
+# - MAIN_REPOS_PATH: Path to main git repository for worktree mode
+# - DATABASE__URL: PostgreSQL connection string
+# - REDIS_URL: Redis connection string
+```
+
+**Important Environment Variables:**
+
+- `WORKSPACE_MODE`: Must be set to `worktree` (only mode supported)
+- `MAIN_REPOS_PATH`: **Required** - Path where the primary git repository is located
+- `WORKSPACES_PATH`: Path for temporary worktrees (default: `/tmp/vyrak-workspaces`)
+- `WORKSPACE_CLEANUP_ON_SUCCESS`: Auto-cleanup worktrees after success (default: `true`)
+- `WORKSPACE_CLEANUP_ON_FAILURE`: Auto-cleanup worktrees after failure (default: `false`)
+
+See `.env.example` for complete configuration options.
+
+### 3. Database Setup
 
 ```bash
 # Generate Prisma client
@@ -98,7 +120,7 @@ yarn db:migrate
 yarn db:studio
 ```
 
-### 3. Development
+### 4. Development
 
 ```bash
 # Start all applications
@@ -110,7 +132,7 @@ yarn dev:web      # Web app on http://localhost:5173
 yarn dev:worker   # Background worker
 ```
 
-### 4. Generate API Client
+### 5. Generate API Client
 
 ```bash
 # Generate OpenAPI spec from NestJS

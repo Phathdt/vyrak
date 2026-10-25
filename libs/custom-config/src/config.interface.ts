@@ -1,3 +1,5 @@
+import type { WorkspaceConfig } from './workspace.config'
+
 export interface DatabaseConfig {
   url: string
 }
@@ -20,5 +22,6 @@ export interface AppConfig {
   database: DatabaseConfig
   redis: RedisConfig
   log: LogConfig
+  workspace: WorkspaceConfig
   [key: string]: unknown
 }

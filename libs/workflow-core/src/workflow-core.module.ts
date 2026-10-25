@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common'
 import {
+  AGENT_EXECUTOR,
   AgentRuntimeModule,
+  ARTIFACT_MANAGER,
+  WORKSPACE_MANAGER,
   type IAgentExecutor,
   type IArtifactManager,
   type IWorkspaceManager,
@@ -8,7 +11,7 @@ import {
 import { DatabaseModule } from '@vyrak/database'
 
 import { AgentStepExecutor } from './application/services/agent-step-executor.service'
-import { AGENT_EXECUTOR, AGENT_STEP_EXECUTOR, ARTIFACT_MANAGER, WORKSPACE_MANAGER } from './infras/di/di'
+import { AGENT_STEP_EXECUTOR } from './infras/di/di'
 
 /**
  * Workflow Core Module
