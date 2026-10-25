@@ -210,6 +210,68 @@ const { mutateAsync } = useProductsControllerCreate()
 - `yarn db:migrate` - Run migrations
 - `yarn db:push` - Push schema without migration
 
+**Workspace Management:**
+
+- `yarn workspace:list` - List all workspaces
+- `yarn workspace:health --org-id <org> --project-id <project>` - Check workspace health
+
+### Workspace Configuration
+
+Vyrak supports two workspace modes for workflow execution:
+
+**Clone Mode (Default):**
+- Each workflow run clones the repository into an isolated workspace
+- Safer for development, easier to debug
+- Slower (30-60s) and uses more disk space (~500MB per run)
+
+**Worktree Mode (Production):**
+- Uses git worktree to create lightweight workspaces from a shared main repository
+- 6-12x faster workspace creation (2-5s)
+- 10x disk savings (~50MB per run)
+- Ideal for production environments with many parallel workflows
+
+**Configuration:**
+
+Set workspace mode via environment variables in `apps/api-server/.env`:
+
+```bash
+# Workspace mode: 'clone' (default) or 'worktree'
+WORKSPACE_MODE=clone
+
+# Main repos path (for worktree mode)
+MAIN_REPOS_PATH=/var/vyrak/repos
+
+# Workspaces path
+WORKSPACES_PATH=/tmp/vyrak-workspaces
+
+# Cleanup configuration
+WORKSPACE_CLEANUP_ON_SUCCESS=true
+WORKSPACE_CLEANUP_ON_FAILURE=false
+
+# Worktree-specific settings
+WORKTREE_BASE_BRANCH=main
+WORKTREE_BRANCH_PREFIX=workflow/
+WORKTREE_AUTO_FETCH=true
+WORKTREE_AUTO_CLEANUP_BRANCH=true
+```
+
+**Migration Guide:**
+
+For detailed instructions on migrating to worktree mode, see `/docs/workspace-worktree-migration.md`.
+
+**CLI Commands:**
+
+```bash
+# List all workspaces
+yarn workspace:list
+
+# List worktrees for specific org/project
+yarn workspace:list --org-id org-123 --project-id project-456
+
+# Check workspace health
+yarn workspace:health --org-id org-123 --project-id project-456
+```
+
 ## Code Conventions
 
 ### File Naming
@@ -586,6 +648,54 @@ To skip hooks temporarily: `LEFTHOOK=0 git commit`
 - Turborepo caching for faster builds
 - Rolldown for optimized production bundles
 - Minimize bundle size with tree-shaking
+
+## Workspace Management
+
+### Workspace Modes
+
+Vyrak supports two workspace modes for workflow execution:
+
+**Clone Mode (Default):**
+- Each workflow run clones the repository into an isolated workspace
+- Simple and safe for development
+- Slower (30-60s per workspace) and uses more disk (~500MB per run)
+
+**Worktree Mode (Production):**
+- Uses git worktree to create lightweight workspaces from a shared main repository
+- 6-12x faster (2-5s per workspace) and 10x more disk efficient (~50MB per run)
+- Ideal for production environments with concurrent workflows
+
+### Configuration
+
+Set workspace mode via environment variables in `apps/api-server/.env`:
+
+```bash
+# Workspace mode: 'clone' (default) or 'worktree' (production)
+WORKSPACE_MODE=clone
+
+# For worktree mode
+MAIN_REPOS_PATH=/var/vyrak/repos
+WORKTREE_AUTO_FETCH=true
+WORKTREE_AUTO_CLEANUP_BRANCH=true
+```
+
+See `docs/workspace-worktree-migration.md` for full configuration options and migration guide.
+
+### CLI Commands
+
+```bash
+# List all workspaces
+yarn workspace:list
+
+# Check main repo health
+yarn workspace:health --org-id <org> --project-id <project>
+```
+
+### When to Use Each Mode
+
+- **Development:** Use clone mode (default) for simpler debugging
+- **Staging/Production:** Use worktree mode for performance and efficiency
+- **CI/CD:** Use worktree mode for parallel workflow execution
 
 ## Security Notes
 

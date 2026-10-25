@@ -166,6 +166,48 @@ yarn generate:api
 - `yarn docker:logs` - View container logs
 - `yarn docker:ps` - List running containers
 
+### Workspace Management
+
+- `yarn workspace:list` - List all workspaces
+- `yarn workspace:health --org-id <org> --project-id <project>` - Check workspace health
+
+## Configuration
+
+### Environment Variables
+
+Copy `.env.example` to `.env` and configure:
+
+```bash
+# Database
+DATABASE__URL=postgresql://postgres:postgres@localhost:5433/vyrak
+
+# Workspace mode (clone or worktree)
+WORKSPACE_MODE=clone
+MAIN_REPOS_PATH=/var/vyrak/repos
+
+# Authentication
+JWT_SECRET=your-secret-key-here
+
+# Frontend
+FRONTEND_URL=http://localhost:5173
+```
+
+### Workspace Modes
+
+Vyrak supports two workspace modes for workflow execution:
+
+- **Clone Mode (Default)** - Each workflow run clones the repository. Simple and safe for development.
+- **Worktree Mode (Production)** - Uses git worktree for 6-12x faster workspace creation and 10x less disk usage.
+
+For production deployments, enable worktree mode:
+
+```bash
+WORKSPACE_MODE=worktree
+MAIN_REPOS_PATH=/var/vyrak/repos
+```
+
+See `docs/workspace-worktree-migration.md` for detailed configuration and migration guide.
+
 ## Development Services
 
 When you run `yarn docker:up`, the following services will be available:
