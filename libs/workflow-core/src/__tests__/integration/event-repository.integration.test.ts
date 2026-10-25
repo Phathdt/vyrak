@@ -355,7 +355,7 @@ describe('EventRepository Integration Tests', () => {
       const events = await Promise.all(eventPromises)
 
       // All events should have unique sequences
-      const sequences = events.map((e) => e.sequence).sort((a, b) => a - b)
+      const sequences = events.map((e: any) => e.sequence).sort((a: number, b: number) => a - b)
       const uniqueSequences = new Set(sequences)
 
       expect(uniqueSequences.size).toBe(20)
@@ -415,8 +415,8 @@ describe('EventRepository Integration Tests', () => {
       expect(run2Events).toHaveLength(5)
 
       // Each run should have sequences 1-5
-      expect(run1Events.map((e) => e.sequence).sort((a, b) => a - b)).toEqual([1, 2, 3, 4, 5])
-      expect(run2Events.map((e) => e.sequence).sort((a, b) => a - b)).toEqual([1, 2, 3, 4, 5])
+      expect(run1Events.map((e: any) => e.sequence).sort((a: number, b: number) => a - b)).toEqual([1, 2, 3, 4, 5])
+      expect(run2Events.map((e: any) => e.sequence).sort((a: number, b: number) => a - b)).toEqual([1, 2, 3, 4, 5])
     })
   })
 
