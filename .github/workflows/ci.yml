@@ -105,15 +105,15 @@ jobs:
       - name: Install Playwright browsers
         run: yarn workspace @vyrak/e2e install:browsers
 
+      - name: Build packages
+        run: yarn build
+
       - name: Setup test database
         env:
           DATABASE__URL: postgresql://postgres:postgres@localhost:5432/vyrak_test
         run: |
           yarn db:migrate:deploy
           yarn db:seed:test
-
-      - name: Build packages
-        run: yarn build
 
       - name: Start API server
         env:
