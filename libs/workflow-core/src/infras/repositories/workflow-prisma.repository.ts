@@ -75,6 +75,9 @@ export class WorkflowPrismaRepository implements IWorkflowRepository {
           errorMessage: state.errorMessage,
           startedAt: state.startedAt,
           completedAt: state.completedAt,
+          cancellationReason: state.cancellationReason,
+          cancelledByUserId: state.cancelledByUserId,
+          cancelledAt: state.cancelledAt,
         },
       })
     } catch (error) {

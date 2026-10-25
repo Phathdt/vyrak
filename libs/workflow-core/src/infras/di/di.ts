@@ -21,6 +21,11 @@ export const STEP_REPOSITORY = Symbol('STEP_REPOSITORY')
 export const EVENT_REPOSITORY = Symbol('EVENT_REPOSITORY')
 
 /**
+ * Workflow approval repository token
+ */
+export const WORKFLOW_APPROVAL_REPOSITORY = Symbol('WORKFLOW_APPROVAL_REPOSITORY')
+
+/**
  * Job queue token (BullMQ)
  */
 export const JOB_QUEUE = Symbol('JOB_QUEUE')
@@ -30,3 +35,45 @@ export const JOB_QUEUE = Symbol('JOB_QUEUE')
  * Executes agent steps in workflows
  */
 export const AGENT_STEP_EXECUTOR = Symbol('AGENT_STEP_EXECUTOR')
+
+/**
+ * Approval step executor token
+ * Executes approval steps in workflows
+ */
+export const APPROVAL_STEP_EXECUTOR = Symbol('APPROVAL_STEP_EXECUTOR')
+
+/**
+ * Artifact repository token
+ */
+export const ARTIFACT_REPOSITORY = Symbol('ARTIFACT_REPOSITORY')
+
+/**
+ * Approval validator service token
+ * Validates plan versions to prevent stale approvals
+ */
+export const APPROVAL_VALIDATOR_SERVICE = Symbol('APPROVAL_VALIDATOR_SERVICE')
+
+/**
+ * Authorization service token
+ * Handles authorization checks for workflow operations
+ */
+export const AUTHORIZATION_SERVICE = Symbol('AUTHORIZATION_SERVICE')
+
+/**
+ * Approve workflow use case token
+ * Handles approval decision workflow
+ */
+export const APPROVE_WORKFLOW_USE_CASE = Symbol('APPROVE_WORKFLOW_USE_CASE')
+
+/**
+ * Tool step executor token
+ * Executes tool/command steps in workflows
+ */
+export const TOOL_STEP_EXECUTOR = Symbol('TOOL_STEP_EXECUTOR')
+
+/**
+ * Test result parser token
+ * Parses test results from various formats
+ */
+export const TEST_RESULT_PARSER = Symbol('TEST_RESULT_PARSER')
+

@@ -24,6 +24,9 @@ export interface WorkflowStateUpdate {
   errorMessage?: string
   startedAt?: Date
   completedAt?: Date
+  cancellationReason?: string
+  cancelledByUserId?: string
+  cancelledAt?: Date
 }
 
 /**

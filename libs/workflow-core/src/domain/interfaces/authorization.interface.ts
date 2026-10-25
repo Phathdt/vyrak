@@ -14,4 +14,11 @@ export interface IAuthorizationService {
    * @throws UnauthorizedException if access denied
    */
   verifyProjectAccess(userId: string, projectId: string, organizationId: string): Promise<void>
+
+  /**
+   * Validate user has approval permission for project
+   * Typically checks for 'reviewer' role in organization
+   * @throws UnauthorizedAccessError if user lacks permission
+   */
+  requireApprovalPermission(userId: string, organizationId: string, projectId: string): Promise<void>
 }
