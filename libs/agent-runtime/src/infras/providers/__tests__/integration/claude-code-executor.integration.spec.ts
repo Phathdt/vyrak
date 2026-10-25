@@ -2,8 +2,7 @@ import * as fs from 'fs'
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-import type { AgentExecutionInput } from '../../../../domain/interfaces/agent-executor.interface'
-import { AgentType } from '../../../../domain/types/agent-types'
+import { AgentType, type AgentExecutionInput } from '../../../../domain'
 import { ClaudeCodeExecutor } from '../../claude-code-executor'
 
 describe('ClaudeCodeExecutor Integration', () => {

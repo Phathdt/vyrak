@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ArtifactManager } from './artifact-manager.service'
 
-import type { ArtifactEntity, IArtifactRepository } from '../../domain/interfaces/artifact-repository.interface'
+import type { ArtifactEntity, IArtifactRepository } from '../../domain'
 
 describe('ArtifactManager', () => {
   let manager: ArtifactManager

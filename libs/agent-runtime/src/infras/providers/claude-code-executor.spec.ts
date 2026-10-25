@@ -5,8 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ClaudeCodeExecutor } from './claude-code-executor'
 
-import type { AgentExecutionInput } from '../../domain/interfaces/agent-executor.interface'
-import { AgentType, ArtifactType } from '../../domain/types/agent-types'
+import { AgentType, ArtifactType, type AgentExecutionInput } from '../../domain'
 
 describe('ClaudeCodeExecutor', () => {
   let executor: ClaudeCodeExecutor

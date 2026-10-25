@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { MainRepoManager } from './main-repo-manager.service'
 
-import { MainRepoError } from '../../domain/errors/main-repo.errors'
+import { MainRepoError } from '../../domain'
 
 // Mock node modules
 vi.mock('node:child_process')

@@ -3,8 +3,7 @@ import * as path from 'node:path'
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { WorkspaceCreationError } from '../../../domain/errors/agent-execution.errors'
-import type { IMainRepoManager } from '../../../domain/interfaces/main-repo-manager.interface'
+import { WorkspaceCreationError, type IMainRepoManager } from '../../../domain'
 import { WorkspaceManager } from '../workspace-manager.service'
 
 // Mock child_process module

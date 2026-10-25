@@ -5,8 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { WorkspaceManager } from './workspace-manager.service'
 
-import { WorkspaceCreationError } from '../../domain/errors/agent-execution.errors'
-import { WorkspaceCleanupError } from '../../domain/errors/workspace-cleanup.errors'
+import { WorkspaceCleanupError, WorkspaceCreationError } from '../../domain'
 
 describe('WorkspaceManager', () => {
   let manager: WorkspaceManager
