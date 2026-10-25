@@ -9,6 +9,17 @@ paths:
           description: ''
       tags:
         - App
+  /health:
+    get:
+      operationId: AppController_health
+      parameters: []
+      responses:
+        '200':
+          description: ''
+      summary: Health check endpoint
+      tags:
+        - App
+        - health
   /api/auth/login:
     post:
       operationId: AuthController_login

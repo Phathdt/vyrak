@@ -47,11 +47,14 @@ jobs:
       - name: Build frontend
         run: yarn workspace @apps/web build
 
+      - name: Check code formatting
+        run: yarn format:check
+
       - name: Lint
-        run: yarn lint:ci
+        run: yarn ci:lint
 
       - name: Type check
-        run: yarn typecheck
+        run: yarn ci:typecheck
 
       - name: Run tests with coverage
         run: yarn test:ci
