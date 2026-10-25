@@ -52,7 +52,11 @@
     "check:unused:ci": "node unused-detector.js --exit-code",
     "sync:deps": "npx ts-node scripts/sync-package-deps.ts",
     "sync:deps:dry": "npx ts-node scripts/sync-package-deps.ts --dry-run",
-    "sync:deps:strict": "npx ts-node scripts/sync-package-deps.ts --strict --check-versions"
+    "sync:deps:strict": "npx ts-node scripts/sync-package-deps.ts --strict --check-versions",
+    "test:e2e": "yarn workspace @vyrak/e2e test",
+    "test:e2e:headed": "yarn workspace @vyrak/e2e test:headed",
+    "test:e2e:ui": "yarn workspace @vyrak/e2e test:ui",
+    "db:seed:test": "tsx prisma/seed-test.ts"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.4",
@@ -86,7 +90,8 @@
     "tsx": "^4.23.15",
     "turbo": "^2.11.10",
     "typescript": "~7.0.2",
-    "vitest": "^5.0.5"
+    "vitest": "^5.0.5",
+    "wait-on": "^7.2.0"
   },
   "dependencies": {
     "@nestjs/cache-manager": "^12.0.1",
@@ -100,7 +105,7 @@
     }
   },
   "engines": {
-    "node": ">=22.0.0",
+    "node": ">=24.16.0",
     "yarn": ">=1.22.0"
   }
 }

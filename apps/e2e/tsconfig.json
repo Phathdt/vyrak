@@ -1,0 +1,22 @@
+{
+  "extends": "../../tsconfig.dev.json",
+  "compilerOptions": {
+    "types": ["node", "@playwright/test"],
+    "moduleResolution": "bundler",
+    "module": "ESNext",
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "resolveJsonModule": true,
+    "paths": {
+      "@config/*": ["./config/*"],
+      "@fixtures/*": ["./fixtures/*"],
+      "@helpers/*": ["./helpers/*"],
+      "@page-objects/*": ["./page-objects/*"]
+    }
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["node_modules", "playwright-report", "test-results"]
+}

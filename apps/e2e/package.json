@@ -1,0 +1,26 @@
+{
+  "name": "@vyrak/e2e",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "playwright test --config=config/playwright.config.ts",
+    "test:headed": "playwright test --config=config/playwright.config.ts --headed",
+    "test:ui": "playwright test --config=config/playwright.config.ts --ui",
+    "test:debug": "playwright test --config=config/playwright.config.ts --debug",
+    "test:chromium": "playwright test --config=config/playwright.config.ts --project=chromium",
+    "test:firefox": "playwright test --config=config/playwright.config.ts --project=firefox",
+    "test:webkit": "playwright test --config=config/playwright.config.ts --project=webkit",
+    "test:report": "playwright show-report",
+    "install:browsers": "playwright install chromium",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@faker-js/faker": "^9.2.0",
+    "dotenv": "^16.4.7"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.2",
+    "typescript": "^5.7.2"
+  }
+}
