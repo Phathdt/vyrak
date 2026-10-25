@@ -127,7 +127,7 @@ jobs:
       - name: Start API server
         env:
           DATABASE__URL: postgresql://postgres:postgres@localhost:5432/vyrak_test
-          NODE_ENV: test
+          APP_ENV: development
           PORT: 3000
           JWT_SECRET: test-secret-key-for-ci
         run: |
