@@ -1,8 +1,6 @@
-import type { IAgentExecutor } from '@vyrak/agent-runtime/domain/interfaces/agent-executor.interface'
-import type { IWorkspaceManager } from '@vyrak/agent-runtime/domain/interfaces/workspace-manager.interface'
-import type { IArtifactManager } from '@vyrak/agent-runtime/domain/interfaces/artifact-manager.interface'
 import { Module } from '@nestjs/common'
 import { AgentRuntimeModule } from '@vyrak/agent-runtime'
+import type { IAgentExecutor, IArtifactManager, IWorkspaceManager } from '@vyrak/agent-runtime'
 import { DatabaseModule } from '@vyrak/database'
 
 import { AgentStepExecutor } from './application/services/agent-step-executor.service'

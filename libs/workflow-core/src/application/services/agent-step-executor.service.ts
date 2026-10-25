@@ -4,7 +4,7 @@ import {
   AgentExecutionStatus,
   AgentTimeoutError,
   AgentType,
-  ArtifactManager,
+  type IArtifactManager,
   type IAgentExecutor,
   type IWorkspaceManager,
 } from '@vyrak/agent-runtime'
@@ -27,7 +27,7 @@ export class AgentStepExecutor implements IStepExecutor {
   constructor(
     private readonly agentExecutor: IAgentExecutor,
     private readonly workspaceManager: IWorkspaceManager,
-    private readonly artifactManager: ArtifactManager
+    private readonly artifactManager: IArtifactManager
   ) {}
 
   /**
@@ -152,7 +152,7 @@ export class AgentStepExecutor implements IStepExecutor {
    * Save artifacts from agent execution to database
    */
   private async saveArtifacts(
-    artifacts: Array<{ path: string; type: string; size: number }>,
+    artifacts: Array<{ path: string; type: string; size?: number }>,
     run: WorkflowRun & { input?: unknown }
   ): Promise<void> {
     const artifactsPath = this.workspaceManager.getArtifactsPath(run.id)
@@ -188,8 +188,8 @@ export class AgentStepExecutor implements IStepExecutor {
    */
   private mapToStepResult(agentResult: {
     status: AgentExecutionStatus
-    output: string
-    artifacts: Array<{ path: string; type: string; size: number }>
+    output?: string
+    artifacts: Array<{ path: string; type: string; size?: number }>
     usage?: { inputTokens: number; outputTokens: number; durationMs: number }
     errorCode?: string
     errorMessage?: string
@@ -216,7 +216,7 @@ export class AgentStepExecutor implements IStepExecutor {
     return {
       status,
       output: {
-        agentOutput: agentResult.output,
+        agentOutput: agentResult.output || '',
         artifacts: agentResult.artifacts,
         usage: agentResult.usage,
       },

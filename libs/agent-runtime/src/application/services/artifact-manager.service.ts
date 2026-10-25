@@ -3,13 +3,14 @@ import type {
   CreateArtifactParams,
   IArtifactRepository,
 } from '../../domain/interfaces/artifact-repository.interface'
+import type { IArtifactManager } from '../../domain/interfaces/artifact-manager.interface'
 
 /**
  * Artifact manager service
  *
  * NO @Injectable decorator - plain TypeScript class
  */
-export class ArtifactManager {
+export class ArtifactManager implements IArtifactManager {
   // Warning threshold: 1MB
   private readonly LARGE_ARTIFACT_WARNING_SIZE = 1024 * 1024
 
