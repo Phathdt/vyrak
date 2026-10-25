@@ -1,4 +1,5 @@
 import { Controller, Get } from '@nestjs/common'
+import { ApiOperation, ApiTags } from '@nestjs/swagger'
 
 import { AppService } from './app.service'
 
@@ -9,5 +10,15 @@ export class AppController {
   @Get()
   async ping() {
     return this.appService.ping()
+  }
+
+  @Get('health')
+  @ApiTags('health')
+  @ApiOperation({ summary: 'Health check endpoint' })
+  health() {
+    return {
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+    }
   }
 }

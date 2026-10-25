@@ -17,7 +17,8 @@ vyrak/
 ├── apps/
 │   ├── api-server/     # NestJS REST API - Controllers ONLY
 │   ├── web/            # React + Vite frontend
-│   └── worker/         # BullMQ background worker - Processors/Consumers ONLY
+│   ├── worker/         # BullMQ background worker - Processors/Consumers ONLY
+│   └── e2e/            # Playwright E2E tests
 ├── libs/
 │   ├── custom-config/  # Environment configuration
 │   ├── custom-logger/  # Logging utilities
@@ -127,8 +128,10 @@ Domain (contracts) ← Application (orchestration) ← Infrastructure (implement
 - Turborepo for monorepo management
 - Docker Compose for local PostgreSQL
 - Oxlint for fast linting
-- Vitest for testing
+- Vitest for unit/integration testing
+- Playwright for E2E testing
 - Lefthook + Commitizen for git workflow
+- GitHub Actions for CI/CD
 
 ## Development Workflow
 
@@ -176,6 +179,7 @@ const { mutateAsync } = useProductsControllerCreate()
 - `yarn lint` - Auto-fix with Oxlint
 - `yarn typecheck` - TypeScript check all packages
 - `yarn test` - Run Vitest tests
+- `yarn test:e2e` - Run E2E tests with Playwright
 
 **Database:**
 
@@ -349,9 +353,50 @@ VITE_API_BASE_URL=http://localhost:3000
 
 ### E2E Tests
 
-- Test critical user flows
-- Use Playwright or Cypress (to be added)
-- Run against staging environment
+E2E test suite using **Playwright Test** for critical user flows.
+
+**Location:** `apps/e2e/`
+
+**Test Coverage:**
+- Authentication flows (login, register, session persistence, auth guards)
+- Dashboard access and navigation
+- 23 test cases total
+
+**Running Tests:**
+```bash
+# All tests (headless)
+yarn test:e2e
+
+# With browser visible
+yarn test:e2e:headed
+
+# Interactive UI mode
+yarn test:e2e:ui
+
+# Debug mode
+yarn test:e2e:debug
+
+# View reports
+yarn workspace @vyrak/e2e test:report
+```
+
+**Setup:**
+1. Install Playwright browsers: `yarn workspace @vyrak/e2e install:browsers`
+2. Seed test user: `yarn db:seed:test`
+3. Start dev servers: `yarn dev`
+4. Run tests
+
+**Architecture:**
+- **Page Objects:** Organized by domain (auth, dashboard)
+- **Fixtures:** Reusable auth setup with storage state
+- **Helpers:** API helpers for test data, storage helpers for localStorage
+- **Test Data:** Faker.js for generating unique test data
+
+**CI Integration:**
+- Tests run automatically on PR and push to main
+- Uses GitHub Actions with PostgreSQL service container
+- HTML reports uploaded as artifacts
+- Single worker for stability, chromium only
 
 ## Documentation
 
@@ -446,5 +491,5 @@ To skip hooks temporarily: `LEFTHOOK=0 git commit`
 
 ---
 
-_Last updated: 2026-10-23_
+_Last updated: 2026-10-25_
 _For OpenCode-specific instructions, see AGENTS.md_

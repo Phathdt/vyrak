@@ -79,6 +79,11 @@
     },
     "clean": {
       "cache": false
+    },
+    "@vyrak/e2e#test": {
+      "dependsOn": ["^build"],
+      "outputs": ["playwright-report/**", "test-results/**"],
+      "cache": false
     }
   },
   "globalEnv": ["DATABASE__URL", "NODE_ENV", "PORT", "REDIS_HOST", "REDIS_PORT", "REDIS_PASSWORD", "REDIS_URL"]
