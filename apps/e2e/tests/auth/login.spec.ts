@@ -1,6 +1,6 @@
-import { test, expect } from '@playwright/test'
-import { LoginPage } from '@page-objects/auth/login.page'
 import { StorageHelper } from '@helpers/storage.helper'
+import { LoginPage } from '@page-objects/auth/login.page'
+import { expect, test } from '@playwright/test'
 
 test.describe('Login Flow', () => {
   let loginPage: LoginPage
@@ -39,7 +39,10 @@ test.describe('Login Flow', () => {
 
     // Depending on implementation, might show validation or disable submit
     await test.step('verify email validation', async () => {
-      const isDisabled = await loginPage.expectSubmitDisabled().then(() => true).catch(() => false)
+      const isDisabled = await loginPage
+        .expectSubmitDisabled()
+        .then(() => true)
+        .catch(() => false)
       if (!isDisabled) {
         await loginPage.expectEmailError()
       }
@@ -51,7 +54,10 @@ test.describe('Login Flow', () => {
     await loginPage.clickSubmit()
 
     await test.step('verify password validation', async () => {
-      const isDisabled = await loginPage.expectSubmitDisabled().then(() => true).catch(() => false)
+      const isDisabled = await loginPage
+        .expectSubmitDisabled()
+        .then(() => true)
+        .catch(() => false)
       if (!isDisabled) {
         await loginPage.expectPasswordError()
       }
@@ -63,7 +69,10 @@ test.describe('Login Flow', () => {
 
     await test.step('verify email format validation', async () => {
       // Either submit is disabled or error is shown
-      const isDisabled = await loginPage.expectSubmitDisabled().then(() => true).catch(() => false)
+      const isDisabled = await loginPage
+        .expectSubmitDisabled()
+        .then(() => true)
+        .catch(() => false)
       if (!isDisabled) {
         await loginPage.expectErrorVisible()
       }

@@ -1,6 +1,5 @@
-import { test as base, expect } from '@playwright/test'
 import { URLS } from '@config/urls.config'
-import type { Page } from '@playwright/test'
+import { test as base, expect, type Page } from '@playwright/test'
 
 export interface AuthUser {
   email: string
@@ -56,9 +55,7 @@ export const test = base.extend<AuthFixtures>({
     try {
       // Try to use saved state
       const fs = await import('fs/promises')
-      const storageState = JSON.parse(
-        await fs.readFile(storageStatePath, 'utf-8')
-      )
+      const storageState = JSON.parse(await fs.readFile(storageStatePath, 'utf-8'))
       await page.context().addCookies(storageState.cookies)
 
       // Verify auth state is valid

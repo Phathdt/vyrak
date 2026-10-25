@@ -1,8 +1,7 @@
-import { BasePage } from '@page-objects/base.page'
-import { URLS } from '@config/urls.config'
 import { TEST_TIMEOUTS } from '@config/test.config'
-import type { Page } from '@playwright/test'
-import { expect } from '@playwright/test'
+import { URLS } from '@config/urls.config'
+import { BasePage } from '@page-objects/base.page'
+import { expect, type Page } from '@playwright/test'
 
 export class RegisterPage extends BasePage {
   constructor(page: Page) {

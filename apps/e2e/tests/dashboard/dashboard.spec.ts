@@ -1,7 +1,7 @@
-import { test, expect } from '@fixtures/auth.fixture'
-import { DashboardPage } from '@page-objects/dashboard/dashboard.page'
-import { LoginPage } from '@page-objects/auth/login.page'
+import { expect, test } from '@fixtures/auth.fixture'
 import { StorageHelper } from '@helpers/storage.helper'
+import { LoginPage } from '@page-objects/auth/login.page'
+import { DashboardPage } from '@page-objects/dashboard/dashboard.page'
 
 test.describe('Dashboard', () => {
   let dashboardPage: DashboardPage

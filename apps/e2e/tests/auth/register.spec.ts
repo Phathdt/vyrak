@@ -1,7 +1,7 @@
-import { test, expect } from '@playwright/test'
-import { RegisterPage } from '@page-objects/auth/register.page'
 import { TestDataFactory } from '@fixtures/test-data.fixture'
 import { StorageHelper } from '@helpers/storage.helper'
+import { RegisterPage } from '@page-objects/auth/register.page'
+import { expect, test } from '@playwright/test'
 
 test.describe('Registration Flow', () => {
   let registerPage: RegisterPage

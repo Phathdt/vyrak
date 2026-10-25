@@ -1,5 +1,5 @@
-import { test, expect } from '@playwright/test'
 import { URLS } from '@config/urls.config'
+import { expect, test } from '@playwright/test'
 
 test.describe('Authentication Guards', () => {
   test.describe('Unauthenticated User', () => {

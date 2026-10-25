@@ -5,10 +5,7 @@ export class StorageHelper {
    * Set item in localStorage
    */
   static async setLocalStorage(page: Page, key: string, value: string): Promise<void> {
-    await page.evaluate(
-      ({ key, value }) => localStorage.setItem(key, value),
-      { key, value }
-    )
+    await page.evaluate(({ key, value }) => localStorage.setItem(key, value), { key, value })
   }
 
   /**

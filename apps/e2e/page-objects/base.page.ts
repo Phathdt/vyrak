@@ -1,6 +1,5 @@
 import { TEST_TIMEOUTS } from '@config/test.config'
-import type { Page, Locator } from '@playwright/test'
-import { expect } from '@playwright/test'
+import { expect, type Locator, type Page } from '@playwright/test'
 
 export abstract class BasePage {
   constructor(protected readonly page: Page) {}

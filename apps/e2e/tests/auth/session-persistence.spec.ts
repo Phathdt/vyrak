@@ -1,7 +1,7 @@
-import { test, expect } from '@playwright/test'
-import { LoginPage } from '@page-objects/auth/login.page'
-import { StorageHelper } from '@helpers/storage.helper'
 import { URLS } from '@config/urls.config'
+import { StorageHelper } from '@helpers/storage.helper'
+import { LoginPage } from '@page-objects/auth/login.page'
+import { expect, test } from '@playwright/test'
 
 test.describe('Session Persistence', () => {
   const testUser = {
