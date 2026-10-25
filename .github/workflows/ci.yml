@@ -19,19 +19,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: 'yarn'
+          cache: "yarn"
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
+
+      - name: Generate openapi and orval
+        run: yarn generate
 
       - name: Generate Prisma Client
         run: yarn db:generate
 
       - name: Build backend packages (libs + api-server)
         run: yarn turbo run build --filter='!@apps/web'
-
-      - name: Generate API client
-        run: yarn generate:api
 
       - name: Build frontend
         run: yarn workspace @apps/web build
