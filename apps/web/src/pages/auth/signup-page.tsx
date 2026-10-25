@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom'
 
 export function SignupPage() {
-
   return (
     <div
       style={{
