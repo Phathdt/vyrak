@@ -25,7 +25,10 @@ export class WorkflowExecutorService {
     @Inject('STEP_EXECUTORS') private readonly stepExecutors: IStepExecutor[] = [],
     private readonly retryHandler: RetryHandler,
     private readonly leaseManager: LeaseManager
-  ) {}
+  ) {
+    // Note: WorkspaceConfig integration will be added in Story 3.5.2/3.5.3
+    // when workspace creation logic is implemented
+  }
 
   /**
    * Main entry point for workflow execution

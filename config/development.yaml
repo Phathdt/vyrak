@@ -10,3 +10,15 @@ redis:
 log:
   level: info
   enable_json_format: false
+
+workspace:
+  mode: worktree
+  main_repos_path: /var/vyrak/repos
+  workspaces_path: /tmp/vyrak-workspaces
+  cleanup_on_success: true
+  cleanup_on_failure: false
+  worktree:
+    base_branch: main
+    branch_prefix: workflow/
+    auto_fetch: true
+    auto_cleanup_branch: true

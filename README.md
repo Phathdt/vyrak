@@ -85,7 +85,29 @@ yarn install
 yarn docker:up
 ```
 
-### 2. Database Setup
+### 2. Environment Configuration
+
+```bash
+# Copy the example environment file
+cp .env.example .env
+
+# Update the following required variables in .env:
+# - MAIN_REPOS_PATH: Path to main git repository for worktree mode
+# - DATABASE__URL: PostgreSQL connection string
+# - REDIS_URL: Redis connection string
+```
+
+**Important Environment Variables:**
+
+- `WORKSPACE_MODE`: Must be set to `worktree` (only mode supported)
+- `MAIN_REPOS_PATH`: **Required** - Path where the primary git repository is located
+- `WORKSPACES_PATH`: Path for temporary worktrees (default: `/tmp/vyrak-workspaces`)
+- `WORKSPACE_CLEANUP_ON_SUCCESS`: Auto-cleanup worktrees after success (default: `true`)
+- `WORKSPACE_CLEANUP_ON_FAILURE`: Auto-cleanup worktrees after failure (default: `false`)
+
+See `.env.example` for complete configuration options.
+
+### 3. Database Setup
 
 ```bash
 # Generate Prisma client
@@ -98,7 +120,7 @@ yarn db:migrate
 yarn db:studio
 ```
 
-### 3. Development
+### 4. Development
 
 ```bash
 # Start all applications
@@ -110,7 +132,7 @@ yarn dev:web      # Web app on http://localhost:5173
 yarn dev:worker   # Background worker
 ```
 
-### 4. Generate API Client
+### 5. Generate API Client
 
 ```bash
 # Generate OpenAPI spec from NestJS
@@ -165,6 +187,48 @@ yarn generate:api
 - `yarn docker:down` - Stop all containers
 - `yarn docker:logs` - View container logs
 - `yarn docker:ps` - List running containers
+
+### Workspace Management
+
+- `yarn workspace:list` - List all workspaces
+- `yarn workspace:health --org-id <org> --project-id <project>` - Check workspace health
+
+## Configuration
+
+### Environment Variables
+
+Copy `.env.example` to `.env` and configure:
+
+```bash
+# Database
+DATABASE__URL=postgresql://postgres:postgres@localhost:5433/vyrak
+
+# Workspace mode (clone or worktree)
+WORKSPACE_MODE=clone
+MAIN_REPOS_PATH=/var/vyrak/repos
+
+# Authentication
+JWT_SECRET=your-secret-key-here
+
+# Frontend
+FRONTEND_URL=http://localhost:5173
+```
+
+### Workspace Modes
+
+Vyrak supports two workspace modes for workflow execution:
+
+- **Clone Mode (Default)** - Each workflow run clones the repository. Simple and safe for development.
+- **Worktree Mode (Production)** - Uses git worktree for 6-12x faster workspace creation and 10x less disk usage.
+
+For production deployments, enable worktree mode:
+
+```bash
+WORKSPACE_MODE=worktree
+MAIN_REPOS_PATH=/var/vyrak/repos
+```
+
+See `docs/workspace-worktree-migration.md` for detailed configuration and migration guide.
 
 ## Development Services
 

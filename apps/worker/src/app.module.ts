@@ -8,7 +8,12 @@ import { WorkflowCoreModule } from '@vyrak/workflow-core'
 
 import { ClsModule } from 'nestjs-cls'
 
-import { ExampleProcessor, WorkflowExecutionProcessor } from './processors'
+import { ExampleProcessor } from './processors'
+
+// TODO: WorkflowExecutionProcessor temporarily disabled
+// Epic 3 only implements agent integration (AgentStepExecutor)
+// WorkflowExecutionProcessor needs workflow-executor service which will be implemented in Epic 2
+// import { WorkflowExecutionProcessor } from './processors'
 
 @Module({
   imports: [
@@ -49,6 +54,6 @@ import { ExampleProcessor, WorkflowExecutionProcessor } from './processors'
       },
     }),
   ],
-  providers: [ExampleProcessor, WorkflowExecutionProcessor],
+  providers: [ExampleProcessor /* WorkflowExecutionProcessor */],
 })
 export class AppModule {}

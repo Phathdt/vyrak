@@ -1,3 +1,5 @@
+import type { CustomConfigService } from '@vyrak/custom-config'
+
 import * as jose from 'jose'
 
 export interface JwtPayload {
@@ -10,11 +12,12 @@ export interface JwtPayload {
 export class JwtProvider {
   private readonly secret: Uint8Array
   private readonly algorithm = 'HS256'
-  private readonly expiresIn = '24h'
+  private readonly expiresIn: string
 
-  constructor() {
-    const secretKey = process.env.JWT_SECRET || 'development-secret-key-please-change-in-production'
+  constructor(config: CustomConfigService) {
+    const secretKey = config.jwt.secret
     this.secret = new TextEncoder().encode(secretKey)
+    this.expiresIn = config.jwt.expiry
   }
 
   async sign(payload: Omit<JwtPayload, 'iat' | 'exp'>): Promise<string> {

@@ -173,6 +173,23 @@ export class CustomConfigService {
       errors.push('redis.url must be configured')
     }
 
+    // Validate workspace config
+    if (this._config.workspace) {
+      const ws = this._config.workspace
+
+      if (ws.mode !== 'worktree') {
+        errors.push('workspace.mode must be "worktree" (only mode supported)')
+      }
+
+      if (isPlaceholder(ws.mainReposPath)) {
+        errors.push('workspace.mainReposPath must be configured (required for worktree mode)')
+      }
+
+      if (isPlaceholder(ws.workspacesPath)) {
+        errors.push('workspace.workspacesPath must be configured')
+      }
+    }
+
     if (errors.length > 0) {
       const errorMessage = `Configuration validation failed:\n${errors.map((e) => `  - ${e}`).join('\n')}`
       BootstrapLogger.error(errorMessage)

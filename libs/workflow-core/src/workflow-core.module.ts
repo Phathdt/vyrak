@@ -1,77 +1,37 @@
-import { BullModule } from '@nestjs/bullmq'
 import { Module } from '@nestjs/common'
-import { DatabaseModule, DatabaseService } from '@vyrak/database'
-
-import { FakeStepExecutor } from './application/services/fake-step-executor'
-import { LeaseManager } from './application/services/lease-manager.service'
-import { RetryHandler } from './application/services/retry-handler.service'
-import { WorkflowExecutorService } from './application/services/workflow-executor.service'
-import { StartWorkflowUseCase } from './application/use-cases/start-workflow.use-case'
 import {
-  BullMQJobQueue,
-  EVENT_REPOSITORY,
-  EventPrismaRepository,
-  JOB_QUEUE,
-  STEP_REPOSITORY,
-  StepPrismaRepository,
-  WORKFLOW_REPOSITORY,
-  WorkflowPrismaRepository,
-} from './infras'
+  AGENT_EXECUTOR,
+  AgentRuntimeModule,
+  ARTIFACT_MANAGER,
+  WORKSPACE_MANAGER,
+  type IAgentExecutor,
+  type IArtifactManager,
+  type IWorkspaceManager,
+} from '@vyrak/agent-runtime'
+import { DatabaseModule } from '@vyrak/database'
+
+import { AgentStepExecutor } from './application/services/agent-step-executor.service'
+import { AGENT_STEP_EXECUTOR } from './infras/di/di'
 
 /**
  * Workflow Core Module
- * Provides workflow execution domain logic and infrastructure
+ *
+ * Provides workflow execution engine with agent integration
  */
 @Module({
-  imports: [
-    DatabaseModule,
-    BullModule.registerQueue({
-      name: 'workflow-execution',
-    }),
-  ],
+  imports: [DatabaseModule, AgentRuntimeModule],
   providers: [
+    // Agent step executor
     {
-      provide: JOB_QUEUE,
-      useClass: BullMQJobQueue,
+      provide: AGENT_STEP_EXECUTOR,
+      useFactory: (
+        agentExecutor: IAgentExecutor,
+        workspaceManager: IWorkspaceManager,
+        artifactManager: IArtifactManager
+      ) => new AgentStepExecutor(agentExecutor, workspaceManager, artifactManager),
+      inject: [AGENT_EXECUTOR, WORKSPACE_MANAGER, ARTIFACT_MANAGER],
     },
-    {
-      provide: WORKFLOW_REPOSITORY,
-      useFactory: (db: DatabaseService) => new WorkflowPrismaRepository(db.client),
-      inject: [DatabaseService],
-    },
-    {
-      provide: STEP_REPOSITORY,
-      useFactory: (db: DatabaseService) => new StepPrismaRepository(db.client),
-      inject: [DatabaseService],
-    },
-    {
-      provide: EVENT_REPOSITORY,
-      useFactory: (db: DatabaseService) => new EventPrismaRepository(db.client),
-      inject: [DatabaseService],
-    },
-    // Step executors
-    FakeStepExecutor,
-    {
-      provide: 'STEP_EXECUTORS',
-      useFactory: (fakeExecutor: FakeStepExecutor) => [fakeExecutor],
-      inject: [FakeStepExecutor],
-    },
-    // Services
-    LeaseManager,
-    RetryHandler,
-    WorkflowExecutorService,
-    // Use cases
-    StartWorkflowUseCase,
   ],
-  exports: [
-    JOB_QUEUE,
-    WORKFLOW_REPOSITORY,
-    STEP_REPOSITORY,
-    EVENT_REPOSITORY,
-    LeaseManager,
-    RetryHandler,
-    WorkflowExecutorService,
-    StartWorkflowUseCase,
-  ],
+  exports: [AGENT_STEP_EXECUTOR],
 })
 export class WorkflowCoreModule {}

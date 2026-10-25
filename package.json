@@ -59,7 +59,11 @@
     "test:e2e": "yarn workspace @vyrak/e2e test",
     "test:e2e:headed": "yarn workspace @vyrak/e2e test:headed",
     "test:e2e:ui": "yarn workspace @vyrak/e2e test:ui",
-    "db:seed:test": "tsx prisma/seed-test.ts"
+    "db:seed:test": "tsx prisma/seed-test.ts",
+    "workspace:list": "yarn workspace @apps/api-server cli workspace:list",
+    "workspace:health": "yarn workspace @apps/api-server cli workspace:health",
+    "workspace:clean-stale": "yarn workspace @apps/api-server cli workspace:clean-stale --org-id $ORG_ID --project-id $PROJECT_ID",
+    "workspace:prune": "yarn workspace @apps/api-server cli workspace:prune --org-id $ORG_ID --project-id $PROJECT_ID"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.4",

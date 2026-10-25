@@ -7,13 +7,18 @@
   "scripts": {
     "build": "rolldown -c && tsc --emitDeclarationOnly",
     "dev": "rolldown -c --watch",
-    "test": "vitest run",
+    "test": "vitest run --exclude '**/*.integration.spec.ts' --exclude '**/__tests__/integration/**'",
+    "test:unit": "vitest run --exclude '**/*.integration.spec.ts' --exclude '**/__tests__/integration/**'",
+    "test:unit:watch": "vitest --exclude '**/*.integration.spec.ts' --exclude '**/__tests__/integration/**'",
+    "test:integration": "vitest run --config vitest.integration.config.mjs",
+    "test:integration:watch": "vitest --config vitest.integration.config.mjs",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@nestjs/bullmq": "^12.0.0",
     "@nestjs/common": "^12.2.0",
+    "@vyrak/agent-runtime": "*",
     "@vyrak/database": "*",
     "bullmq": "^6.4.0",
     "zod": "^3.24.1"

@@ -1,58 +1,32 @@
-import { EventPrismaRepository, StepPrismaRepository } from '../repositories'
-
 /**
- * Dependency injection tokens for workflow-core infrastructure
- * Uses Symbol for type-safe injection without circular dependencies
+ * Dependency injection tokens for workflow-core module
+ *
+ * Symbol-based tokens prevent injection conflicts and enable
+ * framework-independent business logic
  */
 
 /**
- * Job queue service for enqueuing workflow execution jobs
- */
-export const JOB_QUEUE = Symbol('JOB_QUEUE')
-
-/**
- * Workflow repository for persistence operations
+ * Workflow repository token
  */
 export const WORKFLOW_REPOSITORY = Symbol('WORKFLOW_REPOSITORY')
 
 /**
- * Step repository for step run persistence
+ * Step repository token
  */
 export const STEP_REPOSITORY = Symbol('STEP_REPOSITORY')
 
 /**
- * Event repository for workflow event storage
+ * Event repository token
  */
 export const EVENT_REPOSITORY = Symbol('EVENT_REPOSITORY')
 
 /**
- * Provider factory for step repository
+ * Job queue token (BullMQ)
  */
-export function createStepRepositoryProvider(): {
-  provide: typeof STEP_REPOSITORY
-  useClass: typeof StepPrismaRepository
-} {
-  return {
-    provide: STEP_REPOSITORY,
-    useClass: StepPrismaRepository,
-  }
-}
+export const JOB_QUEUE = Symbol('JOB_QUEUE')
 
 /**
- * Provider factory for event repository
+ * Agent step executor token
+ * Executes agent steps in workflows
  */
-export function createEventRepositoryProvider(): {
-  provide: typeof EVENT_REPOSITORY
-  useClass: typeof EventPrismaRepository
-} {
-  return {
-    provide: EVENT_REPOSITORY,
-    useClass: EventPrismaRepository,
-  }
-}
-
-/**
- * Legacy exports for backward compatibility with NestJS modules
- */
-export const stepRepositoryProvider = createStepRepositoryProvider()
-export const eventRepositoryProvider = createEventRepositoryProvider()
+export const AGENT_STEP_EXECUTOR = Symbol('AGENT_STEP_EXECUTOR')
