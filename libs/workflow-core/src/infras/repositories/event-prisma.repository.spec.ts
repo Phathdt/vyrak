@@ -1,4 +1,3 @@
-import { Test, TestingModule } from '@nestjs/testing'
 import { DatabaseService } from '@vyrak/database'
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -20,28 +19,19 @@ describe('EventPrismaRepository', () => {
     createdAt: new Date('2026-10-25T10:00:00Z'),
   }
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        EventPrismaRepository,
-        {
-          provide: DatabaseService,
-          useValue: {
-            client: {
-              $transaction: vi.fn(),
-              workflowEvent: {
-                findFirst: vi.fn(),
-                findMany: vi.fn(),
-                create: vi.fn(),
-              },
-            },
-          },
+  beforeEach(() => {
+    db = {
+      client: {
+        $transaction: vi.fn(),
+        workflowEvent: {
+          findFirst: vi.fn(),
+          findMany: vi.fn(),
+          create: vi.fn(),
         },
-      ],
-    }).compile()
+      },
+    } as any
 
-    repository = module.get<EventPrismaRepository>(EventPrismaRepository)
-    db = module.get<DatabaseService>(DatabaseService)
+    repository = new EventPrismaRepository(db)
   })
 
   describe('appendEvent', () => {

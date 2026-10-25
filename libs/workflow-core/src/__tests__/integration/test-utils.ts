@@ -23,6 +23,16 @@ export class IntegrationTestSetup {
     }).compile()
 
     this.db = this.module.get(DatabaseService)
+
+    // Debug: check if db.client exists before init
+    console.log('Before onModuleInit - db.client exists:', !!this.db.client)
+
+    // Manually call lifecycle hook since compile() doesn't trigger them
+    await this.db.onModuleInit()
+
+    // Debug: check if db.client exists after init
+    console.log('After onModuleInit - db.client exists:', !!this.db.client)
+    console.log('After onModuleInit - db.$connect called')
   }
 
   /**

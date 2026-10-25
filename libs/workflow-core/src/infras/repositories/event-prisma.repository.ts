@@ -1,11 +1,9 @@
-import { Injectable } from '@nestjs/common'
 import { DatabaseService } from '@vyrak/database'
 
 import { WorkflowEventEntity, WorkflowEventEntitySchema } from '../../domain/entities/workflow-event.entity'
 import { WorkflowRepositoryError } from '../../domain/errors/common.error'
 import { CreateEventParams, IEventRepository } from '../../domain/interfaces/event.repository.interface'
 
-@Injectable()
 export class EventPrismaRepository implements IEventRepository {
   constructor(private readonly db: DatabaseService) {}
 
@@ -36,7 +34,7 @@ export class EventPrismaRepository implements IEventRepository {
       })
 
       return this.mapToDomain(result)
-    } catch (error) {
+    } catch (error: unknown) {
       throw new WorkflowRepositoryError(
         'Failed to append workflow event',
         error instanceof Error ? error.message : 'Unknown error'
@@ -54,7 +52,7 @@ export class EventPrismaRepository implements IEventRepository {
       })
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma internal type
       return events.map((event: any) => this.mapToDomain(event))
-    } catch (error) {
+    } catch (error: unknown) {
       throw new WorkflowRepositoryError(
         'Failed to find workflow events',
         error instanceof Error ? error.message : 'Unknown error'
@@ -70,7 +68,7 @@ export class EventPrismaRepository implements IEventRepository {
         select: { sequence: true },
       })
       return (lastEvent?.sequence ?? 0) + 1
-    } catch (error) {
+    } catch (error: unknown) {
       throw new WorkflowRepositoryError(
         'Failed to get next sequence',
         error instanceof Error ? error.message : 'Unknown error'

@@ -1,11 +1,9 @@
-import { Injectable } from '@nestjs/common'
 import { DatabaseService } from '@vyrak/database'
 
 import { StepRun, StepRunSchema, StepStatus } from '../../domain/entities/step-run.entity'
 import { StepNotFoundError, WorkflowRepositoryError } from '../../domain/errors/common.error'
 import { CreateStepParams, IStepRepository, StepUpdateResult } from '../../domain/interfaces/step-repository.interface'
 
-@Injectable()
 export class StepPrismaRepository implements IStepRepository {
   constructor(private readonly db: DatabaseService) {}
 
@@ -23,7 +21,7 @@ export class StepPrismaRepository implements IStepRepository {
         },
       })
       return this.mapToDomain(step)
-    } catch (error) {
+    } catch (error: unknown) {
       throw new WorkflowRepositoryError(
         'Failed to create workflow step run',
         error instanceof Error ? error.message : 'Unknown error'
@@ -39,7 +37,7 @@ export class StepPrismaRepository implements IStepRepository {
       })
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma internal type
       return steps.map((step: any) => this.mapToDomain(step))
-    } catch (error) {
+    } catch (error: unknown) {
       throw new WorkflowRepositoryError(
         'Failed to find workflow steps',
         error instanceof Error ? error.message : 'Unknown error'
@@ -60,7 +58,7 @@ export class StepPrismaRepository implements IStepRepository {
           completedAt: result?.completedAt,
         },
       })
-    } catch (error) {
+    } catch (error: unknown) {
       if (error instanceof Error && 'code' in error && error.code === 'P2025') {
         throw new StepNotFoundError(`Step run not found: ${stepRunId}`)
       }
@@ -82,7 +80,7 @@ export class StepPrismaRepository implements IStepRepository {
         select: { attempt: true },
       })
       return step.attempt
-    } catch (error) {
+    } catch (error: unknown) {
       if (error instanceof Error && 'code' in error && error.code === 'P2025') {
         throw new StepNotFoundError(`Step run not found: ${stepRunId}`)
       }
@@ -99,7 +97,7 @@ export class StepPrismaRepository implements IStepRepository {
         where: { id: stepRunId },
       })
       return step ? this.mapToDomain(step) : null
-    } catch (error) {
+    } catch (error: unknown) {
       throw new WorkflowRepositoryError(
         'Failed to find step run by ID',
         error instanceof Error ? error.message : 'Unknown error'

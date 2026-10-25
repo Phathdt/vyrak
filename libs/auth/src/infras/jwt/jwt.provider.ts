@@ -1,5 +1,3 @@
-import { Injectable } from '@nestjs/common'
-
 import * as jose from 'jose'
 
 export interface JwtPayload {
@@ -9,7 +7,6 @@ export interface JwtPayload {
   exp?: number
 }
 
-@Injectable()
 export class JwtProvider {
   private readonly secret: Uint8Array
   private readonly algorithm = 'HS256'

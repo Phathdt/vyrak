@@ -1,9 +1,11 @@
 import { BullModule } from '@nestjs/bullmq'
 import { Module } from '@nestjs/common'
-import { DatabaseModule } from '@vyrak/database'
+import { DatabaseModule, DatabaseService } from '@vyrak/database'
 
-import { eventRepositoryProvider, JOB_QUEUE, stepRepositoryProvider, WORKFLOW_REPOSITORY } from './infras/di/di'
+import { EVENT_REPOSITORY, JOB_QUEUE, STEP_REPOSITORY, WORKFLOW_REPOSITORY } from './infras/di/di'
 import { BullMQJobQueue } from './infras/queue/bullmq-job-queue'
+import { EventPrismaRepository } from './infras/repositories/event-prisma.repository'
+import { StepPrismaRepository } from './infras/repositories/step-prisma.repository'
 import { WorkflowPrismaRepository } from './infras/repositories/workflow-prisma.repository'
 
 /**
@@ -24,11 +26,20 @@ import { WorkflowPrismaRepository } from './infras/repositories/workflow-prisma.
     },
     {
       provide: WORKFLOW_REPOSITORY,
-      useClass: WorkflowPrismaRepository,
+      useFactory: (db: DatabaseService) => new WorkflowPrismaRepository(db),
+      inject: [DatabaseService],
     },
-    stepRepositoryProvider,
-    eventRepositoryProvider,
+    {
+      provide: STEP_REPOSITORY,
+      useFactory: (db: DatabaseService) => new StepPrismaRepository(db),
+      inject: [DatabaseService],
+    },
+    {
+      provide: EVENT_REPOSITORY,
+      useFactory: (db: DatabaseService) => new EventPrismaRepository(db),
+      inject: [DatabaseService],
+    },
   ],
-  exports: [JOB_QUEUE, WORKFLOW_REPOSITORY, stepRepositoryProvider, eventRepositoryProvider],
+  exports: [JOB_QUEUE, WORKFLOW_REPOSITORY, STEP_REPOSITORY, EVENT_REPOSITORY],
 })
 export class WorkflowCoreModule {}

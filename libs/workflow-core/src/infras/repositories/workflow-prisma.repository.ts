@@ -1,4 +1,3 @@
-import { Injectable } from '@nestjs/common'
 import { DatabaseService, Prisma } from '@vyrak/database'
 
 import { WorkflowRun, WorkflowRunSchema } from '../../domain/entities/workflow-run.entity'
@@ -18,7 +17,6 @@ import { WorkflowState } from '../../domain/workflow-state'
  * Prisma implementation of workflow repository
  * Maps between Prisma models and domain entities
  */
-@Injectable()
 export class WorkflowPrismaRepository implements IWorkflowRepository {
   constructor(private readonly db: DatabaseService) {}
 

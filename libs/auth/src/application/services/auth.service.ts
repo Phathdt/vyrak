@@ -1,12 +1,18 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common'
-
-import { PasswordService } from './password.service'
-
 import type { IAuthRepository, UserWithOrganizations } from '../../domain/interfaces/auth-repository.interface'
 import type { IAuthService } from '../../domain/interfaces/auth-service.interface'
 import { JwtProvider } from '../../infras/jwt/jwt.provider'
+import { PasswordService } from './password.service'
 
-@Injectable()
+class UnauthorizedError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'UnauthorizedError'
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, UnauthorizedError)
+    }
+  }
+}
+
 export class AuthService implements IAuthService {
   constructor(
     private readonly authRepository: IAuthRepository,
@@ -25,13 +31,13 @@ export class AuthService implements IAuthService {
     // Find user by email
     const user = await this.authRepository.findByEmail(email)
     if (!user || !user.passwordHash) {
-      throw new UnauthorizedException('Invalid credentials')
+      throw new UnauthorizedError('Invalid credentials')
     }
 
     // Verify password
     const isValid = await this.passwordService.verify(user.passwordHash, password)
     if (!isValid) {
-      throw new UnauthorizedException('Invalid credentials')
+      throw new UnauthorizedError('Invalid credentials')
     }
 
     // Generate JWT

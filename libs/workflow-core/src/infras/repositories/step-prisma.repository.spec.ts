@@ -1,4 +1,3 @@
-import { Test, TestingModule } from '@nestjs/testing'
 import { DatabaseService } from '@vyrak/database'
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -30,28 +29,19 @@ describe('StepPrismaRepository', () => {
     updatedAt: new Date('2026-10-25T10:00:00Z'),
   }
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        StepPrismaRepository,
-        {
-          provide: DatabaseService,
-          useValue: {
-            client: {
-              workflowStepRun: {
-                create: vi.fn(),
-                findMany: vi.fn(),
-                findUnique: vi.fn(),
-                update: vi.fn(),
-              },
-            },
-          },
+  beforeEach(() => {
+    db = {
+      client: {
+        workflowStepRun: {
+          create: vi.fn(),
+          findMany: vi.fn(),
+          findUnique: vi.fn(),
+          update: vi.fn(),
         },
-      ],
-    }).compile()
+      },
+    } as any
 
-    repository = module.get<StepPrismaRepository>(StepPrismaRepository)
-    db = module.get<DatabaseService>(DatabaseService)
+    repository = new StepPrismaRepository(db)
   })
 
   describe('createStepRun', () => {

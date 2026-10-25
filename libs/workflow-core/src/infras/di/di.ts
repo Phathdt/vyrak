@@ -1,7 +1,3 @@
-import type { Provider } from '@nestjs/common'
-
-import type { IEventRepository } from '../../domain/interfaces/event.repository.interface'
-import type { IStepRepository } from '../../domain/interfaces/step-repository.interface'
 import { EventPrismaRepository } from '../repositories/event-prisma.repository'
 import { StepPrismaRepository } from '../repositories/step-prisma.repository'
 
@@ -31,17 +27,27 @@ export const STEP_REPOSITORY = Symbol('STEP_REPOSITORY')
 export const EVENT_REPOSITORY = Symbol('EVENT_REPOSITORY')
 
 /**
- * Provider for step repository
+ * Provider factory for step repository
  */
-export const stepRepositoryProvider: Provider<IStepRepository> = {
-  provide: STEP_REPOSITORY,
-  useClass: StepPrismaRepository,
+export function createStepRepositoryProvider(): { provide: typeof STEP_REPOSITORY; useClass: typeof StepPrismaRepository } {
+  return {
+    provide: STEP_REPOSITORY,
+    useClass: StepPrismaRepository,
+  }
 }
 
 /**
- * Provider for event repository
+ * Provider factory for event repository
  */
-export const eventRepositoryProvider: Provider<IEventRepository> = {
-  provide: EVENT_REPOSITORY,
-  useClass: EventPrismaRepository,
+export function createEventRepositoryProvider(): { provide: typeof EVENT_REPOSITORY; useClass: typeof EventPrismaRepository } {
+  return {
+    provide: EVENT_REPOSITORY,
+    useClass: EventPrismaRepository,
+  }
 }
+
+/**
+ * Legacy exports for backward compatibility with NestJS modules
+ */
+export const stepRepositoryProvider = createStepRepositoryProvider()
+export const eventRepositoryProvider = createEventRepositoryProvider()
