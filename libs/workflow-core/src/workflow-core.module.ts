@@ -36,11 +36,11 @@ import {
   WORKFLOW_APPROVAL_REPOSITORY,
   WORKFLOW_REPOSITORY,
 } from './infras/di/di'
-import { StubAuthorizationService } from './infras/services/stub-authorization.service'
-import { TestResultParserService } from './infras/services/test-result-parser.service'
 import { EventPrismaRepository } from './infras/repositories/event-prisma.repository'
 import { WorkflowApprovalPrismaRepository } from './infras/repositories/workflow-approval-prisma.repository'
 import { WorkflowPrismaRepository } from './infras/repositories/workflow-prisma.repository'
+import { StubAuthorizationService } from './infras/services/stub-authorization.service'
+import { TestResultParserService } from './infras/services/test-result-parser.service'
 
 /**
  * Logger adapter for application services
@@ -137,15 +137,7 @@ class ArtifactRepositoryAdapter implements IArtifactRepository {
         authService: IAuthorizationService,
         eventRepo: IEventRepository,
         jobQueue: IJobQueue
-      ) =>
-        new ApproveWorkflowUseCase(
-          workflowRepo,
-          approvalRepo,
-          approvalValidator,
-          authService,
-          eventRepo,
-          jobQueue
-        ),
+      ) => new ApproveWorkflowUseCase(workflowRepo, approvalRepo, approvalValidator, authService, eventRepo, jobQueue),
       inject: [
         WORKFLOW_REPOSITORY,
         WORKFLOW_APPROVAL_REPOSITORY,
@@ -183,8 +175,7 @@ class ArtifactRepositoryAdapter implements IArtifactRepository {
         workflowRepo: IWorkflowRepository,
         artifactRepo: IArtifactRepository,
         eventRepo: IEventRepository
-      ) =>
-        new ApprovalStepExecutor(approvalRepo, workflowRepo, artifactRepo, eventRepo, new LoggerAdapter()),
+      ) => new ApprovalStepExecutor(approvalRepo, workflowRepo, artifactRepo, eventRepo, new LoggerAdapter()),
       inject: [WORKFLOW_APPROVAL_REPOSITORY, WORKFLOW_REPOSITORY, ARTIFACT_REPOSITORY, EVENT_REPOSITORY],
     },
     {

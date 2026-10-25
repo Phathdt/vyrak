@@ -1,7 +1,10 @@
 import type { PrismaClient } from '@vyrak/database'
 
-import type { WorkflowApproval } from '../../domain/entities/workflow-approval.entity'
-import { ApprovalStatus, WorkflowApprovalSchema } from '../../domain/entities/workflow-approval.entity'
+import {
+  ApprovalStatus,
+  WorkflowApprovalSchema,
+  type WorkflowApproval,
+} from '../../domain/entities/workflow-approval.entity'
 import type { IWorkflowApprovalRepository } from '../../domain/interfaces/workflow-approval.repository.interface'
 
 /**

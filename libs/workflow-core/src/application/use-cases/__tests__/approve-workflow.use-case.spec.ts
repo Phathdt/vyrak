@@ -1,7 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-
-import { ApprovalValidatorService } from '../../services/approval-validator.service'
-import { ApproveWorkflowUseCase, ApproveWorkflowInput } from '../approve-workflow.use-case'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { WorkflowState } from '../../../domain'
 import { WorkflowRun } from '../../../domain/entities'
@@ -19,6 +16,8 @@ import type { IEventRepository } from '../../../domain/interfaces/event.reposito
 import type { IJobQueue } from '../../../domain/interfaces/job-queue.interface'
 import type { IWorkflowApprovalRepository } from '../../../domain/interfaces/workflow-approval.repository.interface'
 import type { IWorkflowRepository } from '../../../domain/interfaces/workflow.repository.interface'
+import { ApprovalValidatorService } from '../../services/approval-validator.service'
+import { ApproveWorkflowInput, ApproveWorkflowUseCase } from '../approve-workflow.use-case'
 
 describe('ApproveWorkflowUseCase', () => {
   let useCase: ApproveWorkflowUseCase
@@ -120,10 +119,7 @@ describe('ApproveWorkflowUseCase', () => {
       )
       expect(workflowRunRepository.findRunById).toHaveBeenCalledWith(mockInput.runId)
       expect(workflowApprovalRepository.findByRunId).toHaveBeenCalledWith(mockInput.runId)
-      expect(approvalValidator.validatePlanVersion).toHaveBeenCalledWith(
-        mockApproval.id,
-        mockApproval.planArtifactId
-      )
+      expect(approvalValidator.validatePlanVersion).toHaveBeenCalledWith(mockApproval.id, mockApproval.planArtifactId)
       expect(workflowApprovalRepository.save).toHaveBeenCalled()
       expect(workflowRunRepository.updateRunState).toHaveBeenCalledWith(mockInput.runId, {
         status: WorkflowState.RUNNING,
@@ -343,10 +339,7 @@ describe('ApproveWorkflowUseCase', () => {
       await useCase.execute(mockInput)
 
       // Assert
-      expect(approvalValidator.validatePlanVersion).toHaveBeenCalledWith(
-        mockApproval.id,
-        mockApproval.planArtifactId
-      )
+      expect(approvalValidator.validatePlanVersion).toHaveBeenCalledWith(mockApproval.id, mockApproval.planArtifactId)
     })
   })
 

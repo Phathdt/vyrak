@@ -1,16 +1,11 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-
 import type { IArtifactManager, IWorkspaceManager } from '@vyrak/agent-runtime'
 
-import {
-  ToolStepExecutor,
-  type ITestResultParser,
-  type TestResults,
-} from '../tool-step-executor.service'
-import type { StepDefinition } from '../workflow-definition'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { WorkflowRun } from '../../../domain/entities/workflow-run.entity'
 import { StepStatus, StepType } from '../../../domain/step-types'
+import { ToolStepExecutor, type ITestResultParser, type TestResults } from '../tool-step-executor.service'
+import type { StepDefinition } from '../workflow-definition'
 
 describe('ToolStepExecutor', () => {
   let toolStepExecutor: ToolStepExecutor
@@ -49,11 +44,7 @@ describe('ToolStepExecutor', () => {
       parseTAP: vi.fn(),
     }
 
-    toolStepExecutor = new ToolStepExecutor(
-      mockWorkspaceManager,
-      mockArtifactManager,
-      mockTestResultParser
-    )
+    toolStepExecutor = new ToolStepExecutor(mockWorkspaceManager, mockArtifactManager, mockTestResultParser)
   })
 
   describe('canHandle', () => {

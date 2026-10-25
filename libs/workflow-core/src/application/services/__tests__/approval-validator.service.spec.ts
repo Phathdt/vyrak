@@ -1,20 +1,19 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { ApprovalValidatorService } from '../approval-validator.service'
-
-import type {
-  IWorkflowApprovalRepository,
-  IEventRepository,
-  IArtifactRepository,
-  IArtifact,
-} from '../../../domain/interfaces'
 import {
-  createWorkflowApproval,
-  type WorkflowApproval,
-  invalidate,
   approve,
+  createWorkflowApproval,
+  invalidate,
+  type WorkflowApproval,
 } from '../../../domain/entities/workflow-approval.entity'
-import { WorkflowApprovalNotFoundError, ArtifactNotFoundError } from '../../../domain/errors'
+import { ArtifactNotFoundError, WorkflowApprovalNotFoundError } from '../../../domain/errors'
+import type {
+  IArtifact,
+  IArtifactRepository,
+  IEventRepository,
+  IWorkflowApprovalRepository,
+} from '../../../domain/interfaces'
+import { ApprovalValidatorService } from '../approval-validator.service'
 
 // Test UUIDs (valid format)
 const TEST_IDS = {

@@ -1,15 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import {
-  ApprovalStepExecutor,
-  type IArtifact,
-  type IArtifactRepository,
-  type ILogger,
-} from '../approval-step-executor.service'
-import type { StepDefinition } from '../workflow-definition'
-
-import type { WorkflowApproval } from '../../../domain/entities/workflow-approval.entity'
-import { ApprovalStatus } from '../../../domain/entities/workflow-approval.entity'
+import { ApprovalStatus, type WorkflowApproval } from '../../../domain/entities/workflow-approval.entity'
 import type { WorkflowRun } from '../../../domain/entities/workflow-run.entity'
 import {
   ArtifactNotFoundError,
@@ -21,6 +12,13 @@ import type { IWorkflowApprovalRepository } from '../../../domain/interfaces/wor
 import type { IWorkflowRepository, WorkflowStateUpdate } from '../../../domain/interfaces/workflow.repository.interface'
 import { StepStatus, StepType } from '../../../domain/step-types'
 import { WorkflowState } from '../../../domain/workflow-state'
+import {
+  ApprovalStepExecutor,
+  type IArtifact,
+  type IArtifactRepository,
+  type ILogger,
+} from '../approval-step-executor.service'
+import type { StepDefinition } from '../workflow-definition'
 
 describe('ApprovalStepExecutor', () => {
   let executor: ApprovalStepExecutor
@@ -93,13 +91,7 @@ describe('ApprovalStepExecutor', () => {
       debug: vi.fn(),
     }
 
-    executor = new ApprovalStepExecutor(
-      mockApprovalRepo,
-      mockWorkflowRepo,
-      mockArtifactRepo,
-      mockEventRepo,
-      mockLogger
-    )
+    executor = new ApprovalStepExecutor(mockApprovalRepo, mockWorkflowRepo, mockArtifactRepo, mockEventRepo, mockLogger)
   })
 
   describe('canHandle', () => {

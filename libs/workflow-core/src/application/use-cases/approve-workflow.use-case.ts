@@ -1,7 +1,5 @@
 import { Logger } from '@nestjs/common'
 
-import { ApprovalValidatorService } from '../services/approval-validator.service'
-
 import { WorkflowState } from '../../domain'
 import { approve, isPending } from '../../domain/entities/workflow-approval.entity'
 import {
@@ -17,6 +15,7 @@ import type { IEventRepository } from '../../domain/interfaces/event.repository.
 import type { IJobQueue } from '../../domain/interfaces/job-queue.interface'
 import type { IWorkflowApprovalRepository } from '../../domain/interfaces/workflow-approval.repository.interface'
 import type { IWorkflowRepository } from '../../domain/interfaces/workflow.repository.interface'
+import { ApprovalValidatorService } from '../services/approval-validator.service'
 
 /**
  * Input data for approving a workflow
@@ -64,11 +63,7 @@ export class ApproveWorkflowUseCase {
   async execute(input: ApproveWorkflowInput): Promise<void> {
     try {
       // 1. Authorize user
-      await this.authorizationService.requireApprovalPermission(
-        input.userId,
-        input.organizationId,
-        input.projectId
-      )
+      await this.authorizationService.requireApprovalPermission(input.userId, input.organizationId, input.projectId)
 
       // 2. Load run and verify state
       const run = await this.workflowRunRepository.findRunById(input.runId)
@@ -81,9 +76,7 @@ export class ApproveWorkflowUseCase {
       }
 
       if (run.state !== WorkflowState.WAITING_APPROVAL) {
-        throw new InvalidWorkflowStateError(
-          `Expected waiting_approval, got ${run.state}`
-        )
+        throw new InvalidWorkflowStateError(`Expected waiting_approval, got ${run.state}`)
       }
 
       // 3. Load approval and verify state
@@ -106,15 +99,10 @@ export class ApproveWorkflowUseCase {
       }
 
       // 4. Validate plan version hasn't changed (uses validator from Phase 2)
-      const isValid = await this.approvalValidator.validatePlanVersion(
-        approval.id,
-        approval.planArtifactId
-      )
+      const isValid = await this.approvalValidator.validatePlanVersion(approval.id, approval.planArtifactId)
 
       if (!isValid) {
-        throw new StaleApprovalError(
-          'Plan has been regenerated or modified, approval is no longer valid'
-        )
+        throw new StaleApprovalError('Plan has been regenerated or modified, approval is no longer valid')
       }
 
       // 5. Update approval using entity function (immutable)

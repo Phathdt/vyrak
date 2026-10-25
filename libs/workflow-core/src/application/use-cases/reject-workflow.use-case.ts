@@ -73,11 +73,7 @@ export class RejectWorkflowUseCase {
       }
 
       // 1. Authorize user
-      await this.authorizationService.requireApprovalPermission(
-        input.userId,
-        input.organizationId,
-        input.projectId
-      )
+      await this.authorizationService.requireApprovalPermission(input.userId, input.organizationId, input.projectId)
 
       // 2. Load run and verify state
       const run = await this.workflowRunRepository.findRunById(input.runId)
@@ -90,9 +86,7 @@ export class RejectWorkflowUseCase {
       }
 
       if (run.state !== WorkflowState.WAITING_APPROVAL) {
-        throw new InvalidWorkflowStateError(
-          `Expected waiting_approval, got ${run.state}`
-        )
+        throw new InvalidWorkflowStateError(`Expected waiting_approval, got ${run.state}`)
       }
 
       // 3. Load approval and verify state

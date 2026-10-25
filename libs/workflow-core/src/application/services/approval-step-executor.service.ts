@@ -3,18 +3,17 @@ import { createHash } from 'crypto'
 import type { IStepExecutor, StepExecutorResult } from './step-executor.interface'
 import type { StepDefinition } from './workflow-definition'
 
-import type { WorkflowApproval } from '../../domain/entities/workflow-approval.entity'
-import { createWorkflowApproval } from '../../domain/entities/workflow-approval.entity'
+import { createWorkflowApproval, type WorkflowApproval } from '../../domain/entities/workflow-approval.entity'
 import type { WorkflowRun } from '../../domain/entities/workflow-run.entity'
 import {
   ArtifactNotFoundError,
   InvalidStepTypeError,
   MissingPlanArtifactError,
 } from '../../domain/errors/workflow-approval.errors'
+import type { IArtifact, IArtifactRepository } from '../../domain/interfaces/artifact.interface'
 import type { CreateEventParams, IEventRepository } from '../../domain/interfaces/event.repository.interface'
 import type { IWorkflowApprovalRepository } from '../../domain/interfaces/workflow-approval.repository.interface'
 import type { IWorkflowRepository } from '../../domain/interfaces/workflow.repository.interface'
-import type { IArtifact, IArtifactRepository } from '../../domain/interfaces/artifact.interface'
 import { StepStatus, StepType } from '../../domain/step-types'
 import { WorkflowState } from '../../domain/workflow-state'
 

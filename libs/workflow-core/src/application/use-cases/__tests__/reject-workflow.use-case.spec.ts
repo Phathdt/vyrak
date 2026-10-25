@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { WorkflowApproval } from '../../../domain/entities/workflow-approval.entity'
-import { ApprovalStatus } from '../../../domain/entities/workflow-approval.entity'
+import { ApprovalStatus, type WorkflowApproval } from '../../../domain/entities/workflow-approval.entity'
 import type { WorkflowRun } from '../../../domain/entities/workflow-run.entity'
 import {
   ApprovalAlreadyDecidedError,
@@ -16,8 +15,11 @@ import type { IEventRepository } from '../../../domain/interfaces/event.reposito
 import type { IWorkflowApprovalRepository } from '../../../domain/interfaces/workflow-approval.repository.interface'
 import type { IWorkflowRepository } from '../../../domain/interfaces/workflow.repository.interface'
 import { WorkflowState } from '../../../domain/workflow-state'
-import type { IRejectWorkflowLogger, RejectWorkflowInput } from '../reject-workflow.use-case'
-import { RejectWorkflowUseCase } from '../reject-workflow.use-case'
+import {
+  RejectWorkflowUseCase,
+  type IRejectWorkflowLogger,
+  type RejectWorkflowInput,
+} from '../reject-workflow.use-case'
 
 describe('RejectWorkflowUseCase', () => {
   let useCase: RejectWorkflowUseCase
@@ -81,13 +83,7 @@ describe('RejectWorkflowUseCase', () => {
       error: vi.fn(),
     }
 
-    useCase = new RejectWorkflowUseCase(
-      mockWorkflowRepo,
-      mockApprovalRepo,
-      mockAuthService,
-      mockEventRepo,
-      mockLogger
-    )
+    useCase = new RejectWorkflowUseCase(mockWorkflowRepo, mockApprovalRepo, mockAuthService, mockEventRepo, mockLogger)
   })
 
   describe('Happy Path', () => {
