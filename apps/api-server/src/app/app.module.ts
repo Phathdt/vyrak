@@ -15,6 +15,7 @@ import { AuthController } from './controllers'
 
 import { ResponseInterceptor, TraceIdInterceptor } from '../interceptors'
 import { OrganizationsModule } from '../organizations'
+import { WorkflowsModule } from '../workflows/workflows.module'
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { OrganizationsModule } from '../organizations'
     }),
     AuthModule,
     OrganizationsModule,
+    WorkflowsModule,
   ],
   controllers: [AppController, AuthController],
   providers: [

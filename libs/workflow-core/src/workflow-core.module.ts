@@ -15,7 +15,9 @@ import { ApprovalStepExecutor, type ILogger } from './application/services/appro
 import { ApprovalValidatorService } from './application/services/approval-validator.service'
 import { ToolStepExecutor } from './application/services/tool-step-executor.service'
 import { ApproveWorkflowUseCase } from './application/use-cases/approve-workflow.use-case'
+import { CancelWorkflowUseCase } from './application/use-cases/cancel-workflow.use-case'
 import { RejectWorkflowUseCase } from './application/use-cases/reject-workflow.use-case'
+import { StartWorkflowUseCase } from './application/use-cases/start-workflow.use-case'
 import type { IArtifactRepository } from './domain/interfaces/artifact.interface'
 import type { IAuthorizationService } from './domain/interfaces/authorization.interface'
 import type { IEventRepository } from './domain/interfaces/event.repository.interface'
@@ -157,6 +159,17 @@ class ArtifactRepositoryAdapter implements IArtifactRepository {
       ) => new RejectWorkflowUseCase(workflowRepo, approvalRepo, authService, eventRepo, new LoggerAdapter()),
       inject: [WORKFLOW_REPOSITORY, WORKFLOW_APPROVAL_REPOSITORY, AUTHORIZATION_SERVICE, EVENT_REPOSITORY],
     },
+    {
+      provide: CancelWorkflowUseCase,
+      useFactory: (workflowRepo: IWorkflowRepository) => new CancelWorkflowUseCase(workflowRepo),
+      inject: [WORKFLOW_REPOSITORY],
+    },
+    {
+      provide: StartWorkflowUseCase,
+      useFactory: (workflowRepo: IWorkflowRepository, eventRepo: IEventRepository) =>
+        new StartWorkflowUseCase(workflowRepo, eventRepo),
+      inject: [WORKFLOW_REPOSITORY, EVENT_REPOSITORY],
+    },
 
     // Step executors
     {
@@ -206,7 +219,10 @@ class ArtifactRepositoryAdapter implements IArtifactRepository {
     WORKFLOW_APPROVAL_REPOSITORY,
     ARTIFACT_REPOSITORY,
     TEST_RESULT_PARSER,
+    ApproveWorkflowUseCase,
     RejectWorkflowUseCase,
+    CancelWorkflowUseCase,
+    StartWorkflowUseCase,
   ],
 })
 export class WorkflowCoreModule {}

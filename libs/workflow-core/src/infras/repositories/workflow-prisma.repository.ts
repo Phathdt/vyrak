@@ -3,6 +3,7 @@ import { Prisma, PrismaClient } from '@vyrak/database'
 
 import {
   CreateRunParams,
+  FindRunsParams,
   IWorkflowRepository,
   WorkflowAlreadyExistsError,
   WorkflowNotFoundError,
@@ -106,6 +107,33 @@ export class WorkflowPrismaRepository implements IWorkflowRepository {
     } catch (error) {
       throw new WorkflowRepositoryError(
         'Failed to find workflow run by idempotency key',
+        error instanceof Error ? error.message : 'Unknown error'
+      )
+    }
+  }
+
+  async findRunsWithCount(params: FindRunsParams): Promise<[WorkflowRun[], number]> {
+    try {
+      const where: Prisma.WorkflowRunWhereInput = {
+        organizationId: params.organizationId,
+        ...(params.projectId && { projectId: params.projectId }),
+        ...(params.status && { status: params.status }),
+      }
+
+      const [runs, total] = await Promise.all([
+        this.prisma.workflowRun.findMany({
+          where,
+          orderBy: { createdAt: 'desc' },
+          skip: params.skip,
+          take: params.limit,
+        }),
+        this.prisma.workflowRun.count({ where }),
+      ])
+
+      return [runs.map((run) => this.mapToDomain(run)), total]
+    } catch (error) {
+      throw new WorkflowRepositoryError(
+        'Failed to find workflow runs with count',
         error instanceof Error ? error.message : 'Unknown error'
       )
     }
@@ -260,13 +288,17 @@ export class WorkflowPrismaRepository implements IWorkflowRepository {
       state: prismaRun.status as WorkflowState,
       initiatedByUserId: prismaRun.initiatedByUserId,
       idempotencyKey: prismaRun.idempotencyKey || crypto.randomUUID(),
+      input: prismaRun.input ? (prismaRun.input as Record<string, unknown>) : undefined,
       currentStepKey: prismaRun.currentStepKey ?? undefined,
       errorCode: prismaRun.errorCode ?? undefined,
       errorMessage: prismaRun.errorMessage ?? undefined,
-      createdAt: prismaRun.createdAt,
-      updatedAt: prismaRun.updatedAt,
       startedAt: prismaRun.startedAt ?? undefined,
       completedAt: prismaRun.completedAt ?? undefined,
+      cancelledAt: prismaRun.cancelledAt ?? undefined,
+      cancelledByUserId: prismaRun.cancelledByUserId ?? undefined,
+      cancellationReason: prismaRun.cancellationReason ?? undefined,
+      createdAt: prismaRun.createdAt,
+      updatedAt: prismaRun.updatedAt,
     })
 
     return validated

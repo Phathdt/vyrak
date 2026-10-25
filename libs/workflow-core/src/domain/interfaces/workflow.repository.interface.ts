@@ -30,6 +30,17 @@ export interface WorkflowStateUpdate {
 }
 
 /**
+ * Parameters for finding workflow runs with filters
+ */
+export interface FindRunsParams {
+  organizationId: string
+  projectId?: string
+  status?: WorkflowState
+  skip: number
+  limit: number
+}
+
+/**
  * Repository interface for workflow operations
  */
 export interface IWorkflowRepository {
@@ -56,6 +67,12 @@ export interface IWorkflowRepository {
    * Returns null if not found
    */
   findRunByIdempotencyKey(orgId: string, key: string): Promise<WorkflowRun | null>
+
+  /**
+   * Find workflow runs with filters and pagination
+   * Returns [items, total count] tuple
+   */
+  findRunsWithCount(params: FindRunsParams): Promise<[WorkflowRun[], number]>
 
   /**
    * Cancel a workflow run
