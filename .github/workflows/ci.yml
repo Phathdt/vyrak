@@ -19,7 +19,18 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: 'yarn'
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        id: yarn-cache
+        with:
+          path: |
+            node_modules
+            **/node_modules
+            .yarn/cache
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
@@ -35,9 +46,6 @@ jobs:
 
       - name: Build frontend
         run: yarn workspace @apps/web build
-
-      # Skip format check due to prettier-plugin-sort-imports parsing issues
-      # Run manually with: yarn format
 
       - name: Lint
         run: yarn lint:ci

@@ -1,29 +1,44 @@
-import { All, Controller, Get, Req, Res } from '@nestjs/common'
-import { ApiExcludeEndpoint, ApiOperation, ApiTags } from '@nestjs/swagger'
-import { auth, AuthService, CurrentUserResponseSchema } from '@vyrak/auth'
+import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common'
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
+import { AuthResponseDto, AuthService, CurrentUserResponseDto, LoginDto } from '@vyrak/auth'
 
-import { Request, Response } from 'express'
-import { z } from 'zod'
+import { Request } from 'express'
+
+import { JwtAuthGuard } from '../../guards/jwt-auth.guard'
+
+interface RequestWithUser extends Request {
+  user: {
+    userId: string
+    email: string
+  }
+}
 
 @ApiTags('auth')
 @Controller('api/auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Get('me')
-  @ApiOperation({ summary: 'Get current user with organization' })
-  async getCurrentUser(@Req() req: Request): Promise<z.infer<typeof CurrentUserResponseSchema>> {
-    // Get session from Better Auth
-    const session = await auth.api.getSession({ headers: req.headers })
-
-    if (!session?.user) {
-      return {
-        user: null,
-        organizations: [],
-      }
+  @Post('login')
+  @ApiOperation({ summary: 'Login with email and password' })
+  @ApiResponse({ status: 201, description: 'Login successful', type: AuthResponseDto })
+  @ApiResponse({ status: 401, description: 'Invalid credentials' })
+  async login(@Body() dto: LoginDto): Promise<AuthResponseDto> {
+    const result = await this.authService.login(dto.email, dto.password)
+    return {
+      accessToken: result.accessToken,
+      expiresIn: result.expiresIn,
+      user: result.user,
     }
+  }
 
-    const userId = session.user.id
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get current user with organizations' })
+  @ApiResponse({ status: 200, description: 'User info retrieved', type: CurrentUserResponseDto })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async getCurrentUser(@Req() req: RequestWithUser): Promise<CurrentUserResponseDto> {
+    const userId = req.user.userId
 
     // Handle onboarding if user doesn't have organization
     await this.authService.handleUserOnboarding(userId)
@@ -31,89 +46,26 @@ export class AuthController {
     // Get user with organizations
     const user = await this.authService.getCurrentUser(userId)
 
+    if (!user) {
+      return {
+        user: null,
+        organizations: [],
+      }
+    }
+
     return {
       user: {
-        id: user?.id || userId,
-        name: user?.name ?? session.user.name ?? null,
-        email: user?.email || session.user.email,
-        image: user?.image ?? session.user.image ?? null,
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        image: user.image,
       },
-      organizations:
-        user?.members.map((m) => ({
-          id: m.organization.id,
-          name: m.organization.name,
-          slug: m.organization.slug,
-          role: m.role as 'owner' | 'admin' | 'member',
-        })) || [],
-    }
-  }
-
-  @All('*')
-  @ApiExcludeEndpoint()
-  async handleAuth(@Req() req: Request, @Res({ passthrough: false }) res: Response) {
-    try {
-      // Convert Express request to Web Request format for Better Auth
-      const url = new URL(req.url, `${req.protocol}://${req.get('host')}`)
-
-      // For GET/HEAD requests, body should be null
-      let body: string | null = null
-      if (req.method !== 'GET' && req.method !== 'HEAD') {
-        body = JSON.stringify(req.body)
-      }
-
-      // Properly format headers for Web Request - Express headers may have lowercase keys
-      const headers = new Headers()
-      Object.entries(req.headers).forEach(([key, value]) => {
-        if (value) {
-          // In development, rewrite origin to match baseURL to bypass Better Auth origin check
-          if (key.toLowerCase() === 'origin' && process.env.NODE_ENV !== 'production') {
-            headers.set(key, process.env.BETTER_AUTH_URL || 'http://localhost:3000')
-          } else {
-            headers.set(key, Array.isArray(value) ? value[0] : value)
-          }
-        }
-      })
-
-      const webRequest = new globalThis.Request(url.toString(), {
-        method: req.method,
-        headers,
-        body,
-      })
-
-      const webResponse = await auth.handler(webRequest)
-
-      // Check status before consuming body
-      const isSignup = req.url.includes('/sign-up/email') && req.method === 'POST'
-      const isSuccess = webResponse.status === 200
-
-      // Convert Web Response back to Express response
-      res.status(webResponse.status)
-
-      webResponse.headers.forEach((value: string, key: string) => {
-        res.setHeader(key, value)
-      })
-
-      const text = await webResponse.text()
-
-      // After successful signup, create default organization
-      if (isSignup && isSuccess) {
-        try {
-          const responseData = JSON.parse(text)
-
-          if (responseData.user?.id) {
-            await this.authService.handleUserOnboarding(responseData.user.id)
-          }
-        } catch (error) {
-          console.error('[Auth Controller] Failed to handle onboarding:', error)
-        }
-      }
-
-      res.send(text)
-    } catch (error) {
-      console.error('[Auth Controller Error]', error)
-      if (!res.headersSent) {
-        res.status(500).json({ error: 'Authentication error' })
-      }
+      organizations: user.members.map((m) => ({
+        id: m.organization.id,
+        name: m.organization.name,
+        slug: m.organization.slug,
+        role: m.role as 'owner' | 'admin' | 'member',
+      })),
     }
   }
 }

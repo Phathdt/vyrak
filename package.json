@@ -20,7 +20,7 @@
     "build:prod": "turbo run build:prod",
     "generate:openapi": "yarn workspace @apps/api-server build && node dist/apps/api-server/generate-openapi.js",
     "generate:api": "yarn workspace @apps/web generate:api",
-    "generate": "yarn generate:api && yarn generate:api && yarn db:generate",
+    "generate": "yarn generate:openapi && yarn generate:api && yarn db:generate",
     "test": "vitest run",
     "test:ci": "vitest run --coverage",
     "test:watch": "vitest",
@@ -43,7 +43,7 @@
     "db:migrate:create": "prisma migrate dev --create-only --config=prisma/prisma.config.ts",
     "db:migrate:deploy": "prisma migrate deploy --config=prisma/prisma.config.ts",
     "db:status": "prisma migrate status --config=prisma/prisma.config.ts",
-    "db:seed": "./scripts/seed-db.sh",
+    "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
     "ctix": "node generate-indexes.js",
     "prepare": "lefthook install",
@@ -91,7 +91,7 @@
   "dependencies": {
     "@nestjs/cache-manager": "^12.0.1",
     "@oxc-project/runtime": "^0.155.0",
-    "better-auth": "^1.7.12",
+    "argon2": "^0.45.1",
     "cache-manager": "^7.2.9"
   },
   "config": {

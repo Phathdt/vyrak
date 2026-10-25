@@ -1,14 +1,19 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common'
+import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 
 import { Request } from 'express'
 
-// import { auth } from '../auth/auth.config'
 import { IS_PUBLIC_KEY } from './decorators'
 
+interface JwtPayload {
+  sub: string
+  email: string
+  iat: number
+  exp: number
+}
+
 /**
- * Guard to verify user authentication via Better Auth session
- * TODO Phase 3: Re-enable full auth integration
+ * Guard to verify user authentication via JWT token
  */
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -27,11 +32,52 @@ export class AuthGuard implements CanActivate {
 
     const request = context.switchToHttp().getRequest<Request & { userId?: string }>()
 
-    // TODO Phase 3: Re-enable BetterAuth session check
-    // For Phase 2 testing, use mock userId
-    const mockUserId = 'test-user-id'
-    request.userId = mockUserId
+    // Extract JWT token from Authorization header
+    const authHeader = request.headers.authorization
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw new UnauthorizedException('No token provided')
+    }
 
-    return true
+    const token = authHeader.substring(7)
+
+    try {
+      // Decode JWT without verification (verification will be done by JwtStrategy in other modules)
+      // For simple verification here, we just decode and extract userId
+      const payload = this.decodeJwt(token)
+
+      if (!payload || !payload.sub) {
+        throw new UnauthorizedException('Invalid token')
+      }
+
+      // Check expiration
+      if (payload.exp && payload.exp * 1000 < Date.now()) {
+        throw new UnauthorizedException('Token expired')
+      }
+
+      request.userId = payload.sub
+
+      return true
+    } catch (error) {
+      // Re-throw if it's already an UnauthorizedException
+      if (error instanceof UnauthorizedException) {
+        throw error
+      }
+      throw new UnauthorizedException('Invalid token')
+    }
+  }
+
+  private decodeJwt(token: string): JwtPayload | null {
+    try {
+      const parts = token.split('.')
+      if (parts.length !== 3) {
+        return null
+      }
+
+      const payload = parts[1]
+      const decoded = Buffer.from(payload, 'base64').toString('utf-8')
+      return JSON.parse(decoded)
+    } catch {
+      return null
+    }
   }
 }

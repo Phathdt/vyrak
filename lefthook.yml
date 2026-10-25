@@ -21,3 +21,5 @@ pre-push:
   commands:
     typecheck:
       run: yarn ci:typecheck
+    test:
+      run: yarn test

@@ -1,22 +1,21 @@
-import { auth } from '@vyrak/auth'
+import { UnauthorizedException } from '@nestjs/common'
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { AuthController } from './auth.controller'
 
-// Mock Better Auth BEFORE importing from @vyrak/auth
-vi.mock('@vyrak/auth', () => ({
-  auth: {
-    api: {
-      getSession: vi.fn(),
-    },
-    handler: vi.fn(),
-  },
-  AuthService: vi.fn(() => ({
-    handleUserOnboarding: vi.fn(),
-    getCurrentUser: vi.fn(),
-  })),
-}))
+// Mock @vyrak/auth module - preserve all exports including DTOs
+vi.mock('@vyrak/auth', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@vyrak/auth')>()
+  return {
+    ...actual,
+    AuthService: vi.fn(() => ({
+      login: vi.fn(),
+      getCurrentUser: vi.fn(),
+      handleUserOnboarding: vi.fn(),
+    })),
+  }
+})
 
 describe('AuthController', () => {
   let controller: AuthController
@@ -24,30 +23,177 @@ describe('AuthController', () => {
 
   beforeEach(() => {
     mockAuthService = {
-      handleUserOnboarding: vi.fn(),
+      login: vi.fn(),
       getCurrentUser: vi.fn(),
+      handleUserOnboarding: vi.fn(),
     }
 
     controller = new AuthController(mockAuthService)
     vi.clearAllMocks()
   })
 
-  describe('getCurrentUser', () => {
-    it('should return user with organizations when session exists', async () => {
-      const mockSession = {
+  describe('login', () => {
+    it('should return JWT token when credentials are valid', async () => {
+      const loginDto = {
+        email: 'admin@vyrak.dev',
+        password: 'Password123!',
+      }
+
+      const mockResponse = {
+        accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+        expiresIn: 86400,
         user: {
           id: 'user-123',
-          name: 'Test User',
-          email: 'test@example.com',
-          image: 'https://example.com/avatar.jpg',
+          email: 'admin@vyrak.dev',
+          name: 'Admin User',
+        },
+      }
+
+      mockAuthService.login.mockResolvedValue(mockResponse)
+
+      const result = await controller.login(loginDto)
+
+      expect(result).toEqual(mockResponse)
+      expect(mockAuthService.login).toHaveBeenCalledWith(loginDto.email, loginDto.password)
+    })
+
+    it('should throw UnauthorizedException when credentials are invalid', async () => {
+      const loginDto = {
+        email: 'admin@vyrak.dev',
+        password: 'WrongPassword',
+      }
+
+      mockAuthService.login.mockRejectedValue(new UnauthorizedException('Invalid credentials'))
+
+      await expect(controller.login(loginDto)).rejects.toThrow(UnauthorizedException)
+      expect(mockAuthService.login).toHaveBeenCalledWith(loginDto.email, loginDto.password)
+    })
+
+    it('should throw UnauthorizedException when user not found', async () => {
+      const loginDto = {
+        email: 'notfound@vyrak.dev',
+        password: 'Password123!',
+      }
+
+      mockAuthService.login.mockRejectedValue(new UnauthorizedException('Invalid credentials'))
+
+      await expect(controller.login(loginDto)).rejects.toThrow(UnauthorizedException)
+    })
+  })
+
+  describe('getCurrentUser', () => {
+    it('should return user with organizations when JWT is valid', async () => {
+      const mockRequest = {
+        user: {
+          userId: 'user-123',
+          email: 'admin@vyrak.dev',
         },
       }
 
       const mockUserData = {
         id: 'user-123',
-        name: 'Test User',
-        email: 'test@example.com',
+        name: 'Admin User',
+        email: 'admin@vyrak.dev',
         image: 'https://example.com/avatar.jpg',
+        members: [
+          {
+            role: 'owner',
+            organization: {
+              id: 'org-1',
+              name: 'Acme Corporation',
+              slug: 'acme-corp',
+            },
+          },
+        ],
+      }
+
+      mockAuthService.handleUserOnboarding.mockResolvedValue(undefined)
+      mockAuthService.getCurrentUser.mockResolvedValue(mockUserData)
+
+      const result = await controller.getCurrentUser(mockRequest as any)
+
+      expect(result.user).toEqual({
+        id: 'user-123',
+        name: 'Admin User',
+        email: 'admin@vyrak.dev',
+        image: 'https://example.com/avatar.jpg',
+      })
+      expect(result.organizations).toHaveLength(1)
+      expect(result.organizations[0]).toEqual({
+        id: 'org-1',
+        name: 'Acme Corporation',
+        slug: 'acme-corp',
+        role: 'owner',
+      })
+      expect(mockAuthService.handleUserOnboarding).toHaveBeenCalledWith('user-123')
+      expect(mockAuthService.getCurrentUser).toHaveBeenCalledWith('user-123')
+    })
+
+    it('should return user without organizations when user has no memberships', async () => {
+      const mockRequest = {
+        user: {
+          userId: 'user-456',
+          email: 'new@vyrak.dev',
+        },
+      }
+
+      const mockUserData = {
+        id: 'user-456',
+        name: 'New User',
+        email: 'new@vyrak.dev',
+        image: null,
+        members: [],
+      }
+
+      mockAuthService.handleUserOnboarding.mockResolvedValue(undefined)
+      mockAuthService.getCurrentUser.mockResolvedValue(mockUserData)
+
+      const result = await controller.getCurrentUser(mockRequest as any)
+
+      expect(result.user).toEqual({
+        id: 'user-456',
+        name: 'New User',
+        email: 'new@vyrak.dev',
+        image: null,
+      })
+      expect(result.organizations).toHaveLength(0)
+    })
+
+    it('should call handleUserOnboarding before getCurrentUser', async () => {
+      const mockRequest = {
+        user: {
+          userId: 'user-789',
+          email: 'test@vyrak.dev',
+        },
+      }
+
+      mockAuthService.handleUserOnboarding.mockResolvedValue(undefined)
+      mockAuthService.getCurrentUser.mockResolvedValue({
+        id: 'user-789',
+        name: 'Test User',
+        email: 'test@vyrak.dev',
+        members: [],
+      })
+
+      await controller.getCurrentUser(mockRequest as any)
+
+      expect(mockAuthService.handleUserOnboarding).toHaveBeenCalledWith('user-789')
+      expect(mockAuthService.handleUserOnboarding).toHaveBeenCalledBefore(mockAuthService.getCurrentUser)
+    })
+
+    it('should handle multiple organizations', async () => {
+      const mockRequest = {
+        user: {
+          userId: 'user-multi',
+          email: 'multi@vyrak.dev',
+        },
+      }
+
+      const mockUserData = {
+        id: 'user-multi',
+        name: 'Multi Org User',
+        email: 'multi@vyrak.dev',
+        image: null,
         members: [
           {
             role: 'owner',
@@ -57,154 +203,34 @@ describe('AuthController', () => {
               slug: 'org-1',
             },
           },
+          {
+            role: 'admin',
+            organization: {
+              id: 'org-2',
+              name: 'Org 2',
+              slug: 'org-2',
+            },
+          },
+          {
+            role: 'member',
+            organization: {
+              id: 'org-3',
+              name: 'Org 3',
+              slug: 'org-3',
+            },
+          },
         ],
       }
 
-      vi.mocked(auth.api.getSession).mockResolvedValue(mockSession as any)
       mockAuthService.handleUserOnboarding.mockResolvedValue(undefined)
       mockAuthService.getCurrentUser.mockResolvedValue(mockUserData)
 
-      const mockRequest = {
-        headers: { authorization: 'Bearer token' },
-      }
-
       const result = await controller.getCurrentUser(mockRequest as any)
 
-      expect(result.user).toEqual({
-        id: 'user-123',
-        name: 'Test User',
-        email: 'test@example.com',
-        image: 'https://example.com/avatar.jpg',
-      })
-      expect(result.organizations).toHaveLength(1)
-      expect(mockAuthService.handleUserOnboarding).toHaveBeenCalledWith('user-123')
-    })
-
-    it('should return empty user and organizations when no session', async () => {
-      vi.mocked(auth.api.getSession).mockResolvedValue(null)
-
-      const mockRequest = {
-        headers: {},
-      }
-
-      const result = await controller.getCurrentUser(mockRequest as any)
-
-      expect(result).toEqual({
-        user: null,
-        organizations: [],
-      })
-      expect(mockAuthService.handleUserOnboarding).not.toHaveBeenCalled()
-    })
-
-    it('should call getCurrentUser after handleUserOnboarding', async () => {
-      const mockSession = {
-        user: {
-          id: 'user-456',
-          name: 'New User',
-          email: 'new@example.com',
-          image: null,
-        },
-      }
-
-      vi.mocked(auth.api.getSession).mockResolvedValue(mockSession as any)
-      mockAuthService.handleUserOnboarding.mockResolvedValue(undefined)
-      mockAuthService.getCurrentUser.mockResolvedValue({
-        id: 'user-456',
-        name: 'New User',
-        email: 'new@example.com',
-        members: [],
-      })
-
-      const mockRequest = {
-        headers: { authorization: 'Bearer token' },
-      }
-
-      await controller.getCurrentUser(mockRequest as any)
-
-      expect(mockAuthService.handleUserOnboarding).toHaveBeenCalledWith('user-456')
-      expect(mockAuthService.getCurrentUser).toHaveBeenCalledWith('user-456')
-    })
-  })
-
-  describe('handleAuth', () => {
-    it('should call auth.handler with proper request format', async () => {
-      const mockTextResponse = async () => '{"user":{"id":"123"}}'
-      const mockWebResponse = {
-        status: 200,
-        headers: new Map([['content-type', 'application/json']]),
-        text: mockTextResponse,
-      }
-
-      vi.mocked(auth.handler).mockResolvedValue(mockWebResponse as any)
-
-      const mockRequest = {
-        method: 'POST',
-        url: '/api/auth/sign-up/email',
-        protocol: 'http',
-        get: vi.fn().mockReturnValue('localhost:3000'),
-        headers: { 'content-type': 'application/json' },
-        body: { email: 'test@example.com' },
-      }
-
-      const mockResponse = {
-        status: vi.fn().mockReturnThis(),
-        setHeader: vi.fn().mockReturnThis(),
-        send: vi.fn().mockReturnThis(),
-        headersSent: false,
-      }
-
-      await controller.handleAuth(mockRequest as any, mockResponse as any)
-
-      expect(auth.handler).toHaveBeenCalled()
-      expect(mockResponse.status).toHaveBeenCalledWith(200)
-    })
-
-    it('should handle errors from auth.handler', async () => {
-      vi.mocked(auth.handler).mockRejectedValue(new Error('Auth error'))
-
-      const mockRequest = {
-        method: 'GET',
-        url: '/api/auth/session',
-        protocol: 'http',
-        get: vi.fn().mockReturnValue('localhost:3000'),
-        headers: {},
-        body: null,
-      }
-
-      const mockResponse = {
-        status: vi.fn().mockReturnThis(),
-        json: vi.fn().mockReturnThis(),
-        headersSent: false,
-      }
-
-      await controller.handleAuth(mockRequest as any, mockResponse as any)
-
-      expect(mockResponse.status).toHaveBeenCalledWith(500)
-      expect(mockResponse.json).toHaveBeenCalledWith({ error: 'Authentication error' })
-    })
-
-    it('should not send headers if already sent', async () => {
-      vi.mocked(auth.handler).mockRejectedValue(new Error('Error'))
-
-      const mockRequest = {
-        method: 'GET',
-        url: '/api/auth/session',
-        protocol: 'http',
-        get: vi.fn().mockReturnValue('localhost:3000'),
-        headers: {},
-        body: null,
-      }
-
-      const mockResponse = {
-        status: vi.fn(),
-        json: vi.fn(),
-        headersSent: true,
-      }
-
-      await controller.handleAuth(mockRequest as any, mockResponse as any)
-
-      expect(mockResponse.status).not.toHaveBeenCalled()
-      expect(mockResponse.json).not.toHaveBeenCalled()
+      expect(result.organizations).toHaveLength(3)
+      expect(result.organizations[0].role).toBe('owner')
+      expect(result.organizations[1].role).toBe('admin')
+      expect(result.organizations[2].role).toBe('member')
     })
   })
 })

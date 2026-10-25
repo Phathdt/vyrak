@@ -4,6 +4,7 @@ import {
   useOrganizationsControllerCreate,
   useOrganizationsControllerFindAll,
 } from '@/api/generated/organizations/organizations'
+import { useAuth } from '@/contexts/auth-context'
 import { useOrganization } from '@/contexts/organization-context'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -23,7 +24,17 @@ type CreateOrgFormData = z.infer<typeof createOrgSchema>
 
 export function OrganizationsPage() {
   const [isCreating, setIsCreating] = useState(false)
-  const { data: orgs, isLoading, refetch } = useOrganizationsControllerFindAll()
+  const { user } = useAuth()
+  // Only fetch organizations after user is loaded
+  const {
+    data: orgs,
+    isLoading,
+    refetch,
+  } = useOrganizationsControllerFindAll({
+    query: {
+      enabled: !!user,
+    },
+  })
   const { mutateAsync: createOrg, isPending } = useOrganizationsControllerCreate()
   const { activeOrgId, setActiveOrgId } = useOrganization()
 

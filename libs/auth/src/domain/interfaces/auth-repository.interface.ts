@@ -19,17 +19,22 @@ export interface UserWithOrganizations extends UserEntity {
 
 export interface IAuthRepository {
   /**
-   * Tìm user theo ID kèm theo organization memberships
+   * Find user by email with password hash
+   */
+  findByEmail(email: string): Promise<(UserEntity & { passwordHash: string | null }) | null>
+
+  /**
+   * Find user by ID with organization memberships
    */
   findUserById(userId: string): Promise<UserWithOrganizations | null>
 
   /**
-   * Kiểm tra xem user đã có organization nào chưa
+   * Check if user has any organization
    */
   hasAnyOrganization(userId: string): Promise<boolean>
 
   /**
-   * Tạo personal organization cho user
+   * Create personal organization for user
    */
   createPersonalOrganization(userId: string): Promise<{
     id: string
