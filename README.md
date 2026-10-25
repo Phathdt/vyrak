@@ -2,7 +2,7 @@
 
 A comprehensive TypeScript monorepo boilerplate for building professional full-stack applications with OpenAPI + Orval type-safe API integration.
 
-## Features
+## Features:
 
 - 🏗️ **Turborepo Monorepo** - High-performance build system with caching
 - 🔥 **TypeScript 7.0** - Latest TypeScript with strict mode
