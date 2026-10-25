@@ -1,7 +1,7 @@
 import { URLS } from '@config/urls.config'
+import { expect, test } from '@fixtures/auth.fixture'
 import { StorageHelper } from '@helpers/storage.helper'
 import { LoginPage } from '@page-objects/auth/login.page'
-import { expect, test } from '@fixtures/auth.fixture'
 
 test.describe('Session Persistence', () => {
   const testUser = {

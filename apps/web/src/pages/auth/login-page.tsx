@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { z } from 'zod'
 
 import { useAuthControllerLogin } from '../../api/generated/auth/auth'
@@ -164,7 +164,12 @@ export function LoginPage() {
                 <ErrorMessage id='password-error'>{errors.password?.message}</ErrorMessage>
               </FormField>
 
-              <Button type='submit' className='w-full' loading={loginMutation.isPending} data-testid='login-submit-button'>
+              <Button
+                type='submit'
+                className='w-full'
+                loading={loginMutation.isPending}
+                data-testid='login-submit-button'
+              >
                 {loginMutation.isPending ? 'Signing in...' : 'Sign in'}
               </Button>
             </form>
@@ -195,13 +200,6 @@ export function LoginPage() {
               </div>
             </div>
           </div>
-
-          <p className='mt-6 text-center text-sm text-muted-foreground'>
-            Don't have an account?{' '}
-            <Link to='/signup' className='text-accent-cyan hover:underline font-medium'>
-              Sign up
-            </Link>
-          </p>
         </div>
       </div>
     </div>

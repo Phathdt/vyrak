@@ -81,9 +81,4 @@ test.describe('Login Flow', () => {
       await loginPage.expectOnLoginPage()
     })
   })
-
-  test('should navigate to register page', async ({ page }) => {
-    await loginPage.clickRegisterLink()
-    await expect(page).toHaveURL(/\/signup/)
-  })
 })

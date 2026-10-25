@@ -14,11 +14,6 @@ test.describe('Authentication Guards', () => {
       await page.goto(URLS.ROUTES.LOGIN)
       await expect(page).toHaveURL(/\/login/)
     })
-
-    test('should allow access to register page', async ({ page }) => {
-      await page.goto(URLS.ROUTES.REGISTER)
-      await expect(page).toHaveURL(/\/signup/)
-    })
   })
 
   test.describe('Authenticated User', () => {

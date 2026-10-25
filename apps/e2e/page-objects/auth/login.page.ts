@@ -21,10 +21,6 @@ export class LoginPage extends BasePage {
     return this.page.getByRole('button', { name: /sign in/i })
   }
 
-  private get registerLink() {
-    return this.page.getByRole('link', { name: /sign up/i })
-  }
-
   private get errorMessage() {
     return this.page.locator('[role="alert"]').first()
   }
@@ -50,10 +46,6 @@ export class LoginPage extends BasePage {
     await this.fillEmail(email)
     await this.fillPassword(password)
     await this.clickSubmit()
-  }
-
-  async clickRegisterLink(): Promise<void> {
-    await this.registerLink.click()
   }
 
   // Assertions

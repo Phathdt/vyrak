@@ -7,12 +7,10 @@ export const URLS = {
   ROUTES: {
     HOME: '/',
     LOGIN: '/login',
-    REGISTER: '/signup',
     DASHBOARD: '/',
   },
   API_ENDPOINTS: {
     LOGIN: `${API_URL}/api/auth/login`,
-    REGISTER: `${API_URL}/api/auth/register`,
     HEALTH: `${API_URL}/health`,
   },
 } as const

@@ -19,8 +19,12 @@ export function DashboardPage() {
         <header className='mb-8 pb-6 border-b border-border'>
           <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
             <div>
-              <h1 className='text-3xl font-bold tracking-tight mb-1' data-testid='welcome-message'>Dashboard</h1>
-              <p className='text-muted-foreground' data-testid='user-info'>Welcome back, {user?.name || user?.email}</p>
+              <h1 className='text-3xl font-bold tracking-tight mb-1' data-testid='welcome-message'>
+                Dashboard
+              </h1>
+              <p className='text-muted-foreground' data-testid='user-info'>
+                Welcome back, {user?.name || user?.email}
+              </p>
             </div>
             <Button variant='outline' onClick={logout} className='w-full sm:w-auto' data-testid='logout-button'>
               <svg className='w-4 h-4 mr-2' fill='none' viewBox='0 0 24 24' stroke='currentColor'>

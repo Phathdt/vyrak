@@ -48,7 +48,12 @@ const ErrorMessage = ({ children, className, id }: ErrorMessageProps) => {
   if (!children) return null
 
   return (
-    <p id={id} className={cn('text-xs text-destructive flex items-center gap-1', className)} role='alert' data-testid={id ? `${id}-error-message` : 'error-message'}>
+    <p
+      id={id}
+      className={cn('text-xs text-destructive flex items-center gap-1', className)}
+      role='alert'
+      data-testid={id ? `${id}-error-message` : 'error-message'}
+    >
       <svg
         className='h-3.5 w-3.5 flex-shrink-0'
         fill='none'

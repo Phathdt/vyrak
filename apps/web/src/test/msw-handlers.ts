@@ -38,26 +38,6 @@ export const handlers = [
     return HttpResponse.json({ message: 'Invalid credentials' }, { status: 401 })
   }),
 
-  http.post(`${API_BASE_URL}/api/auth/signup`, async ({ request }) => {
-    const body = (await request.json()) as {
-      email: string
-      password: string
-      name: string
-    }
-
-    return HttpResponse.json({
-      user: {
-        id: 'new-user-id',
-        email: body.email,
-        name: body.name,
-      },
-      session: {
-        token: 'test-token',
-        expiresAt: new Date(Date.now() + 3600000).toISOString(),
-      },
-    })
-  }),
-
   http.post(`${API_BASE_URL}/api/auth/logout`, () => {
     return HttpResponse.json({ success: true })
   }),
