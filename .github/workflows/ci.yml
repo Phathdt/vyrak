@@ -108,11 +108,14 @@ jobs:
       - name: Generate Prisma Client
         run: yarn db:generate
 
-      - name: Build packages
-        run: yarn build
+      - name: Build backend packages (libs + api-server)
+        run: yarn turbo run build --filter='!@apps/web'
 
       - name: Generate API client
         run: yarn generate:api
+
+      - name: Build frontend
+        run: yarn workspace @apps/web build
 
       - name: Setup test database
         env:
