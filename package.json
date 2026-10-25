@@ -27,7 +27,7 @@
     "lint": "oxlint --config oxlint.json apps libs --fix",
     "typecheck": "turbo run typecheck",
     "format": "prettier --write \"**/*.{ts,tsx,json}\"",
-    "format:check": "prettier --check \"**/*.{ts,tsx,json}\" --no-error-on-unmatched-pattern || true",
+    "format:check": "prettier --check \"**/*.{ts,tsx,json}\" --no-error-on-unmatched-pattern",
     "ci:lint": "oxlint --config oxlint.json apps libs --deny-warnings",
     "ci:format": "prettier --write",
     "ci:typecheck": "turbo run typecheck",

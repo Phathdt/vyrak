@@ -97,7 +97,7 @@ export class EventPrismaRepository implements IEventRepository {
 
       const sequence = result[0]?.sequence
       // PostgreSQL returns bigint for aggregate functions, convert to number
-      return typeof sequence === 'bigint' ? Number(sequence) : sequence ?? 1
+      return typeof sequence === 'bigint' ? Number(sequence) : (sequence ?? 1)
     } catch (error: unknown) {
       throw new WorkflowRepositoryError(
         'Failed to get next sequence',
