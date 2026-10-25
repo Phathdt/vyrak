@@ -1,8 +1,19 @@
+import { PrismaPg } from '@prisma/adapter-pg'
 import { PrismaClient } from '@vyrak/database'
+import { Pool } from 'pg'
 
 import * as argon2 from 'argon2'
 
-const prisma = new PrismaClient()
+// Create PostgreSQL connection pool
+const pool = new Pool({
+  connectionString: process.env.DATABASE__URL || 'postgresql://postgres:postgres@localhost:5432/vyrak',
+})
+
+// Create driver adapter for Prisma 7
+const adapter = new PrismaPg(pool)
+
+// Initialize Prisma client with adapter
+const prisma = new PrismaClient({ adapter })
 
 async function seedTestData() {
   console.log('Seeding test data...')
@@ -42,4 +53,5 @@ seedTestData()
   })
   .finally(async () => {
     await prisma.$disconnect()
+    await pool.end()
   })
