@@ -35,38 +35,12 @@ The Vyrak AI-SDLC platform provides isolated workspace environments for each wor
     └── .metadata.json           ← Workspace metadata
 ```
 
-### Two Isolation Modes
+### Worktree Isolation Mode
 
-#### 1. Full Clone Mode (Default - Epic 3)
-
-**Use case:** Simple setup, one-off workflows, testing
+**Production mode:** Fast, parallel-safe, disk-efficient
 
 ```typescript
 const workspace = await workspaceManager.createWorkspace(
-  runId,
-  repoUrl
-)
-// Creates: /tmp/vyrak-workspaces/{runId}/
-//   ├── repo/        ← Full git clone
-//   └── artifacts/
-```
-
-**Pros:**
-- Simple implementation
-- Independent workspace
-- Easy cleanup
-
-**Cons:**
-- Slow (30-60s for large repos)
-- High disk usage (~500MB per run)
-- Not suitable for parallel runs
-
-#### 2. Git Worktree Mode (Epic 3.5)
-
-**Use case:** Parallel workflows, production deployments, frequent runs
-
-```typescript
-const workspace = await workspaceManager.createWorkspaceWithWorktree(
   runId,
   repoUrl,
   'main'  // base branch
@@ -75,15 +49,12 @@ const workspace = await workspaceManager.createWorkspaceWithWorktree(
 // Branch: workflow/{runId}
 ```
 
-**Pros:**
-- ⚡ Fast creation (~2-5s)
-- 💾 Disk efficient (shared .git)
+**Benefits:**
+- ⚡ Fast creation (~2-5s vs 30-60s clone)
+- 💾 Disk efficient (50-100MB vs 500MB per run)
 - 🔄 Parallel-safe (isolated branches)
 - 🧹 Easy cleanup
-
-**Cons:**
-- Requires main repo setup
-- Slightly more complex
+- 🏭 Production-ready
 
 ---
 
@@ -93,10 +64,19 @@ const workspace = await workspaceManager.createWorkspaceWithWorktree(
 
 ```typescript
 interface IWorkspaceManager {
-  // Full clone mode (Epic 3)
+  // Always uses worktree mode
   createWorkspace(
     runId: string,
-    repoUrl: string
+    repoUrl: string,
+    branch?: string
+  ): Promise<string>
+
+  // Advanced worktree options
+  createWorkspaceWithWorktree(
+    runId: string,
+    repoUrl: string,
+    baseBranch?: string,
+    options?: WorktreeOptions
   ): Promise<WorkspaceInfo>
 
   // Worktree mode (Epic 3.5)

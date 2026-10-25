@@ -2,13 +2,18 @@ import { spawn, type ChildProcess } from 'child_process'
 import * as fs from 'fs'
 import * as path from 'path'
 
-import { AgentCancelledError, AgentExecutionError, AgentTimeoutError } from '../../domain/errors/agent-execution.errors'
-import type {
-  AgentExecutionInput,
-  AgentExecutionResult,
-  IAgentExecutor,
-} from '../../domain/interfaces/agent-executor.interface'
-import { AgentExecutionStatus, AgentType, ArtifactType, type ArtifactReference } from '../../domain/types/agent-types'
+import {
+  AgentCancelledError,
+  AgentExecutionError,
+  AgentExecutionStatus,
+  AgentTimeoutError,
+  AgentType,
+  ArtifactType,
+  type AgentExecutionInput,
+  type AgentExecutionResult,
+  type ArtifactReference,
+  type IAgentExecutor,
+} from '../../domain'
 
 /**
  * Configuration for Claude Code executor

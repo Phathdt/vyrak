@@ -1,25 +1,17 @@
-# Workspace Worktree Migration Guide
+# Workspace Worktree Setup Guide
 
-This guide walks through migrating from clone mode to worktree mode for improved workflow execution performance.
+This guide walks through setting up worktree mode for optimal workflow execution performance.
 
 ## Overview
 
-Vyrak supports two workspace modes:
+Vyrak uses **worktree mode exclusively** for workspace isolation. Git worktree creates lightweight workspaces from a shared main repository.
 
-- **Clone mode** (default): Each workflow run clones the repository into an isolated workspace
-- **Worktree mode** (opt-in): Uses git worktree to create lightweight workspaces from a shared main repository
-
-### Performance Comparison
-
-**Clone Mode:**
-- Workspace creation: 30-60s
-- Disk per run: ~500MB
-- 10 parallel runs: 7.5 min, 5GB
+### Performance Benefits
 
 **Worktree Mode:**
-- Workspace creation: 2-5s (6-12x faster)
-- Disk per run: ~50MB (10x savings)
-- 10 parallel runs: 30s (15x faster), 1GB (5x savings)
+- Workspace creation: 2-5s (6-12x faster than clone)
+- Disk per run: ~50MB (10x savings vs clone)
+- 10 parallel runs: 30s, 1GB total
 
 ## Prerequisites
 
@@ -34,10 +26,10 @@ Vyrak supports two workspace modes:
 Add these to your `apps/api-server/.env`:
 
 ```bash
-# Workspace mode: 'clone' (safe, default) or 'worktree' (fast, production)
-WORKSPACE_MODE=clone
+# Workspace mode: only 'worktree' supported (fast, production-ready)
+WORKSPACE_MODE=worktree
 
-# Main repos path (for worktree mode)
+# Main repos path (required for worktree mode)
 MAIN_REPOS_PATH=/var/vyrak/repos
 
 # Workspaces path
@@ -58,8 +50,8 @@ WORKTREE_AUTO_CLEANUP_BRANCH=true
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `WORKSPACE_MODE` | `clone` | Workspace mode: `clone` or `worktree` |
-| `MAIN_REPOS_PATH` | `/var/vyrak/repos` | Directory for main repositories (worktree mode) |
+| `WORKSPACE_MODE` | `worktree` | Workspace mode (only worktree supported) |
+| `MAIN_REPOS_PATH` | `/var/vyrak/repos` | Directory for main repositories |
 | `WORKSPACES_PATH` | `/tmp/vyrak-workspaces` | Directory for workspace instances |
 | `WORKSPACE_CLEANUP_ON_SUCCESS` | `true` | Clean workspace after successful run |
 | `WORKSPACE_CLEANUP_ON_FAILURE` | `false` | Clean workspace after failed run (keep for debugging) |
@@ -68,11 +60,11 @@ WORKTREE_AUTO_CLEANUP_BRANCH=true
 | `WORKTREE_AUTO_FETCH` | `true` | Auto-fetch main repo before creating worktree |
 | `WORKTREE_AUTO_CLEANUP_BRANCH` | `true` | Delete branch when cleaning up worktree |
 
-## Migration Steps
+## Setup Steps
 
-### Phase 1: Enable Worktree Mode (Week 1)
+### Phase 1: Initial Setup (Week 1)
 
-**Goal:** Test worktree mode in staging environment.
+**Goal:** Configure and test worktree mode in staging environment.
 
 #### 1. Update environment variables
 
@@ -150,7 +142,7 @@ Track these metrics:
 
 ### Phase 3: Optimization (Week 3)
 
-**Goal:** Fine-tune configuration and remove old clone-mode artifacts.
+**Goal:** Fine-tune configuration for optimal performance.
 
 #### 1. List all workspaces
 
@@ -158,17 +150,17 @@ Track these metrics:
 yarn workspace:list
 ```
 
-#### 2. Clean stale clones (if needed)
+#### 2. Clean stale worktrees (if needed)
 
 ```bash
-# Manual cleanup of old clone-mode workspaces
+# Manual cleanup of stale worktrees
 find /tmp/vyrak-workspaces -type d -mtime +7 -exec rm -rf {} \;
 ```
 
 #### 3. Update documentation
 
-- Mark clone mode as legacy in internal docs
-- Document worktree as default mode
+- Document worktree best practices
+- Add monitoring dashboards
 
 ## CLI Commands
 
@@ -191,24 +183,24 @@ yarn workspace:health --org-id org-123 --project-id project-456
 
 ## Rollback Plan
 
-If issues occur, rollback to clone mode:
+If issues occur with worktree configuration:
 
-### 1. Revert environment variable
+### 1. Check configuration
 
 ```bash
-# apps/api-server/.env
-WORKSPACE_MODE=clone
+# Verify environment variables
+cat apps/api-server/.env | grep WORKSPACE
 ```
 
-### 2. Redeploy
+### 2. Review main repo health
 
 ```bash
-yarn deploy:production
+yarn workspace:health --org-id org-123 --project-id project-456
 ```
 
 ### 3. Keep main repos
 
-Main repos are harmless and can stay for future retry. They use minimal disk space when not actively creating worktrees.
+Main repos are harmless and can stay. They use minimal disk space when not actively creating worktrees.
 
 ## Verification Checklist
 
@@ -232,10 +224,6 @@ Monitor these metrics to ensure healthy operation:
 // Workspace creation latency
 workspace.creation.time.p50
 workspace.creation.time.p99
-
-// Mode distribution
-workspace.mode.clone
-workspace.mode.worktree
 
 // Resource usage
 workspace.disk.usage.total
@@ -366,8 +354,8 @@ main_repo.fetch.failures
 
 ### Development
 
-1. **Use clone mode for local development** - Simpler debugging and inspection
-2. **Use worktree mode for staging/production** - Performance and efficiency
+1. **Use worktree mode everywhere** - Consistent behavior across environments
+2. **Monitor disk usage** - Set up alerts for main repos path
 
 ### Operations
 
@@ -384,25 +372,19 @@ main_repo.fetch.failures
 
 ## Next Steps
 
-After successful migration:
+After successful setup:
 
-1. Update default mode in documentation
-2. Archive clone-mode code as legacy (keep for backward compatibility)
-3. Document worktree best practices in team wiki
-4. Train team on new CLI commands
-5. Setup automated cleanup jobs
-6. Monitor long-term disk usage trends
-7. Consider retention policy for main repos
+1. Document worktree best practices in team wiki
+2. Train team on CLI commands
+3. Setup automated cleanup jobs
+4. Monitor long-term disk usage trends
+5. Consider retention policy for main repos
 
 ## FAQ
 
-### Can I switch back to clone mode anytime?
+### What happens to existing workspaces when restarting?
 
-Yes, simply change `WORKSPACE_MODE=clone` and redeploy. Both modes are fully supported.
-
-### What happens to existing workspaces when switching modes?
-
-They remain until explicitly cleaned up. New runs will use the configured mode.
+They remain until explicitly cleaned up. The system will continue using worktree mode.
 
 ### Do I need to change application code?
 
@@ -411,10 +393,6 @@ No, the workspace mode is transparent to workflow execution logic.
 ### How much disk space do main repos use?
 
 Approximately 500MB per unique repository. Worktrees add only 50-100MB each.
-
-### Can different projects use different modes?
-
-Currently no, the mode is global. You can run separate instances with different configs if needed.
 
 ---
 

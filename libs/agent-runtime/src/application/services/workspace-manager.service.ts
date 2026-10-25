@@ -33,50 +33,12 @@ export class WorkspaceManager implements IWorkspaceManager {
 
   /**
    * Create isolated workspace for a workflow run
+   * Now always uses worktree mode for performance and disk efficiency
    */
   async createWorkspace(runId: string, repoUrl: string, branch: string = 'main'): Promise<string> {
-    const workspacePath = this.getWorkspacePath(runId)
-
-    try {
-      // Create workspace directory
-      if (fs.existsSync(workspacePath)) {
-        throw new WorkspaceCreationError(`Workspace already exists for run ${runId}`)
-      }
-
-      fs.mkdirSync(workspacePath, { recursive: true })
-
-      // Create subdirectories
-      const repoPath = path.join(workspacePath, 'repo')
-      const artifactsPath = path.join(workspacePath, 'artifacts')
-
-      fs.mkdirSync(repoPath, { recursive: true })
-      fs.mkdirSync(artifactsPath, { recursive: true })
-
-      // Clone repository
-      this.cloneRepository(repoUrl, repoPath, branch)
-
-      // Write workspace metadata
-      this.writeMetadata(workspacePath, {
-        runId,
-        repoUrl,
-        branch,
-        isWorktree: false,
-        createdAt: new Date().toISOString(),
-      })
-
-      return workspacePath
-    } catch (error) {
-      // Cleanup on failure
-      if (fs.existsSync(workspacePath)) {
-        fs.rmSync(workspacePath, { recursive: true, force: true })
-      }
-
-      throw new WorkspaceCreationError(
-        `Failed to create workspace for run ${runId}: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        'WORKSPACE_CREATION_FAILED',
-        error instanceof Error ? error : undefined
-      )
-    }
+    // Always use worktree mode
+    const workspaceInfo = await this.createWorkspaceWithWorktree(runId, repoUrl, branch)
+    return workspaceInfo.path
   }
 
   /**
@@ -396,27 +358,6 @@ export class WorkspaceManager implements IWorkspaceManager {
   private ensureBaseDirectory(): void {
     if (!fs.existsSync(this.baseWorkspacePath)) {
       fs.mkdirSync(this.baseWorkspacePath, { recursive: true })
-    }
-  }
-
-  /**
-   * Clone git repository
-   */
-  private cloneRepository(repoUrl: string, targetPath: string, branch: string): void {
-    try {
-      // Clone with depth 1 for faster cloning
-      const command = `git clone --depth 1 --branch ${branch} ${repoUrl} ${targetPath}`
-
-      execSync(command, {
-        stdio: 'pipe',
-        timeout: 5 * 60 * 1000, // 5 minutes timeout
-      })
-    } catch (error) {
-      throw new WorkspaceCreationError(
-        `Failed to clone repository: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        'GIT_CLONE_FAILED',
-        error instanceof Error ? error : undefined
-      )
     }
   }
 
