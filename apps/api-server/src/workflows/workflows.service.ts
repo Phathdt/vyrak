@@ -2,9 +2,9 @@ import { Inject, Injectable, NotFoundException, UnauthorizedException } from '@n
 import { DatabaseService } from '@vyrak/database'
 import {
   CANCEL_WORKFLOW_USE_CASE,
+  WORKFLOW_REPOSITORY,
   type CancelWorkflowUseCase,
   type IWorkflowRepository,
-  WORKFLOW_REPOSITORY,
   type WorkflowRun,
 } from '@vyrak/workflow-core'
 
