@@ -1,55 +1,28 @@
-import { type CSSProperties } from 'react'
+import { cn } from '@/lib/utils'
 
 interface Props {
-  size?: 'small' | 'medium' | 'large'
+  size?: 'sm' | 'md' | 'lg'
   message?: string
+  className?: string
 }
 
-export function LoadingSpinner({ size = 'medium', message }: Props) {
-  const sizes = {
-    small: '16px',
-    medium: '32px',
-    large: '48px',
-  }
+const sizeClasses = {
+  sm: 'h-4 w-4 border-2',
+  md: 'h-8 w-8 border-3',
+  lg: 'h-12 w-12 border-4',
+}
 
-  const spinnerStyle: CSSProperties = {
-    width: sizes[size],
-    height: sizes[size],
-    border: '3px solid #1E293B',
-    borderTop: '3px solid #38BDF8',
-    borderRadius: '50%',
-    animation: 'spin 0.8s linear infinite',
-  }
-
-  const containerStyle: CSSProperties = {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '1rem',
-  }
-
+export function LoadingSpinner({ size = 'md', message, className }: Props) {
   return (
-    <div style={containerStyle}>
-      <div style={spinnerStyle} />
-      {message && (
-        <p
-          style={{
-            color: '#94A3B8',
-            fontSize: '0.875rem',
-          }}
-        >
-          {message}
-        </p>
-      )}
-      <style>
-        {`
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}
-      </style>
+    <div className={cn('flex flex-col items-center justify-center gap-4', className)}>
+      <div
+        className={cn('animate-spin rounded-full border-secondary border-t-accent-cyan', sizeClasses[size])}
+        role='status'
+        aria-label='Loading'
+      >
+        <span className='sr-only'>Loading...</span>
+      </div>
+      {message && <p className='text-sm text-muted-foreground'>{message}</p>}
     </div>
   )
 }

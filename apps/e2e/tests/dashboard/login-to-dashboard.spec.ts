@@ -9,8 +9,8 @@ test.describe('Login to Dashboard Flow', () => {
     const dashboardPage = new DashboardPage(page)
 
     const testUser = {
-      email: process.env.TEST_USER_EMAIL || 'test@example.com',
-      password: process.env.TEST_USER_PASSWORD || 'Test123456!',
+      email: process.env.TEST_USER_EMAIL || 'admin@vyrak.dev',
+      password: process.env.TEST_USER_PASSWORD || 'Password123!',
     }
 
     // Step 1: Navigate to login

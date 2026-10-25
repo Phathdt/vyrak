@@ -1,5 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
 
+import { Button } from './ui/button'
+
 interface Props {
   children: ReactNode
   fallback?: ReactNode
@@ -31,82 +33,45 @@ export class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <div
-          style={{
-            minHeight: '100vh',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: '#05070C',
-            color: '#F8FAFC',
-            padding: '2rem',
-          }}
-        >
-          <div
-            style={{
-              maxWidth: '600px',
-              padding: '2rem',
-              backgroundColor: '#1E2636',
-              borderRadius: '8px',
-              border: '1px solid #2D3748',
-            }}
-          >
-            <h1
-              style={{
-                fontSize: '1.5rem',
-                fontWeight: '600',
-                marginBottom: '1rem',
-                color: '#F8FAFC',
-              }}
-            >
-              Something went wrong
-            </h1>
-            <p
-              style={{
-                color: '#94A3B8',
-                marginBottom: '1.5rem',
-              }}
-            >
-              An unexpected error occurred. Please try refreshing the page.
-            </p>
-            {this.state.error && (
-              <details
-                style={{
-                  marginBottom: '1.5rem',
-                  padding: '1rem',
-                  backgroundColor: '#0F172A',
-                  borderRadius: '4px',
-                  fontSize: '0.875rem',
-                  color: '#CBD5E1',
-                }}
-              >
-                <summary style={{ cursor: 'pointer', marginBottom: '0.5rem' }}>Error details</summary>
-                <pre
-                  style={{
-                    marginTop: '0.5rem',
-                    whiteSpace: 'pre-wrap',
-                    wordBreak: 'break-word',
-                  }}
+        <div className='min-h-screen flex items-center justify-center bg-background p-6'>
+          <div className='max-w-2xl w-full bg-card border border-border rounded-lg p-6 md:p-8 shadow-lg'>
+            <div className='flex items-start gap-4 mb-6'>
+              <div className='flex-shrink-0 w-12 h-12 rounded-lg bg-destructive/10 flex items-center justify-center'>
+                <svg
+                  className='w-6 h-6 text-destructive'
+                  fill='none'
+                  viewBox='0 0 24 24'
+                  stroke='currentColor'
+                  aria-hidden='true'
                 >
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth={2}
+                    d='M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z'
+                  />
+                </svg>
+              </div>
+              <div className='flex-1'>
+                <h1 className='text-xl font-semibold mb-2'>Something went wrong</h1>
+                <p className='text-muted-foreground'>An unexpected error occurred. Please try refreshing the page.</p>
+              </div>
+            </div>
+
+            {this.state.error && (
+              <details className='mb-6 p-4 bg-surface-1 border border-border rounded-md'>
+                <summary className='cursor-pointer text-sm font-medium mb-2 hover:text-accent-cyan transition-colors'>
+                  Error details
+                </summary>
+                <pre className='mt-3 text-xs text-muted-foreground whitespace-pre-wrap break-words overflow-x-auto'>
                   {this.state.error.message}
                 </pre>
               </details>
             )}
-            <button
-              onClick={() => window.location.reload()}
-              style={{
-                padding: '0.75rem 1.5rem',
-                backgroundColor: '#38BDF8',
-                color: '#0F172A',
-                border: 'none',
-                borderRadius: '4px',
-                fontSize: '0.875rem',
-                fontWeight: '500',
-                cursor: 'pointer',
-              }}
-            >
+
+            <Button onClick={() => window.location.reload()} className='w-full sm:w-auto'>
               Reload page
-            </button>
+            </Button>
           </div>
         </div>
       )

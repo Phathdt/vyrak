@@ -26,14 +26,14 @@ export class StorageHelper {
    * Set auth token in localStorage
    */
   static async setAuthToken(page: Page, token: string): Promise<void> {
-    await this.setLocalStorage(page, 'token', token)
+    await this.setLocalStorage(page, 'vyrak_access_token', token)
   }
 
   /**
    * Get auth token from localStorage
    */
   static async getAuthToken(page: Page): Promise<string | null> {
-    return this.getLocalStorage(page, 'token')
+    return this.getLocalStorage(page, 'vyrak_access_token')
   }
 
   /**

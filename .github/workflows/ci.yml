@@ -1,69 +1,69 @@
-# name: CI
+name: CI
 
-# on:
-#   push:
-#     branches: [main, develop]
-#   pull_request:
-#     branches: [main, develop]
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
 
-# jobs:
-#   quality:
-#     name: Quality Checks
-#     runs-on: ubuntu-latest
+jobs:
+  quality:
+    name: Quality Checks
+    runs-on: ubuntu-latest
 
-#     steps:
-#       - name: Checkout code
-#         uses: actions/checkout@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-#       - name: Setup Node.js
-#         uses: actions/setup-node@v4
-#         with:
-#           node-version: '24.16.0'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24.16.0"
 
-#       - name: Cache dependencies
-#         uses: actions/cache@v4
-#         id: yarn-cache
-#         with:
-#           path: |
-#             node_modules
-#             **/node_modules
-#             .yarn/cache
-#           key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-#           restore-keys: |
-#             ${{ runner.os }}-yarn-
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        id: yarn-cache
+        with:
+          path: |
+            node_modules
+            **/node_modules
+            .yarn/cache
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
 
-#       - name: Install dependencies
-#         run: yarn install --frozen-lockfile
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
 
-#       - name: Generate Prisma Client
-#         run: yarn db:generate
+      - name: Generate Prisma Client
+        run: yarn db:generate
 
-#       - name: Build backend packages (libs + api-server)
-#         run: yarn turbo run build --filter='!@apps/web'
+      - name: Build backend packages (libs + api-server)
+        run: yarn turbo run build --filter='!@apps/web'
 
-#       - name: Generate API client
-#         run: yarn generate:api
+      - name: Generate API client
+        run: yarn generate:api
 
-#       - name: Build frontend
-#         run: yarn workspace @apps/web build
+      - name: Build frontend
+        run: yarn workspace @apps/web build
 
-#       - name: Lint
-#         run: yarn lint:ci
+      - name: Lint
+        run: yarn lint:ci
 
-#       - name: Type check
-#         run: yarn typecheck
+      - name: Type check
+        run: yarn typecheck
 
-#       - name: Run tests with coverage
-#         run: yarn test:ci
-#         env:
-#           NODE_ENV: test
+      - name: Run tests with coverage
+        run: yarn test:ci
+        env:
+          NODE_ENV: test
 
-#       - name: Upload coverage reports
-#         uses: codecov/codecov-action@v4
-#         if: always()
-#         with:
-#           files: ./coverage/coverage-final.json
-#           flags: unittests
-#           name: codecov-umbrella
-#         env:
-#           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          files: ./coverage/coverage-final.json
+          flags: unittests
+          name: codecov-umbrella
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

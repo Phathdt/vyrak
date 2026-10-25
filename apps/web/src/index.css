@@ -2,58 +2,57 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-    --radius: 0.5rem;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-  }
+    /* Stepped surface tokens - dark theme base */
+    --surface-base: 217 30% 4%;      /* #05070C */
+    --surface-1: 217 28% 5%;         /* #0B0E14 */
+    --surface-2: 217 30% 7%;         /* #0F131C */
+    --surface-3: 217 26% 12%;        /* #161D2B */
+    --surface-4: 217 22% 16%;        /* #1E2636 */
 
-  .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+    /* Text colors */
+    --text-primary: 210 20% 98%;     /* #F8FAFC */
+    --text-secondary: 215 16% 47%;   /* #64748B */
+    --text-muted: 215 20% 65%;       /* #94A3B8 */
+
+    /* Accent colors */
+    --accent-cyan: 199 89% 61%;      /* #38BDF8 */
+    --accent-cyan-hover: 199 89% 48%; /* #0EA5E9 */
+    --accent-orange: 25 95% 53%;     /* #F97316 */
+    --accent-orange-hover: 25 95% 43%; /* #EA580C */
+
+    /* Border colors */
+    --border-subtle: 215 25% 27%;    /* #334155 */
+    --border-hairline: 217 22% 16%;  /* #1E2636 */
+
+    /* Semantic colors */
+    --destructive: 0 84% 60%;
+    --destructive-hover: 0 84% 50%;
+
+    /* shadcn/ui compatible tokens */
+    --background: var(--surface-base);
+    --foreground: var(--text-primary);
+    --card: var(--surface-2);
+    --card-foreground: var(--text-primary);
+    --popover: var(--surface-3);
+    --popover-foreground: var(--text-primary);
+    --primary: var(--accent-orange);
+    --primary-foreground: var(--text-primary);
+    --secondary: var(--surface-3);
+    --secondary-foreground: var(--text-primary);
+    --muted: var(--surface-3);
+    --muted-foreground: var(--text-muted);
+    --accent: var(--accent-cyan);
+    --accent-foreground: var(--text-primary);
+    --border: var(--border-hairline);
+    --input: var(--surface-3);
+    --ring: var(--accent-cyan);
+
+    /* Radius tokens */
+    --radius-sm: 0.375rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-pill: 999px;
+    --radius: var(--radius-md);
   }
 }
 
@@ -61,9 +60,35 @@
   * {
     border-color: hsl(var(--border));
   }
+
+  html {
+    font-size: clamp(14px, 0.875rem + 0.25vw, 16px);
+  }
+
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+
+  h1 {
+    font-size: clamp(1.75rem, 2vw + 1rem, 2.5rem);
+  }
+
+  h2 {
+    font-size: clamp(1.5rem, 1.5vw + 0.875rem, 2rem);
+  }
+
+  h3 {
+    font-size: clamp(1.25rem, 1vw + 0.75rem, 1.5rem);
   }
 }
 
@@ -73,7 +98,7 @@
   }
 }
 
-/* Organization Components Styles */
+/* Organization Components Styles - Refactored with Design Tokens */
 .organizations-page,
 .org-settings-page {
   max-width: 1200px;
@@ -89,7 +114,6 @@
 }
 
 .page-header h1 {
-  font-size: 2rem;
   font-weight: 600;
 }
 
@@ -97,40 +121,41 @@
 .btn-secondary,
 .btn-danger {
   padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
+  border-radius: var(--radius-md);
   font-weight: 500;
   transition: all 0.2s;
   cursor: pointer;
+  font-size: 0.875rem;
 }
 
 .btn-primary {
-  background-color: #38bdf8;
-  color: white;
+  background-color: hsl(var(--accent-orange));
+  color: hsl(var(--text-primary));
   border: none;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background-color: #0ea5e9;
+  background-color: hsl(var(--accent-orange-hover));
 }
 
 .btn-secondary {
   background-color: transparent;
-  color: #38bdf8;
-  border: 1px solid #38bdf8;
+  color: hsl(var(--accent-cyan));
+  border: 1px solid hsl(var(--accent-cyan));
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background-color: rgba(56, 189, 248, 0.1);
+  background-color: hsl(var(--accent-cyan) / 0.1);
 }
 
 .btn-danger {
-  background-color: #ef4444;
-  color: white;
+  background-color: hsl(var(--destructive));
+  color: hsl(var(--text-primary));
   border: none;
 }
 
 .btn-danger:hover:not(:disabled) {
-  background-color: #dc2626;
+  background-color: hsl(var(--destructive-hover));
 }
 
 button:disabled {
@@ -141,8 +166,9 @@ button:disabled {
 .create-org-section,
 .settings-section,
 .members-section {
-  background: #0f131c;
-  border-radius: 0.5rem;
+  background: hsl(var(--surface-2));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-lg);
   padding: 1.5rem;
   margin-bottom: 2rem;
 }
@@ -150,7 +176,6 @@ button:disabled {
 .create-org-section h2,
 .settings-section h2,
 .members-section h2 {
-  font-size: 1.5rem;
   font-weight: 600;
   margin-bottom: 1.5rem;
 }
@@ -179,23 +204,25 @@ button:disabled {
 .form-field label {
   font-size: 0.875rem;
   font-weight: 500;
-  color: #94a3b8;
+  color: hsl(var(--text-muted));
 }
 
 .form-field input,
 .form-field select {
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.375rem;
-  border: 1px solid #334155;
-  background: #1e2636;
-  color: white;
+  padding: 0.625rem 0.75rem;
+  border-radius: var(--radius-md);
+  border: 1px solid hsl(var(--border-subtle));
+  background: hsl(var(--surface-3));
+  color: hsl(var(--text-primary));
   font-size: 1rem;
+  transition: border-color 0.2s;
 }
 
 .form-field input:focus,
 .form-field select:focus {
   outline: none;
-  border-color: #38bdf8;
+  border-color: hsl(var(--accent-cyan));
+  box-shadow: 0 0 0 3px hsl(var(--accent-cyan) / 0.1);
 }
 
 .form-field input:disabled {
@@ -204,7 +231,7 @@ button:disabled {
 }
 
 .error {
-  color: #ef4444;
+  color: hsl(var(--destructive));
   font-size: 0.875rem;
 }
 
@@ -227,21 +254,22 @@ button:disabled {
 }
 
 .org-card {
-  background: #161d2b;
-  border: 2px solid transparent;
-  border-radius: 0.5rem;
+  background: hsl(var(--surface-3));
+  border: 2px solid hsl(var(--border));
+  border-radius: var(--radius-lg);
   padding: 1.5rem;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .org-card:hover {
-  border-color: #38bdf8;
+  border-color: hsl(var(--accent-cyan));
+  transform: translateY(-2px);
 }
 
 .org-card.active {
-  border-color: #38bdf8;
-  background: #1e2636;
+  border-color: hsl(var(--accent-cyan));
+  background: hsl(var(--surface-4));
 }
 
 .org-logo {
@@ -250,6 +278,7 @@ button:disabled {
   border-radius: 50%;
   overflow: hidden;
   margin-bottom: 1rem;
+  background: hsl(var(--surface-4));
 }
 
 .org-logo img {
@@ -259,13 +288,12 @@ button:disabled {
 }
 
 .org-info h3 {
-  font-size: 1.25rem;
   font-weight: 600;
   margin-bottom: 0.25rem;
 }
 
 .org-slug {
-  color: #94a3b8;
+  color: hsl(var(--text-muted));
   font-size: 0.875rem;
   margin-bottom: 0.75rem;
 }
@@ -277,22 +305,22 @@ button:disabled {
 }
 
 .role-badge {
-  padding: 0.25rem 0.5rem;
-  border-radius: 999px;
-  background: #38bdf8;
-  color: white;
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--radius-pill);
+  background: hsl(var(--accent-cyan));
+  color: hsl(var(--text-primary));
   font-size: 0.75rem;
   font-weight: 500;
 }
 
 .member-count {
-  color: #94a3b8;
+  color: hsl(var(--text-muted));
 }
 
 .empty-state {
   text-align: center;
-  color: #94a3b8;
-  padding: 2rem;
+  color: hsl(var(--text-muted));
+  padding: 3rem 2rem;
 }
 
 .members-list {
@@ -306,8 +334,14 @@ button:disabled {
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  background: #161d2b;
-  border-radius: 0.375rem;
+  background: hsl(var(--surface-3));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-md);
+  transition: border-color 0.2s;
+}
+
+.member-card:hover {
+  border-color: hsl(var(--border-subtle));
 }
 
 .member-info {
@@ -321,6 +355,7 @@ button:disabled {
   height: 40px;
   border-radius: 50%;
   object-fit: cover;
+  background: hsl(var(--surface-4));
 }
 
 .member-details {
@@ -334,7 +369,7 @@ button:disabled {
 }
 
 .member-email {
-  color: #94a3b8;
+  color: hsl(var(--text-muted));
   font-size: 0.875rem;
 }
 
@@ -346,10 +381,10 @@ button:disabled {
 
 .role-select {
   padding: 0.375rem 0.5rem;
-  border-radius: 0.375rem;
-  border: 1px solid #334155;
-  background: #1e2636;
-  color: white;
+  border-radius: var(--radius-md);
+  border: 1px solid hsl(var(--border-subtle));
+  background: hsl(var(--surface-3));
+  color: hsl(var(--text-primary));
   font-size: 0.875rem;
 }
 
@@ -360,24 +395,31 @@ button:disabled {
 }
 
 .org-select {
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.375rem;
-  border: 1px solid #334155;
-  background: #1e2636;
-  color: white;
+  padding: 0.625rem 0.75rem;
+  border-radius: var(--radius-md);
+  border: 1px solid hsl(var(--border-subtle));
+  background: hsl(var(--surface-3));
+  color: hsl(var(--text-primary));
   font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.org-select:focus {
+  outline: none;
+  border-color: hsl(var(--accent-cyan));
+  box-shadow: 0 0 0 3px hsl(var(--accent-cyan) / 0.1);
 }
 
 .page-loading,
 .page-error {
   text-align: center;
-  padding: 2rem;
+  padding: 3rem 2rem;
 }
 
 .org-selector-loading,
 .org-selector-error,
 .org-selector-empty {
   padding: 0.5rem;
-  color: #94a3b8;
+  color: hsl(var(--text-muted));
   font-size: 0.875rem;
 }

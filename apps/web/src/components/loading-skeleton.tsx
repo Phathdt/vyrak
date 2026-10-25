@@ -1,55 +1,32 @@
-import { type CSSProperties } from 'react'
+import { cn } from '@/lib/utils'
 
 interface Props {
-  width?: string
-  height?: string
+  className?: string
   variant?: 'text' | 'rectangular' | 'circular'
 }
 
-export function LoadingSkeleton({ width = '100%', height = '20px', variant = 'rectangular' }: Props) {
-  const baseStyle: CSSProperties = {
-    width,
-    height,
-    backgroundColor: '#1E293B',
-    animation: 'pulse 1.5s ease-in-out infinite',
-  }
-
-  const variantStyles: Record<string, CSSProperties> = {
-    text: {
-      borderRadius: '4px',
-      height: '1em',
-    },
-    rectangular: {
-      borderRadius: '8px',
-    },
-    circular: {
-      borderRadius: '50%',
-      width: height,
-    },
-  }
-
+export function LoadingSkeleton({ className, variant = 'rectangular' }: Props) {
   return (
-    <>
-      <div style={{ ...baseStyle, ...variantStyles[variant] }} />
-      <style>
-        {`
-          @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-          }
-        `}
-      </style>
-    </>
+    <div
+      className={cn(
+        'animate-pulse bg-secondary',
+        variant === 'text' && 'h-4 rounded',
+        variant === 'rectangular' && 'rounded-lg',
+        variant === 'circular' && 'rounded-full aspect-square',
+        className
+      )}
+      aria-hidden='true'
+    />
   )
 }
 
 export function TableLoadingSkeleton({ rows = 5, columns = 4 }: { rows?: number; columns?: number }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+    <div className='flex flex-col gap-4'>
       {Array.from({ length: rows }).map((_, rowIndex) => (
-        <div key={rowIndex} style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+        <div key={rowIndex} className='flex gap-4 items-center'>
           {Array.from({ length: columns }).map((_, colIndex) => (
-            <LoadingSkeleton key={colIndex} height='24px' />
+            <LoadingSkeleton key={colIndex} className='h-6 flex-1' />
           ))}
         </div>
       ))}
@@ -59,24 +36,13 @@ export function TableLoadingSkeleton({ rows = 5, columns = 4 }: { rows?: number;
 
 export function CardLoadingSkeleton() {
   return (
-    <div
-      style={{
-        padding: '1.5rem',
-        backgroundColor: '#1E2636',
-        borderRadius: '8px',
-        border: '1px solid #2D3748',
-      }}
-    >
-      <LoadingSkeleton height='24px' width='60%' />
-      <div style={{ marginTop: '1rem' }}>
-        <LoadingSkeleton height='16px' width='100%' />
-      </div>
-      <div style={{ marginTop: '0.5rem' }}>
-        <LoadingSkeleton height='16px' width='80%' />
-      </div>
-      <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem' }}>
-        <LoadingSkeleton height='36px' width='100px' />
-        <LoadingSkeleton height='36px' width='100px' />
+    <div className='p-6 bg-card border border-border rounded-lg'>
+      <LoadingSkeleton className='h-6 w-3/5 mb-4' />
+      <LoadingSkeleton className='h-4 w-full mb-2' />
+      <LoadingSkeleton className='h-4 w-4/5 mb-4' />
+      <div className='flex gap-4 mt-4'>
+        <LoadingSkeleton className='h-9 w-24' />
+        <LoadingSkeleton className='h-9 w-24' />
       </div>
     </div>
   )

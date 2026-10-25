@@ -4,3 +4,12 @@
 # tmp/
 
 node_modules
+dist
+.vitest/json/output.json
+coverage-report.json
+unused-detector.js
+
+***.spec.ts
+scripts
+***.md
+apps/e2e

@@ -5,7 +5,7 @@ import { ProtectedRoute } from './components/auth'
 import { ErrorBoundary } from './components/error-boundary'
 import { PageLoading } from './components/page-loading'
 import { OrganizationProvider } from './contexts'
-import { LoginPage, SignupPage } from './pages/auth'
+import { LoginPage } from './pages/auth'
 import { DashboardPage } from './pages/dashboard'
 import { OrganizationSettingsPage, OrganizationsPage } from './pages/organizations'
 
@@ -16,7 +16,6 @@ function App() {
         <Suspense fallback={<PageLoading />}>
           <Routes>
             <Route path='/login' element={<LoginPage />} />
-            <Route path='/signup' element={<SignupPage />} />
             <Route
               path='/dashboard'
               element={
