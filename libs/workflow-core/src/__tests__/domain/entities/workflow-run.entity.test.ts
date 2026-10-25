@@ -1,12 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import {
-  WorkflowRunEntity,
-} from '../../../domain/entities/workflow-run.entity'
+
+import { WorkflowRunEntity } from '../../../domain/entities/workflow-run.entity'
 import { InvalidStateTransitionError } from '../../../domain/errors/invalid-state-transition.error'
 import { InvalidWorkflowStateError } from '../../../domain/errors/invalid-workflow-state.error'
-import {
-  WorkflowState,
-} from '../../../domain/workflow-state'
+import { WorkflowState } from '../../../domain/workflow-state'
 
 describe('WorkflowRunEntity', () => {
   let entity: WorkflowRunEntity
@@ -118,25 +115,19 @@ describe('WorkflowRunEntity', () => {
 
     it('rejects invalid transitions', () => {
       entity.transition(WorkflowState.RUNNING)
-      expect(() => entity.transition(WorkflowState.QUEUED)).toThrow(
-        InvalidStateTransitionError
-      )
+      expect(() => entity.transition(WorkflowState.QUEUED)).toThrow(InvalidStateTransitionError)
     })
 
     it('rejects transitions from terminal states', () => {
       entity.transition(WorkflowState.RUNNING)
       entity.transition(WorkflowState.SUCCEEDED)
-      expect(() => entity.transition(WorkflowState.RUNNING)).toThrow(
-        InvalidStateTransitionError
-      )
+      expect(() => entity.transition(WorkflowState.RUNNING)).toThrow(InvalidStateTransitionError)
     })
 
     it('updates updatedAt timestamp on transition', () => {
       const oldUpdatedAt = entity.updatedAt
       entity.transition(WorkflowState.RUNNING)
-      expect(entity.updatedAt.getTime()).toBeGreaterThanOrEqual(
-        oldUpdatedAt.getTime()
-      )
+      expect(entity.updatedAt.getTime()).toBeGreaterThanOrEqual(oldUpdatedAt.getTime())
     })
 
     it('sets startedAt only once on first running transition', () => {
@@ -241,9 +232,7 @@ describe('WorkflowRunEntity', () => {
 
     it('recordFailure works from different states', () => {
       // From queued (should fail because cannot transition directly)
-      expect(() =>
-        entity.recordFailure('ERROR', 'Message')
-      ).toThrow(InvalidStateTransitionError)
+      expect(() => entity.recordFailure('ERROR', 'Message')).toThrow(InvalidStateTransitionError)
 
       // Create new entity in running state
       const runningEntity = new WorkflowRunEntity(

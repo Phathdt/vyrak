@@ -16,7 +16,7 @@ export const ErrorClassificationSchema = z.enum(['retryable', 'non_retryable', '
 export function classifyError(
   errorCode: string,
   retryableErrorCodes: string[],
-  isTimeout: boolean = false,
+  isTimeout: boolean = false
 ): ErrorClassification {
   if (isTimeout) return 'timeout'
   if (retryableErrorCodes.includes(errorCode)) return 'retryable'

@@ -214,7 +214,7 @@ export function validateEventPayload(eventType: WorkflowEventType, payload: unkn
     return schema.parse(payload)
   } catch (error) {
     throw new InvalidEventPayloadError(
-      `Invalid payload for ${eventType}: ${error instanceof Error ? error.message : 'unknown error'}`,
+      `Invalid payload for ${eventType}: ${error instanceof Error ? error.message : 'unknown error'}`
     )
   }
 }
@@ -228,7 +228,7 @@ export function createWorkflowEvent(
   eventType: WorkflowEventType,
   sequence: number,
   payload: unknown,
-  metadata?: Record<string, unknown>,
+  metadata?: Record<string, unknown>
 ): WorkflowEvent {
   const validatedPayload = validateEventPayload(eventType, payload)
 

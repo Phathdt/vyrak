@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import {
-  StepRunEntity,
-} from '../../../domain/entities/step-run.entity'
+
+import { StepRunEntity } from '../../../domain/entities/step-run.entity'
 import { InvalidStepStateError } from '../../../domain/errors/invalid-step-state.error'
 import { StepStatus } from '../../../domain/step-types'
 
@@ -134,9 +133,7 @@ describe('StepRunEntity', () => {
     })
 
     it('fail throws if not running', () => {
-      expect(() => entity.fail('ERROR', 'Message', false)).toThrow(
-        InvalidStepStateError
-      )
+      expect(() => entity.fail('ERROR', 'Message', false)).toThrow(InvalidStepStateError)
     })
 
     it('skip transitions from pending to skipped', () => {
@@ -184,9 +181,7 @@ describe('StepRunEntity', () => {
     it('incrementAttempt updates updatedAt', () => {
       const oldUpdatedAt = entity.updatedAt
       entity.incrementAttempt()
-      expect(entity.updatedAt.getTime()).toBeGreaterThanOrEqual(
-        oldUpdatedAt.getTime()
-      )
+      expect(entity.updatedAt.getTime()).toBeGreaterThanOrEqual(oldUpdatedAt.getTime())
     })
   })
 

@@ -59,9 +59,7 @@ export class WorkflowStateMachine {
    */
   transition(from: WorkflowState, to: WorkflowState): WorkflowState {
     if (!this.canTransition(from, to)) {
-      throw new InvalidStateTransitionError(
-        `Cannot transition from ${from} to ${to}`
-      )
+      throw new InvalidStateTransitionError(`Cannot transition from ${from} to ${to}`)
     }
     return to
   }

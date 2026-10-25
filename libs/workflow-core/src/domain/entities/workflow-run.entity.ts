@@ -1,4 +1,5 @@
 import { z } from 'zod'
+
 import { InvalidWorkflowStateError } from '../errors/invalid-workflow-state.error'
 import { WorkflowState, WorkflowStateMachine } from '../workflow-state'
 
@@ -76,9 +77,7 @@ export class WorkflowRunEntity {
     })
 
     if (!parsed.success) {
-      throw new InvalidWorkflowStateError(
-        `Invalid workflow run: ${parsed.error.message}`
-      )
+      throw new InvalidWorkflowStateError(`Invalid workflow run: ${parsed.error.message}`)
     }
   }
 
@@ -183,4 +182,3 @@ export class WorkflowRunEntity {
     )
   }
 }
-

@@ -1,10 +1,10 @@
 import { z } from 'zod'
+
 import { InvalidStepStateError } from '../errors/invalid-step-state.error'
 import { StepStatus } from '../step-types'
 
 // Re-export StepStatus for convenience
 export { StepStatus }
-
 
 /**
  * Schema for StepRunEntity validation
@@ -83,9 +83,7 @@ export class StepRunEntity {
     })
 
     if (!parsed.success) {
-      throw new InvalidStepStateError(
-        `Invalid step run: ${parsed.error.message}`
-      )
+      throw new InvalidStepStateError(`Invalid step run: ${parsed.error.message}`)
     }
   }
 
@@ -100,11 +98,7 @@ export class StepRunEntity {
    * Check if step is in terminal state
    */
   isTerminal(): boolean {
-    return [
-      StepStatus.SUCCEEDED,
-      StepStatus.FAILED,
-      StepStatus.SKIPPED,
-    ].includes(this.status)
+    return [StepStatus.SUCCEEDED, StepStatus.FAILED, StepStatus.SKIPPED].includes(this.status)
   }
 
   /**
@@ -119,9 +113,7 @@ export class StepRunEntity {
    */
   incrementAttempt(): void {
     if (this.attempt >= this.maxAttempts) {
-      throw new InvalidStepStateError(
-        `Cannot increment attempt: already at max attempts (${this.maxAttempts})`
-      )
+      throw new InvalidStepStateError(`Cannot increment attempt: already at max attempts (${this.maxAttempts})`)
     }
     this.attempt++
     this.updatedAt = new Date()
@@ -132,9 +124,7 @@ export class StepRunEntity {
    */
   start(): void {
     if (this.status !== StepStatus.PENDING) {
-      throw new InvalidStepStateError(
-        `Cannot start step: current status is ${this.status}`
-      )
+      throw new InvalidStepStateError(`Cannot start step: current status is ${this.status}`)
     }
     this.status = StepStatus.RUNNING
     this.startedAt = new Date()
@@ -146,9 +136,7 @@ export class StepRunEntity {
    */
   succeed(outputRef?: string): void {
     if (!this.isRunning()) {
-      throw new InvalidStepStateError(
-        `Cannot succeed step: current status is ${this.status}`
-      )
+      throw new InvalidStepStateError(`Cannot succeed step: current status is ${this.status}`)
     }
     this.status = StepStatus.SUCCEEDED
     this.outputRef = outputRef
@@ -161,9 +149,7 @@ export class StepRunEntity {
    */
   fail(errorCode: string, errorMessage: string, retryable: boolean): void {
     if (!this.isRunning()) {
-      throw new InvalidStepStateError(
-        `Cannot fail step: current status is ${this.status}`
-      )
+      throw new InvalidStepStateError(`Cannot fail step: current status is ${this.status}`)
     }
     this.status = StepStatus.FAILED
     this.errorCode = errorCode
@@ -178,9 +164,7 @@ export class StepRunEntity {
    */
   skip(): void {
     if (this.status !== StepStatus.PENDING) {
-      throw new InvalidStepStateError(
-        `Cannot skip step: current status is ${this.status}`
-      )
+      throw new InvalidStepStateError(`Cannot skip step: current status is ${this.status}`)
     }
     this.status = StepStatus.SKIPPED
     this.completedAt = new Date()
@@ -237,4 +221,3 @@ export class StepRunEntity {
     )
   }
 }
-

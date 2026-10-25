@@ -102,7 +102,7 @@ export class StepExecutionError extends Error {
   constructor(
     message: string,
     public readonly errorCode: string,
-    public readonly retryable: boolean = false,
+    public readonly retryable: boolean = false
   ) {
     super(message)
     this.name = 'StepExecutionError'
@@ -118,7 +118,7 @@ export function validateStepConfig(config: unknown): StepConfig {
     return StepConfigSchema.parse(config)
   } catch (error) {
     throw new InvalidStepConfigError(
-      `Invalid step configuration: ${error instanceof Error ? error.message : 'unknown error'}`,
+      `Invalid step configuration: ${error instanceof Error ? error.message : 'unknown error'}`
     )
   }
 }
@@ -126,11 +126,7 @@ export function validateStepConfig(config: unknown): StepConfig {
 /**
  * Check if a step should be retried
  */
-export function shouldRetryStep(
-  result: StepExecutionResult,
-  policy: RetryPolicy,
-  currentAttempt: number,
-): boolean {
+export function shouldRetryStep(result: StepExecutionResult, policy: RetryPolicy, currentAttempt: number): boolean {
   if (currentAttempt >= policy.maxAttempts) return false
   if (!result.retryable) return false
   if (!result.errorCode) return false
@@ -143,7 +139,7 @@ export function shouldRetryStep(
 export function calculateBackoffDelay(
   attempt: number,
   baseBackoffMs: number,
-  strategy: 'linear' | 'exponential' = 'exponential',
+  strategy: 'linear' | 'exponential' = 'exponential'
 ): number {
   if (strategy === 'linear') {
     return baseBackoffMs * attempt

@@ -1,21 +1,22 @@
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
+
 import {
-  WorkflowEventType,
-  WorkflowEvent,
   createWorkflowEvent,
-  validateEventPayload,
-  sanitizeEvent,
   InvalidEventPayloadError,
-  isRunCreatedPayload,
-  isStepStartedPayload,
-  isStepCompletedPayload,
-  isApprovalRequestedPayload,
   isApprovalDecidedPayload,
-  isRunSucceededPayload,
-  isRunFailedPayload,
-  isRunCancelledPayload,
-  isRetryScheduledPayload,
+  isApprovalRequestedPayload,
   isRecoveryPerformedPayload,
+  isRetryScheduledPayload,
+  isRunCancelledPayload,
+  isRunCreatedPayload,
+  isRunFailedPayload,
+  isRunSucceededPayload,
+  isStepCompletedPayload,
+  isStepStartedPayload,
+  sanitizeEvent,
+  validateEventPayload,
+  WorkflowEvent,
+  WorkflowEventType,
 } from './workflow-events'
 
 describe('Workflow Events', () => {
@@ -43,18 +44,14 @@ describe('Workflow Events', () => {
           initiatedByUserId: '880e8400-e29b-41d4-a716-446655440000',
           idempotencyKey: '990e8400-e29b-41d4-a716-446655440000',
         }
-        expect(() => validateEventPayload(WorkflowEventType.RUN_CREATED, payload)).toThrow(
-          InvalidEventPayloadError,
-        )
+        expect(() => validateEventPayload(WorkflowEventType.RUN_CREATED, payload)).toThrow(InvalidEventPayloadError)
       })
 
       it('throws on missing required fields', () => {
         const payload = {
           workflowKey: 'checkout-flow',
         }
-        expect(() => validateEventPayload(WorkflowEventType.RUN_CREATED, payload)).toThrow(
-          InvalidEventPayloadError,
-        )
+        expect(() => validateEventPayload(WorkflowEventType.RUN_CREATED, payload)).toThrow(InvalidEventPayloadError)
       })
 
       it('throws on invalid UUID format', () => {
@@ -65,9 +62,7 @@ describe('Workflow Events', () => {
           initiatedByUserId: '880e8400-e29b-41d4-a716-446655440000',
           idempotencyKey: '990e8400-e29b-41d4-a716-446655440000',
         }
-        expect(() => validateEventPayload(WorkflowEventType.RUN_CREATED, payload)).toThrow(
-          InvalidEventPayloadError,
-        )
+        expect(() => validateEventPayload(WorkflowEventType.RUN_CREATED, payload)).toThrow(InvalidEventPayloadError)
       })
     })
 
@@ -87,9 +82,7 @@ describe('Workflow Events', () => {
           stepType: 'agent',
           attempt: 0,
         }
-        expect(() => validateEventPayload(WorkflowEventType.STEP_STARTED, payload)).toThrow(
-          InvalidEventPayloadError,
-        )
+        expect(() => validateEventPayload(WorkflowEventType.STEP_STARTED, payload)).toThrow(InvalidEventPayloadError)
       })
 
       it('throws on non-integer attempt', () => {
@@ -98,9 +91,7 @@ describe('Workflow Events', () => {
           stepType: 'agent',
           attempt: 1.5,
         }
-        expect(() => validateEventPayload(WorkflowEventType.STEP_STARTED, payload)).toThrow(
-          InvalidEventPayloadError,
-        )
+        expect(() => validateEventPayload(WorkflowEventType.STEP_STARTED, payload)).toThrow(InvalidEventPayloadError)
       })
     })
 
@@ -133,9 +124,7 @@ describe('Workflow Events', () => {
           durationMs: 1500,
           errorClassification: 'unknown',
         }
-        expect(() => validateEventPayload(WorkflowEventType.STEP_COMPLETED, payload)).toThrow(
-          InvalidEventPayloadError,
-        )
+        expect(() => validateEventPayload(WorkflowEventType.STEP_COMPLETED, payload)).toThrow(InvalidEventPayloadError)
       })
 
       it('throws on negative duration', () => {
@@ -144,9 +133,7 @@ describe('Workflow Events', () => {
           status: 'succeeded',
           durationMs: -100,
         }
-        expect(() => validateEventPayload(WorkflowEventType.STEP_COMPLETED, payload)).toThrow(
-          InvalidEventPayloadError,
-        )
+        expect(() => validateEventPayload(WorkflowEventType.STEP_COMPLETED, payload)).toThrow(InvalidEventPayloadError)
       })
     })
 
@@ -154,14 +141,9 @@ describe('Workflow Events', () => {
       it('validates valid ApprovalRequestedPayload', () => {
         const payload = {
           stepKey: 'manager-approval',
-          requiredApprovers: [
-            '880e8400-e29b-41d4-a716-446655440000',
-            '990e8400-e29b-41d4-a716-446655440000',
-          ],
+          requiredApprovers: ['880e8400-e29b-41d4-a716-446655440000', '990e8400-e29b-41d4-a716-446655440000'],
         }
-        expect(() =>
-          validateEventPayload(WorkflowEventType.APPROVAL_REQUESTED, payload),
-        ).not.toThrow()
+        expect(() => validateEventPayload(WorkflowEventType.APPROVAL_REQUESTED, payload)).not.toThrow()
       })
 
       it('validates with optional deadline', () => {
@@ -170,9 +152,7 @@ describe('Workflow Events', () => {
           requiredApprovers: ['880e8400-e29b-41d4-a716-446655440000'],
           approvalDeadlineAt: new Date('2026-12-31T23:59:59Z'),
         }
-        expect(() =>
-          validateEventPayload(WorkflowEventType.APPROVAL_REQUESTED, payload),
-        ).not.toThrow()
+        expect(() => validateEventPayload(WorkflowEventType.APPROVAL_REQUESTED, payload)).not.toThrow()
       })
 
       it('throws on invalid approver UUID', () => {
@@ -181,7 +161,7 @@ describe('Workflow Events', () => {
           requiredApprovers: ['invalid-uuid'],
         }
         expect(() => validateEventPayload(WorkflowEventType.APPROVAL_REQUESTED, payload)).toThrow(
-          InvalidEventPayloadError,
+          InvalidEventPayloadError
         )
       })
     })
@@ -214,7 +194,7 @@ describe('Workflow Events', () => {
           approvedByUserId: '880e8400-e29b-41d4-a716-446655440000',
         }
         expect(() => validateEventPayload(WorkflowEventType.APPROVAL_DECIDED, payload)).toThrow(
-          InvalidEventPayloadError,
+          InvalidEventPayloadError
         )
       })
     })
@@ -233,9 +213,7 @@ describe('Workflow Events', () => {
           totalDurationMs: 5000,
           stepCount: 0,
         }
-        expect(() => validateEventPayload(WorkflowEventType.RUN_SUCCEEDED, payload)).toThrow(
-          InvalidEventPayloadError,
-        )
+        expect(() => validateEventPayload(WorkflowEventType.RUN_SUCCEEDED, payload)).toThrow(InvalidEventPayloadError)
       })
     })
 
@@ -255,9 +233,7 @@ describe('Workflow Events', () => {
           errorCode: '',
           errorMessage: 'Cart validation failed',
         }
-        expect(() => validateEventPayload(WorkflowEventType.RUN_FAILED, payload)).toThrow(
-          InvalidEventPayloadError,
-        )
+        expect(() => validateEventPayload(WorkflowEventType.RUN_FAILED, payload)).toThrow(InvalidEventPayloadError)
       })
     })
 
@@ -296,9 +272,7 @@ describe('Workflow Events', () => {
           scheduledForMs: 5000,
           reason: 'Network timeout',
         }
-        expect(() => validateEventPayload(WorkflowEventType.RETRY_SCHEDULED, payload)).toThrow(
-          InvalidEventPayloadError,
-        )
+        expect(() => validateEventPayload(WorkflowEventType.RETRY_SCHEDULED, payload)).toThrow(InvalidEventPayloadError)
       })
     })
 
@@ -309,9 +283,7 @@ describe('Workflow Events', () => {
           affectedStepKey: 'database-update',
           recoveryResult: 'success' as const,
         }
-        expect(() =>
-          validateEventPayload(WorkflowEventType.RECOVERY_PERFORMED, payload),
-        ).not.toThrow()
+        expect(() => validateEventPayload(WorkflowEventType.RECOVERY_PERFORMED, payload)).not.toThrow()
       })
 
       it('validates failed recovery', () => {
@@ -319,16 +291,12 @@ describe('Workflow Events', () => {
           recoveryType: 'compensate',
           recoveryResult: 'failure' as const,
         }
-        expect(() =>
-          validateEventPayload(WorkflowEventType.RECOVERY_PERFORMED, payload),
-        ).not.toThrow()
+        expect(() => validateEventPayload(WorkflowEventType.RECOVERY_PERFORMED, payload)).not.toThrow()
       })
     })
 
     it('throws on unknown event type', () => {
-      expect(() => validateEventPayload('unknown' as WorkflowEventType, {})).toThrow(
-        InvalidEventPayloadError,
-      )
+      expect(() => validateEventPayload('unknown' as WorkflowEventType, {})).toThrow(InvalidEventPayloadError)
     })
   })
 
@@ -341,18 +309,10 @@ describe('Workflow Events', () => {
         initiatedByUserId: '880e8400-e29b-41d4-a716-446655440000',
         idempotencyKey: '990e8400-e29b-41d4-a716-446655440000',
       }
-      const event = createWorkflowEvent(
-        runId,
-        organizationId,
-        WorkflowEventType.RUN_CREATED,
-        1,
-        payload,
-      )
+      const event = createWorkflowEvent(runId, organizationId, WorkflowEventType.RUN_CREATED, 1, payload)
 
       expect(event.id).toBeDefined()
-      expect(event.id).toMatch(
-        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
-      )
+      expect(event.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i)
       expect(event.runId).toBe(runId)
       expect(event.organizationId).toBe(organizationId)
       expect(event.eventType).toBe(WorkflowEventType.RUN_CREATED)
@@ -371,23 +331,16 @@ describe('Workflow Events', () => {
         executionContext: 'background',
         priority: 'high',
       }
-      const event = createWorkflowEvent(
-        runId,
-        organizationId,
-        WorkflowEventType.STEP_STARTED,
-        2,
-        payload,
-        metadata,
-      )
+      const event = createWorkflowEvent(runId, organizationId, WorkflowEventType.STEP_STARTED, 2, payload, metadata)
 
       expect(event.metadata).toEqual(metadata)
     })
 
     it('throws on invalid payload', () => {
       const payload = { workflowKey: 'test' }
-      expect(() =>
-        createWorkflowEvent(runId, organizationId, WorkflowEventType.RUN_CREATED, 1, payload),
-      ).toThrow(InvalidEventPayloadError)
+      expect(() => createWorkflowEvent(runId, organizationId, WorkflowEventType.RUN_CREATED, 1, payload)).toThrow(
+        InvalidEventPayloadError
+      )
     })
 
     it('assigns unique IDs to events', () => {
@@ -396,20 +349,8 @@ describe('Workflow Events', () => {
         stepType: 'agent',
         attempt: 1,
       }
-      const event1 = createWorkflowEvent(
-        runId,
-        organizationId,
-        WorkflowEventType.STEP_STARTED,
-        1,
-        payload,
-      )
-      const event2 = createWorkflowEvent(
-        runId,
-        organizationId,
-        WorkflowEventType.STEP_STARTED,
-        2,
-        payload,
-      )
+      const event1 = createWorkflowEvent(runId, organizationId, WorkflowEventType.STEP_STARTED, 1, payload)
+      const event2 = createWorkflowEvent(runId, organizationId, WorkflowEventType.STEP_STARTED, 2, payload)
 
       expect(event1.id).not.toBe(event2.id)
     })
@@ -420,20 +361,8 @@ describe('Workflow Events', () => {
         stepType: 'agent',
         attempt: 1,
       }
-      const event1 = createWorkflowEvent(
-        runId,
-        organizationId,
-        WorkflowEventType.STEP_STARTED,
-        1,
-        payload,
-      )
-      const event2 = createWorkflowEvent(
-        runId,
-        organizationId,
-        WorkflowEventType.STEP_STARTED,
-        2,
-        payload,
-      )
+      const event1 = createWorkflowEvent(runId, organizationId, WorkflowEventType.STEP_STARTED, 1, payload)
+      const event2 = createWorkflowEvent(runId, organizationId, WorkflowEventType.STEP_STARTED, 2, payload)
 
       expect(event2.sequence).toBeGreaterThan(event1.sequence)
     })
