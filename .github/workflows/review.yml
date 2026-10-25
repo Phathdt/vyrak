@@ -1,0 +1,30 @@
+name: Claude PR Review
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  review:
+    if: >-
+      github.event.issue.pull_request &&
+      contains(github.event.comment.body, '@claude')
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: anthropics/claude-code-action@v1
+        env:
+          ANTHROPIC_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+        with:
+          anthropic_api_key: ${{ secrets.LLM_API_KEY }}
+          claude_args: |
+            --model claude-opus-5-5
+            --max-turns 5
+            --system-prompt "Act as a senior software engineer reviewing a pull request. Focus on correctness, bugs, security, concurrency, performance and maintainability. Report only actionable findings, explain the impact, and reference the affected files or lines. Do not modify code."
