@@ -3,11 +3,14 @@ import * as path from 'node:path'
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
+import { MainRepoManager } from '../../main-repo-manager.service'
 import { WorkspaceManager } from '../../workspace-manager.service'
 
 describe('WorkspaceManager Integration', () => {
   let manager: WorkspaceManager
+  let mainRepoManager: MainRepoManager
   const testBasePath = '/tmp/vyrak-integration-test'
+  const testMainReposPath = '/tmp/vyrak-integration-main-repos'
   const testRunId = `integration-test-${Date.now()}`
 
   // Use a public test repository
@@ -15,13 +18,18 @@ describe('WorkspaceManager Integration', () => {
   const testBranch = 'master'
 
   beforeAll(() => {
-    manager = new WorkspaceManager(testBasePath)
+    mainRepoManager = new MainRepoManager(testMainReposPath)
+    manager = new WorkspaceManager(testBasePath, mainRepoManager)
   })
 
   afterAll(async () => {
     // Cleanup all test workspaces
     if (fs.existsSync(testBasePath)) {
       fs.rmSync(testBasePath, { recursive: true, force: true })
+    }
+    // Cleanup main repos
+    if (fs.existsSync(testMainReposPath)) {
+      fs.rmSync(testMainReposPath, { recursive: true, force: true })
     }
   })
 
@@ -33,9 +41,9 @@ describe('WorkspaceManager Integration', () => {
     const repoPath = manager.getRepoPath(testRunId)
     expect(fs.existsSync(repoPath)).toBe(true)
 
-    // Verify git repository
-    const gitDir = path.join(repoPath, '.git')
-    expect(fs.existsSync(gitDir)).toBe(true)
+    // Verify git worktree (has .git file pointing to main repo)
+    const gitPath = path.join(repoPath, '.git')
+    expect(fs.existsSync(gitPath)).toBe(true)
 
     // Verify artifacts directory
     const artifactsPath = manager.getArtifactsPath(testRunId)
@@ -48,13 +56,13 @@ describe('WorkspaceManager Integration', () => {
     const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf-8'))
     expect(metadata.runId).toBe(testRunId)
     expect(metadata.repoUrl).toBe(testRepoUrl)
-    expect(metadata.branch).toBe(testBranch)
+    expect(metadata.branch).toBeDefined() // Worktree creates unique branch
     expect(metadata.createdAt).toBeDefined()
 
     // Verify README exists (Hello-World has a README)
     const readmePath = path.join(repoPath, 'README')
     expect(fs.existsSync(readmePath)).toBe(true)
-  }, 60000) // 60s timeout for git clone
+  }, 60000) // 60s timeout for git operations
 
   it('should list workspaces', async () => {
     const workspaces = await manager.listWorkspaces()

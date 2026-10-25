@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common'
 import { PassportModule } from '@nestjs/passport'
-import { DatabaseModule, DatabaseService } from '@vyrak/database'
 import { CustomConfigModule, CustomConfigService } from '@vyrak/custom-config'
+import { DatabaseModule, DatabaseService } from '@vyrak/database'
 
 import { AuthService, PasswordService } from './application'
 import { AuthPrismaRepository, JwtProvider, JwtStrategy } from './infras'

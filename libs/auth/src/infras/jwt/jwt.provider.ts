@@ -1,5 +1,6 @@
-import * as jose from 'jose'
 import type { CustomConfigService } from '@vyrak/custom-config'
+
+import * as jose from 'jose'
 
 export interface JwtPayload {
   sub: string

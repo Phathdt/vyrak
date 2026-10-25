@@ -1,7 +1,7 @@
 import { PassportStrategy } from '@nestjs/passport'
+import type { CustomConfigService } from '@vyrak/custom-config'
 
 import { ExtractJwt, Strategy } from 'passport-jwt'
-import type { CustomConfigService } from '@vyrak/custom-config'
 
 import type { JwtPayload } from './jwt.provider'
 
