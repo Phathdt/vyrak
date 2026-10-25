@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   Param,
   ParseUUIDPipe,
   Post,
@@ -11,17 +12,17 @@ import {
   UseGuards,
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
-
 import {
-  ApproveWorkflowUseCase,
-  CancelWorkflowUseCase,
-  RejectWorkflowUseCase,
-  StartWorkflowUseCase,
+  APPROVE_WORKFLOW_USE_CASE,
+  CANCEL_WORKFLOW_USE_CASE,
+  REJECT_WORKFLOW_USE_CASE,
+  START_WORKFLOW_USE_CASE,
+  type ApproveWorkflowUseCase,
+  type CancelWorkflowUseCase,
+  type RejectWorkflowUseCase,
+  type StartWorkflowUseCase,
 } from '@vyrak/workflow-core'
 
-import { JwtAuthGuard } from '../guards/jwt-auth.guard'
-import { OrganizationMemberGuard } from '../guards/organization-member.guard'
-import { CurrentUser } from '../organizations/decorators'
 import {
   ApprovalDecisionDto,
   CreateWorkflowRunDto,
@@ -32,6 +33,10 @@ import {
 import { toWorkflowRunResponseDto } from './mappers/workflow-run.mapper'
 import { WorkflowsService } from './workflows.service'
 
+import { JwtAuthGuard } from '../guards/jwt-auth.guard'
+import { OrganizationMemberGuard } from '../guards/organization-member.guard'
+import { CurrentUser } from '../organizations/decorators'
+
 @ApiTags('workflows')
 @Controller('api')
 @UseGuards(JwtAuthGuard)
@@ -39,9 +44,13 @@ import { WorkflowsService } from './workflows.service'
 export class WorkflowsController {
   constructor(
     private readonly workflowsService: WorkflowsService,
+    @Inject(START_WORKFLOW_USE_CASE)
     private readonly startWorkflowUseCase: StartWorkflowUseCase,
+    @Inject(APPROVE_WORKFLOW_USE_CASE)
     private readonly approveWorkflowUseCase: ApproveWorkflowUseCase,
+    @Inject(REJECT_WORKFLOW_USE_CASE)
     private readonly rejectWorkflowUseCase: RejectWorkflowUseCase,
+    @Inject(CANCEL_WORKFLOW_USE_CASE)
     private readonly cancelWorkflowUseCase: CancelWorkflowUseCase
   ) {}
 

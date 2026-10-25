@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common'
-
 import { DatabaseModule } from '@vyrak/database'
 import { WorkflowCoreModule } from '@vyrak/workflow-core'
 

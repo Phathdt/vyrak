@@ -17,11 +17,7 @@ export const CreateWorkflowRunSchema = z.object({
     .min(1, 'Branch name must not be empty')
     .max(255, 'Branch name must not exceed 255 characters')
     .default('main'),
-  idempotencyKey: z
-    .string()
-    .min(1)
-    .max(255)
-    .optional(),
+  idempotencyKey: z.string().min(1).max(255).optional(),
 })
 
 /**

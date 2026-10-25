@@ -1,7 +1,12 @@
 import { Inject, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common'
-
 import { DatabaseService } from '@vyrak/database'
-import { CancelWorkflowUseCase, IWorkflowRepository, WORKFLOW_REPOSITORY, WorkflowRun } from '@vyrak/workflow-core'
+import {
+  CANCEL_WORKFLOW_USE_CASE,
+  type CancelWorkflowUseCase,
+  type IWorkflowRepository,
+  WORKFLOW_REPOSITORY,
+  type WorkflowRun,
+} from '@vyrak/workflow-core'
 
 import { ListWorkflowRunsDto, PaginatedWorkflowRunsDto } from './dto'
 import { toWorkflowRunSummaryDto } from './mappers/workflow-run.mapper'
@@ -16,6 +21,7 @@ export class WorkflowsService {
     @Inject(WORKFLOW_REPOSITORY)
     private readonly workflowRepo: IWorkflowRepository,
     private readonly databaseService: DatabaseService,
+    @Inject(CANCEL_WORKFLOW_USE_CASE)
     private readonly cancelWorkflowUseCase: CancelWorkflowUseCase
   ) {}
 

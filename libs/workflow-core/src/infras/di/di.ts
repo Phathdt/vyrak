@@ -66,6 +66,24 @@ export const AUTHORIZATION_SERVICE = Symbol('AUTHORIZATION_SERVICE')
 export const APPROVE_WORKFLOW_USE_CASE = Symbol('APPROVE_WORKFLOW_USE_CASE')
 
 /**
+ * Reject workflow use case token
+ * Handles rejection decision workflow
+ */
+export const REJECT_WORKFLOW_USE_CASE = Symbol('REJECT_WORKFLOW_USE_CASE')
+
+/**
+ * Cancel workflow use case token
+ * Handles workflow cancellation
+ */
+export const CANCEL_WORKFLOW_USE_CASE = Symbol('CANCEL_WORKFLOW_USE_CASE')
+
+/**
+ * Start workflow use case token
+ * Handles workflow run creation
+ */
+export const START_WORKFLOW_USE_CASE = Symbol('START_WORKFLOW_USE_CASE')
+
+/**
  * Tool step executor token
  * Executes tool/command steps in workflows
  */

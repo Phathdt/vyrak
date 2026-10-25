@@ -7,10 +7,7 @@ import { z } from 'zod'
  * Zod schema for approval decision (approve/reject)
  */
 export const ApprovalDecisionSchema = z.object({
-  comment: z
-    .string()
-    .max(5000, 'Comment must not exceed 5000 characters')
-    .optional(),
+  comment: z.string().max(5000, 'Comment must not exceed 5000 characters').optional(),
 })
 
 /**

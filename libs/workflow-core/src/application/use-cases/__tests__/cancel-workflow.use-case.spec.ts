@@ -1,4 +1,5 @@
 import { NotFoundException } from '@nestjs/common'
+
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { IWorkflowRepository, WorkflowRun, WorkflowState } from '../../../domain'
@@ -43,9 +44,7 @@ describe('CancelWorkflowUseCase', () => {
     it('should cancel a running workflow successfully', async () => {
       const cancelledRun = { ...mockRun, state: WorkflowState.CANCELLED }
 
-      vi.mocked(mockWorkflowRepo.findRunById)
-        .mockResolvedValueOnce(mockRun)
-        .mockResolvedValueOnce(cancelledRun)
+      vi.mocked(mockWorkflowRepo.findRunById).mockResolvedValueOnce(mockRun).mockResolvedValueOnce(cancelledRun)
 
       const result = await useCase.execute({
         runId: 'run-123',
@@ -68,9 +67,7 @@ describe('CancelWorkflowUseCase', () => {
     it('should use default reason when not provided', async () => {
       const cancelledRun = { ...mockRun, state: WorkflowState.CANCELLED }
 
-      vi.mocked(mockWorkflowRepo.findRunById)
-        .mockResolvedValueOnce(mockRun)
-        .mockResolvedValueOnce(cancelledRun)
+      vi.mocked(mockWorkflowRepo.findRunById).mockResolvedValueOnce(mockRun).mockResolvedValueOnce(cancelledRun)
 
       await useCase.execute({
         runId: 'run-123',
@@ -186,9 +183,7 @@ describe('CancelWorkflowUseCase', () => {
       const queuedRun = { ...mockRun, state: WorkflowState.QUEUED }
       const cancelledRun = { ...queuedRun, state: WorkflowState.CANCELLED }
 
-      vi.mocked(mockWorkflowRepo.findRunById)
-        .mockResolvedValueOnce(queuedRun)
-        .mockResolvedValueOnce(cancelledRun)
+      vi.mocked(mockWorkflowRepo.findRunById).mockResolvedValueOnce(queuedRun).mockResolvedValueOnce(cancelledRun)
 
       const result = await useCase.execute({
         runId: 'run-123',
@@ -204,9 +199,7 @@ describe('CancelWorkflowUseCase', () => {
       const waitingRun = { ...mockRun, state: WorkflowState.WAITING_APPROVAL }
       const cancelledRun = { ...waitingRun, state: WorkflowState.CANCELLED }
 
-      vi.mocked(mockWorkflowRepo.findRunById)
-        .mockResolvedValueOnce(waitingRun)
-        .mockResolvedValueOnce(cancelledRun)
+      vi.mocked(mockWorkflowRepo.findRunById).mockResolvedValueOnce(waitingRun).mockResolvedValueOnce(cancelledRun)
 
       const result = await useCase.execute({
         runId: 'run-123',

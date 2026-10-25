@@ -1,10 +1,8 @@
 import { WorkflowRun, WorkflowState } from '@vyrak/workflow-core'
+
 import { describe, expect, it } from 'vitest'
 
-import {
-  toWorkflowRunResponseDto,
-  toWorkflowRunSummaryDto,
-} from '../workflow-run.mapper'
+import { toWorkflowRunResponseDto, toWorkflowRunSummaryDto } from '../workflow-run.mapper'
 
 describe('WorkflowRunMapper', () => {
   const mockWorkflowRun: WorkflowRun = {
@@ -125,7 +123,9 @@ describe('WorkflowRunMapper', () => {
         'This is a very long requirement that exceeds one hundred characters and should be truncated properly with extra text'
       const dto = toWorkflowRunSummaryDto(mockWorkflowRun, longRequirement)
 
-      expect(dto.requirement).toBe('This is a very long requirement that exceeds one hundred characters and should be truncated prope...')
+      expect(dto.requirement).toBe(
+        'This is a very long requirement that exceeds one hundred characters and should be truncated prope...'
+      )
       expect(dto.requirement.length).toBe(100)
     })
 

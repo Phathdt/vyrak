@@ -1,9 +1,9 @@
 import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common'
 
-import type { IWorkflowRepository } from '../../domain/interfaces/workflow.repository.interface'
-import { WORKFLOW_REPOSITORY } from '../../infras/di/di'
 import type { WorkflowRun } from '../../domain/entities/workflow-run.entity'
+import type { IWorkflowRepository } from '../../domain/interfaces/workflow.repository.interface'
 import { WorkflowState } from '../../domain/workflow-state'
+import { WORKFLOW_REPOSITORY } from '../../infras/di/di'
 
 /**
  * Input for cancelling a workflow
@@ -52,11 +52,7 @@ export class CancelWorkflowUseCase {
     }
 
     // Check if workflow can be cancelled
-    const terminalStates = [
-      WorkflowState.SUCCEEDED,
-      WorkflowState.FAILED,
-      WorkflowState.CANCELLED,
-    ]
+    const terminalStates = [WorkflowState.SUCCEEDED, WorkflowState.FAILED, WorkflowState.CANCELLED]
 
     if (terminalStates.includes(run.state)) {
       throw new Error(`Workflow in state ${run.state} cannot be cancelled`)

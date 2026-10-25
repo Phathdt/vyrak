@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
-
 import { WorkflowState } from '@vyrak/workflow-core'
+
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 

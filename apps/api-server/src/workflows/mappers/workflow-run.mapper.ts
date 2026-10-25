@@ -34,12 +34,8 @@ export function toWorkflowRunResponseDto(run: WorkflowRun): WorkflowRunResponseD
  * Map WorkflowRun entity to WorkflowRunSummaryDto
  * Truncates requirement to 100 characters
  */
-export function toWorkflowRunSummaryDto(
-  run: WorkflowRun,
-  requirement: string
-): WorkflowRunSummaryDto {
-  const truncatedRequirement =
-    requirement.length > 100 ? `${requirement.substring(0, 97)}...` : requirement
+export function toWorkflowRunSummaryDto(run: WorkflowRun, requirement: string): WorkflowRunSummaryDto {
+  const truncatedRequirement = requirement.length > 100 ? `${requirement.substring(0, 97)}...` : requirement
 
   return {
     id: run.id,
