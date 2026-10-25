@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto'
-import { DatabaseService, Prisma } from '@vyrak/database'
+import { Prisma, PrismaClient } from '@vyrak/database'
 
 import {
   CreateRunParams,
@@ -18,11 +18,11 @@ import {
  * Maps between Prisma models and domain entities
  */
 export class WorkflowPrismaRepository implements IWorkflowRepository {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(private readonly prisma: PrismaClient) {}
 
   async createRun(params: CreateRunParams): Promise<WorkflowRun> {
     try {
-      const run = await this.db.client.workflowRun.create({
+      const run = await this.prisma.workflowRun.create({
         data: {
           organizationId: params.organizationId,
           projectId: params.projectId,
@@ -30,7 +30,7 @@ export class WorkflowPrismaRepository implements IWorkflowRepository {
           workflowVersion: params.workflowVersion,
           initiatedByUserId: params.initiatedByUserId,
           idempotencyKey: params.idempotencyKey || randomUUID(),
-          input: params.input ? (params.input as Prisma.InputJsonValue) : null,
+          input: params.input ? (params.input as Prisma.InputJsonValue) : Prisma.JsonNull,
           status: WorkflowState.QUEUED,
         },
       })
@@ -51,7 +51,7 @@ export class WorkflowPrismaRepository implements IWorkflowRepository {
 
   async findRunById(runId: string): Promise<WorkflowRun | null> {
     try {
-      const run = await this.db.client.workflowRun.findUnique({
+      const run = await this.prisma.workflowRun.findUnique({
         where: { id: runId },
       })
 
@@ -66,7 +66,7 @@ export class WorkflowPrismaRepository implements IWorkflowRepository {
 
   async updateRunState(runId: string, state: WorkflowStateUpdate): Promise<void> {
     try {
-      await this.db.client.workflowRun.update({
+      await this.prisma.workflowRun.update({
         where: { id: runId },
         data: {
           status: state.status,
@@ -90,7 +90,7 @@ export class WorkflowPrismaRepository implements IWorkflowRepository {
 
   async findRunByIdempotencyKey(orgId: string, key: string): Promise<WorkflowRun | null> {
     try {
-      const run = await this.db.client.workflowRun.findUnique({
+      const run = await this.prisma.workflowRun.findUnique({
         where: {
           organizationId_idempotencyKey: {
             organizationId: orgId,
@@ -110,7 +110,7 @@ export class WorkflowPrismaRepository implements IWorkflowRepository {
 
   async cancelRun(runId: string): Promise<void> {
     try {
-      await this.db.client.workflowRun.update({
+      await this.prisma.workflowRun.update({
         where: { id: runId },
         data: {
           cancelRequestedAt: new Date(),

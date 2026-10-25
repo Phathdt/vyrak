@@ -1,4 +1,4 @@
-import { DatabaseService } from '@vyrak/database'
+import type { PrismaClient } from '@vyrak/database'
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -8,7 +8,7 @@ import { StepNotFoundError, StepStatus } from '../../domain'
 
 describe('StepPrismaRepository', () => {
   let repository: StepPrismaRepository
-  let db: DatabaseService
+  let prisma: PrismaClient
 
   const mockPrismaStep = {
     id: '550e8400-e29b-41d4-a716-446655440000',
@@ -29,18 +29,16 @@ describe('StepPrismaRepository', () => {
   }
 
   beforeEach(() => {
-    db = {
-      client: {
-        workflowStepRun: {
-          create: vi.fn(),
-          findMany: vi.fn(),
-          findUnique: vi.fn(),
-          update: vi.fn(),
-        },
+    prisma = {
+      workflowStepRun: {
+        create: vi.fn(),
+        findMany: vi.fn(),
+        findUnique: vi.fn(),
+        update: vi.fn(),
       },
     } as any
 
-    repository = new StepPrismaRepository(db)
+    repository = new StepPrismaRepository(prisma)
   })
 
   describe('createStepRun', () => {
@@ -53,7 +51,7 @@ describe('StepPrismaRepository', () => {
         input: { url: 'https://example.com' },
       }
 
-      vi.spyOn(db.client.workflowStepRun, 'create').mockResolvedValueOnce(mockPrismaStep)
+      vi.spyOn(prisma.workflowStepRun, 'create').mockResolvedValueOnce(mockPrismaStep)
 
       const result = await repository.createStepRun(params)
 
@@ -62,7 +60,7 @@ describe('StepPrismaRepository', () => {
       expect(result.attempt).toBe(1)
       expect(result.stepKey).toBe('deploy')
       expect(result.stepType).toBe('http')
-      expect(db.client.workflowStepRun.create).toHaveBeenCalledWith({
+      expect(prisma.workflowStepRun.create).toHaveBeenCalledWith({
         data: {
           runId: params.runId,
           organizationId: params.organizationId,
@@ -95,14 +93,14 @@ describe('StepPrismaRepository', () => {
         },
       ]
 
-      vi.spyOn(db.client.workflowStepRun, 'findMany').mockResolvedValueOnce(mockSteps)
+      vi.spyOn(prisma.workflowStepRun, 'findMany').mockResolvedValueOnce(mockSteps)
 
       const result = await repository.findStepsByRunId('550e8400-e29b-41d4-a716-446655440001')
 
       expect(result).toHaveLength(2)
       expect(result[0].stepKey).toBe('validate')
       expect(result[1].stepKey).toBe('deploy')
-      expect(db.client.workflowStepRun.findMany).toHaveBeenCalledWith({
+      expect(prisma.workflowStepRun.findMany).toHaveBeenCalledWith({
         where: { runId: '550e8400-e29b-41d4-a716-446655440001' },
         orderBy: { createdAt: 'asc' },
       })
@@ -116,11 +114,11 @@ describe('StepPrismaRepository', () => {
         completedAt: new Date('2026-10-25T10:10:00Z'),
       }
 
-      vi.spyOn(db.client.workflowStepRun, 'update').mockResolvedValueOnce({} as any)
+      vi.spyOn(prisma.workflowStepRun, 'update').mockResolvedValueOnce({} as any)
 
       await repository.updateStepStatus('550e8400-e29b-41d4-a716-446655440000', StepStatus.SUCCEEDED, result)
 
-      expect(db.client.workflowStepRun.update).toHaveBeenCalledWith({
+      expect(prisma.workflowStepRun.update).toHaveBeenCalledWith({
         where: { id: '550e8400-e29b-41d4-a716-446655440000' },
         data: {
           status: StepStatus.SUCCEEDED,
@@ -143,7 +141,7 @@ describe('StepPrismaRepository', () => {
       }
       const error = new PrismaError('Record not found')
 
-      vi.spyOn(db.client.workflowStepRun, 'update').mockRejectedValueOnce(error)
+      vi.spyOn(prisma.workflowStepRun, 'update').mockRejectedValueOnce(error)
 
       await expect(repository.updateStepStatus('nonexistent', StepStatus.FAILED)).rejects.toThrow(StepNotFoundError)
     })
@@ -151,12 +149,12 @@ describe('StepPrismaRepository', () => {
 
   describe('incrementAttempt', () => {
     it('should increment attempt number and reset to pending', async () => {
-      vi.spyOn(db.client.workflowStepRun, 'update').mockResolvedValueOnce({ attempt: 2 } as any)
+      vi.spyOn(prisma.workflowStepRun, 'update').mockResolvedValueOnce({ attempt: 2 } as any)
 
       const result = await repository.incrementAttempt('550e8400-e29b-41d4-a716-446655440000')
 
       expect(result).toBe(2)
-      expect(db.client.workflowStepRun.update).toHaveBeenCalledWith({
+      expect(prisma.workflowStepRun.update).toHaveBeenCalledWith({
         where: { id: '550e8400-e29b-41d4-a716-446655440000' },
         data: {
           attempt: { increment: 1 },
@@ -176,7 +174,7 @@ describe('StepPrismaRepository', () => {
       }
       const error = new PrismaError('Record not found')
 
-      vi.spyOn(db.client.workflowStepRun, 'update').mockRejectedValueOnce(error)
+      vi.spyOn(prisma.workflowStepRun, 'update').mockRejectedValueOnce(error)
 
       await expect(repository.incrementAttempt('nonexistent')).rejects.toThrow(StepNotFoundError)
     })
@@ -184,7 +182,7 @@ describe('StepPrismaRepository', () => {
 
   describe('findById', () => {
     it('should find a step by ID', async () => {
-      vi.spyOn(db.client.workflowStepRun, 'findUnique').mockResolvedValueOnce(mockPrismaStep)
+      vi.spyOn(prisma.workflowStepRun, 'findUnique').mockResolvedValueOnce(mockPrismaStep)
 
       const result = await repository.findById('550e8400-e29b-41d4-a716-446655440000')
 
@@ -195,7 +193,7 @@ describe('StepPrismaRepository', () => {
     })
 
     it('should return null if step not found', async () => {
-      vi.spyOn(db.client.workflowStepRun, 'findUnique').mockResolvedValueOnce(null)
+      vi.spyOn(prisma.workflowStepRun, 'findUnique').mockResolvedValueOnce(null)
 
       const result = await repository.findById('nonexistent')
 

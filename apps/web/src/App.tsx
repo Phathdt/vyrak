@@ -1,9 +1,13 @@
 import { Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 
-import { ErrorBoundary, PageLoading, ProtectedRoute } from './components'
+import { ProtectedRoute } from './components/auth'
+import { ErrorBoundary } from './components/error-boundary'
+import { PageLoading } from './components/page-loading'
 import { OrganizationProvider } from './contexts'
-import { DashboardPage, LoginPage, OrganizationSettingsPage, OrganizationsPage } from './pages'
+import { LoginPage } from './pages/auth'
+import { DashboardPage } from './pages/dashboard'
+import { OrganizationSettingsPage, OrganizationsPage } from './pages/organizations'
 
 function App() {
   return (

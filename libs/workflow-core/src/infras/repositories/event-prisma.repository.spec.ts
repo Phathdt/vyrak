@@ -1,4 +1,4 @@
-import { DatabaseService } from '@vyrak/database'
+import type { PrismaClient } from '@vyrak/database'
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -6,7 +6,7 @@ import { EventPrismaRepository } from './event-prisma.repository'
 
 describe('EventPrismaRepository', () => {
   let repository: EventPrismaRepository
-  let db: DatabaseService
+  let prisma: PrismaClient
 
   const mockPrismaEvent = {
     id: '550e8400-e29b-41d4-a716-446655440000',
@@ -20,20 +20,18 @@ describe('EventPrismaRepository', () => {
   }
 
   beforeEach(() => {
-    db = {
-      client: {
-        $transaction: vi.fn(),
-        $executeRaw: vi.fn().mockResolvedValue(undefined),
-        $queryRaw: vi.fn(),
-        workflowEvent: {
-          findFirst: vi.fn(),
-          findMany: vi.fn(),
-          create: vi.fn(),
-        },
+    prisma = {
+      $transaction: vi.fn(),
+      $executeRaw: vi.fn().mockResolvedValue(undefined),
+      $queryRaw: vi.fn(),
+      workflowEvent: {
+        findFirst: vi.fn(),
+        findMany: vi.fn(),
+        create: vi.fn(),
       },
     } as any
 
-    repository = new EventPrismaRepository(db)
+    repository = new EventPrismaRepository(prisma)
   })
 
   describe('appendEvent', () => {
@@ -52,7 +50,7 @@ describe('EventPrismaRepository', () => {
         sequence: 1,
       }
 
-      vi.spyOn(db.client, '$transaction').mockImplementation(async (callback: any) => {
+      vi.spyOn(prisma, '$transaction').mockImplementation(async (callback: any) => {
         return await callback({
           $queryRaw: vi.fn().mockResolvedValueOnce([{ sequence: 1 }]),
           workflowEvent: {
@@ -86,7 +84,7 @@ describe('EventPrismaRepository', () => {
         sequence: 5,
       }
 
-      vi.spyOn(db.client, '$transaction').mockImplementation(async (callback: any) => {
+      vi.spyOn(prisma, '$transaction').mockImplementation(async (callback: any) => {
         return await callback({
           $queryRaw: vi.fn().mockResolvedValueOnce([{ sequence: 5 }]),
           workflowEvent: {
@@ -119,14 +117,14 @@ describe('EventPrismaRepository', () => {
         },
       ]
 
-      vi.spyOn(db.client.workflowEvent, 'findMany').mockResolvedValueOnce(mockEvents)
+      vi.spyOn(prisma.workflowEvent, 'findMany').mockResolvedValueOnce(mockEvents)
 
       const result = await repository.findEventsByRunId('550e8400-e29b-41d4-a716-446655440001', 10, 0)
 
       expect(result).toHaveLength(2)
       expect(result[0].sequence).toBe(1)
       expect(result[1].sequence).toBe(2)
-      expect(db.client.workflowEvent.findMany).toHaveBeenCalledWith({
+      expect(prisma.workflowEvent.findMany).toHaveBeenCalledWith({
         where: { runId: '550e8400-e29b-41d4-a716-446655440001' },
         orderBy: { sequence: 'asc' },
         take: 10,
@@ -135,11 +133,11 @@ describe('EventPrismaRepository', () => {
     })
 
     it('should use default pagination values', async () => {
-      vi.spyOn(db.client.workflowEvent, 'findMany').mockResolvedValueOnce([])
+      vi.spyOn(prisma.workflowEvent, 'findMany').mockResolvedValueOnce([])
 
       await repository.findEventsByRunId('550e8400-e29b-41d4-a716-446655440001')
 
-      expect(db.client.workflowEvent.findMany).toHaveBeenCalledWith({
+      expect(prisma.workflowEvent.findMany).toHaveBeenCalledWith({
         where: { runId: '550e8400-e29b-41d4-a716-446655440001' },
         orderBy: { sequence: 'asc' },
         take: 100,
@@ -150,16 +148,16 @@ describe('EventPrismaRepository', () => {
 
   describe('getNextSequence', () => {
     it('should return next sequence number', async () => {
-      vi.spyOn(db.client, '$queryRaw').mockResolvedValueOnce([{ sequence: 6 }])
+      vi.spyOn(prisma, '$queryRaw').mockResolvedValueOnce([{ sequence: 6 }])
 
       const result = await repository.getNextSequence('550e8400-e29b-41d4-a716-446655440001')
 
       expect(result).toBe(6)
-      expect(db.client.$queryRaw).toHaveBeenCalled()
+      expect(prisma.$queryRaw).toHaveBeenCalled()
     })
 
     it('should return 1 if no events exist', async () => {
-      vi.spyOn(db.client, '$queryRaw').mockResolvedValueOnce([{ sequence: 1 }])
+      vi.spyOn(prisma, '$queryRaw').mockResolvedValueOnce([{ sequence: 1 }])
 
       const result = await repository.getNextSequence('550e8400-e29b-41d4-a716-446655440001')
 

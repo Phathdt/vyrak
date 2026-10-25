@@ -6,8 +6,8 @@ export default defineConfig({
     environment: 'node',
     testTimeout: 60_000,
     hookTimeout: 120_000,
-    include: ['**/*.integration.spec.ts', '**/*.integration.test.ts', '**/__tests__/integration/**/*.ts'],
-    exclude: ['**/node_modules/**', '**/dist/**', '**/apps/e2e/**'],
+    include: ['**/*.integration.spec.ts', '**/*.integration.test.ts'],
+    exclude: ['**/node_modules/**', '**/dist/**', '**/apps/e2e/**', '**/*-utils.ts', '**/test-utils.ts'],
     // Run tests sequentially in a single worker to allow sharing global test database
     pool: 'forks',
     singleFork: true,

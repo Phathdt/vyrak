@@ -1,4 +1,4 @@
-import { DatabaseService } from '@vyrak/database'
+import { Prisma, PrismaClient } from '@vyrak/database'
 
 import {
   CreateEventParams,
@@ -9,7 +9,7 @@ import {
 } from '../../domain'
 
 export class EventPrismaRepository implements IEventRepository {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(private readonly prisma: PrismaClient) {}
 
   async appendEvent(event: CreateEventParams): Promise<WorkflowEventEntity> {
     try {
@@ -18,11 +18,11 @@ export class EventPrismaRepository implements IEventRepository {
       const lockId = this.getLockId(event.runId)
 
       // Acquire advisory lock
-      await this.db.client.$executeRaw`SELECT pg_advisory_lock(${lockId})`
+      await this.prisma.$executeRaw`SELECT pg_advisory_lock(${lockId})`
 
       try {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma TransactionClient type
-        const result = await this.db.client.$transaction(async (tx: any) => {
+        const result = await this.prisma.$transaction(async (tx: any) => {
           // Get next sequence
           const sequenceResult = (await tx.$queryRaw`
             SELECT COALESCE(MAX(sequence), 0) + 1 as sequence
@@ -40,7 +40,7 @@ export class EventPrismaRepository implements IEventRepository {
               stepRunId: event.stepRunId ?? null,
               sequence: nextSequence,
               eventType: event.eventType,
-              payload: event.payload,
+              payload: event.payload as Prisma.InputJsonValue,
             },
           })
         })
@@ -48,7 +48,7 @@ export class EventPrismaRepository implements IEventRepository {
         return this.mapToDomain(result)
       } finally {
         // Always release lock
-        await this.db.client.$executeRaw`SELECT pg_advisory_unlock(${lockId})`
+        await this.prisma.$executeRaw`SELECT pg_advisory_unlock(${lockId})`
       }
     } catch (error: unknown) {
       throw new WorkflowRepositoryError(
@@ -70,7 +70,7 @@ export class EventPrismaRepository implements IEventRepository {
 
   async findEventsByRunId(runId: string, limit: number = 100, offset: number = 0): Promise<WorkflowEventEntity[]> {
     try {
-      const events = await this.db.client.workflowEvent.findMany({
+      const events = await this.prisma.workflowEvent.findMany({
         where: { runId },
         orderBy: { sequence: 'asc' },
         take: limit,
@@ -89,7 +89,7 @@ export class EventPrismaRepository implements IEventRepository {
   async getNextSequence(runId: string): Promise<number> {
     try {
       // Use $queryRaw for better read-after-write consistency
-      const result = (await this.db.client.$queryRaw`
+      const result = (await this.prisma.$queryRaw`
         SELECT COALESCE(MAX(sequence), 0) + 1 as sequence
         FROM workflow_events
         WHERE run_id = ${runId}

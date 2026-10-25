@@ -1,4 +1,5 @@
-import { DatabaseService, Prisma } from '@vyrak/database'
+import type { PrismaClient } from '@vyrak/database'
+import { Prisma } from '@vyrak/database'
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -13,7 +14,7 @@ import { WorkflowPrismaRepository } from '../../../infras'
 
 describe('WorkflowPrismaRepository', () => {
   let repository: WorkflowPrismaRepository
-  let db: DatabaseService
+  let prisma: PrismaClient
 
   const mockWorkflowRun = {
     id: '123e4567-e89b-12d3-a456-426614174000',
@@ -37,17 +38,15 @@ describe('WorkflowPrismaRepository', () => {
   }
 
   beforeEach(() => {
-    db = {
-      client: {
-        workflowRun: {
-          create: vi.fn(),
-          findUnique: vi.fn(),
-          update: vi.fn(),
-        },
+    prisma = {
+      workflowRun: {
+        create: vi.fn(),
+        findUnique: vi.fn(),
+        update: vi.fn(),
       },
     } as any
 
-    repository = new WorkflowPrismaRepository(db)
+    repository = new WorkflowPrismaRepository(prisma)
   })
 
   afterEach(() => {
@@ -66,14 +65,14 @@ describe('WorkflowPrismaRepository', () => {
     }
 
     it('should create a workflow run successfully', async () => {
-      vi.spyOn(db.client.workflowRun, 'create').mockResolvedValueOnce(mockWorkflowRun)
+      vi.spyOn(prisma.workflowRun, 'create').mockResolvedValueOnce(mockWorkflowRun)
 
       const result = await repository.createRun(createParams)
 
       expect(result.id).toBe('123e4567-e89b-12d3-a456-426614174000')
       expect(result.state).toBe(WorkflowState.QUEUED)
       expect(result.workflowKey).toBe('deploy-app')
-      expect(db.client.workflowRun.create).toHaveBeenCalledWith({
+      expect(prisma.workflowRun.create).toHaveBeenCalledWith({
         data: {
           organizationId: '123e4567-e89b-12d3-a456-426614174001',
           projectId: '123e4567-e89b-12d3-a456-426614174002',
@@ -93,7 +92,7 @@ describe('WorkflowPrismaRepository', () => {
         clientVersion: '5.0.0',
       })
 
-      vi.spyOn(db.client.workflowRun, 'create').mockRejectedValue(prismaError)
+      vi.spyOn(prisma.workflowRun, 'create').mockRejectedValue(prismaError)
 
       await expect(repository.createRun(createParams)).rejects.toThrow(WorkflowAlreadyExistsError)
       await expect(repository.createRun(createParams)).rejects.toThrow(
@@ -102,7 +101,7 @@ describe('WorkflowPrismaRepository', () => {
     })
 
     it('should throw WorkflowRepositoryError on other database errors', async () => {
-      vi.spyOn(db.client.workflowRun, 'create').mockRejectedValueOnce(new Error('Database connection failed'))
+      vi.spyOn(prisma.workflowRun, 'create').mockRejectedValueOnce(new Error('Database connection failed'))
 
       await expect(repository.createRun(createParams)).rejects.toThrow(WorkflowRepositoryError)
       await expect(repository.createRun(createParams)).rejects.toThrow(/Failed to create workflow run/)
@@ -123,15 +122,15 @@ describe('WorkflowPrismaRepository', () => {
         input: null,
       }
 
-      vi.spyOn(db.client.workflowRun, 'create').mockResolvedValueOnce(runWithoutOptionals)
+      vi.spyOn(prisma.workflowRun, 'create').mockResolvedValueOnce(runWithoutOptionals)
 
       const result = await repository.createRun(paramsWithoutOptionals)
 
       expect(result.id).toBe('123e4567-e89b-12d3-a456-426614174000')
-      expect(db.client.workflowRun.create).toHaveBeenCalledWith({
+      expect(prisma.workflowRun.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           idempotencyKey: expect.any(String), // Auto-generated
-          input: null,
+          input: Prisma.JsonNull, // Changed from null to Prisma.JsonNull
         }),
       })
     })
@@ -139,20 +138,20 @@ describe('WorkflowPrismaRepository', () => {
 
   describe('findRunById', () => {
     it('should return workflow run by id', async () => {
-      vi.spyOn(db.client.workflowRun, 'findUnique').mockResolvedValueOnce(mockWorkflowRun)
+      vi.spyOn(prisma.workflowRun, 'findUnique').mockResolvedValueOnce(mockWorkflowRun)
 
       const result = await repository.findRunById('123e4567-e89b-12d3-a456-426614174000')
 
       expect(result).not.toBeNull()
       expect(result?.id).toBe('123e4567-e89b-12d3-a456-426614174000')
       expect(result?.state).toBe(WorkflowState.QUEUED)
-      expect(db.client.workflowRun.findUnique).toHaveBeenCalledWith({
+      expect(prisma.workflowRun.findUnique).toHaveBeenCalledWith({
         where: { id: '123e4567-e89b-12d3-a456-426614174000' },
       })
     })
 
     it('should return null if run not found', async () => {
-      vi.spyOn(db.client.workflowRun, 'findUnique').mockResolvedValueOnce(null)
+      vi.spyOn(prisma.workflowRun, 'findUnique').mockResolvedValueOnce(null)
 
       const result = await repository.findRunById('nonexistent')
 
@@ -160,7 +159,7 @@ describe('WorkflowPrismaRepository', () => {
     })
 
     it('should throw WorkflowRepositoryError on database error', async () => {
-      vi.spyOn(db.client.workflowRun, 'findUnique').mockRejectedValueOnce(new Error('Database error'))
+      vi.spyOn(prisma.workflowRun, 'findUnique').mockRejectedValueOnce(new Error('Database error'))
 
       await expect(repository.findRunById('123e4567-e89b-12d3-a456-426614174000')).rejects.toThrow(
         WorkflowRepositoryError
@@ -176,7 +175,7 @@ describe('WorkflowPrismaRepository', () => {
         startedAt: new Date('2024-01-01T01:00:00Z'),
       }
 
-      vi.spyOn(db.client.workflowRun, 'update').mockResolvedValueOnce({
+      vi.spyOn(prisma.workflowRun, 'update').mockResolvedValueOnce({
         ...mockWorkflowRun,
         status: 'running',
         currentStepKey: 'step-1',
@@ -185,7 +184,7 @@ describe('WorkflowPrismaRepository', () => {
 
       await repository.updateRunState('123e4567-e89b-12d3-a456-426614174000', stateUpdate)
 
-      expect(db.client.workflowRun.update).toHaveBeenCalledWith({
+      expect(prisma.workflowRun.update).toHaveBeenCalledWith({
         where: { id: '123e4567-e89b-12d3-a456-426614174000' },
         data: {
           status: WorkflowState.RUNNING,
@@ -206,7 +205,7 @@ describe('WorkflowPrismaRepository', () => {
         completedAt: new Date('2024-01-01T02:00:00Z'),
       }
 
-      vi.spyOn(db.client.workflowRun, 'update').mockResolvedValueOnce({
+      vi.spyOn(prisma.workflowRun, 'update').mockResolvedValueOnce({
         ...mockWorkflowRun,
         status: 'failed',
         errorCode: 'DEPLOY_FAILED',
@@ -216,7 +215,7 @@ describe('WorkflowPrismaRepository', () => {
 
       await repository.updateRunState('123e4567-e89b-12d3-a456-426614174000', stateUpdate)
 
-      expect(db.client.workflowRun.update).toHaveBeenCalledWith({
+      expect(prisma.workflowRun.update).toHaveBeenCalledWith({
         where: { id: '123e4567-e89b-12d3-a456-426614174000' },
         data: stateUpdate,
       })
@@ -228,7 +227,7 @@ describe('WorkflowPrismaRepository', () => {
         clientVersion: '5.0.0',
       })
 
-      vi.spyOn(db.client.workflowRun, 'update').mockRejectedValueOnce(prismaError)
+      vi.spyOn(prisma.workflowRun, 'update').mockRejectedValueOnce(prismaError)
 
       await expect(repository.updateRunState('nonexistent', { status: WorkflowState.RUNNING })).rejects.toThrow(
         WorkflowNotFoundError
@@ -236,7 +235,7 @@ describe('WorkflowPrismaRepository', () => {
     })
 
     it('should throw WorkflowRepositoryError on other database errors', async () => {
-      vi.spyOn(db.client.workflowRun, 'update').mockRejectedValueOnce(new Error('Database error'))
+      vi.spyOn(prisma.workflowRun, 'update').mockRejectedValueOnce(new Error('Database error'))
 
       await expect(
         repository.updateRunState('123e4567-e89b-12d3-a456-426614174000', { status: WorkflowState.RUNNING })
@@ -246,7 +245,7 @@ describe('WorkflowPrismaRepository', () => {
 
   describe('findRunByIdempotencyKey', () => {
     it('should find run by idempotency key', async () => {
-      vi.spyOn(db.client.workflowRun, 'findUnique').mockResolvedValueOnce(mockWorkflowRun)
+      vi.spyOn(prisma.workflowRun, 'findUnique').mockResolvedValueOnce(mockWorkflowRun)
 
       const result = await repository.findRunByIdempotencyKey(
         '123e4567-e89b-12d3-a456-426614174001',
@@ -256,7 +255,7 @@ describe('WorkflowPrismaRepository', () => {
       expect(result).not.toBeNull()
       expect(result?.id).toBe('123e4567-e89b-12d3-a456-426614174000')
       expect(result?.idempotencyKey).toBe('123e4567-e89b-12d3-a456-426614174004')
-      expect(db.client.workflowRun.findUnique).toHaveBeenCalledWith({
+      expect(prisma.workflowRun.findUnique).toHaveBeenCalledWith({
         where: {
           organizationId_idempotencyKey: {
             organizationId: '123e4567-e89b-12d3-a456-426614174001',
@@ -267,7 +266,7 @@ describe('WorkflowPrismaRepository', () => {
     })
 
     it('should return null if idempotency key not found', async () => {
-      vi.spyOn(db.client.workflowRun, 'findUnique').mockResolvedValueOnce(null)
+      vi.spyOn(prisma.workflowRun, 'findUnique').mockResolvedValueOnce(null)
 
       const result = await repository.findRunByIdempotencyKey('123e4567-e89b-12d3-a456-426614174001', 'nonexistent')
 
@@ -275,7 +274,7 @@ describe('WorkflowPrismaRepository', () => {
     })
 
     it('should throw WorkflowRepositoryError on database error', async () => {
-      vi.spyOn(db.client.workflowRun, 'findUnique').mockRejectedValueOnce(new Error('Database error'))
+      vi.spyOn(prisma.workflowRun, 'findUnique').mockRejectedValueOnce(new Error('Database error'))
 
       await expect(
         repository.findRunByIdempotencyKey(
@@ -291,7 +290,7 @@ describe('WorkflowPrismaRepository', () => {
       const cancelledAt = new Date('2024-01-01T01:30:00Z')
       vi.useFakeTimers().setSystemTime(cancelledAt)
 
-      vi.spyOn(db.client.workflowRun, 'update').mockResolvedValueOnce({
+      vi.spyOn(prisma.workflowRun, 'update').mockResolvedValueOnce({
         ...mockWorkflowRun,
         status: 'cancelled',
         cancelRequestedAt: cancelledAt,
@@ -299,7 +298,7 @@ describe('WorkflowPrismaRepository', () => {
 
       await repository.cancelRun('123e4567-e89b-12d3-a456-426614174000')
 
-      expect(db.client.workflowRun.update).toHaveBeenCalledWith({
+      expect(prisma.workflowRun.update).toHaveBeenCalledWith({
         where: { id: '123e4567-e89b-12d3-a456-426614174000' },
         data: {
           cancelRequestedAt: cancelledAt,
@@ -316,13 +315,13 @@ describe('WorkflowPrismaRepository', () => {
         clientVersion: '5.0.0',
       })
 
-      vi.spyOn(db.client.workflowRun, 'update').mockRejectedValueOnce(prismaError)
+      vi.spyOn(prisma.workflowRun, 'update').mockRejectedValueOnce(prismaError)
 
       await expect(repository.cancelRun('nonexistent')).rejects.toThrow(WorkflowNotFoundError)
     })
 
     it('should throw WorkflowRepositoryError on other database errors', async () => {
-      vi.spyOn(db.client.workflowRun, 'update').mockRejectedValueOnce(new Error('Database error'))
+      vi.spyOn(prisma.workflowRun, 'update').mockRejectedValueOnce(new Error('Database error'))
 
       await expect(repository.cancelRun('123e4567-e89b-12d3-a456-426614174000')).rejects.toThrow(
         WorkflowRepositoryError

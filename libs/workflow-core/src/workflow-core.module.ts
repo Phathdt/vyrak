@@ -31,17 +31,17 @@ import {
     },
     {
       provide: WORKFLOW_REPOSITORY,
-      useFactory: (db: DatabaseService) => new WorkflowPrismaRepository(db),
+      useFactory: (db: DatabaseService) => new WorkflowPrismaRepository(db.client),
       inject: [DatabaseService],
     },
     {
       provide: STEP_REPOSITORY,
-      useFactory: (db: DatabaseService) => new StepPrismaRepository(db),
+      useFactory: (db: DatabaseService) => new StepPrismaRepository(db.client),
       inject: [DatabaseService],
     },
     {
       provide: EVENT_REPOSITORY,
-      useFactory: (db: DatabaseService) => new EventPrismaRepository(db),
+      useFactory: (db: DatabaseService) => new EventPrismaRepository(db.client),
       inject: [DatabaseService],
     },
   ],
