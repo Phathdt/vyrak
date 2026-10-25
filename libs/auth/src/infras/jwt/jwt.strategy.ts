@@ -1,12 +1,13 @@
 import { PassportStrategy } from '@nestjs/passport'
 
 import { ExtractJwt, Strategy } from 'passport-jwt'
+import type { CustomConfigService } from '@vyrak/custom-config'
 
 import type { JwtPayload } from './jwt.provider'
 
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor() {
-    const secretKey = process.env.JWT_SECRET || 'development-secret-key-please-change-in-production'
+  constructor(config: CustomConfigService) {
+    const secretKey = config.jwt.secret
 
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),

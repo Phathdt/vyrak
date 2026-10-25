@@ -59,9 +59,8 @@ import {
     // Agent executor (use fake for testing, Claude for production)
     {
       provide: AGENT_EXECUTOR,
-      useFactory: () => {
-        // Use environment variable to switch between fake and real executor
-        const useFake = process.env.USE_FAKE_AGENT === 'true'
+      useFactory: (config: CustomConfigService) => {
+        const useFake = config.agentRuntime.useFakeAgent
 
         if (useFake) {
           return new FakeAgentExecutor({
@@ -72,10 +71,10 @@ import {
         }
 
         return new ClaudeCodeExecutor({
-          cliPath: process.env.CLAUDE_CLI_PATH || 'claude',
+          cliPath: config.agentRuntime.claudeCliPath,
         })
       },
-      inject: [],
+      inject: [CustomConfigService],
     },
   ],
   exports: [AGENT_EXECUTOR, WORKSPACE_MANAGER, ARTIFACT_MANAGER, ARTIFACT_REPOSITORY],

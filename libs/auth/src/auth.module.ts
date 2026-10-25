@@ -1,16 +1,29 @@
 import { Module } from '@nestjs/common'
 import { PassportModule } from '@nestjs/passport'
 import { DatabaseModule, DatabaseService } from '@vyrak/database'
+import { CustomConfigModule, CustomConfigService } from '@vyrak/custom-config'
 
 import { AuthService, PasswordService } from './application'
 import { AuthPrismaRepository, JwtProvider, JwtStrategy } from './infras'
 
 @Module({
-  imports: [DatabaseModule, PassportModule.register({ defaultStrategy: 'jwt' })],
+  imports: [DatabaseModule, CustomConfigModule, PassportModule.register({ defaultStrategy: 'jwt' })],
   providers: [
-    JwtProvider,
-    JwtStrategy,
     PasswordService,
+    {
+      provide: JwtProvider,
+      useFactory: (config: CustomConfigService) => {
+        return new JwtProvider(config)
+      },
+      inject: [CustomConfigService],
+    },
+    {
+      provide: JwtStrategy,
+      useFactory: (config: CustomConfigService) => {
+        return new JwtStrategy(config)
+      },
+      inject: [CustomConfigService],
+    },
     {
       provide: AuthService,
       useFactory: (databaseService: DatabaseService, jwtProvider: JwtProvider, passwordService: PasswordService) => {
