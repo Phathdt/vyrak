@@ -10,6 +10,11 @@ export default defineConfig({
     // Vitest 4+ moved poolOptions to top level
     pool: 'forks',
     singleFork: true,
+    exclude: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/apps/e2e/**', // E2E tests run with Playwright, not Vitest
+    ],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],
