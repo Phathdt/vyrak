@@ -11,7 +11,7 @@ function shouldIgnoreFile(filename) {
 }
 
 function shouldIgnoreDirectory(dirName) {
-  return dirName === 'typechains' || dirName === 'factories'
+  return dirName === 'typechains' || dirName === 'factories' || dirName === '__tests__'
 }
 
 function shouldIgnoreModule(moduleName) {
@@ -53,7 +53,7 @@ function processModule(dirPath) {
     .filter((entry) => entry.isFile() && entry.name.endsWith('.ts') && !shouldIgnoreFile(entry.name))
     .map((entry) => path.join(dirPath, entry.name))
 
-  const subdirectories = entries.filter((entry) => entry.isDirectory())
+  const subdirectories = entries.filter((entry) => entry.isDirectory() && !shouldIgnoreDirectory(entry.name))
   const subDirExports = subdirectories
     .map((dir) => {
       const subdirPath = path.join(dirPath, dir.name)

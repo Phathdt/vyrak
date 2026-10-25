@@ -7,7 +7,7 @@ import { StepStatus } from '../step-types'
 export { StepStatus }
 
 /**
- * Schema for StepRunEntity validation
+ * Schema for StepRun validation
  */
 export const StepRunSchema = z.object({
   id: z.string().uuid(),
@@ -29,195 +29,132 @@ export const StepRunSchema = z.object({
   completedAt: z.date().optional(),
 })
 
-export type StepRunData = z.infer<typeof StepRunSchema>
+export type StepRun = z.infer<typeof StepRunSchema>
 
 /**
- * Domain entity for a step run
- * Manages step lifecycle and retry logic
+ * Validate step run data
  */
-export class StepRunEntity {
-  constructor(
-    public readonly id: string,
-    public readonly runId: string,
-    public readonly stepKey: string,
-    public readonly organizationId: string,
-    public readonly projectId: string,
-    public status: StepStatus,
-    public attempt: number,
-    public readonly maxAttempts: number,
-    public inputRef?: string,
-    public outputRef?: string,
-    public errorCode?: string,
-    public errorMessage?: string,
-    public retryable: boolean = false,
-    public readonly createdAt: Date = new Date(),
-    public updatedAt: Date = new Date(),
-    public startedAt?: Date,
-    public completedAt?: Date
-  ) {
-    this.validate()
+function validateStepRun(data: unknown): StepRun {
+  const parsed = StepRunSchema.safeParse(data)
+  if (!parsed.success) {
+    throw new InvalidStepStateError(`Invalid step run: ${parsed.error.message}`)
+  }
+  return parsed.data
+}
+
+/**
+ * Status check functions
+ */
+export function isStepRunning(step: StepRun): boolean {
+  return step.status === StepStatus.RUNNING
+}
+
+export function isStepTerminal(step: StepRun): boolean {
+  return [StepStatus.SUCCEEDED, StepStatus.FAILED, StepStatus.SKIPPED].includes(step.status)
+}
+
+export function isStepSucceeded(step: StepRun): boolean {
+  return step.status === StepStatus.SUCCEEDED
+}
+
+export function isStepFailed(step: StepRun): boolean {
+  return step.status === StepStatus.FAILED
+}
+
+/**
+ * Retry logic functions
+ */
+export function canRetryStep(step: StepRun): boolean {
+  return step.retryable && step.attempt < step.maxAttempts
+}
+
+export function incrementAttempt(step: StepRun): StepRun {
+  if (step.attempt >= step.maxAttempts) {
+    throw new InvalidStepStateError(`Cannot increment attempt: already at max attempts (${step.maxAttempts})`)
   }
 
-  /**
-   * Validate entity invariants
-   */
-  private validate(): void {
-    const parsed = StepRunSchema.safeParse({
-      id: this.id,
-      runId: this.runId,
-      stepKey: this.stepKey,
-      organizationId: this.organizationId,
-      projectId: this.projectId,
-      status: this.status,
-      attempt: this.attempt,
-      maxAttempts: this.maxAttempts,
-      inputRef: this.inputRef,
-      outputRef: this.outputRef,
-      errorCode: this.errorCode,
-      errorMessage: this.errorMessage,
-      retryable: this.retryable,
-      createdAt: this.createdAt,
-      updatedAt: this.updatedAt,
-      startedAt: this.startedAt,
-      completedAt: this.completedAt,
-    })
+  return validateStepRun({
+    ...step,
+    attempt: step.attempt + 1,
+    updatedAt: new Date(),
+  })
+}
 
-    if (!parsed.success) {
-      throw new InvalidStepStateError(`Invalid step run: ${parsed.error.message}`)
-    }
+/**
+ * Lifecycle transition functions
+ */
+export function startStepRun(step: StepRun): StepRun {
+  if (step.status !== StepStatus.PENDING) {
+    throw new InvalidStepStateError(`Cannot start step: current status is ${step.status}`)
   }
 
-  /**
-   * Check if step is currently running
-   */
-  isRunning(): boolean {
-    return this.status === StepStatus.RUNNING
+  return validateStepRun({
+    ...step,
+    status: StepStatus.RUNNING,
+    startedAt: new Date(),
+    updatedAt: new Date(),
+  })
+}
+
+export function succeedStepRun(step: StepRun, outputRef?: string): StepRun {
+  if (!isStepRunning(step)) {
+    throw new InvalidStepStateError(`Cannot succeed step: current status is ${step.status}`)
   }
 
-  /**
-   * Check if step is in terminal state
-   */
-  isTerminal(): boolean {
-    return [StepStatus.SUCCEEDED, StepStatus.FAILED, StepStatus.SKIPPED].includes(this.status)
+  return validateStepRun({
+    ...step,
+    status: StepStatus.SUCCEEDED,
+    outputRef,
+    completedAt: new Date(),
+    updatedAt: new Date(),
+  })
+}
+
+export function failStepRun(step: StepRun, errorCode: string, errorMessage: string, retryable: boolean): StepRun {
+  if (!isStepRunning(step)) {
+    throw new InvalidStepStateError(`Cannot fail step: current status is ${step.status}`)
   }
 
-  /**
-   * Check if step can be retried
-   */
-  canRetry(): boolean {
-    return this.retryable && this.attempt < this.maxAttempts
+  return validateStepRun({
+    ...step,
+    status: StepStatus.FAILED,
+    errorCode,
+    errorMessage,
+    retryable,
+    completedAt: new Date(),
+    updatedAt: new Date(),
+  })
+}
+
+export function skipStepRun(step: StepRun): StepRun {
+  if (step.status !== StepStatus.PENDING) {
+    throw new InvalidStepStateError(`Cannot skip step: current status is ${step.status}`)
   }
 
-  /**
-   * Increment attempt counter
-   */
-  incrementAttempt(): void {
-    if (this.attempt >= this.maxAttempts) {
-      throw new InvalidStepStateError(`Cannot increment attempt: already at max attempts (${this.maxAttempts})`)
-    }
-    this.attempt++
-    this.updatedAt = new Date()
+  return validateStepRun({
+    ...step,
+    status: StepStatus.SKIPPED,
+    completedAt: new Date(),
+    updatedAt: new Date(),
+  })
+}
+
+/**
+ * Factory function to create a new step run
+ */
+export function createStepRun(
+  data: Partial<StepRun> &
+    Required<Pick<StepRun, 'id' | 'runId' | 'stepKey' | 'organizationId' | 'projectId' | 'maxAttempts'>>
+): StepRun {
+  const now = new Date()
+  const full: StepRun = {
+    status: StepStatus.PENDING,
+    attempt: 1,
+    retryable: false,
+    createdAt: now,
+    updatedAt: now,
+    ...data,
   }
 
-  /**
-   * Start step execution
-   */
-  start(): void {
-    if (this.status !== StepStatus.PENDING) {
-      throw new InvalidStepStateError(`Cannot start step: current status is ${this.status}`)
-    }
-    this.status = StepStatus.RUNNING
-    this.startedAt = new Date()
-    this.updatedAt = new Date()
-  }
-
-  /**
-   * Mark step as succeeded
-   */
-  succeed(outputRef?: string): void {
-    if (!this.isRunning()) {
-      throw new InvalidStepStateError(`Cannot succeed step: current status is ${this.status}`)
-    }
-    this.status = StepStatus.SUCCEEDED
-    this.outputRef = outputRef
-    this.completedAt = new Date()
-    this.updatedAt = new Date()
-  }
-
-  /**
-   * Mark step as failed
-   */
-  fail(errorCode: string, errorMessage: string, retryable: boolean): void {
-    if (!this.isRunning()) {
-      throw new InvalidStepStateError(`Cannot fail step: current status is ${this.status}`)
-    }
-    this.status = StepStatus.FAILED
-    this.errorCode = errorCode
-    this.errorMessage = errorMessage
-    this.retryable = retryable
-    this.completedAt = new Date()
-    this.updatedAt = new Date()
-  }
-
-  /**
-   * Mark step as skipped
-   */
-  skip(): void {
-    if (this.status !== StepStatus.PENDING) {
-      throw new InvalidStepStateError(`Cannot skip step: current status is ${this.status}`)
-    }
-    this.status = StepStatus.SKIPPED
-    this.completedAt = new Date()
-    this.updatedAt = new Date()
-  }
-
-  /**
-   * Get data as plain object for serialization
-   */
-  toData(): StepRunData {
-    return {
-      id: this.id,
-      runId: this.runId,
-      stepKey: this.stepKey,
-      organizationId: this.organizationId,
-      projectId: this.projectId,
-      status: this.status,
-      attempt: this.attempt,
-      maxAttempts: this.maxAttempts,
-      inputRef: this.inputRef,
-      outputRef: this.outputRef,
-      errorCode: this.errorCode,
-      errorMessage: this.errorMessage,
-      retryable: this.retryable,
-      createdAt: this.createdAt,
-      updatedAt: this.updatedAt,
-      startedAt: this.startedAt,
-      completedAt: this.completedAt,
-    }
-  }
-
-  /**
-   * Create entity from data
-   */
-  static fromData(data: StepRunData): StepRunEntity {
-    return new StepRunEntity(
-      data.id,
-      data.runId,
-      data.stepKey,
-      data.organizationId,
-      data.projectId,
-      data.status,
-      data.attempt,
-      data.maxAttempts,
-      data.inputRef,
-      data.outputRef,
-      data.errorCode,
-      data.errorMessage,
-      data.retryable,
-      data.createdAt,
-      data.updatedAt,
-      data.startedAt,
-      data.completedAt
-    )
-  }
+  return validateStepRun(full)
 }

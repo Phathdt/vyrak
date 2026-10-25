@@ -1,346 +1,352 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { InvalidStepStateError, StepRunEntity, StepStatus } from '../../../domain'
+import {
+  canRetryStep,
+  createStepRun,
+  failStepRun,
+  incrementAttempt,
+  InvalidStepStateError,
+  isStepFailed,
+  isStepRunning,
+  isStepSucceeded,
+  isStepTerminal,
+  skipStepRun,
+  startStepRun,
+  StepStatus,
+  succeedStepRun,
+  type StepRun,
+} from '../../../domain'
 
-describe('StepRunEntity', () => {
-  let entity: StepRunEntity
+describe('StepRun (Functional)', () => {
+  let step: StepRun
 
   beforeEach(() => {
-    entity = new StepRunEntity(
-      '123e4567-e89b-12d3-a456-426614174000',
-      '456e7890-e89b-12d3-a456-426614174001',
-      'step-1',
-      '789e0123-e89b-12d3-a456-426614174002',
-      '999e0123-e89b-12d3-a456-426614174003',
-      StepStatus.PENDING,
-      1,
-      3
-    )
+    step = createStepRun({
+      id: '123e4567-e89b-12d3-a456-426614174000',
+      runId: '456e7890-e89b-12d3-a456-426614174001',
+      stepKey: 'step-1',
+      organizationId: '789e0123-e89b-12d3-a456-426614174002',
+      projectId: '999e0123-e89b-12d3-a456-426614174003',
+      maxAttempts: 3,
+    })
   })
 
   describe('creation and validation', () => {
-    it('creates entity with correct initial state', () => {
-      expect(entity.status).toBe(StepStatus.PENDING)
-      expect(entity.attempt).toBe(1)
-      expect(entity.maxAttempts).toBe(3)
-      expect(entity.isRunning()).toBe(false)
-      expect(entity.isTerminal()).toBe(false)
+    it('creates step with correct initial state', () => {
+      expect(step.status).toBe(StepStatus.PENDING)
+      expect(step.attempt).toBe(1)
+      expect(step.maxAttempts).toBe(3)
+      expect(isStepRunning(step)).toBe(false)
+      expect(isStepTerminal(step)).toBe(false)
     })
 
     it('validates UUID format for id', () => {
       expect(() => {
-        new StepRunEntity(
-          'invalid-uuid',
-          '456e7890-e89b-12d3-a456-426614174001',
-          'step-1',
-          '789e0123-e89b-12d3-a456-426614174002',
-          '999e0123-e89b-12d3-a456-426614174003',
-          StepStatus.PENDING,
-          1,
-          3
-        )
+        createStepRun({
+          id: 'invalid-uuid',
+          runId: '456e7890-e89b-12d3-a456-426614174001',
+          stepKey: 'step-1',
+          organizationId: '789e0123-e89b-12d3-a456-426614174002',
+          projectId: '999e0123-e89b-12d3-a456-426614174003',
+          maxAttempts: 3,
+        })
       }).toThrow(InvalidStepStateError)
     })
 
     it('validates stepKey is not empty', () => {
       expect(() => {
-        new StepRunEntity(
-          '123e4567-e89b-12d3-a456-426614174000',
-          '456e7890-e89b-12d3-a456-426614174001',
-          '', // empty key
-          '789e0123-e89b-12d3-a456-426614174002',
-          '999e0123-e89b-12d3-a456-426614174003',
-          StepStatus.PENDING,
-          1,
-          3
-        )
+        createStepRun({
+          id: '123e4567-e89b-12d3-a456-426614174000',
+          runId: '456e7890-e89b-12d3-a456-426614174001',
+          stepKey: '', // empty key
+          organizationId: '789e0123-e89b-12d3-a456-426614174002',
+          projectId: '999e0123-e89b-12d3-a456-426614174003',
+          maxAttempts: 3,
+        })
       }).toThrow(InvalidStepStateError)
     })
 
     it('validates attempt is positive integer', () => {
       expect(() => {
-        new StepRunEntity(
-          '123e4567-e89b-12d3-a456-426614174000',
-          '456e7890-e89b-12d3-a456-426614174001',
-          'step-1',
-          '789e0123-e89b-12d3-a456-426614174002',
-          '999e0123-e89b-12d3-a456-426614174003',
-          StepStatus.PENDING,
-          0, // invalid attempt
-          3
-        )
+        createStepRun({
+          id: '123e4567-e89b-12d3-a456-426614174000',
+          runId: '456e7890-e89b-12d3-a456-426614174001',
+          stepKey: 'step-1',
+          organizationId: '789e0123-e89b-12d3-a456-426614174002',
+          projectId: '999e0123-e89b-12d3-a456-426614174003',
+          attempt: 0, // invalid attempt
+          maxAttempts: 3,
+        })
       }).toThrow(InvalidStepStateError)
     })
 
     it('validates maxAttempts is positive integer', () => {
       expect(() => {
-        new StepRunEntity(
-          '123e4567-e89b-12d3-a456-426614174000',
-          '456e7890-e89b-12d3-a456-426614174001',
-          'step-1',
-          '789e0123-e89b-12d3-a456-426614174002',
-          '999e0123-e89b-12d3-a456-426614174003',
-          StepStatus.PENDING,
-          1,
-          0 // invalid maxAttempts
-        )
+        createStepRun({
+          id: '123e4567-e89b-12d3-a456-426614174000',
+          runId: '456e7890-e89b-12d3-a456-426614174001',
+          stepKey: 'step-1',
+          organizationId: '789e0123-e89b-12d3-a456-426614174002',
+          projectId: '999e0123-e89b-12d3-a456-426614174003',
+          maxAttempts: 0, // invalid maxAttempts
+        })
       }).toThrow(InvalidStepStateError)
     })
   })
 
   describe('lifecycle methods', () => {
     it('start transitions from pending to running', () => {
-      entity.start()
-      expect(entity.status).toBe(StepStatus.RUNNING)
-      expect(entity.startedAt).toBeDefined()
-      expect(entity.startedAt).toBeInstanceOf(Date)
+      const updated = startStepRun(step)
+      expect(updated.status).toBe(StepStatus.RUNNING)
+      expect(updated.startedAt).toBeDefined()
+      expect(updated.startedAt).toBeInstanceOf(Date)
     })
 
     it('start throws if not in pending state', () => {
-      entity.start()
-      expect(() => entity.start()).toThrow(InvalidStepStateError)
+      const running = startStepRun(step)
+      expect(() => startStepRun(running)).toThrow(InvalidStepStateError)
     })
 
     it('succeed transitions from running to succeeded', () => {
-      entity.start()
-      entity.succeed('output-ref-123')
-      expect(entity.status).toBe(StepStatus.SUCCEEDED)
-      expect(entity.outputRef).toBe('output-ref-123')
-      expect(entity.completedAt).toBeDefined()
+      const running = startStepRun(step)
+      const updated = succeedStepRun(running, 'output-ref-123')
+      expect(updated.status).toBe(StepStatus.SUCCEEDED)
+      expect(updated.outputRef).toBe('output-ref-123')
+      expect(updated.completedAt).toBeDefined()
     })
 
     it('succeed without outputRef', () => {
-      entity.start()
-      entity.succeed()
-      expect(entity.status).toBe(StepStatus.SUCCEEDED)
-      expect(entity.outputRef).toBeUndefined()
+      const running = startStepRun(step)
+      const updated = succeedStepRun(running)
+      expect(updated.status).toBe(StepStatus.SUCCEEDED)
+      expect(updated.outputRef).toBeUndefined()
     })
 
     it('succeed throws if not running', () => {
-      expect(() => entity.succeed()).toThrow(InvalidStepStateError)
+      expect(() => succeedStepRun(step)).toThrow(InvalidStepStateError)
     })
 
     it('fail transitions from running to failed', () => {
-      entity.start()
-      entity.fail('TIMEOUT', 'Step timed out', true)
-      expect(entity.status).toBe(StepStatus.FAILED)
-      expect(entity.errorCode).toBe('TIMEOUT')
-      expect(entity.errorMessage).toBe('Step timed out')
-      expect(entity.retryable).toBe(true)
-      expect(entity.completedAt).toBeDefined()
+      const running = startStepRun(step)
+      const updated = failStepRun(running, 'TIMEOUT', 'Step timed out', true)
+      expect(updated.status).toBe(StepStatus.FAILED)
+      expect(updated.errorCode).toBe('TIMEOUT')
+      expect(updated.errorMessage).toBe('Step timed out')
+      expect(updated.retryable).toBe(true)
+      expect(updated.completedAt).toBeDefined()
     })
 
     it('fail throws if not running', () => {
-      expect(() => entity.fail('ERROR', 'Message', false)).toThrow(InvalidStepStateError)
+      expect(() => failStepRun(step, 'ERROR', 'Message', false)).toThrow(InvalidStepStateError)
     })
 
     it('skip transitions from pending to skipped', () => {
-      entity.skip()
-      expect(entity.status).toBe(StepStatus.SKIPPED)
-      expect(entity.completedAt).toBeDefined()
+      const updated = skipStepRun(step)
+      expect(updated.status).toBe(StepStatus.SKIPPED)
+      expect(updated.completedAt).toBeDefined()
     })
 
     it('skip throws if not pending', () => {
-      entity.start()
-      expect(() => entity.skip()).toThrow(InvalidStepStateError)
+      const running = startStepRun(step)
+      expect(() => skipStepRun(running)).toThrow(InvalidStepStateError)
     })
   })
 
   describe('retry logic', () => {
-    it('canRetry returns true when retryable and attempts remaining', () => {
-      entity.start()
-      entity.fail('ERROR', 'Message', true)
-      expect(entity.canRetry()).toBe(true)
+    it('canRetryStep returns true when retryable and attempts remaining', () => {
+      const running = startStepRun(step)
+      const failed = failStepRun(running, 'ERROR', 'Message', true)
+      expect(canRetryStep(failed)).toBe(true)
     })
 
-    it('canRetry returns false when not retryable', () => {
-      entity.start()
-      entity.fail('ERROR', 'Message', false)
-      expect(entity.canRetry()).toBe(false)
+    it('canRetryStep returns false when not retryable', () => {
+      const running = startStepRun(step)
+      const failed = failStepRun(running, 'ERROR', 'Message', false)
+      expect(canRetryStep(failed)).toBe(false)
     })
 
-    it('canRetry returns false when max attempts reached', () => {
-      entity.attempt = 3 // at max
-      entity.retryable = true
-      expect(entity.canRetry()).toBe(false)
+    it('canRetryStep returns false when max attempts reached', () => {
+      const atMax = createStepRun({
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        runId: '456e7890-e89b-12d3-a456-426614174001',
+        stepKey: 'step-1',
+        organizationId: '789e0123-e89b-12d3-a456-426614174002',
+        projectId: '999e0123-e89b-12d3-a456-426614174003',
+        maxAttempts: 3,
+        attempt: 3,
+        retryable: true,
+      })
+      expect(canRetryStep(atMax)).toBe(false)
     })
 
     it('incrementAttempt increases attempt counter', () => {
-      expect(entity.attempt).toBe(1)
-      entity.incrementAttempt()
-      expect(entity.attempt).toBe(2)
+      expect(step.attempt).toBe(1)
+      const updated = incrementAttempt(step)
+      expect(updated.attempt).toBe(2)
     })
 
     it('incrementAttempt throws when at max attempts', () => {
-      entity.attempt = 3 // at max
-      expect(() => entity.incrementAttempt()).toThrow(InvalidStepStateError)
+      const atMax = createStepRun({
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        runId: '456e7890-e89b-12d3-a456-426614174001',
+        stepKey: 'step-1',
+        organizationId: '789e0123-e89b-12d3-a456-426614174002',
+        projectId: '999e0123-e89b-12d3-a456-426614174003',
+        maxAttempts: 3,
+        attempt: 3,
+      })
+      expect(() => incrementAttempt(atMax)).toThrow(InvalidStepStateError)
     })
 
     it('incrementAttempt updates updatedAt', () => {
-      const oldUpdatedAt = entity.updatedAt
-      entity.incrementAttempt()
-      expect(entity.updatedAt.getTime()).toBeGreaterThanOrEqual(oldUpdatedAt.getTime())
+      const oldUpdatedAt = step.updatedAt
+      const updated = incrementAttempt(step)
+      expect(updated.updatedAt.getTime()).toBeGreaterThanOrEqual(oldUpdatedAt.getTime())
     })
   })
 
   describe('status checks', () => {
-    it('isRunning returns true only in running state', () => {
-      expect(entity.isRunning()).toBe(false)
-      entity.start()
-      expect(entity.isRunning()).toBe(true)
-      entity.succeed()
-      expect(entity.isRunning()).toBe(false)
+    it('isStepRunning returns true only in running state', () => {
+      expect(isStepRunning(step)).toBe(false)
+      const running = startStepRun(step)
+      expect(isStepRunning(running)).toBe(true)
+      const succeeded = succeedStepRun(running)
+      expect(isStepRunning(succeeded)).toBe(false)
     })
 
-    it('isTerminal returns true for terminal states', () => {
-      expect(entity.isTerminal()).toBe(false)
+    it('isStepTerminal returns true for terminal states', () => {
+      expect(isStepTerminal(step)).toBe(false)
 
-      entity.start()
-      expect(entity.isTerminal()).toBe(false)
+      const running = startStepRun(step)
+      expect(isStepTerminal(running)).toBe(false)
 
-      entity.succeed()
-      expect(entity.isTerminal()).toBe(true)
+      const succeeded = succeedStepRun(running)
+      expect(isStepTerminal(succeeded)).toBe(true)
     })
 
-    it('isTerminal recognizes all terminal states', () => {
+    it('isStepTerminal recognizes all terminal states', () => {
       // Succeeded
-      const succeededEntity = new StepRunEntity(
-        '123e4567-e89b-12d3-a456-426614174000',
-        '456e7890-e89b-12d3-a456-426614174001',
-        'step-1',
-        '789e0123-e89b-12d3-a456-426614174002',
-        '999e0123-e89b-12d3-a456-426614174003',
-        StepStatus.SUCCEEDED,
-        1,
-        3
-      )
-      expect(succeededEntity.isTerminal()).toBe(true)
+      const succeededStep = createStepRun({
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        runId: '456e7890-e89b-12d3-a456-426614174001',
+        stepKey: 'step-1',
+        organizationId: '789e0123-e89b-12d3-a456-426614174002',
+        projectId: '999e0123-e89b-12d3-a456-426614174003',
+        status: StepStatus.SUCCEEDED,
+        maxAttempts: 3,
+      })
+      expect(isStepTerminal(succeededStep)).toBe(true)
 
       // Failed
-      const failedEntity = new StepRunEntity(
-        '123e4567-e89b-12d3-a456-426614174000',
-        '456e7890-e89b-12d3-a456-426614174001',
-        'step-1',
-        '789e0123-e89b-12d3-a456-426614174002',
-        '999e0123-e89b-12d3-a456-426614174003',
-        StepStatus.FAILED,
-        1,
-        3
-      )
-      expect(failedEntity.isTerminal()).toBe(true)
+      const failedStep = createStepRun({
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        runId: '456e7890-e89b-12d3-a456-426614174001',
+        stepKey: 'step-1',
+        organizationId: '789e0123-e89b-12d3-a456-426614174002',
+        projectId: '999e0123-e89b-12d3-a456-426614174003',
+        status: StepStatus.FAILED,
+        maxAttempts: 3,
+      })
+      expect(isStepTerminal(failedStep)).toBe(true)
 
       // Skipped
-      const skippedEntity = new StepRunEntity(
-        '123e4567-e89b-12d3-a456-426614174000',
-        '456e7890-e89b-12d3-a456-426614174001',
-        'step-1',
-        '789e0123-e89b-12d3-a456-426614174002',
-        '999e0123-e89b-12d3-a456-426614174003',
-        StepStatus.SKIPPED,
-        1,
-        3
-      )
-      expect(skippedEntity.isTerminal()).toBe(true)
+      const skippedStep = createStepRun({
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        runId: '456e7890-e89b-12d3-a456-426614174001',
+        stepKey: 'step-1',
+        organizationId: '789e0123-e89b-12d3-a456-426614174002',
+        projectId: '999e0123-e89b-12d3-a456-426614174003',
+        status: StepStatus.SKIPPED,
+        maxAttempts: 3,
+      })
+      expect(isStepTerminal(skippedStep)).toBe(true)
+    })
+
+    it('isStepSucceeded returns true only for succeeded status', () => {
+      expect(isStepSucceeded(step)).toBe(false)
+      const running = startStepRun(step)
+      expect(isStepSucceeded(running)).toBe(false)
+      const succeeded = succeedStepRun(running)
+      expect(isStepSucceeded(succeeded)).toBe(true)
+    })
+
+    it('isStepFailed returns true only for failed status', () => {
+      expect(isStepFailed(step)).toBe(false)
+      const running = startStepRun(step)
+      expect(isStepFailed(running)).toBe(false)
+      const failed = failStepRun(running, 'ERROR', 'Message', false)
+      expect(isStepFailed(failed)).toBe(true)
     })
   })
 
   describe('serialization', () => {
-    it('toData returns complete data object', () => {
-      const data = entity.toData()
-      expect(data.id).toBe(entity.id)
-      expect(data.runId).toBe(entity.runId)
-      expect(data.stepKey).toBe(entity.stepKey)
-      expect(data.status).toBe(entity.status)
-      expect(data.attempt).toBe(entity.attempt)
-      expect(data.maxAttempts).toBe(entity.maxAttempts)
-      expect(data.createdAt).toBeInstanceOf(Date)
-    })
-
-    it('fromData creates entity from data', () => {
-      entity.inputRef = 'input-123'
-      entity.start()
-      entity.fail('ERROR', 'Test error', true)
-
-      const data = entity.toData()
-      const restored = StepRunEntity.fromData(data)
-
-      expect(restored.id).toBe(entity.id)
-      expect(restored.status).toBe(StepStatus.FAILED)
-      expect(restored.errorCode).toBe('ERROR')
-      expect(restored.errorMessage).toBe('Test error')
-      expect(restored.retryable).toBe(true)
-      expect(restored.inputRef).toBe('input-123')
-      expect(restored.startedAt).toBeDefined()
-      expect(restored.completedAt).toBeDefined()
-    })
-
     it('roundtrip serialization preserves all fields', () => {
-      entity.inputRef = 'input-ref'
-      entity.start()
-      entity.succeed('output-ref')
+      const withInput = { ...step, inputRef: 'input-ref' }
+      let running = startStepRun(withInput)
+      let succeeded = succeedStepRun(running, 'output-ref')
 
-      const data = entity.toData()
-      const restored = StepRunEntity.fromData(data)
-      const restoredData = restored.toData()
+      // Serialize and deserialize by just using the object
+      const reserialized = { ...succeeded }
 
-      expect(restoredData).toEqual(data)
+      expect(reserialized).toEqual(succeeded)
+      expect(reserialized.inputRef).toBe('input-ref')
+      expect(reserialized.outputRef).toBe('output-ref')
+      expect(reserialized.status).toBe(StepStatus.SUCCEEDED)
     })
   })
 
   describe('edge cases', () => {
     it('handles optional fields correctly', () => {
-      expect(entity.inputRef).toBeUndefined()
-      expect(entity.outputRef).toBeUndefined()
-      expect(entity.errorCode).toBeUndefined()
-      expect(entity.errorMessage).toBeUndefined()
-      expect(entity.startedAt).toBeUndefined()
-      expect(entity.completedAt).toBeUndefined()
+      expect(step.inputRef).toBeUndefined()
+      expect(step.outputRef).toBeUndefined()
+      expect(step.errorCode).toBeUndefined()
+      expect(step.errorMessage).toBeUndefined()
+      expect(step.startedAt).toBeUndefined()
+      expect(step.completedAt).toBeUndefined()
     })
 
     it('retryable defaults to false', () => {
-      expect(entity.retryable).toBe(false)
+      expect(step.retryable).toBe(false)
     })
 
     it('allows explicit inputRef', () => {
-      const entityWithInput = new StepRunEntity(
-        '123e4567-e89b-12d3-a456-426614174000',
-        '456e7890-e89b-12d3-a456-426614174001',
-        'step-1',
-        '789e0123-e89b-12d3-a456-426614174002',
-        '999e0123-e89b-12d3-a456-426614174003',
-        StepStatus.PENDING,
-        1,
-        3,
-        'input-ref-xyz'
-      )
-      expect(entityWithInput.inputRef).toBe('input-ref-xyz')
+      const stepWithInput = createStepRun({
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        runId: '456e7890-e89b-12d3-a456-426614174001',
+        stepKey: 'step-1',
+        organizationId: '789e0123-e89b-12d3-a456-426614174002',
+        projectId: '999e0123-e89b-12d3-a456-426614174003',
+        maxAttempts: 3,
+        inputRef: 'input-ref-xyz',
+      })
+      expect(stepWithInput.inputRef).toBe('input-ref-xyz')
     })
 
     it('complete retry workflow', () => {
       // First attempt
-      entity.start()
-      entity.fail('NETWORK_ERROR', 'Connection failed', true)
-      expect(entity.canRetry()).toBe(true)
+      let current = startStepRun(step)
+      current = failStepRun(current, 'NETWORK_ERROR', 'Connection failed', true)
+      expect(canRetryStep(current)).toBe(true)
 
       // Second attempt
-      entity.incrementAttempt()
-      expect(entity.attempt).toBe(2)
+      current = incrementAttempt(current)
+      expect(current.attempt).toBe(2)
 
       // Reset status to pending for retry (would be done by service)
-      entity.status = StepStatus.PENDING
-      entity.start()
-      entity.fail('NETWORK_ERROR', 'Connection failed', true)
-      expect(entity.canRetry()).toBe(true)
+      current = { ...current, status: StepStatus.PENDING }
+      current = startStepRun(current)
+      current = failStepRun(current, 'NETWORK_ERROR', 'Connection failed', true)
+      expect(canRetryStep(current)).toBe(true)
 
       // Third attempt (last)
-      entity.incrementAttempt()
-      expect(entity.attempt).toBe(3)
-      expect(entity.canRetry()).toBe(false) // At max attempts, cannot retry
+      current = incrementAttempt(current)
+      expect(current.attempt).toBe(3)
+      expect(canRetryStep(current)).toBe(false) // At max attempts, cannot retry
 
-      entity.status = StepStatus.PENDING
-      entity.start()
-      entity.succeed()
-      expect(entity.status).toBe(StepStatus.SUCCEEDED)
+      current = { ...current, status: StepStatus.PENDING }
+      current = startStepRun(current)
+      current = succeedStepRun(current)
+      expect(current.status).toBe(StepStatus.SUCCEEDED)
     })
   })
 })

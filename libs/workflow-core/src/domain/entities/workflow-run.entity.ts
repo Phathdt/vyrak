@@ -4,7 +4,7 @@ import { InvalidWorkflowStateError } from '../errors/invalid-workflow-state.erro
 import { WorkflowState, WorkflowStateMachine } from '../workflow-state'
 
 /**
- * Schema for WorkflowRunEntity validation
+ * Schema for WorkflowRun validation
  */
 export const WorkflowRunSchema = z.object({
   id: z.string().uuid(),
@@ -24,161 +24,114 @@ export const WorkflowRunSchema = z.object({
   completedAt: z.date().optional(),
 })
 
-export type WorkflowRunData = z.infer<typeof WorkflowRunSchema>
+export type WorkflowRun = z.infer<typeof WorkflowRunSchema>
 
 /**
- * Domain entity for a workflow run
- * Enforces business invariants and provides state management
+ * Validate a workflow run against domain invariants
+ * @throws InvalidWorkflowStateError
  */
-export class WorkflowRunEntity {
-  private stateMachine: WorkflowStateMachine
+function validateWorkflowRun(run: WorkflowRun): void {
+  const parsed = WorkflowRunSchema.safeParse(run)
 
-  constructor(
-    public readonly id: string,
-    public readonly workflowKey: string,
-    public readonly workflowVersion: string,
-    public readonly organizationId: string,
-    public readonly projectId: string,
-    public state: WorkflowState,
-    public readonly initiatedByUserId: string,
-    public readonly idempotencyKey: string,
-    public currentStepKey?: string,
-    public errorCode?: string,
-    public errorMessage?: string,
-    public readonly createdAt: Date = new Date(),
-    public updatedAt: Date = new Date(),
-    public startedAt?: Date,
-    public completedAt?: Date
-  ) {
-    this.stateMachine = new WorkflowStateMachine()
-    this.validate()
+  if (!parsed.success) {
+    throw new InvalidWorkflowStateError(`Invalid workflow run: ${parsed.error.message}`)
+  }
+}
+
+/**
+ * Create a new workflow run with the given data
+ * Validates all invariants before creation
+ * @throws InvalidWorkflowStateError
+ */
+export function createWorkflowRun(
+  data: Partial<WorkflowRun> &
+    Pick<
+      WorkflowRun,
+      'id' | 'workflowKey' | 'workflowVersion' | 'organizationId' | 'projectId' | 'initiatedByUserId' | 'idempotencyKey'
+    >
+): WorkflowRun {
+  const now = new Date()
+  const run: WorkflowRun = {
+    state: WorkflowState.QUEUED,
+    createdAt: now,
+    updatedAt: now,
+    ...data,
   }
 
-  /**
-   * Validate entity invariants
-   */
-  private validate(): void {
-    const parsed = WorkflowRunSchema.safeParse({
-      id: this.id,
-      workflowKey: this.workflowKey,
-      workflowVersion: this.workflowVersion,
-      organizationId: this.organizationId,
-      projectId: this.projectId,
-      state: this.state,
-      currentStepKey: this.currentStepKey,
-      initiatedByUserId: this.initiatedByUserId,
-      idempotencyKey: this.idempotencyKey,
-      errorCode: this.errorCode,
-      errorMessage: this.errorMessage,
-      createdAt: this.createdAt,
-      updatedAt: this.updatedAt,
-      startedAt: this.startedAt,
-      completedAt: this.completedAt,
-    })
+  validateWorkflowRun(run)
+  return run
+}
 
-    if (!parsed.success) {
-      throw new InvalidWorkflowStateError(`Invalid workflow run: ${parsed.error.message}`)
-    }
+/**
+ * Check if workflow can transition to running state
+ */
+export function canStartWorkflow(run: WorkflowRun): boolean {
+  return run.state === WorkflowState.QUEUED
+}
+
+/**
+ * Check if workflow can be cancelled
+ */
+export function canCancelWorkflow(run: WorkflowRun): boolean {
+  const stateMachine = new WorkflowStateMachine()
+  return !stateMachine.isTerminal(run.state)
+}
+
+/**
+ * Check if workflow is currently running
+ */
+export function isRunning(run: WorkflowRun): boolean {
+  return run.state === WorkflowState.RUNNING
+}
+
+/**
+ * Check if workflow is in terminal state
+ */
+export function isTerminal(run: WorkflowRun): boolean {
+  const stateMachine = new WorkflowStateMachine()
+  return stateMachine.isTerminal(run.state)
+}
+
+/**
+ * Transition workflow to a new state with automatic timestamp management
+ * @throws InvalidStateTransitionError
+ * @returns New workflow run object (immutable)
+ */
+export function transitionWorkflow(run: WorkflowRun, to: WorkflowState): WorkflowRun {
+  const stateMachine = new WorkflowStateMachine()
+  const newState = stateMachine.transition(run.state, to)
+
+  const updated: WorkflowRun = {
+    ...run,
+    state: newState,
+    updatedAt: new Date(),
   }
 
-  /**
-   * Transition workflow to new state
-   * @throws InvalidStateTransitionError
-   */
-  transition(to: WorkflowState): void {
-    const newState = this.stateMachine.transition(this.state, to)
-    this.state = newState
-    this.updatedAt = new Date()
-
-    if (newState === WorkflowState.RUNNING && !this.startedAt) {
-      this.startedAt = new Date()
-    }
-
-    if (this.stateMachine.isTerminal(newState) && !this.completedAt) {
-      this.completedAt = new Date()
-    }
+  // Set startedAt only on first transition to RUNNING
+  if (newState === WorkflowState.RUNNING && !run.startedAt) {
+    updated.startedAt = new Date()
   }
 
-  /**
-   * Check if workflow can transition to running
-   */
-  canStart(): boolean {
-    return this.state === WorkflowState.QUEUED
+  // Set completedAt when entering terminal state
+  if (stateMachine.isTerminal(newState) && !run.completedAt) {
+    updated.completedAt = new Date()
   }
 
-  /**
-   * Check if workflow can be cancelled
-   */
-  canCancel(): boolean {
-    return !this.stateMachine.isTerminal(this.state)
+  validateWorkflowRun(updated)
+  return updated
+}
+
+/**
+ * Record a failure with error details and transition to FAILED state
+ * @throws InvalidStateTransitionError
+ * @returns New workflow run object with error details (immutable)
+ */
+export function recordFailure(run: WorkflowRun, errorCode: string, errorMessage: string): WorkflowRun {
+  const withError: WorkflowRun = {
+    ...run,
+    errorCode,
+    errorMessage,
   }
 
-  /**
-   * Check if workflow is currently running
-   */
-  isRunning(): boolean {
-    return this.state === WorkflowState.RUNNING
-  }
-
-  /**
-   * Check if workflow is in terminal state
-   */
-  isTerminal(): boolean {
-    return this.stateMachine.isTerminal(this.state)
-  }
-
-  /**
-   * Record failure with error details
-   */
-  recordFailure(errorCode: string, errorMessage: string): void {
-    this.errorCode = errorCode
-    this.errorMessage = errorMessage
-    this.transition(WorkflowState.FAILED)
-  }
-
-  /**
-   * Get data as plain object for serialization
-   */
-  toData(): WorkflowRunData {
-    return {
-      id: this.id,
-      workflowKey: this.workflowKey,
-      workflowVersion: this.workflowVersion,
-      organizationId: this.organizationId,
-      projectId: this.projectId,
-      state: this.state,
-      currentStepKey: this.currentStepKey,
-      initiatedByUserId: this.initiatedByUserId,
-      idempotencyKey: this.idempotencyKey,
-      errorCode: this.errorCode,
-      errorMessage: this.errorMessage,
-      createdAt: this.createdAt,
-      updatedAt: this.updatedAt,
-      startedAt: this.startedAt,
-      completedAt: this.completedAt,
-    }
-  }
-
-  /**
-   * Create entity from data
-   */
-  static fromData(data: WorkflowRunData): WorkflowRunEntity {
-    return new WorkflowRunEntity(
-      data.id,
-      data.workflowKey,
-      data.workflowVersion,
-      data.organizationId,
-      data.projectId,
-      data.state,
-      data.initiatedByUserId,
-      data.idempotencyKey,
-      data.currentStepKey,
-      data.errorCode,
-      data.errorMessage,
-      data.createdAt,
-      data.updatedAt,
-      data.startedAt,
-      data.completedAt
-    )
-  }
+  return transitionWorkflow(withError, WorkflowState.FAILED)
 }
