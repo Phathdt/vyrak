@@ -2,6 +2,11 @@ import { BullModule } from '@nestjs/bullmq'
 import { Module } from '@nestjs/common'
 import { DatabaseModule, DatabaseService } from '@vyrak/database'
 
+import { FakeStepExecutor } from './application/services/fake-step-executor'
+import { LeaseManager } from './application/services/lease-manager.service'
+import { RetryHandler } from './application/services/retry-handler.service'
+import { WorkflowExecutorService } from './application/services/workflow-executor.service'
+import { StartWorkflowUseCase } from './application/use-cases/start-workflow.use-case'
 import {
   BullMQJobQueue,
   EVENT_REPOSITORY,
@@ -44,7 +49,29 @@ import {
       useFactory: (db: DatabaseService) => new EventPrismaRepository(db.client),
       inject: [DatabaseService],
     },
+    // Step executors
+    FakeStepExecutor,
+    {
+      provide: 'STEP_EXECUTORS',
+      useFactory: (fakeExecutor: FakeStepExecutor) => [fakeExecutor],
+      inject: [FakeStepExecutor],
+    },
+    // Services
+    LeaseManager,
+    RetryHandler,
+    WorkflowExecutorService,
+    // Use cases
+    StartWorkflowUseCase,
   ],
-  exports: [JOB_QUEUE, WORKFLOW_REPOSITORY, STEP_REPOSITORY, EVENT_REPOSITORY],
+  exports: [
+    JOB_QUEUE,
+    WORKFLOW_REPOSITORY,
+    STEP_REPOSITORY,
+    EVENT_REPOSITORY,
+    LeaseManager,
+    RetryHandler,
+    WorkflowExecutorService,
+    StartWorkflowUseCase,
+  ],
 })
 export class WorkflowCoreModule {}

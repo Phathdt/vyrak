@@ -59,4 +59,35 @@ export interface IWorkflowRepository {
    * @throws WorkflowNotFoundError if run not found
    */
   cancelRun(runId: string): Promise<void>
+
+  /**
+   * Acquire lease for workflow run execution
+   * Returns true if lease acquired successfully
+   * Atomic operation: only acquires if no active lease exists or lease expired
+   */
+  acquireLease(runId: string, workerId: string, leaseDurationMs: number): Promise<boolean>
+
+  /**
+   * Renew existing lease
+   * Returns true if renewed successfully (only if current owner)
+   */
+  renewLease(runId: string, workerId: string, leaseDurationMs: number): Promise<boolean>
+
+  /**
+   * Release lease
+   * Only releases if current owner
+   */
+  releaseLease(runId: string, workerId: string): Promise<void>
+
+  /**
+   * Update heartbeat timestamp
+   * Only updates if current owner
+   */
+  updateHeartbeat(runId: string, workerId: string): Promise<void>
+
+  /**
+   * Find workflow runs with expired leases
+   * Used for recovery mechanisms
+   */
+  findExpiredLeases(limit?: number): Promise<string[]>
 }
