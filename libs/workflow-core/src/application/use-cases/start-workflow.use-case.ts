@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common'
+import { Inject } from '@nestjs/common'
 
 import type { WorkflowRun } from '../../domain/entities'
 import type { IEventRepository, IWorkflowRepository } from '../../domain/interfaces'
@@ -15,7 +15,6 @@ import type { StartWorkflowInput } from '../dtos/start-workflow.dto'
  * - Emit run_created event
  * - Enqueue job for execution (TODO: Add in Story 2.2)
  */
-@Injectable()
 export class StartWorkflowUseCase {
   constructor(
     @Inject(WORKFLOW_REPOSITORY)

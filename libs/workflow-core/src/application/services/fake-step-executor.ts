@@ -1,5 +1,3 @@
-import { Injectable } from '@nestjs/common'
-
 import { IStepExecutor, StepExecutorResult } from './step-executor.interface'
 import { StepDefinition } from './workflow-definition'
 
@@ -10,7 +8,6 @@ import { WorkflowRun } from '../../domain/entities'
  * Fake step executor for testing purposes
  * Can be configured to return specific results for each step key
  */
-@Injectable()
 export class FakeStepExecutor implements IStepExecutor {
   private mockResults: Map<string, StepExecutorResult> = new Map()
 

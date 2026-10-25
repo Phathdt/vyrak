@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger } from '@nestjs/common'
+import { Inject, Logger } from '@nestjs/common'
 
 import type { StepDefinition } from './workflow-definition'
 
@@ -18,7 +18,6 @@ export interface RetryableError {
  * Retry Handler Service
  * Manages automatic retry logic for transient step failures
  */
-@Injectable()
 export class RetryHandler {
   private readonly logger = new Logger(RetryHandler.name)
 

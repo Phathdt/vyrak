@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto'
-import { Inject, Injectable, Logger, OnModuleDestroy } from '@nestjs/common'
+import { Inject, Logger, OnModuleDestroy } from '@nestjs/common'
 
 import type { IWorkflowRepository } from '../../domain/interfaces'
 import { WORKFLOW_REPOSITORY } from '../../infras/di'
@@ -13,7 +13,6 @@ import { WORKFLOW_REPOSITORY } from '../../infras/di'
  * - Heartbeat interval: 30 seconds (30,000ms)
  * - Worker ID: random UUID per process
  */
-@Injectable()
 export class LeaseManager implements OnModuleDestroy {
   private readonly logger = new Logger(LeaseManager.name)
   private readonly workerId: string

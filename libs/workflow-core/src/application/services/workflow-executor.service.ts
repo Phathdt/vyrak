@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger } from '@nestjs/common'
+import { Inject, Logger } from '@nestjs/common'
 
 import { LeaseManager } from './lease-manager.service'
 import { RetryableError, RetryHandler } from './retry-handler.service'
@@ -14,7 +14,6 @@ import { EVENT_REPOSITORY, JOB_QUEUE, STEP_REPOSITORY, WORKFLOW_REPOSITORY } fro
  * Workflow Executor Service
  * Orchestrates step execution for workflow runs
  */
-@Injectable()
 export class WorkflowExecutorService {
   private readonly logger = new Logger(WorkflowExecutorService.name)
 
