@@ -2,7 +2,7 @@ import { PrismaPg } from '@prisma/adapter-pg'
 
 import * as argon2 from 'argon2'
 
-import { PrismaClient } from '../libs/database/src/generated/prisma/client'
+import { PrismaClient } from '../libs'
 
 const databaseUrl = process.env.DATABASE__URL || 'postgresql://postgres:postgres@localhost:5433/vyrak'
 
