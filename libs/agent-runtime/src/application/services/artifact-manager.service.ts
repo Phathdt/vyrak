@@ -1,9 +1,9 @@
+import type { IArtifactManager } from '../../domain/interfaces/artifact-manager.interface'
 import type {
   ArtifactEntity,
   CreateArtifactParams,
   IArtifactRepository,
 } from '../../domain/interfaces/artifact-repository.interface'
-import type { IArtifactManager } from '../../domain/interfaces/artifact-manager.interface'
 
 /**
  * Artifact manager service

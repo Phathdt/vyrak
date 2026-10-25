@@ -1,6 +1,10 @@
 import { Module } from '@nestjs/common'
-import { AgentRuntimeModule } from '@vyrak/agent-runtime'
-import type { IAgentExecutor, IArtifactManager, IWorkspaceManager } from '@vyrak/agent-runtime'
+import {
+  AgentRuntimeModule,
+  type IAgentExecutor,
+  type IArtifactManager,
+  type IWorkspaceManager,
+} from '@vyrak/agent-runtime'
 import { DatabaseModule } from '@vyrak/database'
 
 import { AgentStepExecutor } from './application/services/agent-step-executor.service'

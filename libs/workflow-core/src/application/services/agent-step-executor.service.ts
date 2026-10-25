@@ -4,8 +4,8 @@ import {
   AgentExecutionStatus,
   AgentTimeoutError,
   AgentType,
-  type IArtifactManager,
   type IAgentExecutor,
+  type IArtifactManager,
   type IWorkspaceManager,
 } from '@vyrak/agent-runtime'
 
