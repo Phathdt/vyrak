@@ -29,8 +29,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [accessToken, setAccessTokenState] = useState<string | null>(() => {
     return localStorage.getItem(TOKEN_KEY)
   })
-  const [user, setUser] = useState<User | null>(null)
-  const [organizations, setOrganizations] = useState<Organization[]>([])
 
   // Sync token to api-client on mount and when it changes
   useEffect(() => {
@@ -45,48 +43,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   })
 
-  useEffect(() => {
-    if (data && data.user) {
-      setUser(data.user)
-      setOrganizations(data.organizations || [])
-    }
-  }, [data])
-
-  // Handle invalid token
+  // Handle invalid token (only for 401, not for canceled requests)
   useEffect(() => {
     if (error && accessToken) {
-      // Token is invalid, clear it
-      logout()
+      // Only logout on 401, not on canceled requests or network errors
+      const axiosError = error as unknown
+      if (
+        axiosError &&
+        typeof axiosError === 'object' &&
+        'response' in axiosError &&
+        axiosError.response &&
+        typeof axiosError.response === 'object' &&
+        'status' in axiosError.response &&
+        axiosError.response.status === 401
+      ) {
+        logout()
+      }
     }
   }, [error, accessToken])
 
-  const setAuth = (token: string, userData: AuthResponseDtoUser) => {
+  const setAuth = (token: string, _userData: AuthResponseDtoUser) => {
     // IMPORTANT: Set token in axios interceptor FIRST (synchronously)
     // before updating state to avoid race condition with React Query
     setAuthToken(token)
     localStorage.setItem(TOKEN_KEY, token)
     setAccessTokenState(token)
-    // Convert AuthResponseDtoUser to User format
-    setUser({
-      id: userData.id!,
-      email: userData.email!,
-      name: userData.name || null,
-      image: null, // Not provided in login response
-    })
+    // Note: user data will be fetched automatically via useAuthControllerGetCurrentUser
   }
 
   const logout = () => {
     localStorage.removeItem(TOKEN_KEY)
     setAccessTokenState(null)
-    setUser(null)
-    setOrganizations([])
   }
 
   return (
     <AuthContext.Provider
       value={{
-        user,
-        organizations,
+        user: data?.user ?? null,
+        organizations: data?.organizations ?? [],
         accessToken,
         isLoading,
         setAuth,

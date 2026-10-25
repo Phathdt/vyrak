@@ -7,7 +7,14 @@ export const customInstance = <T>(config: AxiosRequestConfig, options?: AxiosReq
   const promise = apiClient({
     ...config,
     ...options,
-  }).then(({ data }) => data)
+  }).then(({ data }) => {
+    // Handle wrapped response from ResponseInterceptor
+    // If response has { data: actual_data, trace_id: string }, extract the data
+    if (data && typeof data === 'object' && 'data' in data && 'trace_id' in data) {
+      return data.data as T
+    }
+    return data
+  })
 
   return promise
 }

@@ -6,6 +6,7 @@ import { ErrorBoundary } from './components/error-boundary'
 import { PageLoading } from './components/page-loading'
 import { OrganizationProvider } from './contexts'
 import { LoginPage, SignupPage } from './pages/auth'
+import { DashboardPage } from './pages/dashboard'
 import { OrganizationSettingsPage, OrganizationsPage } from './pages/organizations'
 
 function App() {
@@ -17,10 +18,10 @@ function App() {
             <Route path='/login' element={<LoginPage />} />
             <Route path='/signup' element={<SignupPage />} />
             <Route
-              path='/'
+              path='/dashboard'
               element={
                 <ProtectedRoute>
-                  <OrganizationsPage />
+                  <DashboardPage />
                 </ProtectedRoute>
               }
             />
@@ -40,7 +41,8 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route path='*' element={<Navigate to='/' replace />} />
+            <Route path='/' element={<Navigate to='/dashboard' replace />} />
+            <Route path='*' element={<Navigate to='/dashboard' replace />} />
           </Routes>
         </Suspense>
       </OrganizationProvider>

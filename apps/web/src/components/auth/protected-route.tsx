@@ -8,7 +8,7 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { user, isLoading } = useAuth()
+  const { user, isLoading, accessToken } = useAuth()
   const location = useLocation()
 
   if (isLoading) {
@@ -35,7 +35,13 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     )
   }
 
-  if (!user) {
+  // If no token at all, definitely not authenticated
+  if (!accessToken) {
+    return <Navigate to='/login' state={{ from: location }} replace />
+  }
+
+  // If we have token but no user, and not loading, something went wrong
+  if (!user && !isLoading) {
     return <Navigate to='/login' state={{ from: location }} replace />
   }
 

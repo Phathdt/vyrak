@@ -17,7 +17,7 @@ export class ResponseInterceptor implements NestInterceptor {
 
         // Skip adding trace_id to arrays to preserve array structure
         if (Array.isArray(data)) {
-          return data
+          return { data, trace_id: traceId }
         }
 
         // Only add traceId to objects

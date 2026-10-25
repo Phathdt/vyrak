@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import { z } from 'zod'
@@ -17,7 +17,7 @@ type LoginForm = z.infer<typeof loginSchema>
 
 export function LoginPage() {
   const navigate = useNavigate()
-  const { setAuth } = useAuth()
+  const { setAuth, user } = useAuth()
   const [error, setError] = useState<string | null>(null)
 
   const {
@@ -29,6 +29,13 @@ export function LoginPage() {
   })
 
   const loginMutation = useAuthControllerLogin()
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard', { replace: true })
+    }
+  }, [user, navigate])
 
   const onSubmit = async (data: LoginForm) => {
     try {
