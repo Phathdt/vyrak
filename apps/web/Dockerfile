@@ -1,7 +1,7 @@
 # =============================================================================
 # Stage 1: Builder - Build the application
 # =============================================================================
-FROM node:22-alpine AS builder
+FROM node:24.16.0-alpine3.21 AS builder
 WORKDIR /app
 
 # Install build dependencies
