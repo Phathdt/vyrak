@@ -131,15 +131,15 @@ jobs:
           PORT: 3000
           JWT_SECRET: test-secret-key-for-ci
         run: |
-          yarn workspace @vyrak/api-server start &
+          yarn workspace @apps/api-server start &
           npx wait-on http://localhost:3000/health --timeout 60000
 
       - name: Start web app
         env:
           VITE_API_BASE_URL: http://localhost:3000
         run: |
-          yarn workspace @vyrak/web build
-          yarn workspace @vyrak/web preview --port 5173 &
+          yarn workspace @apps/web build
+          yarn workspace @apps/web preview --port 5173 &
           npx wait-on http://localhost:5173 --timeout 60000
 
       - name: Run E2E tests
