@@ -6,6 +6,9 @@ export const TENANT_OWNED_MODELS = [
   'project',
   'gitRepository',
   'workflowRun',
+  'workflowStepRun',
+  'workflowEvent',
+  'workflowApproval',
   'agentTask',
   'artifact',
 ] as const

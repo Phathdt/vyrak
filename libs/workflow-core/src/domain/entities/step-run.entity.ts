@@ -12,21 +12,19 @@ export { StepStatus }
 export const StepRunSchema = z.object({
   id: z.string().uuid(),
   runId: z.string().uuid(),
-  stepKey: z.string().min(1),
   organizationId: z.string().uuid(),
-  projectId: z.string().uuid(),
+  stepKey: z.string().min(1),
+  stepType: z.string().min(1),
   status: z.nativeEnum(StepStatus),
   attempt: z.number().int().min(1),
-  maxAttempts: z.number().int().min(1),
-  inputRef: z.string().optional(),
-  outputRef: z.string().optional(),
+  input: z.any().optional(),
+  output: z.any().optional(),
   errorCode: z.string().optional(),
   errorMessage: z.string().optional(),
-  retryable: z.boolean().default(false),
-  createdAt: z.date(),
-  updatedAt: z.date(),
   startedAt: z.date().optional(),
   completedAt: z.date().optional(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
 })
 
 export type StepRun = z.infer<typeof StepRunSchema>
@@ -64,15 +62,7 @@ export function isStepFailed(step: StepRun): boolean {
 /**
  * Retry logic functions
  */
-export function canRetryStep(step: StepRun): boolean {
-  return step.retryable && step.attempt < step.maxAttempts
-}
-
 export function incrementAttempt(step: StepRun): StepRun {
-  if (step.attempt >= step.maxAttempts) {
-    throw new InvalidStepStateError(`Cannot increment attempt: already at max attempts (${step.maxAttempts})`)
-  }
-
   return validateStepRun({
     ...step,
     attempt: step.attempt + 1,
@@ -96,7 +86,7 @@ export function startStepRun(step: StepRun): StepRun {
   })
 }
 
-export function succeedStepRun(step: StepRun, outputRef?: string): StepRun {
+export function succeedStepRun(step: StepRun, output?: unknown): StepRun {
   if (!isStepRunning(step)) {
     throw new InvalidStepStateError(`Cannot succeed step: current status is ${step.status}`)
   }
@@ -104,13 +94,13 @@ export function succeedStepRun(step: StepRun, outputRef?: string): StepRun {
   return validateStepRun({
     ...step,
     status: StepStatus.SUCCEEDED,
-    outputRef,
+    output,
     completedAt: new Date(),
     updatedAt: new Date(),
   })
 }
 
-export function failStepRun(step: StepRun, errorCode: string, errorMessage: string, retryable: boolean): StepRun {
+export function failStepRun(step: StepRun, errorCode: string, errorMessage: string): StepRun {
   if (!isStepRunning(step)) {
     throw new InvalidStepStateError(`Cannot fail step: current status is ${step.status}`)
   }
@@ -120,7 +110,6 @@ export function failStepRun(step: StepRun, errorCode: string, errorMessage: stri
     status: StepStatus.FAILED,
     errorCode,
     errorMessage,
-    retryable,
     completedAt: new Date(),
     updatedAt: new Date(),
   })
@@ -143,14 +132,12 @@ export function skipStepRun(step: StepRun): StepRun {
  * Factory function to create a new step run
  */
 export function createStepRun(
-  data: Partial<StepRun> &
-    Required<Pick<StepRun, 'id' | 'runId' | 'stepKey' | 'organizationId' | 'projectId' | 'maxAttempts'>>
+  data: Partial<StepRun> & Required<Pick<StepRun, 'id' | 'runId' | 'stepKey' | 'organizationId' | 'stepType'>>
 ): StepRun {
   const now = new Date()
   const full: StepRun = {
     status: StepStatus.PENDING,
     attempt: 1,
-    retryable: false,
     createdAt: now,
     updatedAt: now,
     ...data,

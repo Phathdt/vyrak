@@ -36,8 +36,9 @@ model User {
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
-  members   Member[]
-  auditLogs AuditLog[]
+  members      Member[]
+  auditLogs    AuditLog[]
+  workflowRuns WorkflowRun[]
 
   @@map("user")
 }
@@ -52,15 +53,17 @@ model Organization {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  members         Member[]
-  invitations     Invitation[]
-  products        Product[]
-  projects        Project[]
-  gitRepositories GitRepository[]
-  workflowRuns    WorkflowRun[]
-  agentTasks      AgentTask[]
-  artifacts       Artifact[]
-  auditLogs       AuditLog[]
+  members          Member[]
+  invitations      Invitation[]
+  products         Product[]
+  projects         Project[]
+  gitRepositories  GitRepository[]
+  workflowRuns     WorkflowRun[]
+  workflowStepRuns WorkflowStepRun[]
+  workflowEvents   WorkflowEvent[]
+  agentTasks       AgentTask[]
+  artifacts        Artifact[]
+  auditLogs        AuditLog[]
 
   @@map("organizations")
 }
@@ -140,24 +143,38 @@ model GitRepository {
 }
 
 model WorkflowRun {
-  id             String    @id @default(uuid())
-  projectId      String    @map("project_id")
-  organizationId String    @map("organization_id")
-  status         String    @default("pending")
-  result         String?   @db.Text
-  startedAt      DateTime  @default(now()) @map("started_at")
-  completedAt    DateTime? @map("completed_at")
-  createdAt      DateTime  @default(now()) @map("created_at")
-  updatedAt      DateTime  @updatedAt @map("updated_at")
+  id                 String    @id @default(uuid())
+  projectId          String    @map("project_id")
+  organizationId     String    @map("organization_id")
+  status             String    @default("pending")
+  workflowKey        String    @map("workflow_key")
+  workflowVersion    String    @map("workflow_version")
+  initiatedByUserId  String    @map("initiated_by_user_id")
+  idempotencyKey     String?   @map("idempotency_key")
+  input              Json?
+  currentStepKey     String?   @map("current_step_key")
+  cancelRequestedAt  DateTime? @map("cancel_requested_at")
+  errorCode          String?   @map("error_code")
+  errorMessage       String?   @db.Text @map("error_message")
+  result             String?   @db.Text
+  startedAt          DateTime? @map("started_at")
+  completedAt        DateTime? @map("completed_at")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
 
-  project      Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  project      Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  organization Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  initiatedBy  User               @relation(fields: [initiatedByUserId], references: [id], onDelete: Restrict)
   agentTasks   AgentTask[]
   artifacts    Artifact[]
+  steps        WorkflowStepRun[]
+  events       WorkflowEvent[]
 
+  @@unique([organizationId, idempotencyKey], map: "workflow_runs_org_idempotency_key")
   @@index([projectId])
   @@index([organizationId])
   @@index([status])
+  @@index([initiatedByUserId])
   @@map("workflow_runs")
 }
 
@@ -194,6 +211,56 @@ model Artifact {
   @@index([runId])
   @@index([organizationId])
   @@map("artifacts")
+}
+
+model WorkflowStepRun {
+  id             String    @id @default(uuid())
+  runId          String    @map("run_id")
+  organizationId String    @map("organization_id")
+  stepKey        String    @map("step_key")
+  stepType       String    @map("step_type")
+  status         String    @default("pending")
+  attempt        Int       @default(1)
+  input          Json?
+  output         Json?
+  errorCode      String?   @map("error_code")
+  errorMessage   String?   @db.Text @map("error_message")
+  startedAt      DateTime? @map("started_at")
+  completedAt    DateTime? @map("completed_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  run          WorkflowRun     @relation(fields: [runId], references: [id], onDelete: Cascade)
+  organization Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  events       WorkflowEvent[]
+
+  @@unique([runId, stepKey, attempt])
+  @@index([runId])
+  @@index([organizationId])
+  @@index([status])
+  @@map("workflow_step_runs")
+}
+
+model WorkflowEvent {
+  id             String   @id @default(uuid())
+  runId          String   @map("run_id")
+  organizationId String   @map("organization_id")
+  stepRunId      String?  @map("step_run_id")
+  sequence       Int
+  eventType      String   @map("event_type")
+  payload        Json
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  run          WorkflowRun      @relation(fields: [runId], references: [id], onDelete: Cascade)
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  stepRun      WorkflowStepRun? @relation(fields: [stepRunId], references: [id], onDelete: Cascade)
+
+  @@unique([runId, sequence])
+  @@index([runId])
+  @@index([organizationId])
+  @@index([eventType])
+  @@index([createdAt])
+  @@map("workflow_events")
 }
 
 model AuditLog {
