@@ -1,5 +1,4 @@
-import type { PrismaClient } from '@vyrak/database'
-import { Prisma } from '@vyrak/database'
+import { Prisma, type PrismaClient } from '@vyrak/database'
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
