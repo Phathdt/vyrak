@@ -1,6 +1,5 @@
 import { Inject, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common'
-import type { ArtifactEntity, IArtifactManager } from '@vyrak/agent-runtime'
-import { ARTIFACT_MANAGER } from '@vyrak/agent-runtime'
+import { ARTIFACT_MANAGER, type ArtifactEntity, type IArtifactManager } from '@vyrak/agent-runtime'
 import { DatabaseService } from '@vyrak/database'
 import {
   CANCEL_WORKFLOW_USE_CASE,

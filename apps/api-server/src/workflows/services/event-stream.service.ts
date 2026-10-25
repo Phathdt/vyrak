@@ -1,5 +1,6 @@
 import { Inject, Injectable, Logger } from '@nestjs/common'
 import { EVENT_REPOSITORY, type IEventRepository } from '@vyrak/workflow-core'
+
 import { defer, interval, Observable } from 'rxjs'
 import { map, share, switchMap, takeWhile } from 'rxjs/operators'
 

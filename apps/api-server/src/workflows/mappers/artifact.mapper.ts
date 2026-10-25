@@ -19,7 +19,9 @@ function inferContentType(filePath: string): string {
   return 'text/plain'
 }
 
-function inferArtifactType(filePath: string): 'plan' | 'implementation_report' | 'test_result' | 'approval_plan' | 'other' {
+function inferArtifactType(
+  filePath: string
+): 'plan' | 'implementation_report' | 'test_result' | 'approval_plan' | 'other' {
   const fileName = filePath.toLowerCase()
   if (fileName.includes('plan') && fileName.includes('approval')) {
     return 'approval_plan'
