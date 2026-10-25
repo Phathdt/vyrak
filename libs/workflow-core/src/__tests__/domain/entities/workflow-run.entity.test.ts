@@ -1,9 +1,11 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { WorkflowRunEntity } from '../../../domain/entities/workflow-run.entity'
-import { InvalidStateTransitionError } from '../../../domain/errors/invalid-state-transition.error'
-import { InvalidWorkflowStateError } from '../../../domain/errors/invalid-workflow-state.error'
-import { WorkflowState } from '../../../domain/workflow-state'
+import {
+  InvalidStateTransitionError,
+  InvalidWorkflowStateError,
+  WorkflowRunEntity,
+  WorkflowState,
+} from '../../../domain'
 
 describe('WorkflowRunEntity', () => {
   let entity: WorkflowRunEntity

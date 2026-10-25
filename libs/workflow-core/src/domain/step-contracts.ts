@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { InvalidStepConfigError } from './errors/invalid-step-config.error'
+import { InvalidStepConfigError } from './errors'
 import { StepStatus, StepStatusSchema, StepType, StepTypeSchema } from './step-types'
 
 /**

@@ -1,8 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { StepRunEntity } from '../../../domain/entities/step-run.entity'
-import { InvalidStepStateError } from '../../../domain/errors/invalid-step-state.error'
-import { StepStatus } from '../../../domain/step-types'
+import { InvalidStepStateError, StepRunEntity, StepStatus } from '../../../domain'
 
 describe('StepRunEntity', () => {
   let entity: StepRunEntity

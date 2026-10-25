@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { InvalidStateTransitionError } from '../../domain/errors/invalid-state-transition.error'
-import { WorkflowState, WorkflowStateMachine } from '../../domain/workflow-state'
+import { InvalidStateTransitionError, WorkflowState, WorkflowStateMachine } from '../../domain'
 
 describe('WorkflowStateMachine', () => {
   let machine: WorkflowStateMachine
