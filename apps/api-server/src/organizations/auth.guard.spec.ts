@@ -15,8 +15,13 @@ describe('AuthGuard (Organizations)', () => {
     guard = new AuthGuard(reflector)
   })
 
-  const createMockContext = (isPublic = false): ExecutionContext => {
-    const request = { userId: undefined }
+  const createMockContext = (isPublic = false, token?: string): ExecutionContext => {
+    const request = {
+      userId: undefined,
+      headers: {
+        authorization: token ? `Bearer ${token}` : undefined,
+      },
+    }
 
     return {
       switchToHttp: () => ({
@@ -25,6 +30,13 @@ describe('AuthGuard (Organizations)', () => {
       getHandler: vi.fn(),
       getClass: vi.fn(),
     } as any
+  }
+
+  const createValidToken = (payload: any): string => {
+    const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64')
+    const body = Buffer.from(JSON.stringify(payload)).toString('base64')
+    const signature = 'mock-signature'
+    return `${header}.${body}.${signature}`
   }
 
   describe('canActivate', () => {
@@ -37,9 +49,15 @@ describe('AuthGuard (Organizations)', () => {
       expect(result).toBe(true)
     })
 
-    it('should allow access to protected routes with mock userId', async () => {
+    it('should allow access to protected routes with valid token', async () => {
       vi.spyOn(reflector, 'getAllAndOverride').mockReturnValue(false)
-      const context = createMockContext(false)
+      const token = createValidToken({
+        sub: 'test-user-id',
+        email: 'test@example.com',
+        iat: Math.floor(Date.now() / 1000),
+        exp: Math.floor(Date.now() / 1000) + 3600,
+      })
+      const context = createMockContext(false, token)
 
       const result = await guard.canActivate(context)
 
@@ -49,9 +67,15 @@ describe('AuthGuard (Organizations)', () => {
       expect(request.userId).toBe('test-user-id')
     })
 
-    it('should set mock userId on request', async () => {
+    it('should set userId on request with valid token', async () => {
       vi.spyOn(reflector, 'getAllAndOverride').mockReturnValue(false)
-      const context = createMockContext(false)
+      const token = createValidToken({
+        sub: 'test-user-id',
+        email: 'test@example.com',
+        iat: Math.floor(Date.now() / 1000),
+        exp: Math.floor(Date.now() / 1000) + 3600,
+      })
+      const context = createMockContext(false, token)
 
       await guard.canActivate(context)
 
@@ -62,11 +86,44 @@ describe('AuthGuard (Organizations)', () => {
 
     it('should check IS_PUBLIC_KEY metadata', async () => {
       const spy = vi.spyOn(reflector, 'getAllAndOverride').mockReturnValue(false)
-      const context = createMockContext(false)
+      const token = createValidToken({
+        sub: 'test-user-id',
+        email: 'test@example.com',
+        iat: Math.floor(Date.now() / 1000),
+        exp: Math.floor(Date.now() / 1000) + 3600,
+      })
+      const context = createMockContext(false, token)
 
       await guard.canActivate(context)
 
       expect(spy).toHaveBeenCalledWith(IS_PUBLIC_KEY, [context.getHandler(), context.getClass()])
+    })
+
+    it('should throw UnauthorizedException when no token provided', async () => {
+      vi.spyOn(reflector, 'getAllAndOverride').mockReturnValue(false)
+      const context = createMockContext(false)
+
+      await expect(guard.canActivate(context)).rejects.toThrow('No token provided')
+    })
+
+    it('should throw UnauthorizedException when token is invalid', async () => {
+      vi.spyOn(reflector, 'getAllAndOverride').mockReturnValue(false)
+      const context = createMockContext(false, 'invalid-token')
+
+      await expect(guard.canActivate(context)).rejects.toThrow('Invalid token')
+    })
+
+    it('should throw UnauthorizedException when token is expired', async () => {
+      vi.spyOn(reflector, 'getAllAndOverride').mockReturnValue(false)
+      const token = createValidToken({
+        sub: 'test-user-id',
+        email: 'test@example.com',
+        iat: Math.floor(Date.now() / 1000) - 7200,
+        exp: Math.floor(Date.now() / 1000) - 3600, // expired 1 hour ago
+      })
+      const context = createMockContext(false, token)
+
+      await expect(guard.canActivate(context)).rejects.toThrow('Token expired')
     })
   })
 })
