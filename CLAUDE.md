@@ -25,6 +25,11 @@ vyrak/
 │   ├── database/       # Prisma ORM client
 │   ├── shared/         # Shared utilities and types
 │   └── product/        # Product domain module (reference implementation)
+├── config/             # Shared base configurations
+│   ├── rolldown.base.mjs      # Base Rolldown config (createLibConfig, createAppConfig)
+│   ├── tsconfig.base.json     # Base TypeScript config
+│   ├── tsconfig.lib.json      # TypeScript config for libs
+│   └── tsconfig.app.json      # TypeScript config for apps
 └── docs/               # Documentation
 ```
 
@@ -132,6 +137,21 @@ Domain (contracts) ← Application (orchestration) ← Infrastructure (implement
 - Playwright for E2E testing
 - Lefthook + Commitizen for git workflow
 - GitHub Actions for CI/CD
+
+### Build Configuration
+
+The project uses shared base configurations to ensure consistency:
+
+**Rolldown (Production Builds):**
+- `config/rolldown.base.mjs` exports `createLibConfig()` and `createAppConfig()`
+- Libs use: `import { createLibConfig } from '../../config/rolldown.base.mjs'`
+- Apps use: `import { createAppConfig } from '../../config/rolldown.base.mjs'` with `appName` required
+
+**TypeScript:**
+- `config/tsconfig.base.json` - Base compiler options (strict mode, decorators, ES2022)
+- `config/tsconfig.lib.json` - Extends base for libs (declaration output)
+- `config/tsconfig.app.json` - Extends base for apps (noEmit for type checking only)
+- All workspace packages extend one of these configs
 
 ## Development Workflow
 
@@ -269,14 +289,18 @@ Using `@ianvs/prettier-plugin-sort-imports`:
    - Module: NestJS module with DI wiring
 4. **Add controller to api-server** - Create lightweight controller in `apps/api-server/src/{module}/` that injects and calls the service from `libs/{module}/`
 5. **Add processor to worker (if needed)** - Create processor/consumer in `apps/worker/src/{module}/` for background jobs
-6. **Run code generation**:
+6. **Use shared base configs**:
+   - Rolldown: `import { createLibConfig } from '../../config/rolldown.base.mjs'` for libs, `createAppConfig({ appName: 'app-name' })` for apps
+   - TypeScript: Extend `../../config/tsconfig.lib.json` for libs, `../../config/tsconfig.app.json` for apps
+   - See `config/README.md` for detailed documentation
+7. **Run code generation**:
    - `yarn ctix` - Regenerate index.ts barrel exports
    - `yarn generate:openapi` - Generate OpenAPI spec
    - `yarn generate:api` - Generate React Query hooks
-7. **Use generated hooks** - NEVER write React Query hooks manually, always use Orval-generated hooks from `apps/web/src/api/generated/`
-8. **Frontend validation** - Add Zod schemas in `lib/schemas/` for form validation only (not for API calls)
-9. **Test endpoints** - Verify API works before integrating frontend
-10. **Update examples** - Keep product CRUD as reference implementation
+8. **Use generated hooks** - NEVER write React Query hooks manually, always use Orval-generated hooks from `apps/web/src/api/generated/`
+9. **Frontend validation** - Add Zod schemas in `lib/schemas/` for form validation only (not for API calls)
+10. **Test endpoints** - Verify API works before integrating frontend
+11. **Update examples** - Keep product CRUD as reference implementation
 
 ### When Debugging
 

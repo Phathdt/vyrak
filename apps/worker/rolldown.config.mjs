@@ -1,14 +1,8 @@
-import { defineConfig } from 'rolldown'
+import { createAppConfig } from '../../config/rolldown.base.mjs'
 
-export default defineConfig({
-  input: 'src/main.ts',
-  output: {
-    dir: '../../dist/apps/worker',
-    format: 'cjs',
-    sourcemap: true,
-    entryFileNames: '[name].js',
-  },
-  // External: npm packages and node built-ins, but NOT @vyrak/* (bundle them)
+export default createAppConfig({
+  input: { main: 'src/main.ts' },
+  appName: 'worker',
   external: [
     /^@nestjs\//,
     /^bullmq$/,
@@ -20,5 +14,4 @@ export default defineConfig({
     /^ioredis$/,
     /node:/,
   ],
-  tsconfig: '../../tsconfig.json',
 })

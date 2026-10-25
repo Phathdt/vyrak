@@ -1,27 +1,6 @@
 {
+  "extends": "./config/tsconfig.base.json",
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "commonjs",
-    "lib": ["ES2022"],
-    "moduleResolution": "bundler",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "strictPropertyInitialization": false,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "strictFunctionTypes": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
     "paths": {
       "@vyrak/auth": ["./dist/libs/auth/index"],
       "@vyrak/custom-config": ["./dist/libs/custom-config/index"],
@@ -30,6 +9,5 @@
       "@vyrak/shared": ["./dist/libs/shared/index"],
       "@vyrak/workflow-core": ["./dist/libs/workflow-core/index"]
     }
-  },
-  "exclude": ["node_modules", "dist", "build", "coverage", "**/*.spec.ts", "**/*.test.ts"]
+  }
 }
