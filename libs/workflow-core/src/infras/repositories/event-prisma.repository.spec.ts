@@ -23,6 +23,7 @@ describe('EventPrismaRepository', () => {
     db = {
       client: {
         $transaction: vi.fn(),
+        $executeRaw: vi.fn().mockResolvedValue(undefined),
         workflowEvent: {
           findFirst: vi.fn(),
           findMany: vi.fn(),

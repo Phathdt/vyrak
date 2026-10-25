@@ -45,10 +45,7 @@ function validateWorkflowRun(run: WorkflowRun): void {
  */
 export function createWorkflowRun(
   data: Partial<WorkflowRun> &
-    Pick<
-      WorkflowRun,
-      'id' | 'workflowKey' | 'workflowVersion' | 'organizationId' | 'projectId' | 'initiatedByUserId'
-    >
+    Pick<WorkflowRun, 'id' | 'workflowKey' | 'workflowVersion' | 'organizationId' | 'projectId' | 'initiatedByUserId'>
 ): WorkflowRun {
   const now = new Date()
   const run: WorkflowRun = {

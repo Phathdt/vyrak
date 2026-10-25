@@ -98,7 +98,7 @@ async function handleFindUnique(args: PrismaArgs, query: QueryFunction, model: s
   // Check if this is a composite key lookup with organizationId
   // Pattern matches: organizationId_idempotencyKey, organizationId_slug, etc.
   const compositeKeyPattern = /^(\w+_)*organizationId$/
-  const compositeKeys = Object.keys(where).filter(key => compositeKeyPattern.test(key))
+  const compositeKeys = Object.keys(where).filter((key) => compositeKeyPattern.test(key))
 
   if (compositeKeys.length > 0) {
     // For composite keys that include organizationId, validate and inject the context organizationId

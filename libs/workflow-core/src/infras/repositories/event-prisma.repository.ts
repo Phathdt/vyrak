@@ -20,11 +20,11 @@ export class EventPrismaRepository implements IEventRepository {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma TransactionClient type
         const result = await this.db.client.$transaction(async (tx: any) => {
           // Get next sequence
-          const sequenceResult = await tx.$queryRaw`
+          const sequenceResult = (await tx.$queryRaw`
             SELECT COALESCE(MAX(sequence), 0) + 1 as sequence
             FROM workflow_events
             WHERE run_id = ${event.runId}
-          ` as Array<{ sequence: number }>
+          `) as Array<{ sequence: number }>
 
           const nextSequence = sequenceResult[0]?.sequence ?? 1
 

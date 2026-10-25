@@ -130,7 +130,7 @@ describe('WorkflowPrismaRepository', () => {
       expect(result.id).toBe('123e4567-e89b-12d3-a456-426614174000')
       expect(db.client.workflowRun.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
-          idempotencyKey: undefined,
+          idempotencyKey: expect.any(String), // Auto-generated
           input: null,
         }),
       })
@@ -258,7 +258,7 @@ describe('WorkflowPrismaRepository', () => {
       expect(result?.idempotencyKey).toBe('123e4567-e89b-12d3-a456-426614174004')
       expect(db.client.workflowRun.findUnique).toHaveBeenCalledWith({
         where: {
-          workflow_runs_org_idempotency_key: {
+          organizationId_idempotencyKey: {
             organizationId: '123e4567-e89b-12d3-a456-426614174001',
             idempotencyKey: '123e4567-e89b-12d3-a456-426614174004',
           },

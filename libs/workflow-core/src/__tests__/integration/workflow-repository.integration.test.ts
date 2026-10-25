@@ -115,7 +115,7 @@ describe('WorkflowRepository Integration Tests', () => {
 
       expect(run.idempotencyKey).toBeDefined()
       expect(typeof run.idempotencyKey).toBe('string')
-      expect(run.idempotencyKey.length).toBeGreaterThan(0)
+      expect(run.idempotencyKey?.length).toBeGreaterThan(0)
     })
 
     it('should use provided idempotency key', async () => {
@@ -308,9 +308,7 @@ describe('WorkflowRepository Integration Tests', () => {
     })
 
     it('should return null for non-existent idempotency key', async () => {
-      const found = await db.withOrganization(orgId, () =>
-        repository.findRunByIdempotencyKey(orgId, testData.orgId())
-      )
+      const found = await db.withOrganization(orgId, () => repository.findRunByIdempotencyKey(orgId, testData.orgId()))
 
       expect(found).toBeNull()
     })
