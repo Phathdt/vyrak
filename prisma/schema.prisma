@@ -143,40 +143,46 @@ model GitRepository {
 }
 
 model WorkflowRun {
-  id                 String    @id @default(uuid())
-  projectId          String    @map("project_id")
-  organizationId     String    @map("organization_id")
-  status             String    @default("pending")
-  workflowKey        String    @map("workflow_key")
-  workflowVersion    String    @map("workflow_version")
-  initiatedByUserId  String    @map("initiated_by_user_id")
-  idempotencyKey     String?   @map("idempotency_key")
-  input              Json?
-  currentStepKey     String?   @map("current_step_key")
-  cancelRequestedAt  DateTime? @map("cancel_requested_at")
-  errorCode          String?   @map("error_code")
-  errorMessage       String?   @db.Text @map("error_message")
-  result             String?   @db.Text
-  startedAt          DateTime? @map("started_at")
-  completedAt        DateTime? @map("completed_at")
-  leaseOwnerId       String?   @map("lease_owner_id")
-  leaseExpiresAt     DateTime? @map("lease_expires_at")
-  lastHeartbeatAt    DateTime? @map("last_heartbeat_at")
-  createdAt          DateTime  @default(now()) @map("created_at")
-  updatedAt          DateTime  @updatedAt @map("updated_at")
+  id                  String    @id @default(uuid())
+  projectId           String    @map("project_id")
+  organizationId      String    @map("organization_id")
+  status              String    @default("pending")
+  state               String    @default("pending") // pending, running, waiting_approval, completed, failed, cancelled
+  workflowKey         String    @map("workflow_key")
+  workflowVersion     String    @map("workflow_version")
+  initiatedByUserId   String    @map("initiated_by_user_id")
+  idempotencyKey      String?   @map("idempotency_key")
+  input               Json?
+  currentStepKey      String?   @map("current_step_key")
+  cancelRequestedAt   DateTime? @map("cancel_requested_at")
+  cancellationReason  String?   @db.Text @map("cancellation_reason")
+  cancelledByUserId   String?   @map("cancelled_by_user_id")
+  cancelledAt         DateTime? @map("cancelled_at")
+  errorCode           String?   @map("error_code")
+  errorMessage        String?   @db.Text @map("error_message")
+  result              String?   @db.Text
+  startedAt           DateTime? @map("started_at")
+  completedAt         DateTime? @map("completed_at")
+  leaseOwnerId        String?   @map("lease_owner_id")
+  leaseExpiresAt      DateTime? @map("lease_expires_at")
+  lastHeartbeatAt     DateTime? @map("last_heartbeat_at")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
 
-  project      Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  organization Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  initiatedBy  User               @relation(fields: [initiatedByUserId], references: [id], onDelete: Restrict)
+  project      Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  organization Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  initiatedBy  User                 @relation(fields: [initiatedByUserId], references: [id], onDelete: Restrict)
   agentTasks   AgentTask[]
   artifacts    Artifact[]
   steps        WorkflowStepRun[]
   events       WorkflowEvent[]
+  approvals    WorkflowApproval[]
 
   @@unique([organizationId, idempotencyKey], map: "workflow_runs_org_idempotency_key")
   @@index([projectId])
   @@index([organizationId])
   @@index([status])
+  @@index([state])
   @@index([initiatedByUserId])
   @@index([leaseExpiresAt])
   @@index([lastHeartbeatAt])
@@ -266,6 +272,28 @@ model WorkflowEvent {
   @@index([eventType])
   @@index([createdAt])
   @@map("workflow_events")
+}
+
+model WorkflowApproval {
+  id                 String    @id @default(uuid())
+  workflowRunId      String    @unique @map("workflow_run_id")
+  status             String    @default("pending") // pending, approved, rejected
+  planArtifactId     String    @map("plan_artifact_id")
+  planArtifactHash   String    @map("plan_artifact_hash")
+  decidedByUserId    String?   @map("decided_by_user_id")
+  decidedAt          DateTime? @map("decided_at")
+  comment            String?   @db.Text
+  invalidatedAt      DateTime? @map("invalidated_at")
+  invalidationReason String?   @map("invalidation_reason") @db.Text
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  workflowRun WorkflowRun @relation(fields: [workflowRunId], references: [id], onDelete: Cascade)
+
+  @@index([workflowRunId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("workflow_approvals")
 }
 
 model AuditLog {

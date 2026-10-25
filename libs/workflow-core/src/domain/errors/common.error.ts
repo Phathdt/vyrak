@@ -14,6 +14,21 @@ export class ValidationException extends Error {
 }
 
 /**
+ * Invalid input error
+ * Thrown when user input is invalid
+ */
+export class InvalidInputException extends Error {
+  constructor(message: string) {
+    super(`Invalid input: ${message}`)
+    this.name = 'InvalidInputException'
+
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, InvalidInputException)
+    }
+  }
+}
+
+/**
  * Resource not found error
  */
 export class NotFoundException extends Error {
@@ -124,6 +139,36 @@ export class WorkflowRepositoryError extends WorkflowError {
 
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, WorkflowRepositoryError)
+    }
+  }
+}
+
+/**
+ * Invalid step configuration error
+ * Thrown when step configuration is missing or invalid
+ */
+export class InvalidStepConfigException extends Error {
+  constructor(stepKey: string, message: string) {
+    super(`Invalid step config for ${stepKey}: ${message}`)
+    this.name = 'InvalidStepConfigException'
+
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, InvalidStepConfigException)
+    }
+  }
+}
+
+/**
+ * Workspace not found error
+ * Thrown when workspace cannot be found for a repository
+ */
+export class WorkspaceNotFoundException extends Error {
+  constructor(repositoryId: string) {
+    super(`Workspace not found for repository: ${repositoryId}`)
+    this.name = 'WorkspaceNotFoundException'
+
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, WorkspaceNotFoundException)
     }
   }
 }
