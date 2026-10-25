@@ -60,6 +60,7 @@ jobs:
         run: yarn test:ci
         env:
           NODE_ENV: test
+          APP_ENV: development
 
       - name: Upload coverage reports
         uses: codecov/codecov-action@v4
