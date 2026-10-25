@@ -24,6 +24,7 @@ describe('EventPrismaRepository', () => {
       client: {
         $transaction: vi.fn(),
         $executeRaw: vi.fn().mockResolvedValue(undefined),
+        $queryRaw: vi.fn(),
         workflowEvent: {
           findFirst: vi.fn(),
           findMany: vi.fn(),
@@ -149,20 +150,16 @@ describe('EventPrismaRepository', () => {
 
   describe('getNextSequence', () => {
     it('should return next sequence number', async () => {
-      vi.spyOn(db.client.workflowEvent, 'findFirst').mockResolvedValueOnce({ sequence: 5 })
+      vi.spyOn(db.client, '$queryRaw').mockResolvedValueOnce([{ sequence: 6 }])
 
       const result = await repository.getNextSequence('550e8400-e29b-41d4-a716-446655440001')
 
       expect(result).toBe(6)
-      expect(db.client.workflowEvent.findFirst).toHaveBeenCalledWith({
-        where: { runId: '550e8400-e29b-41d4-a716-446655440001' },
-        orderBy: { sequence: 'desc' },
-        select: { sequence: true },
-      })
+      expect(db.client.$queryRaw).toHaveBeenCalled()
     })
 
     it('should return 1 if no events exist', async () => {
-      vi.spyOn(db.client.workflowEvent, 'findFirst').mockResolvedValueOnce(null)
+      vi.spyOn(db.client, '$queryRaw').mockResolvedValueOnce([{ sequence: 1 }])
 
       const result = await repository.getNextSequence('550e8400-e29b-41d4-a716-446655440001')
 

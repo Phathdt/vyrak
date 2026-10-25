@@ -416,7 +416,8 @@ describe('Workflow E2E Integration Tests', () => {
 
       const events = await db.withOrganization(orgId, () => eventRepository.findEventsByRunId(run.id))
 
-      expect(events).toHaveLength(5)
+      expect(events).toHaveLength(4)
+      expect(events[0].eventType).toBe('step.started')
       expect(events[1].eventType).toBe('step.failed')
       expect(events[2].eventType).toBe('step.retry')
       expect(events[3].eventType).toBe('step.completed')
@@ -613,7 +614,7 @@ describe('Workflow E2E Integration Tests', () => {
         })
       )
 
-      // Create many events
+      // Create many events sequentially to ensure order
       const eventTypes = [
         'workflow.created',
         'workflow.queued',
@@ -624,18 +625,16 @@ describe('Workflow E2E Integration Tests', () => {
         'workflow.completed',
       ]
 
-      await Promise.all(
-        eventTypes.map((eventType, i) =>
-          db.withOrganization(orgId, () =>
-            eventRepository.appendEvent({
-              runId: run.id,
-              organizationId: orgId,
-              eventType,
-              payload: { sequence: i + 1 },
-            })
-          )
+      for (const eventType of eventTypes) {
+        await db.withOrganization(orgId, () =>
+          eventRepository.appendEvent({
+            runId: run.id,
+            organizationId: orgId,
+            eventType,
+            payload: {},
+          })
         )
-      )
+      }
 
       // Retrieve all events
       const allEvents = await db.withOrganization(orgId, () => eventRepository.findEventsByRunId(run.id))

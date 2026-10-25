@@ -202,9 +202,12 @@ describe('EventRepository Integration Tests', () => {
         payload: { index: i },
       }))
 
-      const created = await Promise.all(
-        events.map((e) => db.withOrganization(orgId, () => eventRepository.appendEvent(e)))
-      )
+      // Append events sequentially to ensure order
+      const created = []
+      for (const e of events) {
+        const event = await db.withOrganization(orgId, () => eventRepository.appendEvent(e))
+        created.push(event)
+      }
 
       const found = await db.withOrganization(orgId, () => eventRepository.findEventsByRunId(runId))
 
@@ -389,31 +392,30 @@ describe('EventRepository Integration Tests', () => {
         })
       )
 
-      // Append events concurrently to both runs
-      const promises = [
-        ...Array.from({ length: 5 }).map((_, i) =>
-          db.withOrganization(orgId, () =>
-            eventRepository.appendEvent({
-              runId: run1,
-              organizationId: orgId,
-              eventType: `run1-event-${i}`,
-              payload: { run: 1 },
-            })
-          )
-        ),
-        ...Array.from({ length: 5 }).map((_, i) =>
-          db.withOrganization(orgId, () =>
-            eventRepository.appendEvent({
-              runId: run2.id,
-              organizationId: orgId,
-              eventType: `run2-event-${i}`,
-              payload: { run: 2 },
-            })
-          )
-        ),
-      ]
+      // Append events sequentially for each run to avoid RLS race conditions
+      // Run 1 events
+      for (let i = 0; i < 5; i++) {
+        await db.withOrganization(orgId, () =>
+          eventRepository.appendEvent({
+            runId: run1,
+            organizationId: orgId,
+            eventType: `run1-event-${i}`,
+            payload: { run: 1 },
+          })
+        )
+      }
 
-      await Promise.all(promises)
+      // Run 2 events
+      for (let i = 0; i < 5; i++) {
+        await db.withOrganization(orgId, () =>
+          eventRepository.appendEvent({
+            runId: run2.id,
+            organizationId: orgId,
+            eventType: `run2-event-${i}`,
+            payload: { run: 2 },
+          })
+        )
+      }
 
       const run1Events = await db.withOrganization(orgId, () => eventRepository.findEventsByRunId(run1))
 

@@ -88,12 +88,16 @@ export class EventPrismaRepository implements IEventRepository {
 
   async getNextSequence(runId: string): Promise<number> {
     try {
-      const lastEvent = await this.db.client.workflowEvent.findFirst({
-        where: { runId },
-        orderBy: { sequence: 'desc' },
-        select: { sequence: true },
-      })
-      return (lastEvent?.sequence ?? 0) + 1
+      // Use $queryRaw for better read-after-write consistency
+      const result = (await this.db.client.$queryRaw`
+        SELECT COALESCE(MAX(sequence), 0) + 1 as sequence
+        FROM workflow_events
+        WHERE run_id = ${runId}
+      `) as Array<{ sequence: number | bigint }>
+
+      const sequence = result[0]?.sequence
+      // PostgreSQL returns bigint for aggregate functions, convert to number
+      return typeof sequence === 'bigint' ? Number(sequence) : sequence ?? 1
     } catch (error: unknown) {
       throw new WorkflowRepositoryError(
         'Failed to get next sequence',
