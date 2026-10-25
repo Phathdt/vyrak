@@ -1,8 +1,8 @@
 import { PrismaPg } from '@prisma/adapter-pg'
 import { PrismaClient } from '@vyrak/database'
-import { Pool } from 'pg'
 
 import * as argon2 from 'argon2'
+import { Pool } from 'pg'
 
 // Create PostgreSQL connection pool
 const pool = new Pool({
