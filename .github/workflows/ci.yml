@@ -36,9 +36,6 @@ jobs:
         if: steps.yarn-cache.outputs.cache-hit != 'true'
         run: yarn install --frozen-lockfile
 
-      - name: Generate openapi and orval
-        run: yarn generate
-
       - name: Generate Prisma Client
         run: yarn db:generate
 
