@@ -105,8 +105,14 @@ jobs:
       - name: Install Playwright browsers
         run: yarn workspace @vyrak/e2e install:browsers
 
+      - name: Generate Prisma Client
+        run: yarn db:generate
+
       - name: Build packages
         run: yarn build
+
+      - name: Generate API client
+        run: yarn generate:api
 
       - name: Setup test database
         env:
