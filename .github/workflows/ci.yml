@@ -45,9 +45,6 @@ jobs:
       - name: Build frontend
         run: yarn workspace @apps/web build
 
-      # Skip format check due to prettier-plugin-sort-imports parsing issues
-      # Run manually with: yarn format
-
       - name: Lint
         run: yarn lint:ci
 
