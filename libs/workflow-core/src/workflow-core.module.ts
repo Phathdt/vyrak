@@ -2,11 +2,16 @@ import { BullModule } from '@nestjs/bullmq'
 import { Module } from '@nestjs/common'
 import { DatabaseModule, DatabaseService } from '@vyrak/database'
 
-import { EVENT_REPOSITORY, JOB_QUEUE, STEP_REPOSITORY, WORKFLOW_REPOSITORY } from './infras/di/di'
-import { BullMQJobQueue } from './infras/queue/bullmq-job-queue'
-import { EventPrismaRepository } from './infras/repositories/event-prisma.repository'
-import { StepPrismaRepository } from './infras/repositories/step-prisma.repository'
-import { WorkflowPrismaRepository } from './infras/repositories/workflow-prisma.repository'
+import {
+  BullMQJobQueue,
+  EVENT_REPOSITORY,
+  EventPrismaRepository,
+  JOB_QUEUE,
+  STEP_REPOSITORY,
+  StepPrismaRepository,
+  WORKFLOW_REPOSITORY,
+  WorkflowPrismaRepository,
+} from './infras'
 
 /**
  * Workflow Core Module

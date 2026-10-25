@@ -1,18 +1,17 @@
 import { randomUUID } from 'crypto'
 import { DatabaseService, Prisma } from '@vyrak/database'
 
-import { WorkflowRun, WorkflowRunSchema } from '../../domain/entities/workflow-run.entity'
-import {
-  WorkflowAlreadyExistsError,
-  WorkflowNotFoundError,
-  WorkflowRepositoryError,
-} from '../../domain/errors/common.error'
 import {
   CreateRunParams,
   IWorkflowRepository,
+  WorkflowAlreadyExistsError,
+  WorkflowNotFoundError,
+  WorkflowRepositoryError,
+  WorkflowRun,
+  WorkflowRunSchema,
+  WorkflowState,
   WorkflowStateUpdate,
-} from '../../domain/interfaces/workflow.repository.interface'
-import { WorkflowState } from '../../domain/workflow-state'
+} from '../../domain'
 
 /**
  * Prisma implementation of workflow repository

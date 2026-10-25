@@ -1,8 +1,12 @@
 import { DatabaseService } from '@vyrak/database'
 
-import { WorkflowEventEntity, WorkflowEventEntitySchema } from '../../domain/entities/workflow-event.entity'
-import { WorkflowRepositoryError } from '../../domain/errors/common.error'
-import { CreateEventParams, IEventRepository } from '../../domain/interfaces/event.repository.interface'
+import {
+  CreateEventParams,
+  IEventRepository,
+  WorkflowEventEntity,
+  WorkflowEventEntitySchema,
+  WorkflowRepositoryError,
+} from '../../domain'
 
 export class EventPrismaRepository implements IEventRepository {
   constructor(private readonly db: DatabaseService) {}
