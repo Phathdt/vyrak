@@ -1,11 +1,5 @@
 {
-  "extends": "../../tsconfig.dev.json",
-  "compilerOptions": {
-    "outDir": "../../dist/apps/api-server",
-    "rootDir": "../../",
-    "noEmit": true,
-    "composite": false
-  },
+  "extends": "../../config/tsconfig.app.json",
   "include": ["src/**/*"],
   "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.ts", "src/test/**", "../../libs/**/test-utils/**"]
 }

@@ -1,15 +1,8 @@
 {
-  "extends": "../../tsconfig.dev.json",
+  "extends": "../../config/tsconfig.base.json",
   "compilerOptions": {
-    "types": ["node", "@playwright/test"],
-    "moduleResolution": "bundler",
     "module": "ESNext",
-    "target": "ES2022",
-    "lib": ["ES2022"],
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "resolveJsonModule": true,
+    "types": ["node", "@playwright/test"],
     "paths": {
       "@config/*": ["./config/*"],
       "@fixtures/*": ["./fixtures/*"],
