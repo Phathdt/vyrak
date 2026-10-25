@@ -33,7 +33,6 @@ jobs:
             ${{ runner.os }}-yarn-
 
       - name: Install dependencies
-        if: steps.yarn-cache.outputs.cache-hit != 'true'
         run: yarn install --frozen-lockfile
 
       - name: Generate Prisma Client
@@ -41,6 +40,9 @@ jobs:
 
       - name: Build backend packages (libs + api-server)
         run: yarn turbo run build --filter='!@apps/web'
+
+      - name: Generate API client
+        run: yarn generate:api
 
       - name: Build frontend
         run: yarn workspace @apps/web build
