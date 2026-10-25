@@ -3,7 +3,7 @@ import { DatabaseService } from '@vyrak/database'
 import { WorkflowExecutorService } from '@vyrak/workflow-core'
 
 import { Job } from 'bullmq'
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { WorkflowExecutionProcessor } from './workflow-execution.processor'
 
@@ -144,9 +144,7 @@ describe('WorkflowExecutionProcessor', () => {
 
       await processor.process(job)
 
-      expect(logSpy).toHaveBeenCalledWith(
-        'Processing job execute-workflow for run run-456 (org: org-789)'
-      )
+      expect(logSpy).toHaveBeenCalledWith('Processing job execute-workflow for run run-456 (org: org-789)')
       expect(logSpy).toHaveBeenCalledWith('Job execute-workflow completed for run run-456')
     })
 

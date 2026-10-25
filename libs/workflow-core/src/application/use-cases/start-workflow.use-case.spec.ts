@@ -1,10 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { StartWorkflowUseCase } from './start-workflow.use-case'
+
 import type { WorkflowRun } from '../../domain/entities'
 import type { IEventRepository, IJobQueue, IWorkflowRepository } from '../../domain/interfaces'
 import { WorkflowState } from '../../domain/workflow-state'
 import type { StartWorkflowInput } from '../dtos/start-workflow.dto'
-import { StartWorkflowUseCase } from './start-workflow.use-case'
 
 describe('StartWorkflowUseCase', () => {
   let useCase: StartWorkflowUseCase
@@ -162,10 +163,7 @@ describe('StartWorkflowUseCase', () => {
       // Assert
       expect(result).toEqual(mockWorkflowRun)
       expect(workflowRepo.findRunByIdempotencyKey).toHaveBeenCalledOnce()
-      expect(workflowRepo.findRunByIdempotencyKey).toHaveBeenCalledWith(
-        validInput.organizationId,
-        'unique-key-123'
-      )
+      expect(workflowRepo.findRunByIdempotencyKey).toHaveBeenCalledWith(validInput.organizationId, 'unique-key-123')
       // Should NOT create new run
       expect(workflowRepo.createRun).not.toHaveBeenCalled()
       // Should NOT emit event
@@ -194,10 +192,7 @@ describe('StartWorkflowUseCase', () => {
       const result = await useCase.execute(inputWithKey)
 
       // Assert
-      expect(workflowRepo.findRunByIdempotencyKey).toHaveBeenCalledWith(
-        validInput.organizationId,
-        'new-unique-key'
-      )
+      expect(workflowRepo.findRunByIdempotencyKey).toHaveBeenCalledWith(validInput.organizationId, 'new-unique-key')
       expect(workflowRepo.createRun).toHaveBeenCalledOnce()
       expect(workflowRepo.createRun).toHaveBeenCalledWith(
         expect.objectContaining({

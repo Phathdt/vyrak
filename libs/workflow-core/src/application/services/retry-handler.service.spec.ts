@@ -1,11 +1,11 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import { RetryableError, RetryHandler } from './retry-handler.service'
+import type { StepDefinition } from './workflow-definition'
 
 import type { IEventRepository, IJobQueue, IStepRepository } from '../../domain/interfaces'
 import type { RetryPolicy } from '../../domain/step-contracts'
 import { StepStatus } from '../../domain/step-types'
-
-import { RetryableError, RetryHandler } from './retry-handler.service'
-import type { StepDefinition } from './workflow-definition'
 
 describe('RetryHandler', () => {
   let handler: RetryHandler

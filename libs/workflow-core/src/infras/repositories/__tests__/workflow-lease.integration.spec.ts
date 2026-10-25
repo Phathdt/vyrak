@@ -1,7 +1,7 @@
 import { randomUUID } from 'crypto'
-
 import { PrismaClient } from '@vyrak/database'
 import { getPrismaClient, startPostgres, stopPostgres } from '@vyrak/database/test-utils'
+
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
 import { WorkflowState } from '../../../domain/workflow-state'
@@ -161,12 +161,8 @@ describe('WorkflowPrismaRepository - Lease Operations (Integration)', () => {
       expect(renewed).toBe(true)
 
       const updatedLease = await prisma.workflowRun.findUnique({ where: { id: run.id } })
-      expect(updatedLease?.leaseExpiresAt?.getTime()).toBeGreaterThan(
-        initialLease?.leaseExpiresAt?.getTime() || 0
-      )
-      expect(updatedLease?.lastHeartbeatAt?.getTime()).toBeGreaterThan(
-        initialLease?.lastHeartbeatAt?.getTime() || 0
-      )
+      expect(updatedLease?.leaseExpiresAt?.getTime()).toBeGreaterThan(initialLease?.leaseExpiresAt?.getTime() || 0)
+      expect(updatedLease?.lastHeartbeatAt?.getTime()).toBeGreaterThan(initialLease?.lastHeartbeatAt?.getTime() || 0)
     })
 
     it('should not renew lease if not owner', async () => {
@@ -263,9 +259,7 @@ describe('WorkflowPrismaRepository - Lease Operations (Integration)', () => {
       await repository.updateHeartbeat(run.id, workerId)
 
       const updated = await prisma.workflowRun.findUnique({ where: { id: run.id } })
-      expect(updated?.lastHeartbeatAt?.getTime()).toBeGreaterThan(
-        initial?.lastHeartbeatAt?.getTime() || 0
-      )
+      expect(updated?.lastHeartbeatAt?.getTime()).toBeGreaterThan(initial?.lastHeartbeatAt?.getTime() || 0)
     })
 
     it('should not update heartbeat if not owner', async () => {

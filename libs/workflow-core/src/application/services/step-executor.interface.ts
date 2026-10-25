@@ -1,7 +1,7 @@
+import { StepDefinition } from './workflow-definition'
+
 import { StepStatus, StepType } from '../../domain'
 import { WorkflowRun } from '../../domain/entities'
-
-import { StepDefinition } from './workflow-definition'
 
 /**
  * Result of step execution (application layer)

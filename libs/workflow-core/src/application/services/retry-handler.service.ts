@@ -1,10 +1,10 @@
 import { Inject, Injectable, Logger } from '@nestjs/common'
 
+import type { StepDefinition } from './workflow-definition'
+
 import type { IEventRepository, IJobQueue, IStepRepository } from '../../domain/interfaces'
 import type { RetryPolicy } from '../../domain/step-contracts'
 import { EVENT_REPOSITORY, JOB_QUEUE, STEP_REPOSITORY } from '../../infras/di'
-
-import type { StepDefinition } from './workflow-definition'
 
 /**
  * Step execution error with classification code for retry logic

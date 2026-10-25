@@ -1,5 +1,4 @@
 import { randomUUID } from 'crypto'
-
 import { Inject, Injectable, Logger, OnModuleDestroy } from '@nestjs/common'
 
 import type { IWorkflowRepository } from '../../domain/interfaces'

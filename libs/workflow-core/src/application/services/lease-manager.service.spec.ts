@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { IWorkflowRepository } from '../../domain/interfaces'
 import { LeaseManager } from './lease-manager.service'
+
+import type { IWorkflowRepository } from '../../domain/interfaces'
 
 describe('LeaseManager', () => {
   let leaseManager: LeaseManager

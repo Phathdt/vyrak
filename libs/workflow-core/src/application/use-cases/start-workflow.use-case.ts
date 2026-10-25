@@ -47,10 +47,7 @@ export class StartWorkflowUseCase {
 
     // Step 2 - Check idempotency key for duplicate submissions
     if (input.idempotencyKey) {
-      const existingRun = await this.workflowRepo.findRunByIdempotencyKey(
-        input.organizationId,
-        input.idempotencyKey
-      )
+      const existingRun = await this.workflowRepo.findRunByIdempotencyKey(input.organizationId, input.idempotencyKey)
 
       if (existingRun) {
         // Return existing run without creating duplicate
