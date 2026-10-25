@@ -15,11 +15,13 @@ import { ApprovalStepExecutor, type ILogger } from './application/services/appro
 import { ApprovalValidatorService } from './application/services/approval-validator.service'
 import { ToolStepExecutor } from './application/services/tool-step-executor.service'
 import { ApproveWorkflowUseCase } from './application/use-cases/approve-workflow.use-case'
+import { CancelWorkflowUseCase } from './application/use-cases/cancel-workflow.use-case'
 import { RejectWorkflowUseCase } from './application/use-cases/reject-workflow.use-case'
+import { StartWorkflowUseCase } from './application/use-cases/start-workflow.use-case'
 import type { IArtifactRepository } from './domain/interfaces/artifact.interface'
 import type { IAuthorizationService } from './domain/interfaces/authorization.interface'
 import type { IEventRepository } from './domain/interfaces/event.repository.interface'
-import type { IJobQueue } from './domain/interfaces/job-queue.interface'
+import type { IJobQueue, JobOptions } from './domain/interfaces/job-queue.interface'
 import type { IWorkflowApprovalRepository } from './domain/interfaces/workflow-approval.repository.interface'
 import type { IWorkflowRepository } from './domain/interfaces/workflow.repository.interface'
 import {
@@ -29,8 +31,11 @@ import {
   APPROVE_WORKFLOW_USE_CASE,
   ARTIFACT_REPOSITORY,
   AUTHORIZATION_SERVICE,
+  CANCEL_WORKFLOW_USE_CASE,
   EVENT_REPOSITORY,
   JOB_QUEUE,
+  REJECT_WORKFLOW_USE_CASE,
+  START_WORKFLOW_USE_CASE,
   TEST_RESULT_PARSER,
   TOOL_STEP_EXECUTOR,
   WORKFLOW_APPROVAL_REPOSITORY,
@@ -83,6 +88,33 @@ class ArtifactRepositoryAdapter implements IArtifactRepository {
 }
 
 /**
+ * Stub job queue for development/testing
+ * TODO: Replace with real BullMQ implementation in production
+ */
+class StubJobQueue implements IJobQueue {
+  private readonly logger = new Logger('StubJobQueue')
+
+  async enqueueWorkflowJob(runId: string, organizationId: string, options?: JobOptions): Promise<void> {
+    this.logger.warn('StubJobQueue: Workflow job enqueued but not processed (stub implementation)', {
+      runId,
+      organizationId,
+      options,
+    })
+    // No-op: jobs are not actually processed in stub mode
+  }
+
+  async enqueueStepJob(runId: string, stepKey: string, organizationId: string, options?: JobOptions): Promise<void> {
+    this.logger.warn('StubJobQueue: Step job enqueued but not processed (stub implementation)', {
+      runId,
+      stepKey,
+      organizationId,
+      options,
+    })
+    // No-op: jobs are not actually processed in stub mode
+  }
+}
+
+/**
  * Workflow Core Module
  *
  * Provides workflow execution engine with agent integration and approval workflow
@@ -118,6 +150,10 @@ class ArtifactRepositoryAdapter implements IArtifactRepository {
       useClass: StubAuthorizationService,
     },
     {
+      provide: JOB_QUEUE,
+      useClass: StubJobQueue,
+    },
+    {
       provide: APPROVAL_VALIDATOR_SERVICE,
       useFactory: (
         approvalRepo: IWorkflowApprovalRepository,
@@ -148,7 +184,7 @@ class ArtifactRepositoryAdapter implements IArtifactRepository {
       ],
     },
     {
-      provide: RejectWorkflowUseCase,
+      provide: REJECT_WORKFLOW_USE_CASE,
       useFactory: (
         workflowRepo: IWorkflowRepository,
         approvalRepo: IWorkflowApprovalRepository,
@@ -156,6 +192,17 @@ class ArtifactRepositoryAdapter implements IArtifactRepository {
         eventRepo: IEventRepository
       ) => new RejectWorkflowUseCase(workflowRepo, approvalRepo, authService, eventRepo, new LoggerAdapter()),
       inject: [WORKFLOW_REPOSITORY, WORKFLOW_APPROVAL_REPOSITORY, AUTHORIZATION_SERVICE, EVENT_REPOSITORY],
+    },
+    {
+      provide: CANCEL_WORKFLOW_USE_CASE,
+      useFactory: (workflowRepo: IWorkflowRepository) => new CancelWorkflowUseCase(workflowRepo),
+      inject: [WORKFLOW_REPOSITORY],
+    },
+    {
+      provide: START_WORKFLOW_USE_CASE,
+      useFactory: (workflowRepo: IWorkflowRepository, eventRepo: IEventRepository) =>
+        new StartWorkflowUseCase(workflowRepo, eventRepo),
+      inject: [WORKFLOW_REPOSITORY, EVENT_REPOSITORY],
     },
 
     // Step executors
@@ -200,13 +247,15 @@ class ArtifactRepositoryAdapter implements IArtifactRepository {
     TOOL_STEP_EXECUTOR,
     APPROVAL_VALIDATOR_SERVICE,
     APPROVE_WORKFLOW_USE_CASE,
+    REJECT_WORKFLOW_USE_CASE,
+    CANCEL_WORKFLOW_USE_CASE,
+    START_WORKFLOW_USE_CASE,
     AUTHORIZATION_SERVICE,
     WORKFLOW_REPOSITORY,
     EVENT_REPOSITORY,
     WORKFLOW_APPROVAL_REPOSITORY,
     ARTIFACT_REPOSITORY,
     TEST_RESULT_PARSER,
-    RejectWorkflowUseCase,
   ],
 })
 export class WorkflowCoreModule {}
