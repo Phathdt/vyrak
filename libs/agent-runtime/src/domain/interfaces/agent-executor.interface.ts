@@ -1,10 +1,4 @@
-import type {
-  AgentConfig,
-  AgentExecutionStatus,
-  AgentType,
-  ArtifactReference,
-  UsageMetrics,
-} from '../types/agent-types'
+import type { AgentConfig, AgentExecutionStatus, AgentType, ArtifactReference, UsageMetrics } from '../types'
 
 /**
  * Input for agent execution

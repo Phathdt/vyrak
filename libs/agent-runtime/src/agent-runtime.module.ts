@@ -1,13 +1,17 @@
 import { Module } from '@nestjs/common'
 import { DatabaseModule, DatabaseService } from '@vyrak/database'
 
-import { ArtifactManager } from './application/services/artifact-manager.service'
-import { WorkspaceManager } from './application/services/workspace-manager.service'
-import type { IArtifactRepository } from './domain/interfaces/artifact-repository.interface'
-import { AGENT_EXECUTOR, ARTIFACT_MANAGER, ARTIFACT_REPOSITORY, WORKSPACE_MANAGER } from './infras/di/di'
-import { ClaudeCodeExecutor } from './infras/providers/claude-code-executor'
-import { FakeAgentExecutor } from './infras/providers/fake-agent-executor'
-import { ArtifactPrismaRepository } from './infras/repositories/artifact-prisma.repository'
+import { ArtifactManager, WorkspaceManager } from './application'
+import type { IArtifactRepository } from './domain'
+import {
+  AGENT_EXECUTOR,
+  ARTIFACT_MANAGER,
+  ARTIFACT_REPOSITORY,
+  ArtifactPrismaRepository,
+  ClaudeCodeExecutor,
+  FakeAgentExecutor,
+  WORKSPACE_MANAGER,
+} from './infras'
 
 /**
  * Agent Runtime Module

@@ -2,12 +2,7 @@ import { execSync } from 'node:child_process'
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
 
-import { MainRepoError } from '../../domain/errors/main-repo.errors'
-import type {
-  IMainRepoManager,
-  MainRepoOptions,
-  RepoHealthStatus,
-} from '../../domain/interfaces/main-repo-manager.interface'
+import { MainRepoError, type IMainRepoManager, type MainRepoOptions, type RepoHealthStatus } from '../../domain'
 
 /**
  * Main repository manager service

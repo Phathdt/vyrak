@@ -3,18 +3,18 @@ import { createHash } from 'node:crypto'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 
-import { WorkspaceCreationError } from '../../domain/errors/agent-execution.errors'
-import { WorkspaceCleanupError } from '../../domain/errors/workspace-cleanup.errors'
-import type { IMainRepoManager } from '../../domain/interfaces/main-repo-manager.interface'
-import type {
-  CleanupOptions,
-  CleanupResult,
-  IWorkspaceManager,
-  WorkspaceInfo,
-  WorkspaceMetadata,
-  WorktreeInfo,
-  WorktreeOptions,
-} from '../../domain/interfaces/workspace-manager.interface'
+import {
+  WorkspaceCleanupError,
+  WorkspaceCreationError,
+  type CleanupOptions,
+  type CleanupResult,
+  type IMainRepoManager,
+  type IWorkspaceManager,
+  type WorkspaceInfo,
+  type WorkspaceMetadata,
+  type WorktreeInfo,
+  type WorktreeOptions,
+} from '../../domain'
 
 /**
  * Workspace manager service

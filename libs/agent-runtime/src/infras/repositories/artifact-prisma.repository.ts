@@ -1,10 +1,6 @@
 import type { PrismaClient } from '@vyrak/database'
 
-import type {
-  ArtifactEntity,
-  CreateArtifactParams,
-  IArtifactRepository,
-} from '../../domain/interfaces/artifact-repository.interface'
+import type { ArtifactEntity, CreateArtifactParams, IArtifactRepository } from '../../domain'
 
 /**
  * Artifact repository error
