@@ -75,7 +75,7 @@ export class ArtifactPrismaRepository implements IArtifactRepository {
         orderBy: { createdAt: 'asc' },
       })
 
-      return artifacts.map((a) => this.mapToEntity(a))
+      return artifacts.map((a: typeof artifacts[0]) => this.mapToEntity(a))
     } catch (error) {
       throw new ArtifactRepositoryError(
         `Failed to find artifacts for run ${runId}`,
@@ -94,7 +94,7 @@ export class ArtifactPrismaRepository implements IArtifactRepository {
         orderBy: { createdAt: 'desc' },
       })
 
-      return artifacts.map((a) => this.mapToEntity(a))
+      return artifacts.map((a: typeof artifacts[0]) => this.mapToEntity(a))
     } catch (error) {
       throw new ArtifactRepositoryError(
         `Failed to find artifacts for organization ${organizationId}`,
