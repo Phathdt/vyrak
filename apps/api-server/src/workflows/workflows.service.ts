@@ -1,10 +1,17 @@
 import { Inject, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common'
+import { ARTIFACT_MANAGER, type ArtifactEntity, type IArtifactManager } from '@vyrak/agent-runtime'
 import { DatabaseService } from '@vyrak/database'
 import {
   CANCEL_WORKFLOW_USE_CASE,
+  EVENT_REPOSITORY,
+  STEP_REPOSITORY,
   WORKFLOW_REPOSITORY,
   type CancelWorkflowUseCase,
+  type IEventRepository,
+  type IStepRepository,
   type IWorkflowRepository,
+  type StepRun,
+  type WorkflowEventEntity,
   type WorkflowRun,
 } from '@vyrak/workflow-core'
 
@@ -22,7 +29,13 @@ export class WorkflowsService {
     private readonly workflowRepo: IWorkflowRepository,
     private readonly databaseService: DatabaseService,
     @Inject(CANCEL_WORKFLOW_USE_CASE)
-    private readonly cancelWorkflowUseCase: CancelWorkflowUseCase
+    private readonly cancelWorkflowUseCase: CancelWorkflowUseCase,
+    @Inject(EVENT_REPOSITORY)
+    private readonly eventRepo: IEventRepository,
+    @Inject(ARTIFACT_MANAGER)
+    private readonly artifactManager: IArtifactManager,
+    @Inject(STEP_REPOSITORY)
+    private readonly stepRepo: IStepRepository
   ) {}
 
   /**
@@ -139,6 +152,75 @@ export class WorkflowsService {
       projectId: run.projectId,
       reason,
     })
+  }
+
+  /**
+   * Get steps for a workflow run
+   */
+  async getSteps(runId: string, userId: string): Promise<StepRun[]> {
+    // Verify user has access to the workflow run
+    await this.getWorkflowRun(runId, userId)
+
+    // Fetch steps ordered by creation time
+    const steps = await this.stepRepo.findStepsByRunId(runId)
+
+    return steps
+  }
+
+  /**
+   * Get events for a workflow run with pagination
+   */
+  async getEvents(
+    runId: string,
+    userId: string,
+    limit: number,
+    offset: number
+  ): Promise<{ events: WorkflowEventEntity[]; total: number }> {
+    // Verify user has access to the workflow run
+    await this.getWorkflowRun(runId, userId)
+
+    // Fetch events with pagination
+    const [events, total] = await Promise.all([
+      this.eventRepo.findEventsByRunId(runId, limit, offset),
+      this.eventRepo.countByRunId(runId),
+    ])
+
+    return { events, total }
+  }
+
+  /**
+   * List artifacts for a workflow run
+   */
+  async listArtifacts(runId: string, userId: string): Promise<ArtifactEntity[]> {
+    // Verify access
+    await this.getWorkflowRun(runId, userId)
+
+    // List artifacts by run ID
+    const artifacts = await this.artifactManager.listArtifactsByRun(runId)
+
+    return artifacts
+  }
+
+  /**
+   * Get artifact by ID
+   */
+  async getArtifact(runId: string, artifactId: string, userId: string): Promise<ArtifactEntity> {
+    // Verify access to run
+    await this.getWorkflowRun(runId, userId)
+
+    // Get artifact
+    const artifact = await this.artifactManager.getArtifact(artifactId)
+
+    if (!artifact) {
+      throw new NotFoundException(`Artifact ${artifactId} not found`)
+    }
+
+    // Verify artifact belongs to this run
+    if (artifact.runId !== runId) {
+      throw new NotFoundException(`Artifact ${artifactId} not found in run ${runId}`)
+    }
+
+    return artifact
   }
 
   /**

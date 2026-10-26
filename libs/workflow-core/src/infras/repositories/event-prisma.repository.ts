@@ -106,6 +106,42 @@ export class EventPrismaRepository implements IEventRepository {
     }
   }
 
+  async countByRunId(runId: string): Promise<number> {
+    try {
+      return await this.prisma.workflowEvent.count({
+        where: { runId },
+      })
+    } catch (error: unknown) {
+      throw new WorkflowRepositoryError(
+        'Failed to count workflow events',
+        error instanceof Error ? error.message : 'Unknown error'
+      )
+    }
+  }
+
+  async findByRunIdSince(runId: string, sinceSequence: number): Promise<WorkflowEventEntity[]> {
+    try {
+      const events = await this.prisma.workflowEvent.findMany({
+        where: {
+          runId,
+          sequence: {
+            gt: sinceSequence,
+          },
+        },
+        orderBy: {
+          sequence: 'asc',
+        },
+      })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma internal type
+      return events.map((event: any) => this.mapToDomain(event))
+    } catch (error: unknown) {
+      throw new WorkflowRepositoryError(
+        'Failed to find workflow events since sequence',
+        error instanceof Error ? error.message : 'Unknown error'
+      )
+    }
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma internal type
   private mapToDomain(prismaEvent: any): WorkflowEventEntity {
     const validated = WorkflowEventEntitySchema.parse({

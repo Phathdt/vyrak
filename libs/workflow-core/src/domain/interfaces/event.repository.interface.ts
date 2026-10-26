@@ -15,6 +15,16 @@ export interface IEventRepository {
   findEventsByRunId(runId: string, limit?: number, offset?: number): Promise<WorkflowEventEntity[]>
 
   /**
+   * Count total events for a workflow run
+   */
+  countByRunId(runId: string): Promise<number>
+
+  /**
+   * Find events since a specific sequence number
+   */
+  findByRunIdSince(runId: string, sinceSequence: number): Promise<WorkflowEventEntity[]>
+
+  /**
    * Get next sequence number for a run (for manual use)
    */
   getNextSequence(runId: string): Promise<number>
