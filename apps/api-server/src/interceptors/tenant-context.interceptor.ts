@@ -31,21 +31,19 @@ export class TenantContextInterceptor implements NestInterceptor {
       this.prisma
         .withOrganization(organizationId, async () => {
           return new Promise((resolve, reject) => {
-            next
-              .handle()
-              .subscribe({
-                next: (value) => {
-                  subscriber.next(value)
-                },
-                error: (err) => {
-                  subscriber.error(err)
-                  reject(err)
-                },
-                complete: () => {
-                  subscriber.complete()
-                  resolve(undefined)
-                },
-              })
+            next.handle().subscribe({
+              next: (value) => {
+                subscriber.next(value)
+              },
+              error: (err) => {
+                subscriber.error(err)
+                reject(err)
+              },
+              complete: () => {
+                subscriber.complete()
+                resolve(undefined)
+              },
+            })
           })
         })
         .catch((error) => {
