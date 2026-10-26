@@ -1,6 +1,6 @@
 import type { IEventRepository } from '@vyrak/workflow-core'
 
-import { firstValueFrom, take, takeUntil, timer, timeout, toArray } from 'rxjs'
+import { firstValueFrom, take, takeUntil, timeout, timer, toArray } from 'rxjs'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { EventStreamService } from '../services/event-stream.service'
@@ -75,9 +75,7 @@ describe('EventStreamService Integration Tests', () => {
       })
 
       const stream$ = service.createEventStream(runId, 0)
-      const events = await firstValueFrom(
-        stream$.pipe(take(4), toArray(), timeout(10000))
-      )
+      const events = await firstValueFrom(stream$.pipe(take(4), toArray(), timeout(10000)))
 
       expect(events).toHaveLength(3)
       expect(JSON.parse(events[0].data).sequence).toBe(1)
@@ -159,9 +157,7 @@ describe('EventStreamService Integration Tests', () => {
       ])
 
       const stream$ = service.createEventStream(runId, 0)
-      const events = await firstValueFrom(
-        stream$.pipe(take(3), toArray(), timeout(10000))
-      )
+      const events = await firstValueFrom(stream$.pipe(take(3), toArray(), timeout(10000)))
 
       expect(events).toHaveLength(3)
       expect(JSON.parse(events[0].data).eventType).toBe('event_type_a')
@@ -221,9 +217,7 @@ describe('EventStreamService Integration Tests', () => {
 
       expect(completed).toBe(true)
       expect(events.length).toBeGreaterThanOrEqual(1)
-      expect(JSON.parse(events[events.length - 1].data).eventType).toBe(
-        'workflow_completed'
-      )
+      expect(JSON.parse(events[events.length - 1].data).eventType).toBe('workflow_completed')
     })
 
     it('should complete stream when workflow_failed event is received', async () => {
@@ -253,9 +247,7 @@ describe('EventStreamService Integration Tests', () => {
       ])
 
       const stream$ = service.createEventStream(runId, 0)
-      const events = await firstValueFrom(
-        stream$.pipe(take(2), toArray(), timeout(10000))
-      )
+      const events = await firstValueFrom(stream$.pipe(take(2), toArray(), timeout(10000)))
 
       expect(events).toHaveLength(2)
       expect(JSON.parse(events[1].data).eventType).toBe('workflow_failed')
@@ -288,9 +280,7 @@ describe('EventStreamService Integration Tests', () => {
       ])
 
       const stream$ = service.createEventStream(runId, 0)
-      const events = await firstValueFrom(
-        stream$.pipe(take(2), toArray(), timeout(10000))
-      )
+      const events = await firstValueFrom(stream$.pipe(take(2), toArray(), timeout(10000)))
 
       expect(events).toHaveLength(2)
       expect(JSON.parse(events[1].data).eventType).toBe('workflow_cancelled')
@@ -359,9 +349,7 @@ describe('EventStreamService Integration Tests', () => {
       })
 
       const stream$ = service.createEventStream(runId, 0)
-      const events = await firstValueFrom(
-        stream$.pipe(take(5), toArray(), timeout(10000))
-      )
+      const events = await firstValueFrom(stream$.pipe(take(5), toArray(), timeout(10000)))
 
       expect(events).toHaveLength(4)
       expect(JSON.parse(events[0].data).sequence).toBe(1)
@@ -405,9 +393,7 @@ describe('EventStreamService Integration Tests', () => {
       })
 
       const stream$ = service.createEventStream(runId, 0)
-      const events = await firstValueFrom(
-        stream$.pipe(take(1), toArray(), timeout(10000))
-      )
+      const events = await firstValueFrom(stream$.pipe(take(1), toArray(), timeout(10000)))
 
       expect(events.length).toBeGreaterThanOrEqual(1)
       expect(pollCount).toBeGreaterThanOrEqual(2)
@@ -466,9 +452,7 @@ describe('EventStreamService Integration Tests', () => {
       })
 
       const stream$ = service.createEventStream(runId, 0)
-      const events = await firstValueFrom(
-        stream$.pipe(take(3), toArray(), timeout(10000))
-      )
+      const events = await firstValueFrom(stream$.pipe(take(3), toArray(), timeout(10000)))
 
       expect(events.length).toBeGreaterThanOrEqual(1)
       expect(pollCount).toBeGreaterThanOrEqual(3)
@@ -477,9 +461,7 @@ describe('EventStreamService Integration Tests', () => {
     it('should not throw or leak resources on database error', async () => {
       const runId = 'run-123'
 
-      vi.mocked(mockEventRepo.findByRunIdSince).mockRejectedValueOnce(
-        new Error('Connection pool exhausted')
-      )
+      vi.mocked(mockEventRepo.findByRunIdSince).mockRejectedValueOnce(new Error('Connection pool exhausted'))
 
       const stream$ = service.createEventStream(runId, 0)
       let errorThrown = false
@@ -515,44 +497,40 @@ describe('EventStreamService Integration Tests', () => {
       const runId = 'run-123'
       const capturedArgs: any[] = []
 
-      vi.mocked(mockEventRepo.findByRunIdSince).mockImplementation(
-        async (id, since) => {
-          capturedArgs.push({ id, since })
+      vi.mocked(mockEventRepo.findByRunIdSince).mockImplementation(async (id, since) => {
+        capturedArgs.push({ id, since })
 
-          // Only respond to correct since value
-          if (since === 10) {
-            return [
-              {
-                id: 'event-11',
-                runId,
-                organizationId: 'org-123',
-                stepRunId: null,
-                sequence: 11,
-                eventType: 'step_started',
-                payload: {},
-                createdAt: new Date(),
-              },
-              {
-                id: 'event-12',
-                runId,
-                organizationId: 'org-123',
-                stepRunId: null,
-                sequence: 12,
-                eventType: 'workflow_completed',
-                payload: {},
-                createdAt: new Date(),
-              },
-            ]
-          }
-
-          return []
+        // Only respond to correct since value
+        if (since === 10) {
+          return [
+            {
+              id: 'event-11',
+              runId,
+              organizationId: 'org-123',
+              stepRunId: null,
+              sequence: 11,
+              eventType: 'step_started',
+              payload: {},
+              createdAt: new Date(),
+            },
+            {
+              id: 'event-12',
+              runId,
+              organizationId: 'org-123',
+              stepRunId: null,
+              sequence: 12,
+              eventType: 'workflow_completed',
+              payload: {},
+              createdAt: new Date(),
+            },
+          ]
         }
-      )
+
+        return []
+      })
 
       const stream$ = service.createEventStream(runId, 10)
-      const events = await firstValueFrom(
-        stream$.pipe(take(2), toArray(), timeout(10000))
-      )
+      const events = await firstValueFrom(stream$.pipe(take(2), toArray(), timeout(10000)))
 
       expect(events.length).toBeGreaterThanOrEqual(1)
       expect(capturedArgs[0].since).toBe(10)
@@ -564,64 +542,60 @@ describe('EventStreamService Integration Tests', () => {
       let pollCount = 0
       const capturedArgs: any[] = []
 
-      vi.mocked(mockEventRepo.findByRunIdSince).mockImplementation(
-        async (id, since) => {
-          pollCount++
-          capturedArgs.push({ pollNumber: pollCount, since })
+      vi.mocked(mockEventRepo.findByRunIdSince).mockImplementation(async (id, since) => {
+        pollCount++
+        capturedArgs.push({ pollNumber: pollCount, since })
 
-          if (pollCount === 1 && since === 5) {
-            return [
-              {
-                id: 'event-6',
-                runId,
-                organizationId: 'org-123',
-                stepRunId: null,
-                sequence: 6,
-                eventType: 'step_started',
-                payload: {},
-                createdAt: new Date(),
-              },
-            ]
-          }
-
-          if (pollCount === 2 && since === 6) {
-            return [
-              {
-                id: 'event-7',
-                runId,
-                organizationId: 'org-123',
-                stepRunId: null,
-                sequence: 7,
-                eventType: 'step_completed',
-                payload: {},
-                createdAt: new Date(),
-              },
-            ]
-          }
-
-          if (pollCount === 3 && since === 7) {
-            return [
-              {
-                id: 'event-8',
-                runId,
-                organizationId: 'org-123',
-                stepRunId: null,
-                sequence: 8,
-                eventType: 'workflow_completed',
-                payload: {},
-                createdAt: new Date(),
-              },
-            ]
-          }
-
-          return []
+        if (pollCount === 1 && since === 5) {
+          return [
+            {
+              id: 'event-6',
+              runId,
+              organizationId: 'org-123',
+              stepRunId: null,
+              sequence: 6,
+              eventType: 'step_started',
+              payload: {},
+              createdAt: new Date(),
+            },
+          ]
         }
-      )
+
+        if (pollCount === 2 && since === 6) {
+          return [
+            {
+              id: 'event-7',
+              runId,
+              organizationId: 'org-123',
+              stepRunId: null,
+              sequence: 7,
+              eventType: 'step_completed',
+              payload: {},
+              createdAt: new Date(),
+            },
+          ]
+        }
+
+        if (pollCount === 3 && since === 7) {
+          return [
+            {
+              id: 'event-8',
+              runId,
+              organizationId: 'org-123',
+              stepRunId: null,
+              sequence: 8,
+              eventType: 'workflow_completed',
+              payload: {},
+              createdAt: new Date(),
+            },
+          ]
+        }
+
+        return []
+      })
 
       const stream$ = service.createEventStream(runId, 5)
-      const events = await firstValueFrom(
-        stream$.pipe(take(3), toArray(), timeout(10000))
-      )
+      const events = await firstValueFrom(stream$.pipe(take(3), toArray(), timeout(10000)))
 
       expect(events).toHaveLength(3)
       expect(JSON.parse(events[0].data).sequence).toBe(6)
@@ -637,33 +611,29 @@ describe('EventStreamService Integration Tests', () => {
     it('should not re-emit events when resuming from last sequence', async () => {
       const runId = 'run-123'
 
-      vi.mocked(mockEventRepo.findByRunIdSince).mockImplementation(
-        async (id, since) => {
-          // Only return new events (after the since sequence)
-          if (since === 100) {
-            return [
-              {
-                id: 'event-101',
-                runId,
-                organizationId: 'org-123',
-                stepRunId: null,
-                sequence: 101,
-                eventType: 'step_started',
-                payload: {},
-                createdAt: new Date(),
-              },
-            ]
-          }
-
-          // Don't return events <= since
-          return []
+      vi.mocked(mockEventRepo.findByRunIdSince).mockImplementation(async (id, since) => {
+        // Only return new events (after the since sequence)
+        if (since === 100) {
+          return [
+            {
+              id: 'event-101',
+              runId,
+              organizationId: 'org-123',
+              stepRunId: null,
+              sequence: 101,
+              eventType: 'step_started',
+              payload: {},
+              createdAt: new Date(),
+            },
+          ]
         }
-      )
+
+        // Don't return events <= since
+        return []
+      })
 
       const stream$ = service.createEventStream(runId, 100)
-      const events = await firstValueFrom(
-        stream$.pipe(take(1), toArray(), timeout(10000))
-      )
+      const events = await firstValueFrom(stream$.pipe(take(1), toArray(), timeout(10000)))
 
       expect(events).toHaveLength(1)
       expect(JSON.parse(events[0].data).sequence).toBeGreaterThan(100)
@@ -728,9 +698,7 @@ describe('EventStreamService Integration Tests', () => {
       ])
 
       const stream$ = service.createEventStream(runId, 0)
-      const events = await firstValueFrom(
-        stream$.pipe(take(5), toArray(), timeout(10000))
-      )
+      const events = await firstValueFrom(stream$.pipe(take(5), toArray(), timeout(10000)))
 
       expect(events).toHaveLength(5)
       const sequences = events.map((e) => JSON.parse(e.data).sequence)
@@ -782,9 +750,7 @@ describe('EventStreamService Integration Tests', () => {
       ])
 
       const stream$ = service.createEventStream(runId, 0)
-      const events = await firstValueFrom(
-        stream$.pipe(take(2), toArray(), timeout(10000))
-      )
+      const events = await firstValueFrom(stream$.pipe(take(2), toArray(), timeout(10000)))
 
       expect(events).toHaveLength(2)
 
@@ -849,16 +815,12 @@ describe('EventStreamService Integration Tests', () => {
       const stream$ = service.createEventStream(runId, 0)
 
       // Collect events from first subscription
-      const promise1 = firstValueFrom(
-        stream$.pipe(take(1), toArray(), timeout(10000))
-      )
+      const promise1 = firstValueFrom(stream$.pipe(take(1), toArray(), timeout(10000)))
 
       // Wait a bit, then subscribe second time
       await new Promise((resolve) => setTimeout(resolve, 500))
 
-      const promise2 = firstValueFrom(
-        stream$.pipe(take(1), toArray(), timeout(10000))
-      )
+      const promise2 = firstValueFrom(stream$.pipe(take(1), toArray(), timeout(10000)))
 
       const [events1, events2] = await Promise.all([promise1, promise2])
 
@@ -968,9 +930,7 @@ describe('EventStreamService Integration Tests', () => {
       ])
 
       const stream$ = service.createEventStream(runId, 0)
-      const events = await firstValueFrom(
-        stream$.pipe(take(2), toArray(), timeout(10000))
-      )
+      const events = await firstValueFrom(stream$.pipe(take(2), toArray(), timeout(10000)))
 
       expect(events).toHaveLength(2)
       const firstEvent = JSON.parse(events[0].data)
@@ -1014,9 +974,7 @@ describe('EventStreamService Integration Tests', () => {
       ])
 
       const stream$ = service.createEventStream(runId, 0)
-      const events = await firstValueFrom(
-        stream$.pipe(take(3), toArray(), timeout(10000))
-      )
+      const events = await firstValueFrom(stream$.pipe(take(3), toArray(), timeout(10000)))
 
       expect(events).toHaveLength(3)
       // All events should be properly formatted regardless of stepRunId value

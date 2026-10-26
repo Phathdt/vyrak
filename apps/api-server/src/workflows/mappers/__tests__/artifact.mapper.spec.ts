@@ -1,4 +1,5 @@
 import type { ArtifactEntity } from '@vyrak/agent-runtime'
+
 import { describe, expect, it } from 'vitest'
 
 import { toArtifactContentDto, toArtifactMetadataDto } from '../artifact.mapper'

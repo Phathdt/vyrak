@@ -1,4 +1,5 @@
 import type { IEventRepository } from '@vyrak/workflow-core'
+
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { EventStreamService } from '../event-stream.service'

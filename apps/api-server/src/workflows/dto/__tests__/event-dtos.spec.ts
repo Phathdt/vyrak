@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import {
-  ListEventsQuerySchema,
-  PaginatedEventsResponseSchema,
-  WorkflowEventResponseSchema,
-} from '../'
+import { ListEventsQuerySchema, PaginatedEventsResponseSchema, WorkflowEventResponseSchema } from '../'
 
 describe('WorkflowEventResponseDto', () => {
   it('should validate a valid event response', () => {
