@@ -94,3 +94,27 @@ export const TOOL_STEP_EXECUTOR = Symbol('TOOL_STEP_EXECUTOR')
  * Parses test results from various formats
  */
 export const TEST_RESULT_PARSER = Symbol('TEST_RESULT_PARSER')
+
+/**
+ * Workflow performance service token
+ * Provides detailed performance analysis for workflow runs
+ */
+export const WORKFLOW_PERFORMANCE_SERVICE = Symbol('WORKFLOW_PERFORMANCE_SERVICE')
+
+/**
+ * Workflow metrics service token
+ * Provides aggregated workflow execution metrics and statistics
+ */
+export const WORKFLOW_METRICS_SERVICE = Symbol('WORKFLOW_METRICS_SERVICE')
+
+/**
+ * Health check service token
+ * Provides health check endpoints for liveness and readiness probes
+ */
+export const HEALTH_CHECK_SERVICE = Symbol('HEALTH_CHECK_SERVICE')
+
+/**
+ * Prometheus metrics service token
+ * Provides Prometheus-compatible metrics collection and export
+ */
+export const PROMETHEUS_METRICS_SERVICE = Symbol('PROMETHEUS_METRICS_SERVICE')

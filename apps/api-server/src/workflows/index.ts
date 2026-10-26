@@ -1,3 +1,5 @@
+export * from './metrics.controller'
+export * from './performance.controller'
 export * from './workflows.controller'
 export * from './workflows.module'
 export * from './workflows.service'
