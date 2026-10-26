@@ -16,8 +16,7 @@ import {
   type IOrganizationService,
 } from '@vyrak/organization'
 
-import { AuthGuard } from '../../auth/auth.guard'
-import { CurrentUser } from '../../auth/decorators'
+import { AuthGuard, CurrentUser } from '../../../auth'
 
 @ApiTags('organizations')
 @Controller('api/organizations')

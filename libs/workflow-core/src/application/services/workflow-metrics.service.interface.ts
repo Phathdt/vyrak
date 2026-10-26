@@ -48,25 +48,3 @@ export interface WorkflowBreakdown {
   successRate: number
   avgDurationSeconds: number | null
 }
-
-/**
- * Workflow metrics response
- */
-export interface WorkflowMetricsResponse {
-  organizationId: string
-  projectId: string | null
-  period: {
-    from: string
-    to: string
-  }
-  summary: MetricsSummary
-  timeSeries: TimeSeriesDataPoint[]
-  byWorkflow: WorkflowBreakdown[]
-}
-
-/**
- * Workflow metrics service interface
- */
-export interface IWorkflowMetricsService {
-  getMetrics(query: WorkflowMetricsQuery): Promise<WorkflowMetricsResponse>
-}

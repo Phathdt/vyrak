@@ -13,10 +13,7 @@ import { DatabaseModule, DatabaseService } from '@vyrak/database'
 import { AgentStepExecutor } from './application/services/agent-step-executor.service'
 import { ApprovalStepExecutor, type ILogger } from './application/services/approval-step-executor.service'
 import { ApprovalValidatorService } from './application/services/approval-validator.service'
-import { PrometheusMetricsService } from './application/services/prometheus-metrics.service'
 import { ToolStepExecutor } from './application/services/tool-step-executor.service'
-import { WorkflowMetricsService } from './application/services/workflow-metrics.service'
-import { WorkflowPerformanceService } from './application/services/workflow-performance.service'
 import { ApproveWorkflowUseCase } from './application/use-cases/approve-workflow.use-case'
 import { CancelWorkflowUseCase } from './application/use-cases/cancel-workflow.use-case'
 import { RejectWorkflowUseCase } from './application/use-cases/reject-workflow.use-case'
@@ -37,15 +34,12 @@ import {
   CANCEL_WORKFLOW_USE_CASE,
   EVENT_REPOSITORY,
   JOB_QUEUE,
-  PROMETHEUS_METRICS_SERVICE,
   REJECT_WORKFLOW_USE_CASE,
   START_WORKFLOW_USE_CASE,
   STEP_REPOSITORY,
   TEST_RESULT_PARSER,
   TOOL_STEP_EXECUTOR,
   WORKFLOW_APPROVAL_REPOSITORY,
-  WORKFLOW_METRICS_SERVICE,
-  WORKFLOW_PERFORMANCE_SERVICE,
   WORKFLOW_REPOSITORY,
 } from './infras/di/di'
 import { EventPrismaRepository } from './infras/repositories/event-prisma.repository'
@@ -253,21 +247,6 @@ class StubJobQueue implements IJobQueue {
       provide: TEST_RESULT_PARSER,
       useClass: TestResultParserService,
     },
-    {
-      provide: WORKFLOW_PERFORMANCE_SERVICE,
-      useFactory: (db: DatabaseService) => new WorkflowPerformanceService(db.client),
-      inject: [DatabaseService],
-    },
-    {
-      provide: WORKFLOW_METRICS_SERVICE,
-      useFactory: (db: DatabaseService) => new WorkflowMetricsService(db.client),
-      inject: [DatabaseService],
-    },
-    {
-      provide: PROMETHEUS_METRICS_SERVICE,
-      useFactory: (db: DatabaseService) => new PrometheusMetricsService(db.client),
-      inject: [DatabaseService],
-    },
   ],
   exports: [
     AGENT_STEP_EXECUTOR,
@@ -285,9 +264,6 @@ class StubJobQueue implements IJobQueue {
     WORKFLOW_APPROVAL_REPOSITORY,
     ARTIFACT_REPOSITORY,
     TEST_RESULT_PARSER,
-    WORKFLOW_METRICS_SERVICE,
-    WORKFLOW_PERFORMANCE_SERVICE,
-    PROMETHEUS_METRICS_SERVICE,
   ],
 })
 export class WorkflowCoreModule {}

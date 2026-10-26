@@ -17,7 +17,6 @@ describe('OrganizationMemberGuard', () => {
         },
       },
       withSystemAccess: vi.fn(),
-      setTenantContext: vi.fn(),
     }
 
     guard = new OrganizationMemberGuard(mockPrisma as unknown as DatabaseService)
@@ -73,7 +72,6 @@ describe('OrganizationMemberGuard', () => {
 
         expect(result).toBe(true)
         expect(mockPrisma.withSystemAccess).not.toHaveBeenCalled()
-        expect(mockPrisma.setTenantContext).not.toHaveBeenCalled()
       })
 
       it('should allow access with empty params and query', async () => {
@@ -106,7 +104,6 @@ describe('OrganizationMemberGuard', () => {
         expect(result).toBe(true)
         expect(request.organizationId).toBe('org-456')
         expect(request.memberRole).toBe('admin')
-        expect(mockPrisma.setTenantContext).toHaveBeenCalledWith('org-456')
       })
 
       it('should call withSystemAccess when verifying membership', async () => {
@@ -163,7 +160,6 @@ describe('OrganizationMemberGuard', () => {
         const result = await guard.canActivate(context)
 
         expect(result).toBe(true)
-        expect(mockPrisma.setTenantContext).toHaveBeenCalledWith('org-789')
       })
 
       it('should use orgId when organizationId is not present', async () => {
@@ -326,8 +322,6 @@ describe('OrganizationMemberGuard', () => {
         } catch (error) {
           // Expected
         }
-
-        expect(mockPrisma.setTenantContext).not.toHaveBeenCalled()
       })
 
       it('should throw ForbiddenException with correct message', async () => {
@@ -347,35 +341,6 @@ describe('OrganizationMemberGuard', () => {
     })
 
     describe('tenant context setting', () => {
-      it('should set tenant context after successful verification', async () => {
-        const context = createMockContext('user-123', { organizationId: 'org-456' })
-
-        mockPrisma.withSystemAccess.mockImplementation((callback: any) => callback())
-        mockPrisma.client.member.findUnique.mockResolvedValue({
-          id: 'member-1',
-          role: 'admin',
-        })
-
-        await guard.canActivate(context)
-
-        expect(mockPrisma.setTenantContext).toHaveBeenCalledWith('org-456')
-        expect(mockPrisma.setTenantContext).toHaveBeenCalledTimes(1)
-      })
-
-      it('should set tenant context with correct organization ID', async () => {
-        const context = createMockContext('user-123', { organizationId: 'org-specific' })
-
-        mockPrisma.withSystemAccess.mockImplementation((callback: any) => callback())
-        mockPrisma.client.member.findUnique.mockResolvedValue({
-          id: 'member-1',
-          role: 'member',
-        })
-
-        await guard.canActivate(context)
-
-        expect(mockPrisma.setTenantContext).toHaveBeenCalledWith('org-specific')
-      })
-
       it('should set organization ID on request after verification', async () => {
         const context = createMockContext('user-123', { organizationId: 'org-456' })
 

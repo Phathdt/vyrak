@@ -48,7 +48,7 @@ import {
 import { EventStreamService } from './services'
 import { WorkflowsService } from './workflows.service'
 
-import { CurrentUser } from '../app/auth/decorators'
+import { CurrentUser } from '../auth/decorators'
 import { JwtAuthGuard } from '../guards/jwt-auth.guard'
 import { OrganizationMemberGuard } from '../guards/organization-member.guard'
 

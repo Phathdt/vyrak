@@ -15,7 +15,6 @@ import { AppService } from './app.service'
 import { AuthController, InvitationsController, OrganizationsController } from './controllers'
 
 import { ResponseInterceptor, TenantContextInterceptor, TraceIdInterceptor } from '../interceptors'
-import { MetricsModule } from '../metrics/metrics.module'
 import { WorkflowsModule } from '../workflows/workflows.module'
 
 @Module({
@@ -44,7 +43,6 @@ import { WorkflowsModule } from '../workflows/workflows.module'
     AuthModule,
     OrganizationModule,
     WorkflowsModule,
-    MetricsModule,
   ],
   controllers: [AppController, AuthController, OrganizationsController, InvitationsController],
   providers: [
