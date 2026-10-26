@@ -50,7 +50,7 @@ import { WorkflowsService } from './workflows.service'
 
 import { JwtAuthGuard } from '../guards/jwt-auth.guard'
 import { OrganizationMemberGuard } from '../guards/organization-member.guard'
-import { CurrentUser } from '../organizations/decorators'
+import { CurrentUser } from '../app/auth/decorators'
 
 @ApiTags('workflows')
 @Controller('api/organizations/:orgId')

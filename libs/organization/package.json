@@ -1,0 +1,28 @@
+{
+  "name": "@vyrak/organization",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc && rolldown --config rolldown.config.mjs",
+    "dev": "tsc && rolldown --config rolldown.config.mjs --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@vyrak/database": "*",
+    "nestjs-zod": "^3.0.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@nestjs/common": "^11.0.8",
+    "@nestjs/swagger": "^8.0.5"
+  }
+}

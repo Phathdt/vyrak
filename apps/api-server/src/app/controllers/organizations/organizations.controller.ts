@@ -1,20 +1,25 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Inject, Param, Patch, Post, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
-
-import { AuthGuard } from './auth.guard'
-import { CurrentUser } from './decorators'
+import type {
+  IInvitationService,
+  IMemberService,
+  IOrganizationService,
+} from '@vyrak/organization'
 import {
   CreateOrganizationDto,
   InvitationResponse,
   InviteMemberDto,
+  INVITATION_SERVICE,
   MemberResponse,
+  MEMBER_SERVICE,
   OrganizationResponse,
+  ORGANIZATION_SERVICE,
   UpdateMemberRoleDto,
   UpdateOrganizationDto,
-} from './dto'
-import { InvitationsService } from './invitations.service'
-import { MembersService } from './members.service'
-import { OrganizationsService } from './organizations.service'
+} from '@vyrak/organization'
+
+import { AuthGuard } from '../../auth/auth.guard'
+import { CurrentUser } from '../../auth/decorators'
 
 @ApiTags('organizations')
 @Controller('api/organizations')
@@ -22,9 +27,9 @@ import { OrganizationsService } from './organizations.service'
 @ApiBearerAuth()
 export class OrganizationsController {
   constructor(
-    private readonly organizationsService: OrganizationsService,
-    private readonly membersService: MembersService,
-    private readonly invitationsService: InvitationsService
+    @Inject(ORGANIZATION_SERVICE) private readonly organizationsService: IOrganizationService,
+    @Inject(MEMBER_SERVICE) private readonly membersService: IMemberService,
+    @Inject(INVITATION_SERVICE) private readonly invitationsService: IInvitationService
   ) {}
 
   @Post()
@@ -116,7 +121,7 @@ export class OrganizationsController {
 @UseGuards(AuthGuard)
 @ApiBearerAuth()
 export class InvitationsController {
-  constructor(private readonly invitationsService: InvitationsService) {}
+  constructor(@Inject(INVITATION_SERVICE) private readonly invitationsService: IInvitationService) {}
 
   @Get('pending')
   @ApiOperation({ summary: 'List user pending invitations' })

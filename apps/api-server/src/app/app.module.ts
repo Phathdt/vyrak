@@ -8,14 +8,14 @@ import { AuthModule } from '@vyrak/auth'
 import { CustomConfigModule } from '@vyrak/custom-config'
 import { CustomLoggerModule } from '@vyrak/custom-logger'
 import { DatabaseModule } from '@vyrak/database'
+import { OrganizationModule } from '@vyrak/organization'
 
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
-import { AuthController } from './controllers'
+import { AuthController, InvitationsController, OrganizationsController } from './controllers'
 
 import { ResponseInterceptor, TenantContextCleanupInterceptor, TraceIdInterceptor } from '../interceptors'
 import { MetricsModule } from '../metrics/metrics.module'
-import { OrganizationsModule } from '../organizations'
 import { WorkflowsModule } from '../workflows/workflows.module'
 
 @Module({
@@ -42,11 +42,11 @@ import { WorkflowsModule } from '../workflows/workflows.module'
       name: 'example',
     }),
     AuthModule,
-    OrganizationsModule,
+    OrganizationModule,
     WorkflowsModule,
     MetricsModule,
   ],
-  controllers: [AppController, AuthController],
+  controllers: [AppController, AuthController, OrganizationsController, InvitationsController],
   providers: [
     AppService,
     {
