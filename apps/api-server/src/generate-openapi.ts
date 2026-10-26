@@ -28,7 +28,6 @@ import { NestFactory } from '@nestjs/core'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 
 import { dump as yamlDump } from 'js-yaml'
-import { cleanupOpenApiDoc } from 'nestjs-zod'
 
 import { AppModule } from './app'
 
@@ -43,10 +42,17 @@ if (!process.env.DATABASE__URL) {
 const currentDir = __dirname
 
 async function generateOpenApiSpec() {
+  console.log('[OpenAPI] Starting generation...')
+  console.log('[OpenAPI] Current directory:', currentDir)
+  console.log('[OpenAPI] SKIP_DB_CONNECTION:', process.env.SKIP_DB_CONNECTION)
+  console.log('[OpenAPI] DATABASE__URL:', process.env.DATABASE__URL ? 'SET' : 'NOT SET')
+
+  console.log('[OpenAPI] Creating NestJS app...')
   const app = await NestFactory.create(AppModule, {
-    logger: false, // suppress boot logs during export
+    logger: ['error', 'warn', 'log'], // Enable more logging
   })
 
+  console.log('[OpenAPI] Building Swagger configuration...')
   const config = new DocumentBuilder()
     .setTitle('Vyrak API')
     .setDescription('Vyrak API documentation')
@@ -55,11 +61,13 @@ async function generateOpenApiSpec() {
     .addServer('http://localhost:3000', 'Development')
     .build()
 
-  // cleanupOpenApiDoc resolves nestjs-zod schemas into proper OpenAPI definitions
-  const document = cleanupOpenApiDoc(SwaggerModule.createDocument(app, config))
+  console.log('[OpenAPI] Creating document...')
+  const document = SwaggerModule.createDocument(app, config)
 
   // currentDir = apps/api-server/src → go up 3 levels to monorepo root
   const outputPath = path.resolve(currentDir, '..', '..', '..', 'docs', 'openapi.yaml')
+  console.log('[OpenAPI] Output path:', outputPath)
+
   fs.mkdirSync(path.dirname(outputPath), { recursive: true })
   fs.writeFileSync(outputPath, yamlDump(document, { lineWidth: 120 }), 'utf8')
 
