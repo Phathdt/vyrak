@@ -12,10 +12,18 @@ export class TenantContextCleanupInterceptor implements NestInterceptor {
   constructor(private readonly databaseService: DatabaseService) {}
 
   intercept(_context: ExecutionContext, next: CallHandler): Observable<unknown> {
+    // Let the request complete first, then cleanup in finalize
     return next.handle().pipe(
       tap({
+        next: () => {
+          // Do nothing on success - let request complete
+        },
+        error: () => {
+          // Clean up on error
+          this.databaseService.clearTenantContext()
+        },
         finalize: () => {
-          // Clean up tenant context after response is sent
+          // Clean up tenant context after response is fully sent
           this.databaseService.clearTenantContext()
         },
       })

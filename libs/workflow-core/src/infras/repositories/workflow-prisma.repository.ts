@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto'
-import { Prisma, PrismaClient } from '@vyrak/database'
+import { Prisma, PrismaClient, WorkflowRun as PrismaWorkflowRun } from '@vyrak/database'
 
 import {
   CreateRunParams,
@@ -130,7 +130,7 @@ export class WorkflowPrismaRepository implements IWorkflowRepository {
         this.prisma.workflowRun.count({ where }),
       ])
 
-      return [runs.map((run) => this.mapToDomain(run)), total]
+      return [runs.map((run: PrismaWorkflowRun) => this.mapToDomain(run)), total]
     } catch (error) {
       throw new WorkflowRepositoryError(
         'Failed to find workflow runs with count',
