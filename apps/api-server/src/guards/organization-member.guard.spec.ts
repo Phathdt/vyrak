@@ -29,7 +29,7 @@ describe('OrganizationMemberGuard', () => {
     query: Record<string, string> = {}
   ) => {
     const request = {
-      userId,
+      user: userId ? { userId } : undefined,
       params,
       query,
       organizationId: undefined,

@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from 'node:async_hooks'
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { CustomConfigService } from '@vyrak/custom-config'
@@ -45,7 +46,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   private readonly prismaClient: PrismaClient
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private readonly extendedClient: any
-  private tenantContext: TenantFilterContext = {}
+  private readonly asyncLocalStorage = new AsyncLocalStorage<TenantFilterContext>()
 
   constructor(configService: CustomConfigService) {
     // Create pg Pool for health checks (bypassing Prisma adapter)
@@ -68,8 +69,10 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       log: prismaLogLevels,
     })
 
-    // Extend with tenant filter
-    this.extendedClient = this.prismaClient.$extends(createTenantFilterExtension(() => this.tenantContext))
+    // Extend with tenant filter using AsyncLocalStorage
+    this.extendedClient = this.prismaClient.$extends(
+      createTenantFilterExtension(() => this.asyncLocalStorage.getStore() ?? {})
+    )
 
     this.pool = pool
     this.enableColors = !configService.log.enableJsonFormat
@@ -90,46 +93,45 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Set tenant context for current operation
+   * Set tenant context for current request (using AsyncLocalStorage)
+   * This provides request-level isolation preventing race conditions
    */
   setTenantContext(organizationId: string): void {
-    this.tenantContext = {
+    this.asyncLocalStorage.enterWith({
       organizationId,
       bypassTenantFilter: false,
-    }
+    })
   }
 
   /**
-   * Clear tenant context
+   * Clear tenant context for current request
    */
   clearTenantContext(): void {
-    this.tenantContext = {}
+    this.asyncLocalStorage.enterWith({})
+  }
+
+  /**
+   * Get current tenant context (for debugging/logging)
+   */
+  getTenantContext(): TenantFilterContext {
+    return this.asyncLocalStorage.getStore() ?? {}
   }
 
   /**
    * Execute operation with specific organization context
+   * AsyncLocalStorage automatically isolates context per async execution chain
    */
   async withOrganization<T>(organizationId: string, fn: () => Promise<T>): Promise<T> {
-    const previousContext = { ...this.tenantContext }
-    this.setTenantContext(organizationId)
-    try {
-      return await fn()
-    } finally {
-      this.tenantContext = previousContext
-    }
+    return this.asyncLocalStorage.run({ organizationId, bypassTenantFilter: false }, fn)
   }
 
   /**
    * Execute system operation bypassing tenant filter
+   * AsyncLocalStorage automatically isolates context per async execution chain
    */
   async withSystemAccess<T>(fn: () => Promise<T>): Promise<T> {
-    const previousBypass = this.tenantContext.bypassTenantFilter
-    this.tenantContext.bypassTenantFilter = true
-    try {
-      return await fn()
-    } finally {
-      this.tenantContext.bypassTenantFilter = previousBypass
-    }
+    const currentContext = this.asyncLocalStorage.getStore() ?? {}
+    return this.asyncLocalStorage.run({ ...currentContext, bypassTenantFilter: true }, fn)
   }
 
   /**

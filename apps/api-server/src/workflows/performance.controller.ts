@@ -7,6 +7,7 @@ import {
 } from '@vyrak/workflow-core'
 
 import { JwtAuthGuard } from '../guards/jwt-auth.guard'
+import { OrganizationMemberGuard } from '../guards/organization-member.guard'
 
 /**
  * Performance Controller
@@ -15,8 +16,8 @@ import { JwtAuthGuard } from '../guards/jwt-auth.guard'
  * step timing, bottleneck detection, and summary statistics.
  */
 @ApiTags('workflows')
-@Controller('api/workflows/runs')
-@UseGuards(JwtAuthGuard)
+@Controller('api/organizations/:orgId/workflows/runs')
+@UseGuards(JwtAuthGuard, OrganizationMemberGuard)
 @ApiBearerAuth()
 export class PerformanceController {
   constructor(
@@ -25,7 +26,7 @@ export class PerformanceController {
   ) {}
 
   /**
-   * GET /api/workflows/runs/:runId/performance
+   * GET /api/organizations/:orgId/workflows/runs/:runId/performance
    * Get detailed performance stats for a workflow run
    */
   @Get(':runId/performance')
@@ -42,7 +43,11 @@ export class PerformanceController {
   })
   @ApiResponse({ status: 404, description: 'Workflow run not found' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async getPerformance(@Param('runId', ParseUUIDPipe) runId: string): Promise<WorkflowPerformanceResponseDto> {
+  @ApiResponse({ status: 403, description: 'Forbidden - not a member of the organization' })
+  async getPerformance(
+    @Param('orgId', ParseUUIDPipe) _orgId: string,
+    @Param('runId', ParseUUIDPipe) runId: string
+  ): Promise<WorkflowPerformanceResponseDto> {
     try {
       const result = await this.performanceService.getPerformance(runId)
       return result as WorkflowPerformanceResponseDto

@@ -4,7 +4,10 @@ import { DatabaseService } from '@vyrak/database'
 import { Request } from 'express'
 
 interface AuthenticatedRequest extends Request {
-  userId?: string
+  user?: {
+    userId: string
+    email: string
+  }
   organizationId?: string
   memberRole?: string
 }
@@ -19,7 +22,7 @@ export class OrganizationMemberGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>()
-    const userId = request.userId
+    const userId = request.user?.userId
 
     if (!userId) {
       throw new ForbiddenException('Authentication required')

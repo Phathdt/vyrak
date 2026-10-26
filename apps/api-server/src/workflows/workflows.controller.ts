@@ -53,8 +53,8 @@ import { OrganizationMemberGuard } from '../guards/organization-member.guard'
 import { CurrentUser } from '../organizations/decorators'
 
 @ApiTags('workflows')
-@Controller('api')
-@UseGuards(JwtAuthGuard)
+@Controller('api/organizations/:orgId')
+@UseGuards(JwtAuthGuard, OrganizationMemberGuard)
 @ApiBearerAuth()
 export class WorkflowsController {
   constructor(
@@ -71,11 +71,10 @@ export class WorkflowsController {
   ) {}
 
   /**
-   * POST /api/projects/:projectId/workflows/runs
+   * POST /api/organizations/:orgId/projects/:projectId/workflows/runs
    * Create a new workflow run
    */
   @Post('projects/:projectId/workflows/runs')
-  @UseGuards(OrganizationMemberGuard)
   @ApiOperation({
     summary: 'Create a new workflow run',
     description: 'Initiates a new workflow execution with the provided requirements and repository settings',
@@ -90,16 +89,17 @@ export class WorkflowsController {
   @ApiResponse({ status: 403, description: 'Forbidden - not a member of the organization' })
   @ApiResponse({ status: 404, description: 'Project not found' })
   async createWorkflowRun(
+    @Param('orgId', ParseUUIDPipe) orgId: string,
     @Param('projectId', ParseUUIDPipe) projectId: string,
     @CurrentUser() userId: string,
     @Body() dto: CreateWorkflowRunDto
   ): Promise<WorkflowRunResponseDto> {
-    // Get organizationId from project
-    const project = await this.workflowsService.getProject(projectId)
+    // Verify project exists (tenant filter already applied)
+    await this.workflowsService.verifyProjectExists(projectId)
 
     // Start the workflow using the use case
     const run = await this.startWorkflowUseCase.execute({
-      organizationId: project.organizationId,
+      organizationId: orgId,
       projectId,
       workflowKey: 'ai-sdlc-workflow',
       workflowVersion: '1.0.0',
@@ -116,7 +116,30 @@ export class WorkflowsController {
   }
 
   /**
-   * GET /api/workflows/runs/:runId
+   * GET /api/organizations/:orgId/workflows/runs
+   * List workflow runs with optional filters
+   */
+  @Get('workflows/runs')
+  @ApiOperation({
+    summary: 'List workflow runs',
+    description: 'Retrieves a paginated list of workflow runs with optional filters by project and status',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Workflow runs retrieved successfully',
+    type: PaginatedWorkflowRunsDto,
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - not a member of the organization' })
+  async listWorkflowRuns(
+    @Param('orgId', ParseUUIDPipe) orgId: string,
+    @Query() query: ListWorkflowRunsDto
+  ): Promise<PaginatedWorkflowRunsDto> {
+    return this.workflowsService.listWorkflowRuns(orgId, query)
+  }
+
+  /**
+   * GET /api/organizations/:orgId/workflows/runs/:runId
    * Get workflow run details by ID
    */
   @Get('workflows/runs/:runId')
@@ -133,37 +156,15 @@ export class WorkflowsController {
   @ApiResponse({ status: 403, description: 'Forbidden - no access to this workflow run' })
   @ApiResponse({ status: 404, description: 'Workflow run not found' })
   async getWorkflowRun(
-    @Param('runId', ParseUUIDPipe) runId: string,
-    @CurrentUser() userId: string
+    @Param('orgId', ParseUUIDPipe) _orgId: string,
+    @Param('runId', ParseUUIDPipe) runId: string
   ): Promise<WorkflowRunResponseDto> {
-    const run = await this.workflowsService.getWorkflowRun(runId, userId)
+    const run = await this.workflowsService.getWorkflowRun(runId)
     return toWorkflowRunResponseDto(run)
   }
 
   /**
-   * GET /api/workflows/runs
-   * List workflow runs with optional filters
-   */
-  @Get('workflows/runs')
-  @ApiOperation({
-    summary: 'List workflow runs',
-    description: 'Retrieves a paginated list of workflow runs with optional filters by project and status',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Workflow runs retrieved successfully',
-    type: PaginatedWorkflowRunsDto,
-  })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async listWorkflowRuns(
-    @Query() query: ListWorkflowRunsDto,
-    @CurrentUser() userId: string
-  ): Promise<PaginatedWorkflowRunsDto> {
-    return this.workflowsService.listWorkflowRuns(query, userId)
-  }
-
-  /**
-   * POST /api/workflows/runs/:runId/approve
+   * POST /api/organizations/:orgId/workflows/runs/:runId/approve
    * Approve a pending workflow
    */
   @Post('workflows/runs/:runId/approve')
@@ -179,17 +180,18 @@ export class WorkflowsController {
   @ApiResponse({ status: 404, description: 'Workflow run not found' })
   @ApiResponse({ status: 409, description: 'Approval already decided or plan has been regenerated' })
   async approveWorkflow(
+    @Param('orgId', ParseUUIDPipe) orgId: string,
     @Param('runId', ParseUUIDPipe) runId: string,
     @CurrentUser() userId: string,
     @Body() dto: ApprovalDecisionDto
   ): Promise<{ message: string }> {
-    // Get workflow run to extract organizationId and projectId
-    const run = await this.workflowsService.getWorkflowRunForApproval(runId, userId)
+    // Get workflow run (tenant filter already applied)
+    const run = await this.workflowsService.getWorkflowRun(runId)
 
     await this.approveWorkflowUseCase.execute({
       runId,
       userId,
-      organizationId: run.organizationId,
+      organizationId: orgId,
       projectId: run.projectId,
       comment: dto.comment,
     })
@@ -198,7 +200,7 @@ export class WorkflowsController {
   }
 
   /**
-   * POST /api/workflows/runs/:runId/reject
+   * POST /api/organizations/:orgId/workflows/runs/:runId/reject
    * Reject a pending workflow
    */
   @Post('workflows/runs/:runId/reject')
@@ -214,6 +216,7 @@ export class WorkflowsController {
   @ApiResponse({ status: 404, description: 'Workflow run not found' })
   @ApiResponse({ status: 409, description: 'Approval already decided' })
   async rejectWorkflow(
+    @Param('orgId', ParseUUIDPipe) orgId: string,
     @Param('runId', ParseUUIDPipe) runId: string,
     @CurrentUser() userId: string,
     @Body() dto: ApprovalDecisionDto
@@ -223,13 +226,13 @@ export class WorkflowsController {
       throw new Error('Rejection comment is required')
     }
 
-    // Get workflow run to extract organizationId and projectId
-    const run = await this.workflowsService.getWorkflowRunForApproval(runId, userId)
+    // Get workflow run (tenant filter already applied)
+    const run = await this.workflowsService.getWorkflowRun(runId)
 
     await this.rejectWorkflowUseCase.execute({
       runId,
       userId,
-      organizationId: run.organizationId,
+      organizationId: orgId,
       projectId: run.projectId,
       comment: dto.comment,
     })
@@ -238,7 +241,7 @@ export class WorkflowsController {
   }
 
   /**
-   * POST /api/workflows/runs/:runId/cancel
+   * POST /api/organizations/:orgId/workflows/runs/:runId/cancel
    * Cancel a running workflow
    */
   @Post('workflows/runs/:runId/cancel')
@@ -253,17 +256,18 @@ export class WorkflowsController {
   @ApiResponse({ status: 403, description: 'Forbidden - no access to this workflow' })
   @ApiResponse({ status: 404, description: 'Workflow run not found' })
   async cancelWorkflow(
+    @Param('orgId', ParseUUIDPipe) orgId: string,
     @Param('runId', ParseUUIDPipe) runId: string,
     @CurrentUser() userId: string,
     @Body() dto: ApprovalDecisionDto
   ): Promise<{ message: string }> {
-    // Get workflow run to extract organizationId and projectId
-    const run = await this.workflowsService.getWorkflowRun(runId, userId)
+    // Get workflow run (tenant filter already applied)
+    const run = await this.workflowsService.getWorkflowRun(runId)
 
     await this.cancelWorkflowUseCase.execute({
       runId,
       userId,
-      organizationId: run.organizationId,
+      organizationId: orgId,
       projectId: run.projectId,
       reason: dto.comment || 'User requested cancellation',
     })
@@ -272,7 +276,7 @@ export class WorkflowsController {
   }
 
   /**
-   * GET /api/workflows/runs/:runId/steps
+   * GET /api/organizations/:orgId/workflows/runs/:runId/steps
    * Get workflow step executions
    */
   @Get('workflows/runs/:runId/steps')
@@ -289,15 +293,15 @@ export class WorkflowsController {
   @ApiResponse({ status: 403, description: 'Forbidden - no access to this workflow' })
   @ApiResponse({ status: 404, description: 'Workflow run not found' })
   async getSteps(
-    @Param('runId', ParseUUIDPipe) runId: string,
-    @CurrentUser() userId: string
+    @Param('orgId', ParseUUIDPipe) _orgId: string,
+    @Param('runId', ParseUUIDPipe) runId: string
   ): Promise<StepRunResponseDto[]> {
-    const steps = await this.workflowsService.getSteps(runId, userId)
+    const steps = await this.workflowsService.getSteps(runId)
     return steps.map(toStepRunResponseDto)
   }
 
   /**
-   * GET /api/workflows/runs/:runId/events
+   * GET /api/organizations/:orgId/workflows/runs/:runId/events
    * Get workflow events with pagination
    */
   @Get('workflows/runs/:runId/events')
@@ -314,11 +318,11 @@ export class WorkflowsController {
   @ApiResponse({ status: 403, description: 'Forbidden - no access to this workflow' })
   @ApiResponse({ status: 404, description: 'Workflow run not found' })
   async getEvents(
+    @Param('orgId', ParseUUIDPipe) _orgId: string,
     @Param('runId', ParseUUIDPipe) runId: string,
-    @Query() query: ListEventsQueryDto,
-    @CurrentUser() userId: string
+    @Query() query: ListEventsQueryDto
   ): Promise<PaginatedEventsResponseDto> {
-    const { events, total } = await this.workflowsService.getEvents(runId, userId, query.limit, query.offset)
+    const { events, total } = await this.workflowsService.getEvents(runId, query.limit, query.offset)
 
     return {
       items: events.map(toWorkflowEventResponseDto),
@@ -329,7 +333,7 @@ export class WorkflowsController {
   }
 
   /**
-   * GET /api/workflows/runs/:runId/artifacts
+   * GET /api/organizations/:orgId/workflows/runs/:runId/artifacts
    * List workflow artifacts
    */
   @Get('workflows/runs/:runId/artifacts')
@@ -346,15 +350,15 @@ export class WorkflowsController {
   @ApiResponse({ status: 403, description: 'Forbidden - no access to this workflow' })
   @ApiResponse({ status: 404, description: 'Workflow run not found' })
   async listArtifacts(
-    @Param('runId', ParseUUIDPipe) runId: string,
-    @CurrentUser() userId: string
+    @Param('orgId', ParseUUIDPipe) _orgId: string,
+    @Param('runId', ParseUUIDPipe) runId: string
   ): Promise<ArtifactMetadataDto[]> {
-    const artifacts = await this.workflowsService.listArtifacts(runId, userId)
+    const artifacts = await this.workflowsService.listArtifacts(runId)
     return artifacts.map((artifact) => toArtifactMetadataDto(artifact, runId))
   }
 
   /**
-   * GET /api/workflows/runs/:runId/artifacts/:artifactId
+   * GET /api/organizations/:orgId/workflows/runs/:runId/artifacts/:artifactId
    * Get artifact content
    */
   @Get('workflows/runs/:runId/artifacts/:artifactId')
@@ -371,16 +375,16 @@ export class WorkflowsController {
   @ApiResponse({ status: 403, description: 'Forbidden - no access to this artifact' })
   @ApiResponse({ status: 404, description: 'Artifact not found' })
   async getArtifact(
+    @Param('orgId', ParseUUIDPipe) _orgId: string,
     @Param('runId', ParseUUIDPipe) runId: string,
-    @Param('artifactId', ParseUUIDPipe) artifactId: string,
-    @CurrentUser() userId: string
+    @Param('artifactId', ParseUUIDPipe) artifactId: string
   ): Promise<ArtifactContentDto> {
-    const artifact = await this.workflowsService.getArtifact(runId, artifactId, userId)
+    const artifact = await this.workflowsService.getArtifact(runId, artifactId)
     return toArtifactContentDto(artifact, runId)
   }
 
   /**
-   * GET /api/workflows/runs/:runId/events/stream
+   * GET /api/organizations/:orgId/workflows/runs/:runId/events/stream
    * Stream workflow events via SSE
    */
   @Sse('workflows/runs/:runId/events/stream')
@@ -410,12 +414,12 @@ export class WorkflowsController {
   @ApiResponse({ status: 403, description: 'Forbidden - no access to this workflow' })
   @ApiResponse({ status: 404, description: 'Workflow run not found' })
   async streamEvents(
+    @Param('orgId', ParseUUIDPipe) _orgId: string,
     @Param('runId', ParseUUIDPipe) runId: string,
-    @CurrentUser() userId: string,
     @Query('since') since?: string
   ): Promise<Observable<MessageEvent>> {
     // Verify access first (synchronous check before opening stream)
-    await this.workflowsService.getWorkflowRun(runId, userId)
+    await this.workflowsService.getWorkflowRun(runId)
 
     // Parse initial sequence number
     const initialSequence = since ? parseInt(since, 10) : 0

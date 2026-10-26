@@ -27,8 +27,8 @@ import { AuthPrismaRepository, JwtProvider, JwtStrategy } from './infras'
     {
       provide: AuthService,
       useFactory: (databaseService: DatabaseService, jwtProvider: JwtProvider, passwordService: PasswordService) => {
-        // Instantiate repository with Prisma client
-        const repository = new AuthPrismaRepository(databaseService.client)
+        // Instantiate repository with DatabaseService (for withSystemAccess)
+        const repository = new AuthPrismaRepository(databaseService)
 
         // Instantiate service with repository, jwt provider, and password service
         return new AuthService(repository, jwtProvider, passwordService)

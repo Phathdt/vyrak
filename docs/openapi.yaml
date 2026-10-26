@@ -320,11 +320,16 @@ paths:
       security: *ref_3
       summary: Reject invitation
       tags: *ref_4
-  /api/projects/{projectId}/workflows/runs:
+  /api/organizations/{orgId}/projects/{projectId}/workflows/runs:
     post:
       description: Initiates a new workflow execution with the provided requirements and repository settings
       operationId: WorkflowsController_createWorkflowRun
       parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
         - name: projectId
           required: true
           in: path
@@ -356,37 +361,16 @@ paths:
       summary: Create a new workflow run
       tags: &ref_6
         - workflows
-  /api/workflows/runs/{runId}:
-    get:
-      description: Retrieves complete details of a specific workflow run
-      operationId: WorkflowsController_getWorkflowRun
-      parameters:
-        - name: runId
-          required: true
-          in: path
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Workflow run details retrieved successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/WorkflowRunResponseDto'
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden - no access to this workflow run
-        '404':
-          description: Workflow run not found
-      security: *ref_5
-      summary: Get workflow run details
-      tags: *ref_6
-  /api/workflows/runs:
+  /api/organizations/{orgId}/workflows/runs:
     get:
       description: Retrieves a paginated list of workflow runs with optional filters by project and status
       operationId: WorkflowsController_listWorkflowRuns
       parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
         - name: projectId
           required: false
           in: query
@@ -437,14 +421,52 @@ paths:
                 $ref: '#/components/schemas/PaginatedWorkflowRunsDto'
         '401':
           description: Unauthorized
+        '403':
+          description: Forbidden - not a member of the organization
       security: *ref_5
       summary: List workflow runs
       tags: *ref_6
-  /api/workflows/runs/{runId}/approve:
+  /api/organizations/{orgId}/workflows/runs/{runId}:
+    get:
+      description: Retrieves complete details of a specific workflow run
+      operationId: WorkflowsController_getWorkflowRun
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: runId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Workflow run details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowRunResponseDto'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - no access to this workflow run
+        '404':
+          description: Workflow run not found
+      security: *ref_5
+      summary: Get workflow run details
+      tags: *ref_6
+  /api/organizations/{orgId}/workflows/runs/{runId}/approve:
     post:
       description: Approves a workflow that is waiting for human approval and resumes execution
       operationId: WorkflowsController_approveWorkflow
       parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
         - name: runId
           required: true
           in: path
@@ -472,11 +494,16 @@ paths:
       security: *ref_5
       summary: Approve a pending workflow
       tags: *ref_6
-  /api/workflows/runs/{runId}/reject:
+  /api/organizations/{orgId}/workflows/runs/{runId}/reject:
     post:
       description: Rejects a workflow that is waiting for human approval and cancels execution
       operationId: WorkflowsController_rejectWorkflow
       parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
         - name: runId
           required: true
           in: path
@@ -504,11 +531,16 @@ paths:
       security: *ref_5
       summary: Reject a pending workflow
       tags: *ref_6
-  /api/workflows/runs/{runId}/cancel:
+  /api/organizations/{orgId}/workflows/runs/{runId}/cancel:
     post:
       description: Cancels an in-progress workflow execution
       operationId: WorkflowsController_cancelWorkflow
       parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
         - name: runId
           required: true
           in: path
@@ -534,11 +566,16 @@ paths:
       security: *ref_5
       summary: Cancel a running workflow
       tags: *ref_6
-  /api/workflows/runs/{runId}/steps:
+  /api/organizations/{orgId}/workflows/runs/{runId}/steps:
     get:
       description: Retrieves all step executions for a workflow run ordered by sequence
       operationId: WorkflowsController_getSteps
       parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
         - name: runId
           required: true
           in: path
@@ -562,11 +599,16 @@ paths:
       security: *ref_5
       summary: Get workflow run steps
       tags: *ref_6
-  /api/workflows/runs/{runId}/events:
+  /api/organizations/{orgId}/workflows/runs/{runId}/events:
     get:
       description: Retrieves paginated event history for a workflow run
       operationId: WorkflowsController_getEvents
       parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
         - name: runId
           required: true
           in: path
@@ -605,11 +647,16 @@ paths:
       security: *ref_5
       summary: Get workflow events
       tags: *ref_6
-  /api/workflows/runs/{runId}/artifacts:
+  /api/organizations/{orgId}/workflows/runs/{runId}/artifacts:
     get:
       description: Retrieves metadata for all artifacts generated by a workflow run
       operationId: WorkflowsController_listArtifacts
       parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
         - name: runId
           required: true
           in: path
@@ -633,11 +680,16 @@ paths:
       security: *ref_5
       summary: List workflow artifacts
       tags: *ref_6
-  /api/workflows/runs/{runId}/artifacts/{artifactId}:
+  /api/organizations/{orgId}/workflows/runs/{runId}/artifacts/{artifactId}:
     get:
       description: Retrieves the full content of a specific artifact
       operationId: WorkflowsController_getArtifact
       parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
         - name: runId
           required: true
           in: path
@@ -664,11 +716,16 @@ paths:
       security: *ref_5
       summary: Get artifact content
       tags: *ref_6
-  /api/workflows/runs/{runId}/events/stream:
+  /api/organizations/{orgId}/workflows/runs/{runId}/events/stream:
     get:
       description: Opens SSE connection for real-time workflow event updates
       operationId: WorkflowsController_streamEvents
       parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
         - name: runId
           required: true
           in: path
@@ -707,11 +764,16 @@ paths:
       security: *ref_5
       summary: Stream workflow events
       tags: *ref_6
-  /api/workflows/runs/{runId}/performance:
+  /api/organizations/{orgId}/workflows/runs/{runId}/performance:
     get:
       description: Analyzes workflow run performance with step-level timing, bottleneck detection, and summary statistics
       operationId: PerformanceController_getPerformance
       parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
         - name: runId
           required: true
           in: path
@@ -728,6 +790,8 @@ paths:
                 $ref: '#/components/schemas/WorkflowPerformanceResponseDto'
         '401':
           description: Unauthorized
+        '403':
+          description: Forbidden - not a member of the organization
         '404':
           description: Workflow run not found
       security:
@@ -735,11 +799,16 @@ paths:
       summary: Get detailed performance stats for a workflow run
       tags:
         - workflows
-  /workflows/metrics:
+  /api/organizations/{orgId}/workflows/metrics:
     get:
       description: Retrieve aggregated workflow metrics including summary statistics, time series data, and breakdown by workflow
       operationId: MetricsController_getMetrics
       parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
         - name: organizationId
           required: true
           in: query
@@ -793,6 +862,8 @@ paths:
           description: Invalid query parameters
         '401':
           description: Unauthorized
+        '403':
+          description: Forbidden - not a member of the organization
       security:
         - bearer: []
       summary: Get workflow execution metrics and statistics

@@ -1,9 +1,11 @@
 import { useQueryClient } from '@tanstack/react-query'
 
 import { useWorkflowsControllerApproveWorkflow, useWorkflowsControllerRejectWorkflow } from '../api/generated'
+import { useOrganization } from '../contexts/organization-context'
 
 export function useApprovalActions() {
   const queryClient = useQueryClient()
+  const { activeOrgId } = useOrganization()
 
   const approveMutation = useWorkflowsControllerApproveWorkflow({
     mutation: {
@@ -27,10 +29,16 @@ export function useApprovalActions() {
 
   return {
     approve: async ({ runId, comment }: { runId: string; comment?: string }) => {
-      return approveMutation.mutateAsync({ runId, data: { comment } })
+      if (!activeOrgId) {
+        throw new Error('No active organization')
+      }
+      return approveMutation.mutateAsync({ orgId: activeOrgId, runId, data: { comment } })
     },
     reject: async ({ runId, comment }: { runId: string; comment: string }) => {
-      return rejectMutation.mutateAsync({ runId, data: { comment } })
+      if (!activeOrgId) {
+        throw new Error('No active organization')
+      }
+      return rejectMutation.mutateAsync({ orgId: activeOrgId, runId, data: { comment } })
     },
     isLoading: approveMutation.isPending || rejectMutation.isPending,
   }

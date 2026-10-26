@@ -1,5 +1,6 @@
-import type { PrismaClient } from '@vyrak/database'
+import type { DatabaseService } from '@vyrak/database'
 import {
+  createTestDatabaseService,
   createTestOrgWithOwner,
   createTestUser,
   getPrismaClient,
@@ -13,14 +14,15 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AuthPrismaRepository } from './auth-prisma.repository'
 
 describe('AuthPrismaRepository (Integration)', () => {
-  let prisma: PrismaClient | undefined
+  let databaseService: ReturnType<typeof createTestDatabaseService> | undefined
   let repository: AuthPrismaRepository
 
   beforeAll(async () => {
     try {
       await startPostgres()
-      prisma = getPrismaClient()
-      repository = new AuthPrismaRepository(prisma)
+      const prisma = getPrismaClient()
+      databaseService = createTestDatabaseService(prisma)
+      repository = new AuthPrismaRepository(databaseService as unknown as DatabaseService)
     } catch (error) {
       console.warn('PostgreSQL setup failed, skipping integration tests:', error)
     }
@@ -28,8 +30,8 @@ describe('AuthPrismaRepository (Integration)', () => {
 
   afterAll(async () => {
     try {
-      if (prisma) {
-        await prisma.$disconnect()
+      if (databaseService) {
+        // PrismaClient disconnect is handled by stopPostgres
       }
     } catch (error) {
       // Ignore disconnect errors during cleanup
@@ -39,8 +41,9 @@ describe('AuthPrismaRepository (Integration)', () => {
   })
 
   beforeEach(async () => {
-    if (!prisma) return
+    if (!databaseService) return
 
+    const prisma = getPrismaClient()
     // Clean up data
     await prisma.member.deleteMany()
     await prisma.organization.deleteMany()
@@ -52,8 +55,9 @@ describe('AuthPrismaRepository (Integration)', () => {
 
   describe('findUserById', () => {
     it('should return user with organizations when user exists', async () => {
-      if (!prisma) return
+      if (!databaseService) return
 
+      const prisma = getPrismaClient()
       const { user, organization } = await createTestOrgWithOwner(prisma)
 
       const result = await repository.findUserById(user.id)
@@ -66,8 +70,9 @@ describe('AuthPrismaRepository (Integration)', () => {
     })
 
     it('should return user without organizations when user has no memberships', async () => {
-      if (!prisma) return
+      if (!databaseService) return
 
+      const prisma = getPrismaClient()
       const user = await createTestUser(prisma)
 
       const result = await repository.findUserById(user.id)
@@ -78,7 +83,7 @@ describe('AuthPrismaRepository (Integration)', () => {
     })
 
     it('should return null when user does not exist', async () => {
-      if (!prisma) return
+      if (!databaseService) return
 
       const result = await repository.findUserById('non-existent-id')
 
@@ -86,8 +91,9 @@ describe('AuthPrismaRepository (Integration)', () => {
     })
 
     it('should include multiple organizations for user with multiple memberships', async () => {
-      if (!prisma) return
+      if (!databaseService) return
 
+      const prisma = getPrismaClient()
       const user = await createTestUser(prisma)
       const { organization: org1 } = await createTestOrgWithOwner(prisma, user)
       const { organization: org2 } = await createTestOrgWithOwner(prisma, user)
@@ -103,8 +109,9 @@ describe('AuthPrismaRepository (Integration)', () => {
 
   describe('hasAnyOrganization', () => {
     it('should return true when user has organization', async () => {
-      if (!prisma) return
+      if (!databaseService) return
 
+      const prisma = getPrismaClient()
       const { user } = await createTestOrgWithOwner(prisma)
 
       const result = await repository.hasAnyOrganization(user.id)
@@ -113,8 +120,9 @@ describe('AuthPrismaRepository (Integration)', () => {
     })
 
     it('should return false when user has no organization', async () => {
-      if (!prisma) return
+      if (!databaseService) return
 
+      const prisma = getPrismaClient()
       const user = await createTestUser(prisma)
 
       const result = await repository.hasAnyOrganization(user.id)
@@ -123,7 +131,7 @@ describe('AuthPrismaRepository (Integration)', () => {
     })
 
     it('should return false when user does not exist', async () => {
-      if (!prisma) return
+      if (!databaseService) return
 
       const result = await repository.hasAnyOrganization('non-existent-id')
 
@@ -133,8 +141,9 @@ describe('AuthPrismaRepository (Integration)', () => {
 
   describe('createPersonalOrganization', () => {
     it('should create personal organization with user name', async () => {
-      if (!prisma) return
+      if (!databaseService) return
 
+      const prisma = getPrismaClient()
       const user = await createTestUser(prisma, { name: 'John Doe' })
 
       const result = await repository.createPersonalOrganization(user.id)
@@ -156,8 +165,9 @@ describe('AuthPrismaRepository (Integration)', () => {
     })
 
     it('should create personal organization without user name', async () => {
-      if (!prisma) return
+      if (!databaseService) return
 
+      const prisma = getPrismaClient()
       const user = await createTestUser(prisma, { name: null })
 
       const result = await repository.createPersonalOrganization(user.id)
@@ -168,7 +178,7 @@ describe('AuthPrismaRepository (Integration)', () => {
     })
 
     it('should return null when user does not exist', async () => {
-      if (!prisma) return
+      if (!databaseService) return
 
       const result = await repository.createPersonalOrganization('non-existent-id')
 
@@ -176,8 +186,9 @@ describe('AuthPrismaRepository (Integration)', () => {
     })
 
     it('should create unique slug for each personal organization', async () => {
-      if (!prisma) return
+      if (!databaseService) return
 
+      const prisma = getPrismaClient()
       const user1 = await createTestUser(prisma, { name: 'User One' })
       const user2 = await createTestUser(prisma, { name: 'User Two' })
 
@@ -188,8 +199,9 @@ describe('AuthPrismaRepository (Integration)', () => {
     })
 
     it('should allow creating personal org even if user already has organizations', async () => {
-      if (!prisma) return
+      if (!databaseService) return
 
+      const prisma = getPrismaClient()
       const { user } = await createTestOrgWithOwner(prisma)
 
       const result = await repository.createPersonalOrganization(user.id)

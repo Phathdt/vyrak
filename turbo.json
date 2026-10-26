@@ -1,6 +1,7 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "daemon": false,
+  "concurrency": "15",
   "globalDependencies": ["**/.env.*local", ".env"],
   "tasks": {
     "@apps/api-server#build": {
