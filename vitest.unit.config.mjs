@@ -4,6 +4,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
+    isolate: false, // Reuse workers across files for faster execution
     testTimeout: 10_000,
     hookTimeout: 10_000,
     exclude: [
