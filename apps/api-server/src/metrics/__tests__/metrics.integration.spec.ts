@@ -1,25 +1,24 @@
-import { PrismaClient, WorkflowState } from '@vyrak/database'
-import { getPrismaClient, resetCounters, startPostgres, stopPostgres } from '@vyrak/database/test-utils'
+import type { PrismaClient } from '@vyrak/database'
 import {
-  PrometheusMetricsService,
-  WorkflowPrismaRepository,
-  type IPrometheusMetricsService,
-  type IWorkflowRepository,
-} from '@vyrak/workflow-core'
+  createTestOrgWithOwner,
+  getPrismaClient,
+  resetCounters,
+  startPostgres,
+  stopPostgres,
+} from '@vyrak/database/test-utils'
+import { PrometheusMetricsService, WorkflowState, type IPrometheusMetricsService } from '@vyrak/workflow-core'
 
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
 describe('PrometheusMetricsService Integration', () => {
   let prisma: PrismaClient | undefined
-  let repository: IWorkflowRepository
   let service: IPrometheusMetricsService
 
   beforeAll(async () => {
     try {
       await startPostgres()
       prisma = getPrismaClient()
-      repository = new WorkflowPrismaRepository(prisma)
-      service = new PrometheusMetricsService(repository)
+      service = new PrometheusMetricsService(prisma)
     } catch (error) {
       console.warn('PostgreSQL setup failed, skipping integration tests:', error)
     }
@@ -40,35 +39,50 @@ describe('PrometheusMetricsService Integration', () => {
   beforeEach(async () => {
     if (!prisma) return
 
-    // Clean up data
-    await prisma.stepRun.deleteMany()
-    await prisma.workflowRun.deleteMany()
-
     // Reset counters
     resetCounters()
+
+    // Clean up data (in reverse dependency order)
+    await prisma.workflowStepRun.deleteMany()
+    await prisma.workflowRun.deleteMany()
+    await prisma.project.deleteMany()
+    await prisma.member.deleteMany()
+    await prisma.organization.deleteMany()
+    await prisma.user.deleteMany()
+
+    // Create test user, organization, and project
+    const { user, organization } = await createTestOrgWithOwner(prisma)
+    const project = await prisma.project.create({
+      data: {
+        id: 'proj-prom',
+        name: 'Prometheus Test Project',
+        slug: 'prom-test-proj',
+        organizationId: organization.id,
+      },
+    })
 
     // Seed test data
     await prisma.workflowRun.createMany({
       data: [
         {
           id: 'run-prom-1',
-          organizationId: 'org-prom',
-          projectId: 'proj-prom',
+          organizationId: organization.id,
+          projectId: project.id,
           workflowKey: 'prom-workflow',
           workflowVersion: '1.0.0',
           state: WorkflowState.SUCCEEDED,
-          initiatedByUserId: 'user-prom',
+          initiatedByUserId: user.id,
           startedAt: new Date('2026-10-26T10:00:00Z'),
           completedAt: new Date('2026-10-26T10:01:00Z'),
         },
         {
           id: 'run-prom-2',
-          organizationId: 'org-prom',
-          projectId: 'proj-prom',
+          organizationId: organization.id,
+          projectId: project.id,
           workflowKey: 'prom-workflow',
           workflowVersion: '1.0.0',
           state: WorkflowState.RUNNING,
-          initiatedByUserId: 'user-prom',
+          initiatedByUserId: user.id,
           startedAt: new Date('2026-10-26T10:02:00Z'),
         },
       ],
