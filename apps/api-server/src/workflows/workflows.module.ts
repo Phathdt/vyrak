@@ -3,6 +3,8 @@ import { AgentRuntimeModule } from '@vyrak/agent-runtime'
 import { DatabaseModule } from '@vyrak/database'
 import { WorkflowCoreModule } from '@vyrak/workflow-core'
 
+import { MetricsController } from './metrics.controller'
+import { PerformanceController } from './performance.controller'
 import { EventStreamService } from './services'
 import { WorkflowsController } from './workflows.controller'
 import { WorkflowsService } from './workflows.service'
@@ -22,6 +24,8 @@ import { WorkflowsService } from './workflows.service'
  * - List workflow artifacts
  * - Get artifact content
  * - Stream workflow events (SSE)
+ * - Get workflow metrics (aggregated statistics)
+ * - Get workflow performance stats (step-level analysis)
  *
  * Dependencies:
  * - WorkflowCoreModule: Provides use cases and repository
@@ -30,7 +34,7 @@ import { WorkflowsService } from './workflows.service'
  */
 @Module({
   imports: [WorkflowCoreModule, DatabaseModule, AgentRuntimeModule],
-  controllers: [WorkflowsController],
+  controllers: [WorkflowsController, PerformanceController, MetricsController],
   providers: [WorkflowsService, EventStreamService],
   exports: [WorkflowsService],
 })

@@ -113,6 +113,40 @@ Domain (contracts) ← Application (orchestration) ← Infrastructure (implement
                                           Processor (worker)
 ```
 
+### Monitoring & Metrics (Epic 7)
+
+Comprehensive monitoring and observability for workflow execution:
+
+**Health Checks:**
+- `GET /health` - Liveness probe (application running)
+- `GET /health/ready` - Readiness probe (dependencies healthy)
+
+**Metrics APIs:**
+- `GET /api/workflows/metrics` - Aggregated statistics with time-series data
+- `GET /api/workflows/runs/:runId/performance` - Step-level performance analysis
+- `GET /metrics` - Prometheus-compatible metrics export
+
+**Services (libs/workflow-core/application):**
+- `HealthCheckService` - Liveness and readiness checks
+- `WorkflowMetricsService` - Aggregated metrics calculation
+- `WorkflowPerformanceService` - Performance stats with bottleneck detection
+- `PrometheusMetricsService` - Prometheus format export
+
+**Controllers:**
+- `HealthController` (apps/api-server/src/health) - Health endpoints
+- `WorkflowsController` (apps/api-server/src/workflows) - Metrics and performance endpoints
+- `MetricsController` (apps/api-server/src/metrics) - Prometheus endpoint
+
+**Key Features:**
+- On-demand metrics computed from existing `workflow_runs` and `step_runs` tables
+- Bottleneck detection for slow steps and retry patterns
+- Prometheus integration for Grafana dashboards
+- Performance targets: health <50ms, metrics <100ms, performance <150ms
+
+All services are plain TypeScript classes (no `@Injectable()`) registered via DI tokens.
+
+**Documentation:** See `/docs/monitoring-metrics-api.md` for complete API reference.
+
 ### Tech Stack
 
 **Backend:**
