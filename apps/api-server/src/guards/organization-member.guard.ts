@@ -59,9 +59,6 @@ export class OrganizationMemberGuard implements CanActivate {
     request.organizationId = organizationId
     request.memberRole = membership.role
 
-    // Set tenant context on DatabaseService
-    this.prisma.setTenantContext(organizationId)
-
     return true
   }
 }

@@ -41,11 +41,11 @@ async function main() {
 
   console.log('🧹 Cleared existing data')
 
-  // Create users
+  // Create users with UUID
   const users = await Promise.all([
     prisma.user.create({
       data: {
-        id: 'user-1',
+        id: '550e8400-e29b-41d4-a716-446655440001',
         email: 'admin@vyrak.dev',
         name: 'Admin User',
         emailVerified: true,
@@ -54,7 +54,7 @@ async function main() {
     }),
     prisma.user.create({
       data: {
-        id: 'user-2',
+        id: '550e8400-e29b-41d4-a716-446655440002',
         email: 'john@vyrak.dev',
         name: 'John Doe',
         emailVerified: true,
@@ -63,7 +63,7 @@ async function main() {
     }),
     prisma.user.create({
       data: {
-        id: 'user-3',
+        id: '550e8400-e29b-41d4-a716-446655440003',
         email: 'jane@vyrak.dev',
         name: 'Jane Smith',
         emailVerified: true,
@@ -74,11 +74,11 @@ async function main() {
 
   console.log(`👥 Created ${users.length} users`)
 
-  // Create organizations
+  // Create organizations with UUID
   const orgs = await Promise.all([
     prisma.organization.create({
       data: {
-        id: 'org-1',
+        id: '650e8400-e29b-41d4-a716-446655440001',
         name: 'Acme Corporation',
         slug: 'acme-corp',
         metadata: JSON.stringify({ industry: 'Technology', size: 'Enterprise' }),
@@ -86,7 +86,7 @@ async function main() {
     }),
     prisma.organization.create({
       data: {
-        id: 'org-2',
+        id: '650e8400-e29b-41d4-a716-446655440002',
         name: 'Startup Inc',
         slug: 'startup-inc',
         metadata: JSON.stringify({ industry: 'SaaS', size: 'Startup' }),
@@ -96,54 +96,74 @@ async function main() {
 
   console.log(`🏢 Created ${orgs.length} organizations`)
 
-  // Create memberships
+  // Create memberships with UUID
   await Promise.all([
     prisma.member.create({
-      data: { id: 'mem-1', userId: 'user-1', organizationId: 'org-1', role: 'owner' },
+      data: {
+        id: '750e8400-e29b-41d4-a716-446655440001',
+        userId: '550e8400-e29b-41d4-a716-446655440001',
+        organizationId: '650e8400-e29b-41d4-a716-446655440001',
+        role: 'owner',
+      },
     }),
     prisma.member.create({
-      data: { id: 'mem-2', userId: 'user-2', organizationId: 'org-1', role: 'admin' },
+      data: {
+        id: '750e8400-e29b-41d4-a716-446655440002',
+        userId: '550e8400-e29b-41d4-a716-446655440002',
+        organizationId: '650e8400-e29b-41d4-a716-446655440001',
+        role: 'admin',
+      },
     }),
     prisma.member.create({
-      data: { id: 'mem-3', userId: 'user-2', organizationId: 'org-2', role: 'owner' },
+      data: {
+        id: '750e8400-e29b-41d4-a716-446655440003',
+        userId: '550e8400-e29b-41d4-a716-446655440002',
+        organizationId: '650e8400-e29b-41d4-a716-446655440002',
+        role: 'owner',
+      },
     }),
     prisma.member.create({
-      data: { id: 'mem-4', userId: 'user-3', organizationId: 'org-2', role: 'member' },
+      data: {
+        id: '750e8400-e29b-41d4-a716-446655440004',
+        userId: '550e8400-e29b-41d4-a716-446655440003',
+        organizationId: '650e8400-e29b-41d4-a716-446655440002',
+        role: 'member',
+      },
     }),
   ])
 
   console.log('🤝 Created memberships')
 
-  // Create products
+  // Create products with UUID
   await prisma.product.createMany({
     data: [
       {
-        id: 'prod-1',
-        organizationId: 'org-1',
+        id: '850e8400-e29b-41d4-a716-446655440001',
+        organizationId: '650e8400-e29b-41d4-a716-446655440001',
         name: 'Premium Laptop',
         description: 'High-performance laptop for professionals',
         price: 1299.99,
         stock: 50,
       },
       {
-        id: 'prod-2',
-        organizationId: 'org-1',
+        id: '850e8400-e29b-41d4-a716-446655440002',
+        organizationId: '650e8400-e29b-41d4-a716-446655440001',
         name: 'Wireless Mouse',
         description: 'Ergonomic wireless mouse with precision tracking',
         price: 49.99,
         stock: 200,
       },
       {
-        id: 'prod-3',
-        organizationId: 'org-1',
+        id: '850e8400-e29b-41d4-a716-446655440003',
+        organizationId: '650e8400-e29b-41d4-a716-446655440001',
         name: 'Mechanical Keyboard',
         description: 'RGB mechanical keyboard with Cherry MX switches',
         price: 159.99,
         stock: 100,
       },
       {
-        id: 'prod-4',
-        organizationId: 'org-2',
+        id: '850e8400-e29b-41d4-a716-446655440004',
+        organizationId: '650e8400-e29b-41d4-a716-446655440002',
         name: 'SaaS Starter Plan',
         description: 'Monthly subscription for small teams',
         price: 29.99,
@@ -154,19 +174,19 @@ async function main() {
 
   console.log('📦 Created products')
 
-  // Create projects
+  // Create projects with UUID
   await prisma.project.createMany({
     data: [
       {
-        id: 'proj-1',
-        organizationId: 'org-1',
+        id: '950e8400-e29b-41d4-a716-446655440001',
+        organizationId: '650e8400-e29b-41d4-a716-446655440001',
         name: 'Web Platform',
         slug: 'web-platform',
         description: 'Main customer-facing web platform',
       },
       {
-        id: 'proj-2',
-        organizationId: 'org-1',
+        id: '950e8400-e29b-41d4-a716-446655440002',
+        organizationId: '650e8400-e29b-41d4-a716-446655440001',
         name: 'Mobile App',
         slug: 'mobile-app',
         description: 'iOS and Android mobile applications',
@@ -180,6 +200,8 @@ async function main() {
   console.log('\n📝 Test credentials:')
   console.log('   Email: admin@vyrak.dev')
   console.log('   Password: Password123!')
+  console.log('   User ID: 550e8400-e29b-41d4-a716-446655440001')
+  console.log('   Org ID: 650e8400-e29b-41d4-a716-446655440001')
   console.log('\n   Other test users:')
   console.log('   - john@vyrak.dev / Password123!')
   console.log('   - jane@vyrak.dev / Password123!')

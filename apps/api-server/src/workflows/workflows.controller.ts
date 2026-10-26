@@ -48,9 +48,9 @@ import {
 import { EventStreamService } from './services'
 import { WorkflowsService } from './workflows.service'
 
+import { CurrentUser } from '../app/auth/decorators'
 import { JwtAuthGuard } from '../guards/jwt-auth.guard'
 import { OrganizationMemberGuard } from '../guards/organization-member.guard'
-import { CurrentUser } from '../organizations/decorators'
 
 @ApiTags('workflows')
 @Controller('api/organizations/:orgId')

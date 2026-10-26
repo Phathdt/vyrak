@@ -4,11 +4,22 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { StatsCard } from '@/components/ui/stats-card'
 import { useAuth } from '@/contexts/auth-context'
 import { useOrganization } from '@/contexts/organization-context'
+import React from 'react'
 import { Link } from 'react-router-dom'
 
 export function DashboardPage() {
   const { user, organizations, logout } = useAuth()
   const { activeOrgId, setActiveOrgId } = useOrganization()
+
+  // Auto-select first organization if none is selected
+  React.useEffect(() => {
+    if (!activeOrgId && organizations.length > 0) {
+      const firstOrg = organizations[0]
+      if (firstOrg?.id) {
+        setActiveOrgId(firstOrg.id)
+      }
+    }
+  }, [activeOrgId, organizations, setActiveOrgId])
 
   const activeOrg = organizations.find((org) => org.id === activeOrgId)
 
