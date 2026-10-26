@@ -16,6 +16,9 @@ import { OrganizationPrismaRepository } from '../organization-prisma.repository'
 /**
  * Integration tests for OrganizationPrismaRepository
  * Tests real database operations with PostgreSQL testcontainer
+ *
+ * Note: Repository now handles withSystemAccess internally,
+ * so tests no longer need to wrap calls manually.
  */
 describe('OrganizationPrismaRepository (Integration)', () => {
   let databaseService: ReturnType<typeof createTestDatabaseService> | undefined
@@ -56,11 +59,9 @@ describe('OrganizationPrismaRepository (Integration)', () => {
       const prisma = getPrismaClient()
       const user = await createTestUser(prisma)
 
-      const result = await databaseService.withSystemAccess(async () => {
-        return repository.create(user.id, {
-          name: 'Test Org',
-          slug: 'test-org',
-        })
+      const result = await repository.create(user.id, {
+        name: 'Test Org',
+        slug: 'test-org',
       })
 
       expect(result).toMatchObject({
@@ -89,11 +90,9 @@ describe('OrganizationPrismaRepository (Integration)', () => {
       const { user, organization } = await createTestOrgWithOwner(prisma)
 
       await expect(
-        databaseService.withSystemAccess(async () => {
-          return repository.create(user.id, {
-            name: 'Another Org',
-            slug: organization.slug,
-          })
+        repository.create(user.id, {
+          name: 'Another Org',
+          slug: organization.slug,
         })
       ).rejects.toThrow()
     })
@@ -106,9 +105,7 @@ describe('OrganizationPrismaRepository (Integration)', () => {
       const prisma = getPrismaClient()
       const { user, organization } = await createTestOrgWithOwner(prisma)
 
-      const result = await databaseService.withSystemAccess(async () => {
-        return repository.findAllForUser(user.id)
-      })
+      const result = await repository.findAllForUser(user.id)
 
       expect(result).toHaveLength(1)
       expect(result[0]).toMatchObject({
@@ -127,9 +124,7 @@ describe('OrganizationPrismaRepository (Integration)', () => {
       const { organization: org1 } = await createTestOrgWithOwner(prisma, user)
       const { organization: org2 } = await createTestOrgWithOwner(prisma, user)
 
-      const result = await databaseService.withSystemAccess(async () => {
-        return repository.findAllForUser(user.id)
-      })
+      const result = await repository.findAllForUser(user.id)
 
       expect(result).toHaveLength(2)
       const orgIds = result.map((o) => o.id).sort()
@@ -142,9 +137,7 @@ describe('OrganizationPrismaRepository (Integration)', () => {
       const prisma = getPrismaClient()
       const user = await createTestUser(prisma)
 
-      const result = await databaseService.withSystemAccess(async () => {
-        return repository.findAllForUser(user.id)
-      })
+      const result = await repository.findAllForUser(user.id)
 
       expect(result).toEqual([])
     })
@@ -157,9 +150,7 @@ describe('OrganizationPrismaRepository (Integration)', () => {
       const prisma = getPrismaClient()
       const { user, organization } = await createTestOrgWithOwner(prisma)
 
-      const result = await databaseService.withSystemAccess(async () => {
-        return repository.findOne(organization.id, user.id)
-      })
+      const result = await repository.findOne(organization.id, user.id)
 
       expect(result).toMatchObject({
         id: organization.id,
@@ -175,9 +166,7 @@ describe('OrganizationPrismaRepository (Integration)', () => {
       const { organization } = await createTestOrgWithOwner(prisma)
       const outsider = await createTestUser(prisma)
 
-      const result = await databaseService.withSystemAccess(async () => {
-        return repository.findOne(organization.id, outsider.id)
-      })
+      const result = await repository.findOne(organization.id, outsider.id)
 
       expect(result).toBeNull()
     })
@@ -188,9 +177,7 @@ describe('OrganizationPrismaRepository (Integration)', () => {
       const prisma = getPrismaClient()
       const user = await createTestUser(prisma)
 
-      const result = await databaseService.withSystemAccess(async () => {
-        return repository.findOne('non-existent-id', user.id)
-      })
+      const result = await repository.findOne('non-existent-id', user.id)
 
       expect(result).toBeNull()
     })
@@ -203,10 +190,8 @@ describe('OrganizationPrismaRepository (Integration)', () => {
       const prisma = getPrismaClient()
       const { organization } = await createTestOrgWithOwner(prisma)
 
-      const result = await databaseService.withSystemAccess(async () => {
-        return repository.update(organization.id, {
-          name: 'Updated Name',
-        })
+      const result = await repository.update(organization.id, {
+        name: 'Updated Name',
       })
 
       expect(result).toMatchObject({
@@ -228,10 +213,8 @@ describe('OrganizationPrismaRepository (Integration)', () => {
       const prisma = getPrismaClient()
       const { organization } = await createTestOrgWithOwner(prisma)
 
-      const result = await databaseService.withSystemAccess(async () => {
-        return repository.update(organization.id, {
-          logo: 'https://example.com/logo.png',
-        })
+      const result = await repository.update(organization.id, {
+        logo: 'https://example.com/logo.png',
       })
 
       expect(result.logo).toBe('https://example.com/logo.png')
@@ -245,9 +228,7 @@ describe('OrganizationPrismaRepository (Integration)', () => {
       const prisma = getPrismaClient()
       const { organization } = await createTestOrgWithOwner(prisma)
 
-      await databaseService.withSystemAccess(async () => {
-        await repository.delete(organization.id)
-      })
+      await repository.delete(organization.id)
 
       // Verify deleted
       const org = await prisma.organization.findUnique({
@@ -270,20 +251,17 @@ describe('OrganizationPrismaRepository (Integration)', () => {
       const prisma = getPrismaClient()
       const { organization } = await createTestOrgWithOwner(prisma)
 
-      const result = await databaseService.withSystemAccess(async () => {
-        return repository.findBySlug(organization.slug)
-      })
+      const result = await repository.findBySlug(organization.slug)
 
-      expect(result).toBeDefined()
-      expect(result?.id).toBe(organization.id)
+      expect(result).toMatchObject({
+        id: organization.id,
+      })
     })
 
     it('should return null for non-existent slug', async () => {
       if (!databaseService) return
 
-      const result = await databaseService.withSystemAccess(async () => {
-        return repository.findBySlug('non-existent-slug')
-      })
+      const result = await repository.findBySlug('non-existent-slug')
 
       expect(result).toBeNull()
     })

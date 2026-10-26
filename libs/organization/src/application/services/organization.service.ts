@@ -1,8 +1,12 @@
 import { BadRequestException, ForbiddenException } from '@nestjs/common'
 
-import type { IOrganizationRepository } from '../../domain/interfaces/organization-repository.interface'
-import type { IOrganizationService } from '../../domain/interfaces/organization-service.interface'
-import type { CreateOrganizationDto, OrganizationWithRole, UpdateOrganizationDto } from '../../domain/schemas'
+import type {
+  CreateOrganizationDto,
+  IOrganizationRepository,
+  IOrganizationService,
+  OrganizationWithRole,
+  UpdateOrganizationDto,
+} from '../../domain'
 
 export class OrganizationService implements IOrganizationService {
   constructor(private readonly repository: IOrganizationRepository) {}

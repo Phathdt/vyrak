@@ -1,9 +1,12 @@
 import { BadRequestException, ForbiddenException } from '@nestjs/common'
 
-import type { IInvitationRepository } from '../../domain/interfaces/invitation-repository.interface'
-import type { IInvitationService } from '../../domain/interfaces/invitation-service.interface'
-import type { IMemberRepository } from '../../domain/interfaces/member-repository.interface'
-import type { InvitationResponse, InviteMemberDto } from '../../domain/schemas'
+import type {
+  IInvitationRepository,
+  IInvitationService,
+  IMemberRepository,
+  InvitationResponse,
+  InviteMemberDto,
+} from '../../domain'
 
 interface IUserRepository {
   findByEmail(email: string): Promise<{ id: string; email: string } | null>

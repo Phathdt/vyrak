@@ -2,12 +2,7 @@ import { INestApplication } from '@nestjs/common'
 import { Test, TestingModule } from '@nestjs/testing'
 import { DatabaseModule } from '@vyrak/database'
 import { getPrismaClient, startPostgres, stopPostgres } from '@vyrak/database/test-utils'
-import {
-  INVITATION_SERVICE,
-  MEMBER_SERVICE,
-  ORGANIZATION_SERVICE,
-  OrganizationModule,
-} from '@vyrak/organization'
+import { INVITATION_SERVICE, MEMBER_SERVICE, ORGANIZATION_SERVICE, OrganizationModule } from '@vyrak/organization'
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 

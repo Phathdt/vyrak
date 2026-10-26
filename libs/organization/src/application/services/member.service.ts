@@ -1,8 +1,6 @@
 import { BadRequestException, ForbiddenException } from '@nestjs/common'
 
-import type { IMemberRepository } from '../../domain/interfaces/member-repository.interface'
-import type { IMemberService } from '../../domain/interfaces/member-service.interface'
-import type { MemberResponse, UpdateMemberRoleDto } from '../../domain/schemas'
+import type { IMemberRepository, IMemberService, MemberResponse, UpdateMemberRoleDto } from '../../domain'
 
 export class MemberService implements IMemberService {
   constructor(private readonly repository: IMemberRepository) {}
