@@ -17,9 +17,7 @@ export function createTestDatabaseService(prismaClient: PrismaClient) {
   const asyncLocalStorage = new AsyncLocalStorage<TenantFilterContext>()
 
   // Extend with tenant filter using AsyncLocalStorage
-  const extendedClient = prismaClient.$extends(
-    createTenantFilterExtension(() => asyncLocalStorage.getStore() ?? {})
-  )
+  const extendedClient = prismaClient.$extends(createTenantFilterExtension(() => asyncLocalStorage.getStore() ?? {}))
 
   return {
     client: extendedClient,
