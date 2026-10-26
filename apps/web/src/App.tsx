@@ -6,10 +6,8 @@ import { ErrorBoundary } from './components/error-boundary'
 import { PageLoading } from './components/page-loading'
 import { OrganizationProvider } from './contexts'
 import { DashboardLayout } from './layouts/DashboardLayout'
-import { ApprovalsPage } from './pages/approvals/ApprovalsPage'
 import { LoginPage } from './pages/auth'
 import { DashboardPage } from './pages/dashboard'
-import { MetricsPage } from './pages/metrics/MetricsPage'
 import { OrganizationSettingsPage, OrganizationsPage } from './pages/organizations'
 import { WorkflowDetailPage, WorkflowsPage } from './pages/workflows'
 
@@ -32,8 +30,6 @@ function App() {
               <Route path='/dashboard' element={<DashboardPage />} />
               <Route path='/workflows' element={<WorkflowsPage />} />
               <Route path='/workflows/:runId' element={<WorkflowDetailPage />} />
-              <Route path='/approvals' element={<ApprovalsPage />} />
-              <Route path='/metrics' element={<MetricsPage />} />
               <Route path='/organizations' element={<OrganizationsPage />} />
               <Route path='/organizations/:id/settings' element={<OrganizationSettingsPage />} />
             </Route>
