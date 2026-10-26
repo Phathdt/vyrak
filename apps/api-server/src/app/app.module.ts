@@ -1,6 +1,6 @@
 import { BullModule } from '@nestjs/bullmq'
 import { CacheModule } from '@nestjs/cache-manager'
-import { Module, NestModule } from '@nestjs/common'
+import { Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { APP_INTERCEPTOR } from '@nestjs/core'
 import { ScheduleModule } from '@nestjs/schedule'
@@ -14,7 +14,7 @@ import { AppController } from './app.controller'
 import { AppService } from './app.service'
 import { AuthController, InvitationsController, OrganizationsController } from './controllers'
 
-import { ResponseInterceptor, TenantContextCleanupInterceptor, TraceIdInterceptor } from '../interceptors'
+import { ResponseInterceptor, TenantContextInterceptor, TraceIdInterceptor } from '../interceptors'
 import { MetricsModule } from '../metrics/metrics.module'
 import { WorkflowsModule } from '../workflows/workflows.module'
 
@@ -55,7 +55,7 @@ import { WorkflowsModule } from '../workflows/workflows.module'
     },
     {
       provide: APP_INTERCEPTOR,
-      useClass: TenantContextCleanupInterceptor,
+      useClass: TenantContextInterceptor,
     },
     {
       provide: APP_INTERCEPTOR,
@@ -63,6 +63,4 @@ import { WorkflowsModule } from '../workflows/workflows.module'
     },
   ],
 })
-export class AppModule implements NestModule {
-  configure() {}
-}
+export class AppModule {}
