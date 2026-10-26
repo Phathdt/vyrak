@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
 
 import { createZodDto } from 'nestjs-zod'
-import { z } from 'zod'
+import { z } from 'nestjs-zod/z'
 
 import { WorkflowRunSummaryDto, WorkflowRunSummarySchema } from './workflow-run-summary.dto'
 

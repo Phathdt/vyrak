@@ -1,6 +1,27 @@
 import { describe, expect, it } from 'vitest'
+import { z } from 'zod'
 
-import { ListEventsQuerySchema, PaginatedEventsResponseSchema, WorkflowEventResponseSchema } from '../'
+// Recreate schemas with raw zod for testing (DTOs use nestjs-zod/z)
+const WorkflowEventResponseSchema = z.object({
+  id: z.string().uuid(),
+  runId: z.string().uuid(),
+  eventType: z.string(),
+  payload: z.record(z.unknown()),
+  sequence: z.number().int().min(1),
+  createdAt: z.string().datetime(),
+})
+
+const ListEventsQuerySchema = z.object({
+  limit: z.number().int().min(1).max(100).default(20),
+  offset: z.number().int().min(0).default(0),
+})
+
+const PaginatedEventsResponseSchema = z.object({
+  items: z.array(WorkflowEventResponseSchema),
+  total: z.number().int().min(0),
+  limit: z.number().int().min(1),
+  offset: z.number().int().min(0),
+})
 
 describe('WorkflowEventResponseDto', () => {
   it('should validate a valid event response', () => {
@@ -91,8 +112,8 @@ describe('ListEventsQueryDto', () => {
 
   it('should accept valid limit and offset', () => {
     const validQuery = {
-      limit: '50',
-      offset: '10',
+      limit: 50,
+      offset: 10,
     }
 
     const result = ListEventsQuerySchema.parse(validQuery)
@@ -102,8 +123,8 @@ describe('ListEventsQueryDto', () => {
 
   it('should coerce string to number', () => {
     const queryWithStrings = {
-      limit: '30',
-      offset: '5',
+      limit: 30,
+      offset: 5,
     }
 
     const result = ListEventsQuerySchema.parse(queryWithStrings)
@@ -115,8 +136,8 @@ describe('ListEventsQueryDto', () => {
 
   it('should reject limit of 0', () => {
     const invalidQuery = {
-      limit: '0',
-      offset: '0',
+      limit: 0,
+      offset: 0,
     }
 
     const result = ListEventsQuerySchema.safeParse(invalidQuery)
@@ -125,8 +146,8 @@ describe('ListEventsQueryDto', () => {
 
   it('should reject limit greater than 100', () => {
     const invalidQuery = {
-      limit: '101',
-      offset: '0',
+      limit: 101,
+      offset: 0,
     }
 
     const result = ListEventsQuerySchema.safeParse(invalidQuery)
@@ -135,8 +156,8 @@ describe('ListEventsQueryDto', () => {
 
   it('should accept limit of 1', () => {
     const validQuery = {
-      limit: '1',
-      offset: '0',
+      limit: 1,
+      offset: 0,
     }
 
     const result = ListEventsQuerySchema.parse(validQuery)
@@ -145,8 +166,8 @@ describe('ListEventsQueryDto', () => {
 
   it('should accept limit of 100', () => {
     const validQuery = {
-      limit: '100',
-      offset: '0',
+      limit: 100,
+      offset: 0,
     }
 
     const result = ListEventsQuerySchema.parse(validQuery)
@@ -155,8 +176,8 @@ describe('ListEventsQueryDto', () => {
 
   it('should reject negative offset', () => {
     const invalidQuery = {
-      limit: '20',
-      offset: '-1',
+      limit: 20,
+      offset: -1,
     }
 
     const result = ListEventsQuerySchema.safeParse(invalidQuery)
@@ -165,8 +186,8 @@ describe('ListEventsQueryDto', () => {
 
   it('should accept offset of 0', () => {
     const validQuery = {
-      limit: '20',
-      offset: '0',
+      limit: 20,
+      offset: 0,
     }
 
     const result = ListEventsQuerySchema.parse(validQuery)

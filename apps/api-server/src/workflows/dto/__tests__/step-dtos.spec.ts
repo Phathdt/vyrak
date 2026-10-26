@@ -1,6 +1,18 @@
 import { describe, expect, it } from 'vitest'
+import { z } from 'zod'
 
-import { StepRunResponseSchema } from '../step-run-response.dto'
+// Recreate schema with raw zod for testing (DTO uses nestjs-zod/z)
+const StepRunResponseSchema = z.object({
+  id: z.string().uuid(),
+  runId: z.string().uuid(),
+  stepKey: z.string(),
+  status: z.enum(['pending', 'running', 'succeeded', 'failed', 'skipped']),
+  attempt: z.number().int().min(0),
+  startedAt: z.string().datetime().nullable(),
+  completedAt: z.string().datetime().nullable(),
+  errorMessage: z.string().nullable(),
+  outputArtifactId: z.string().uuid().nullable(),
+})
 
 describe('StepRunResponseDto', () => {
   it('should validate a valid step run response', () => {

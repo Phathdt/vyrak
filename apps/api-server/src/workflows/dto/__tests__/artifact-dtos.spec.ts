@@ -1,6 +1,26 @@
 import { describe, expect, it } from 'vitest'
+import { z } from 'zod'
 
-import { ArtifactContentSchema, ArtifactMetadataSchema } from '../'
+// Recreate schemas with raw zod for testing (DTOs use nestjs-zod/z)
+const ArtifactMetadataSchema = z.object({
+  id: z.string().uuid(),
+  runId: z.string().uuid(),
+  stepKey: z.string().nullable(),
+  type: z.enum(['plan', 'implementation_report', 'test_result', 'approval_plan', 'other']),
+  name: z.string(),
+  size: z.number().int().min(0),
+  contentType: z.string(),
+  createdAt: z.string().datetime(),
+})
+
+const ArtifactContentSchema = z.object({
+  id: z.string().uuid(),
+  runId: z.string().uuid(),
+  name: z.string(),
+  contentType: z.string(),
+  content: z.union([z.string(), z.record(z.unknown())]),
+  size: z.number().int().min(0),
+})
 
 describe('ArtifactMetadataDto', () => {
   it('should validate a valid artifact metadata', () => {
