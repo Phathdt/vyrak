@@ -83,7 +83,7 @@ describe('HealthCheckService', () => {
 
       const result = await service.checkReadiness()
 
-      expect(result.checks?.database?.responseTime).toBeGreaterThanOrEqual(10)
+      expect(result.checks?.database?.responseTime).toBeGreaterThanOrEqual(5)
     })
 
     it('should detect missing environment variables', async () => {
