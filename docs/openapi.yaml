@@ -40,7 +40,7 @@ paths:
         '401':
           description: Invalid credentials
       summary: Login with email and password
-      tags:
+      tags: &ref_0
         - auth
   /api/auth/me:
     get:
@@ -58,8 +58,7 @@ paths:
       security:
         - bearer: []
       summary: Get current user with organizations
-      tags:
-        - auth
+      tags: *ref_0
   /api/organizations:
     post:
       operationId: OrganizationsController_create
@@ -77,10 +76,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/OrganizationResponse'
-      security:
+      security: &ref_1
         - bearer: []
       summary: Create new organization
-      tags:
+      tags: &ref_2
         - organizations
     get:
       operationId: OrganizationsController_findAll
@@ -94,11 +93,9 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/OrganizationResponse'
-      security:
-        - bearer: []
+      security: *ref_1
       summary: List all organizations for current user
-      tags:
-        - organizations
+      tags: *ref_2
   /api/organizations/{id}:
     get:
       operationId: OrganizationsController_findOne
@@ -115,11 +112,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/OrganizationResponse'
-      security:
-        - bearer: []
+      security: *ref_1
       summary: Get organization details
-      tags:
-        - organizations
+      tags: *ref_2
     patch:
       operationId: OrganizationsController_update
       parameters:
@@ -141,11 +136,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/OrganizationResponse'
-      security:
-        - bearer: []
+      security: *ref_1
       summary: Update organization (admin/owner only)
-      tags:
-        - organizations
+      tags: *ref_2
     delete:
       operationId: OrganizationsController_delete
       parameters:
@@ -157,11 +150,9 @@ paths:
       responses:
         '204':
           description: ''
-      security:
-        - bearer: []
+      security: *ref_1
       summary: Delete organization (owner only)
-      tags:
-        - organizations
+      tags: *ref_2
   /api/organizations/{id}/members:
     get:
       operationId: OrganizationsController_listMembers
@@ -180,11 +171,9 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/MemberResponse'
-      security:
-        - bearer: []
+      security: *ref_1
       summary: List organization members
-      tags:
-        - organizations
+      tags: *ref_2
   /api/organizations/{id}/members/{memberId}:
     patch:
       operationId: OrganizationsController_updateMemberRole
@@ -212,11 +201,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MemberResponse'
-      security:
-        - bearer: []
+      security: *ref_1
       summary: Update member role (owner/admin only)
-      tags:
-        - organizations
+      tags: *ref_2
     delete:
       operationId: OrganizationsController_removeMember
       parameters:
@@ -233,11 +220,9 @@ paths:
       responses:
         '200':
           description: ''
-      security:
-        - bearer: []
+      security: *ref_1
       summary: Remove member (owner/admin only)
-      tags:
-        - organizations
+      tags: *ref_2
   /api/organizations/{id}/invitations:
     post:
       operationId: OrganizationsController_inviteMember
@@ -260,11 +245,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/InvitationResponse'
-      security:
-        - bearer: []
+      security: *ref_1
       summary: Invite member to organization (admin/owner only)
-      tags:
-        - organizations
+      tags: *ref_2
     get:
       operationId: OrganizationsController_listInvitations
       parameters:
@@ -282,11 +265,9 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/InvitationResponse'
-      security:
-        - bearer: []
+      security: *ref_1
       summary: List pending invitations (admin/owner only)
-      tags:
-        - organizations
+      tags: *ref_2
   /api/invitations/pending:
     get:
       operationId: InvitationsController_listUserInvitations
@@ -300,10 +281,10 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/InvitationResponse'
-      security:
+      security: &ref_3
         - bearer: []
       summary: List user pending invitations
-      tags:
+      tags: &ref_4
         - invitations
   /api/invitations/{id}/accept:
     post:
@@ -321,11 +302,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/InvitationResponse'
-      security:
-        - bearer: []
+      security: *ref_3
       summary: Accept invitation
-      tags:
-        - invitations
+      tags: *ref_4
   /api/invitations/{id}/reject:
     post:
       operationId: InvitationsController_reject
@@ -338,11 +317,487 @@ paths:
       responses:
         '200':
           description: ''
+      security: *ref_3
+      summary: Reject invitation
+      tags: *ref_4
+  /api/projects/{projectId}/workflows/runs:
+    post:
+      description: Initiates a new workflow execution with the provided requirements and repository settings
+      operationId: WorkflowsController_createWorkflowRun
+      parameters:
+        - name: projectId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWorkflowRunDto'
+      responses:
+        '201':
+          description: Workflow run created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowRunResponseDto'
+        '400':
+          description: Invalid input data
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - not a member of the organization
+        '404':
+          description: Project not found
+      security: &ref_5
+        - bearer: []
+      summary: Create a new workflow run
+      tags: &ref_6
+        - workflows
+  /api/workflows/runs/{runId}:
+    get:
+      description: Retrieves complete details of a specific workflow run
+      operationId: WorkflowsController_getWorkflowRun
+      parameters:
+        - name: runId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Workflow run details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowRunResponseDto'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - no access to this workflow run
+        '404':
+          description: Workflow run not found
+      security: *ref_5
+      summary: Get workflow run details
+      tags: *ref_6
+  /api/workflows/runs:
+    get:
+      description: Retrieves a paginated list of workflow runs with optional filters by project and status
+      operationId: WorkflowsController_listWorkflowRuns
+      parameters:
+        - name: projectId
+          required: false
+          in: query
+          description: Filter by project ID
+          schema:
+            format: uuid
+            example: 550e8400-e29b-41d4-a716-446655440000
+            type: string
+        - name: status
+          required: false
+          in: query
+          description: Filter by workflow state
+          schema:
+            example: running
+            type: string
+            enum:
+              - queued
+              - running
+              - waiting_approval
+              - succeeded
+              - failed
+              - cancelled
+        - name: page
+          required: true
+          in: query
+          description: Page number for pagination
+          schema:
+            minimum: 1
+            default: 1
+            example: 1
+            type: number
+        - name: limit
+          required: true
+          in: query
+          description: Number of items per page
+          schema:
+            minimum: 1
+            maximum: 50
+            default: 20
+            example: 20
+            type: number
+      responses:
+        '200':
+          description: Workflow runs retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedWorkflowRunsDto'
+        '401':
+          description: Unauthorized
+      security: *ref_5
+      summary: List workflow runs
+      tags: *ref_6
+  /api/workflows/runs/{runId}/approve:
+    post:
+      description: Approves a workflow that is waiting for human approval and resumes execution
+      operationId: WorkflowsController_approveWorkflow
+      parameters:
+        - name: runId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApprovalDecisionDto'
+      responses:
+        '200':
+          description: Workflow approved successfully
+        '400':
+          description: Invalid approval state or workflow not in waiting_approval state
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - no approval permission
+        '404':
+          description: Workflow run not found
+        '409':
+          description: Approval already decided or plan has been regenerated
+      security: *ref_5
+      summary: Approve a pending workflow
+      tags: *ref_6
+  /api/workflows/runs/{runId}/reject:
+    post:
+      description: Rejects a workflow that is waiting for human approval and cancels execution
+      operationId: WorkflowsController_rejectWorkflow
+      parameters:
+        - name: runId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApprovalDecisionDto'
+      responses:
+        '200':
+          description: Workflow rejected successfully
+        '400':
+          description: Invalid rejection state or missing comment
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - no approval permission
+        '404':
+          description: Workflow run not found
+        '409':
+          description: Approval already decided
+      security: *ref_5
+      summary: Reject a pending workflow
+      tags: *ref_6
+  /api/workflows/runs/{runId}/cancel:
+    post:
+      description: Cancels an in-progress workflow execution
+      operationId: WorkflowsController_cancelWorkflow
+      parameters:
+        - name: runId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApprovalDecisionDto'
+      responses:
+        '200':
+          description: Workflow cancelled successfully
+        '400':
+          description: Workflow cannot be cancelled (already in terminal state)
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - no access to this workflow
+        '404':
+          description: Workflow run not found
+      security: *ref_5
+      summary: Cancel a running workflow
+      tags: *ref_6
+  /api/workflows/runs/{runId}/steps:
+    get:
+      description: Retrieves all step executions for a workflow run ordered by sequence
+      operationId: WorkflowsController_getSteps
+      parameters:
+        - name: runId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Step details retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StepRunResponseDto'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - no access to this workflow
+        '404':
+          description: Workflow run not found
+      security: *ref_5
+      summary: Get workflow run steps
+      tags: *ref_6
+  /api/workflows/runs/{runId}/events:
+    get:
+      description: Retrieves paginated event history for a workflow run
+      operationId: WorkflowsController_getEvents
+      parameters:
+        - name: runId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: limit
+          required: false
+          in: query
+          description: Number of events to return
+          schema:
+            minimum: 1
+            maximum: 100
+            default: 20
+            type: number
+        - name: offset
+          required: false
+          in: query
+          description: Number of events to skip
+          schema:
+            minimum: 0
+            default: 0
+            type: number
+      responses:
+        '200':
+          description: Events retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedEventsResponseDto'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - no access to this workflow
+        '404':
+          description: Workflow run not found
+      security: *ref_5
+      summary: Get workflow events
+      tags: *ref_6
+  /api/workflows/runs/{runId}/artifacts:
+    get:
+      description: Retrieves metadata for all artifacts generated by a workflow run
+      operationId: WorkflowsController_listArtifacts
+      parameters:
+        - name: runId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Artifacts listed successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ArtifactMetadataDto'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - no access to this workflow
+        '404':
+          description: Workflow run not found
+      security: *ref_5
+      summary: List workflow artifacts
+      tags: *ref_6
+  /api/workflows/runs/{runId}/artifacts/{artifactId}:
+    get:
+      description: Retrieves the full content of a specific artifact
+      operationId: WorkflowsController_getArtifact
+      parameters:
+        - name: runId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: artifactId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Artifact content retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArtifactContentDto'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - no access to this artifact
+        '404':
+          description: Artifact not found
+      security: *ref_5
+      summary: Get artifact content
+      tags: *ref_6
+  /api/workflows/runs/{runId}/events/stream:
+    get:
+      description: Opens SSE connection for real-time workflow event updates
+      operationId: WorkflowsController_streamEvents
+      parameters:
+        - name: runId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: since
+          required: true
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: SSE stream established
+          headers:
+            Content-Type:
+              description: text/event-stream
+              schema:
+                type: string
+                example: text/event-stream
+            Cache-Control:
+              description: no-cache
+              schema:
+                type: string
+                example: no-cache
+            Connection:
+              description: keep-alive
+              schema:
+                type: string
+                example: keep-alive
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - no access to this workflow
+        '404':
+          description: Workflow run not found
+      security: *ref_5
+      summary: Stream workflow events
+      tags: *ref_6
+  /api/workflows/runs/{runId}/performance:
+    get:
+      description: Analyzes workflow run performance with step-level timing, bottleneck detection, and summary statistics
+      operationId: PerformanceController_getPerformance
+      parameters:
+        - name: runId
+          required: true
+          in: path
+          description: Workflow run UUID
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '200':
+          description: Performance stats retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowPerformanceResponseDto'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Workflow run not found
       security:
         - bearer: []
-      summary: Reject invitation
+      summary: Get detailed performance stats for a workflow run
       tags:
-        - invitations
+        - workflows
+  /workflows/metrics:
+    get:
+      description: Retrieve aggregated workflow metrics including summary statistics, time series data, and breakdown by workflow
+      operationId: MetricsController_getMetrics
+      parameters:
+        - name: organizationId
+          required: true
+          in: query
+          description: Organization ID
+          schema:
+            format: uuid
+            example: 550e8400-e29b-41d4-a716-446655440000
+            type: string
+        - name: projectId
+          required: false
+          in: query
+          description: Project ID (optional, filters to specific project)
+          schema:
+            format: uuid
+            example: 660e8400-e29b-41d4-a716-446655440001
+            type: string
+        - name: from
+          required: false
+          in: query
+          description: Start of time range (ISO datetime), defaults to 7 days ago
+          schema:
+            example: '2026-10-19T00:00:00.000Z'
+            type: string
+        - name: to
+          required: false
+          in: query
+          description: End of time range (ISO datetime), defaults to now
+          schema:
+            example: '2026-10-26T10:51:00.000Z'
+            type: string
+        - name: granularity
+          required: true
+          in: query
+          description: Time series granularity
+          schema:
+            default: day
+            example: day
+            type: string
+            enum:
+              - hour
+              - day
+              - week
+      responses:
+        '200':
+          description: Metrics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowMetricsResponseDto'
+        '400':
+          description: Invalid query parameters
+        '401':
+          description: Unauthorized
+      security:
+        - bearer: []
+      summary: Get workflow execution metrics and statistics
+      tags:
+        - Workflows
 info:
   title: Vyrak API
   description: Vyrak API documentation
@@ -361,17 +816,7 @@ components:
   schemas:
     LoginDto:
       type: object
-      properties:
-        email:
-          type: string
-          format: email
-          pattern: ^(?:[A-Za-z0-9_'+\-]+\.)*[A-Za-z0-9_'+\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$
-        password:
-          type: string
-          minLength: 8
-      required:
-        - email
-        - password
+      properties: {}
     AuthResponseDto:
       type: object
       properties:
@@ -401,6 +846,7 @@ components:
       properties:
         user:
           type: object
+          nullable: true
           properties:
             id:
               type: string
@@ -412,12 +858,6 @@ components:
             image:
               type: string
               nullable: true
-          required:
-            - id
-            - name
-            - email
-            - image
-          nullable: true
         organizations:
           type: array
           items:
@@ -443,20 +883,19 @@ components:
       properties:
         name:
           type: string
-          minLength: 1
-          maxLength: 100
           example: Acme Inc
           description: Organization name
+          minLength: 1
+          maxLength: 100
         slug:
           type: string
-          minLength: 3
-          maxLength: 50
-          pattern: ^[a-z0-9-]+$
           example: acme-inc
           description: Unique organization slug (lowercase, alphanumeric, hyphens only)
+          pattern: ^[a-z0-9-]+$
+          minLength: 3
+          maxLength: 50
         logo:
           type: string
-          format: uri
           example: https://example.com/logo.png
           description: Organization logo URL
       required:
@@ -513,13 +952,12 @@ components:
       properties:
         name:
           type: string
-          minLength: 1
-          maxLength: 100
           example: Acme Corporation
           description: Organization name
+          minLength: 1
+          maxLength: 100
         logo:
           type: string
-          format: uri
           example: https://example.com/logo.png
           description: Organization logo URL
     MemberUserResponse:
@@ -578,12 +1016,12 @@ components:
       properties:
         role:
           type: string
+          example: admin
+          description: New role for the member
           enum:
             - owner
             - admin
             - member
-          example: admin
-          description: New role for the member
       required:
         - role
     InviteMemberDto:
@@ -591,17 +1029,16 @@ components:
       properties:
         email:
           type: string
-          format: email
-          pattern: ^(?:[A-Za-z0-9_'+\-]+\.)*[A-Za-z0-9_'+\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$
           example: john@example.com
           description: Email address of the user to invite
+          format: email
         role:
           type: string
+          example: member
+          description: Role to assign to the invited user
           enum:
             - admin
             - member
-          example: member
-          description: Role to assign to the invited user
       required:
         - email
         - role
@@ -670,3 +1107,763 @@ components:
         - status
         - expiresAt
         - createdAt
+    CreateWorkflowRunDto:
+      type: object
+      properties:
+        requirement:
+          type: string
+          description: Detailed requirement or task description for the workflow
+          example: Implement user authentication with JWT tokens
+          minLength: 10
+          maxLength: 5000
+        repositoryId:
+          type: string
+          description: UUID of the repository to execute the workflow on
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+        branch:
+          type: string
+          description: Git branch to work on
+          example: main
+          default: main
+          minLength: 1
+          maxLength: 255
+        idempotencyKey:
+          type: string
+          description: Optional idempotency key to prevent duplicate workflow runs
+          example: unique-key-12345
+          maxLength: 255
+      required:
+        - requirement
+        - repositoryId
+        - branch
+    WorkflowRunResponseDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique workflow run ID
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+        organizationId:
+          type: string
+          description: Organization ID
+          example: 550e8400-e29b-41d4-a716-446655440001
+          format: uuid
+        projectId:
+          type: string
+          description: Project ID
+          example: 550e8400-e29b-41d4-a716-446655440002
+          format: uuid
+        workflowKey:
+          type: string
+          description: Workflow key identifier
+          example: ai-sdlc-workflow
+        workflowVersion:
+          type: string
+          description: Workflow version (semver)
+          example: 1.0.0
+        status:
+          type: string
+          description: Current workflow state
+          enum:
+            - queued
+            - running
+            - waiting_approval
+            - succeeded
+            - failed
+            - cancelled
+          example: running
+        currentStepKey:
+          type: string
+          description: Current step key if workflow is in progress
+          example: planning
+        initiatedByUserId:
+          type: string
+          description: User ID who initiated the workflow
+          example: 550e8400-e29b-41d4-a716-446655440003
+          format: uuid
+        idempotencyKey:
+          type: string
+          description: Idempotency key if provided
+          example: unique-key-12345
+        input:
+          type: object
+          description: Workflow input data
+          example:
+            requirement: Implement user authentication
+            branch: main
+        startedAt:
+          type: string
+          description: Timestamp when workflow started execution
+          example: '2026-10-26T02:30:00Z'
+          format: date-time
+        completedAt:
+          type: string
+          description: Timestamp when workflow succeeded/failed
+          example: '2026-10-26T03:00:00Z'
+          format: date-time
+        cancelledAt:
+          type: string
+          description: Timestamp when workflow was cancelled
+          example: '2026-10-26T02:45:00Z'
+          format: date-time
+        cancelledByUserId:
+          type: string
+          description: User ID who cancelled the workflow
+          example: 550e8400-e29b-41d4-a716-446655440004
+          format: uuid
+        cancellationReason:
+          type: string
+          description: Reason for workflow cancellation
+          example: User requested cancellation
+        errorCode:
+          type: string
+          description: Error code if workflow failed
+          example: EXEC_TIMEOUT
+        errorMessage:
+          type: string
+          description: Error message if workflow failed
+          example: Workflow execution timed out after 30 minutes
+        createdAt:
+          type: string
+          description: Timestamp when workflow run was created
+          example: '2026-10-26T02:20:00Z'
+          format: date-time
+        updatedAt:
+          type: string
+          description: Timestamp when workflow run was last updated
+          example: '2026-10-26T02:30:00Z'
+          format: date-time
+      required:
+        - id
+        - organizationId
+        - projectId
+        - workflowKey
+        - workflowVersion
+        - status
+        - initiatedByUserId
+        - createdAt
+        - updatedAt
+    WorkflowRunSummaryDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique workflow run ID
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+        projectId:
+          type: string
+          description: Project ID
+          example: 550e8400-e29b-41d4-a716-446655440002
+          format: uuid
+        workflowKey:
+          type: string
+          description: Workflow key identifier
+          example: ai-sdlc-workflow
+        status:
+          type: string
+          description: Current workflow state
+          enum:
+            - queued
+            - running
+            - waiting_approval
+            - succeeded
+            - failed
+            - cancelled
+          example: running
+        requirement:
+          type: string
+          description: Workflow requirement (truncated to 100 characters)
+          example: Implement user authentication with JWT tokens
+        initiatedByUserId:
+          type: string
+          description: User ID who initiated the workflow
+          example: 550e8400-e29b-41d4-a716-446655440003
+          format: uuid
+        startedAt:
+          type: string
+          description: Timestamp when workflow started execution
+          example: '2026-10-26T02:30:00Z'
+          format: date-time
+        completedAt:
+          type: string
+          description: Timestamp when workflow succeeded/failed
+          example: '2026-10-26T03:00:00Z'
+          format: date-time
+        createdAt:
+          type: string
+          description: Timestamp when workflow run was created
+          example: '2026-10-26T02:20:00Z'
+          format: date-time
+      required:
+        - id
+        - projectId
+        - workflowKey
+        - status
+        - requirement
+        - initiatedByUserId
+        - createdAt
+    PaginatedWorkflowRunsDto:
+      type: object
+      properties:
+        items:
+          description: Array of workflow run summaries
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkflowRunSummaryDto'
+        total:
+          type: number
+          description: Total number of workflow runs matching the filter
+          example: 42
+        page:
+          type: number
+          description: Current page number
+          example: 1
+        limit:
+          type: number
+          description: Number of items per page
+          example: 20
+        totalPages:
+          type: number
+          description: Total number of pages
+          example: 3
+      required:
+        - items
+        - total
+        - page
+        - limit
+        - totalPages
+    ApprovalDecisionDto:
+      type: object
+      properties:
+        comment:
+          type: string
+          description: Optional comment for approval decision. Required when rejecting.
+          example: Approved after reviewing the implementation plan
+          maxLength: 5000
+    StepRunResponseDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Step execution ID
+        runId:
+          type: string
+          description: Workflow run ID
+        stepKey:
+          type: string
+          description: Step key in workflow definition
+        status:
+          type: string
+          enum:
+            - pending
+            - running
+            - succeeded
+            - failed
+            - skipped
+          description: Step execution status
+        attempt:
+          type: number
+          description: Attempt number (0-based)
+        startedAt:
+          type: string
+          nullable: true
+          description: Step start timestamp
+        completedAt:
+          type: string
+          nullable: true
+          description: Step completion timestamp
+        errorMessage:
+          type: string
+          nullable: true
+          description: Error message if step failed
+        outputArtifactId:
+          type: string
+          nullable: true
+          description: Output artifact ID if available
+      required:
+        - id
+        - runId
+        - stepKey
+        - status
+        - attempt
+        - startedAt
+        - completedAt
+        - errorMessage
+        - outputArtifactId
+    WorkflowEventResponseDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Event ID
+        runId:
+          type: string
+          description: Workflow run ID
+        eventType:
+          type: string
+          description: Event type
+        payload:
+          type: object
+          description: Event payload (sensitive data redacted)
+          additionalProperties: true
+        sequence:
+          type: number
+          description: Event sequence number
+        createdAt:
+          type: string
+          description: Event creation timestamp
+      required:
+        - id
+        - runId
+        - eventType
+        - payload
+        - sequence
+        - createdAt
+    PaginatedEventsResponseDto:
+      type: object
+      properties:
+        items:
+          description: List of events
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkflowEventResponseDto'
+        total:
+          type: number
+          description: Total number of events
+        limit:
+          type: number
+          description: Number of items per page
+        offset:
+          type: number
+          description: Offset from start
+      required:
+        - items
+        - total
+        - limit
+        - offset
+    ArtifactMetadataDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Artifact ID
+        runId:
+          type: string
+          description: Workflow run ID
+        stepKey:
+          type: string
+          nullable: true
+          description: Step that created this artifact
+        type:
+          type: string
+          enum:
+            - plan
+            - implementation_report
+            - test_result
+            - approval_plan
+            - other
+          description: Artifact type
+        name:
+          type: string
+          description: Artifact name/filename
+        size:
+          type: number
+          description: Size in bytes
+        contentType:
+          type: string
+          description: MIME content type
+        createdAt:
+          type: string
+          description: Creation timestamp
+      required:
+        - id
+        - runId
+        - stepKey
+        - type
+        - name
+        - size
+        - contentType
+        - createdAt
+    ArtifactContentDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Artifact ID
+        runId:
+          type: string
+          description: Workflow run ID
+        name:
+          type: string
+          description: Artifact name
+        contentType:
+          type: string
+          description: Content type
+        content:
+          description: Artifact content (string or JSON)
+          oneOf:
+            - type: string
+            - type: object
+        size:
+          type: number
+          description: Content size in bytes
+      required:
+        - id
+        - runId
+        - name
+        - contentType
+        - content
+        - size
+    PerformanceStepDto:
+      type: object
+      properties:
+        stepKey:
+          type: string
+          example: planning
+          description: Step key identifier
+        status:
+          type: string
+          enum:
+            - pending
+            - running
+            - succeeded
+            - failed
+            - skipped
+          example: succeeded
+          description: Current status of the step
+        attempt:
+          type: number
+          example: 1
+          description: Latest attempt number
+        durationSeconds:
+          type: object
+          example: 45.2
+          nullable: true
+          description: Duration in seconds
+        percentageOfTotal:
+          type: object
+          example: 18.4
+          nullable: true
+          description: Percentage of total workflow duration
+        startedAt:
+          type: string
+          nullable: true
+          description: ISO timestamp when step started
+        completedAt:
+          type: string
+          nullable: true
+          description: ISO timestamp when step completed
+        isCriticalPath:
+          type: boolean
+          example: true
+          description: Whether step is on critical path
+        retries:
+          type: number
+          example: 0
+          description: Number of retries
+        errorHistory:
+          description: History of failed attempts
+          type: array
+          items:
+            type: string
+      required:
+        - stepKey
+        - status
+        - attempt
+        - durationSeconds
+        - percentageOfTotal
+        - startedAt
+        - completedAt
+        - isCriticalPath
+        - retries
+    PerformanceBottleneckDto:
+      type: object
+      properties:
+        stepKey:
+          type: string
+          example: implementation
+          description: Step key with bottleneck
+        reason:
+          type: string
+          example: Longest step duration (73.5% of total)
+          description: Reason for bottleneck
+        durationSeconds:
+          type: number
+          example: 180.5
+          description: Step duration if relevant
+        retryCount:
+          type: number
+          example: 1
+          description: Retry count if relevant
+        suggestion:
+          type: string
+          example: Consider breaking into smaller steps or parallelizing
+          description: Suggestion to resolve bottleneck
+      required:
+        - stepKey
+        - reason
+        - suggestion
+    PerformanceSummaryDto:
+      type: object
+      properties:
+        totalSteps:
+          type: number
+          example: 5
+          description: Total number of steps
+        completedSteps:
+          type: number
+          example: 5
+          description: Number of completed steps
+        failedSteps:
+          type: number
+          example: 0
+          description: Number of failed steps
+        averageStepDuration:
+          type: object
+          example: 49.12
+          nullable: true
+          description: Average duration per step in seconds
+        longestStepKey:
+          type: object
+          example: implementation
+          nullable: true
+          description: Key of longest step
+        longestStepDuration:
+          type: object
+          example: 180.5
+          nullable: true
+          description: Duration of longest step in seconds
+        totalRetries:
+          type: number
+          example: 1
+          description: Total number of retries across all steps
+      required:
+        - totalSteps
+        - completedSteps
+        - failedSteps
+        - averageStepDuration
+        - longestStepKey
+        - longestStepDuration
+        - totalRetries
+    WorkflowPerformanceResponseDto:
+      type: object
+      properties:
+        runId:
+          type: string
+          example: run-123
+          description: Workflow run ID
+        organizationId:
+          type: string
+          example: org-123
+          description: Organization ID
+        projectId:
+          type: string
+          example: proj-456
+          description: Project ID
+        workflowKey:
+          type: string
+          example: ai-sdlc-workflow
+          description: Workflow key
+        state:
+          type: string
+          example: succeeded
+          description: Workflow state
+        totalDurationSeconds:
+          type: object
+          example: 245.6
+          nullable: true
+          description: Total workflow duration in seconds
+        steps:
+          description: Performance data for each step
+          type: array
+          items:
+            $ref: '#/components/schemas/PerformanceStepDto'
+        bottlenecks:
+          description: Detected performance bottlenecks
+          type: array
+          items:
+            $ref: '#/components/schemas/PerformanceBottleneckDto'
+        summary:
+          description: Summary statistics
+          allOf:
+            - $ref: '#/components/schemas/PerformanceSummaryDto'
+      required:
+        - runId
+        - organizationId
+        - projectId
+        - workflowKey
+        - state
+        - totalDurationSeconds
+        - steps
+        - bottlenecks
+        - summary
+    MetricsSummaryDto:
+      type: object
+      properties:
+        totalRuns:
+          type: number
+          description: Total number of workflow runs
+          example: 1234
+        succeeded:
+          type: number
+          description: Number of succeeded runs
+          example: 1100
+        failed:
+          type: number
+          description: Number of failed runs
+          example: 89
+        cancelled:
+          type: number
+          description: Number of cancelled runs
+          example: 30
+        running:
+          type: number
+          description: Number of running runs
+          example: 15
+        successRate:
+          type: number
+          description: Success rate (succeeded / completed)
+          example: 0.891
+        avgDurationSeconds:
+          type: object
+          description: Average duration in seconds
+          example: 245.6
+          nullable: true
+        p50DurationSeconds:
+          type: object
+          description: P50 duration in seconds
+          example: 180
+          nullable: true
+        p95DurationSeconds:
+          type: object
+          description: P95 duration in seconds
+          example: 450
+          nullable: true
+        p99DurationSeconds:
+          type: object
+          description: P99 duration in seconds
+          example: 680
+          nullable: true
+      required:
+        - totalRuns
+        - succeeded
+        - failed
+        - cancelled
+        - running
+        - successRate
+        - avgDurationSeconds
+        - p50DurationSeconds
+        - p95DurationSeconds
+        - p99DurationSeconds
+    TimeSeriesDataPointDto:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          description: Timestamp for this data point
+          example: '2026-10-19T00:00:00.000Z'
+        totalRuns:
+          type: number
+          description: Total runs in this period
+          example: 145
+        succeeded:
+          type: number
+          description: Succeeded runs in this period
+          example: 130
+        failed:
+          type: number
+          description: Failed runs in this period
+          example: 10
+        cancelled:
+          type: number
+          description: Cancelled runs in this period
+          example: 5
+        avgDurationSeconds:
+          type: object
+          description: Average duration in seconds for this period
+          example: 230.5
+          nullable: true
+      required:
+        - timestamp
+        - totalRuns
+        - succeeded
+        - failed
+        - cancelled
+        - avgDurationSeconds
+    WorkflowBreakdownDto:
+      type: object
+      properties:
+        workflowKey:
+          type: string
+          description: Workflow key
+          example: ai-sdlc-workflow
+        totalRuns:
+          type: number
+          description: Total runs for this workflow
+          example: 800
+        succeeded:
+          type: number
+          description: Succeeded runs for this workflow
+          example: 750
+        failed:
+          type: number
+          description: Failed runs for this workflow
+          example: 40
+        successRate:
+          type: number
+          description: Success rate for this workflow
+          example: 0.937
+        avgDurationSeconds:
+          type: object
+          description: Average duration in seconds for this workflow
+          example: 280.3
+          nullable: true
+      required:
+        - workflowKey
+        - totalRuns
+        - succeeded
+        - failed
+        - successRate
+        - avgDurationSeconds
+    WorkflowMetricsResponseDto:
+      type: object
+      properties:
+        organizationId:
+          type: string
+          description: Organization ID
+          example: org-123
+        projectId:
+          type: object
+          description: Project ID (null if all projects)
+          example: proj-456
+          nullable: true
+        period:
+          type: object
+          description: Time period for metrics
+          example:
+            from: '2026-10-19T00:00:00.000Z'
+            to: '2026-10-26T10:51:00.000Z'
+        summary:
+          description: Summary statistics
+          allOf:
+            - $ref: '#/components/schemas/MetricsSummaryDto'
+        timeSeries:
+          description: Time series data
+          type: array
+          items:
+            $ref: '#/components/schemas/TimeSeriesDataPointDto'
+        byWorkflow:
+          description: Breakdown by workflow
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkflowBreakdownDto'
+      required:
+        - organizationId
+        - projectId
+        - period
+        - summary
+        - timeSeries
+        - byWorkflow

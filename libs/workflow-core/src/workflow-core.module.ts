@@ -40,6 +40,7 @@ import {
   PROMETHEUS_METRICS_SERVICE,
   REJECT_WORKFLOW_USE_CASE,
   START_WORKFLOW_USE_CASE,
+  STEP_REPOSITORY,
   TEST_RESULT_PARSER,
   TOOL_STEP_EXECUTOR,
   WORKFLOW_APPROVAL_REPOSITORY,
@@ -48,6 +49,7 @@ import {
   WORKFLOW_REPOSITORY,
 } from './infras/di/di'
 import { EventPrismaRepository } from './infras/repositories/event-prisma.repository'
+import { StepPrismaRepository } from './infras/repositories/step-prisma.repository'
 import { WorkflowApprovalPrismaRepository } from './infras/repositories/workflow-approval-prisma.repository'
 import { WorkflowPrismaRepository } from './infras/repositories/workflow-prisma.repository'
 import { StubAuthorizationService } from './infras/services/stub-authorization.service'
@@ -132,6 +134,11 @@ class StubJobQueue implements IJobQueue {
     {
       provide: WORKFLOW_REPOSITORY,
       useFactory: (db: DatabaseService) => new WorkflowPrismaRepository(db.client),
+      inject: [DatabaseService],
+    },
+    {
+      provide: STEP_REPOSITORY,
+      useFactory: (db: DatabaseService) => new StepPrismaRepository(db.client),
       inject: [DatabaseService],
     },
     {
@@ -273,6 +280,7 @@ class StubJobQueue implements IJobQueue {
     START_WORKFLOW_USE_CASE,
     AUTHORIZATION_SERVICE,
     WORKFLOW_REPOSITORY,
+    STEP_REPOSITORY,
     EVENT_REPOSITORY,
     WORKFLOW_APPROVAL_REPOSITORY,
     ARTIFACT_REPOSITORY,
