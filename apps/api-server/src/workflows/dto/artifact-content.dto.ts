@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
 
 import { createZodDto } from 'nestjs-zod'
-import { z } from 'nestjs-zod/z'
+import { z } from 'zod'
 
 export const ArtifactContentSchema = z.object({
   id: z.string().uuid(),
