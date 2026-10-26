@@ -21,13 +21,12 @@ export function useWorkflowSSE(runId: string) {
 
     eventSource.onopen = () => {
       setConnected(true)
-      console.log('[SSE] Connected to workflow events stream')
     }
 
     eventSource.onmessage = (event) => {
       try {
-        const data = JSON.parse(event.data)
-        console.log('[SSE] Event received:', data)
+        // Parse event data to validate format
+        JSON.parse(event.data)
 
         // Invalidate queries to trigger refetch
         queryClient.invalidateQueries({ queryKey: ['workflow-run', runId] })
@@ -44,7 +43,6 @@ export function useWorkflowSSE(runId: string) {
     }
 
     return () => {
-      console.log('[SSE] Closing connection')
       eventSource.close()
       setConnected(false)
     }
