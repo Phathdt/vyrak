@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common'
-import { DatabaseModule } from '@vyrak/database'
+import { DatabaseModule, DatabaseService } from '@vyrak/database'
 
 import { InvitationService } from './application/services/invitation.service'
 import { MemberService } from './application/services/member.service'
@@ -23,8 +23,8 @@ import { UserPrismaRepository } from './infras/repositories/user-prisma.reposito
   providers: [
     {
       provide: ORGANIZATION_REPOSITORY,
-      useFactory: (prisma) => new OrganizationPrismaRepository(prisma),
-      inject: [DatabaseModule],
+      useFactory: (prisma: DatabaseService) => new OrganizationPrismaRepository(prisma),
+      inject: [DatabaseService],
     },
     {
       provide: ORGANIZATION_SERVICE,
@@ -33,8 +33,8 @@ import { UserPrismaRepository } from './infras/repositories/user-prisma.reposito
     },
     {
       provide: MEMBER_REPOSITORY,
-      useFactory: (prisma) => new MemberPrismaRepository(prisma),
-      inject: [DatabaseModule],
+      useFactory: (prisma: DatabaseService) => new MemberPrismaRepository(prisma),
+      inject: [DatabaseService],
     },
     {
       provide: MEMBER_SERVICE,
@@ -43,13 +43,13 @@ import { UserPrismaRepository } from './infras/repositories/user-prisma.reposito
     },
     {
       provide: USER_REPOSITORY,
-      useFactory: (prisma) => new UserPrismaRepository(prisma),
-      inject: [DatabaseModule],
+      useFactory: (prisma: DatabaseService) => new UserPrismaRepository(prisma),
+      inject: [DatabaseService],
     },
     {
       provide: INVITATION_REPOSITORY,
-      useFactory: (prisma) => new InvitationPrismaRepository(prisma),
-      inject: [DatabaseModule],
+      useFactory: (prisma: DatabaseService) => new InvitationPrismaRepository(prisma),
+      inject: [DatabaseService],
     },
     {
       provide: INVITATION_SERVICE,

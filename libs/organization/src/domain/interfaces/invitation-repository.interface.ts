@@ -1,12 +1,7 @@
 import type { InvitationResponse, InviteMemberDto } from '../schemas'
 
 export interface IInvitationRepository {
-  create(
-    organizationId: string,
-    inviterId: string,
-    data: InviteMemberDto,
-    expiresAt: Date
-  ): Promise<InvitationResponse>
+  create(organizationId: string, inviterId: string, data: InviteMemberDto, expiresAt: Date): Promise<InvitationResponse>
   findOne(id: string): Promise<
     | (InvitationResponse & {
         organizationId: string

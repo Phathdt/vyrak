@@ -1,21 +1,19 @@
 import { Body, Controller, Delete, Get, Inject, Param, Patch, Post, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
-import type {
-  IInvitationService,
-  IMemberService,
-  IOrganizationService,
-} from '@vyrak/organization'
 import {
   CreateOrganizationDto,
+  INVITATION_SERVICE,
   InvitationResponse,
   InviteMemberDto,
-  INVITATION_SERVICE,
-  MemberResponse,
   MEMBER_SERVICE,
-  OrganizationResponse,
+  MemberResponse,
   ORGANIZATION_SERVICE,
+  OrganizationResponse,
   UpdateMemberRoleDto,
   UpdateOrganizationDto,
+  type IInvitationService,
+  type IMemberService,
+  type IOrganizationService,
 } from '@vyrak/organization'
 
 import { AuthGuard } from '../../auth/auth.guard'
