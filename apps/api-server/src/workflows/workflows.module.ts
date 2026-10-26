@@ -3,8 +3,6 @@ import { AgentRuntimeModule } from '@vyrak/agent-runtime'
 import { DatabaseModule } from '@vyrak/database'
 import { WorkflowCoreModule } from '@vyrak/workflow-core'
 
-import { MetricsController } from './metrics.controller'
-import { PerformanceController } from './performance.controller'
 import { EventStreamService } from './services'
 import { WorkflowsController } from './workflows.controller'
 import { WorkflowsService } from './workflows.service'
@@ -34,7 +32,7 @@ import { WorkflowsService } from './workflows.service'
  */
 @Module({
   imports: [WorkflowCoreModule, DatabaseModule, AgentRuntimeModule],
-  controllers: [WorkflowsController, PerformanceController, MetricsController],
+  controllers: [WorkflowsController],
   providers: [WorkflowsService, EventStreamService],
   exports: [WorkflowsService],
 })
