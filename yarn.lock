@@ -1110,6 +1110,19 @@
     path-to-regexp "8.4.2"
     swagger-ui-dist "5.34.0"
 
+"@nestjs/swagger@^12.0.4":
+  version "12.0.4"
+  resolved "https://registry.yarnpkg.com/@nestjs/swagger/-/swagger-12.0.4.tgz#50dcc0fefe23313d6f7dbaf167c3d95a6806ecb2"
+  integrity sha512-bZKMJ4mwjnbwJOO50Arw4VNWy2NMuaBbTWI/fqdFfP2VsObH0nDSNGXquKLQ08gfVFq3UxzC4bNOjFJ/3z4pRg==
+  dependencies:
+    "@microsoft/tsdoc" "0.17.1"
+    "@nestjs/mapped-types" "12.0.0"
+    "@standard-schema/spec" "1.1.0"
+    es-toolkit "1.52.0"
+    js-yaml "5.5.0"
+    path-to-regexp "8.4.2"
+    swagger-ui-dist "5.34.0"
+
 "@nestjs/swagger@^8.0.5":
   version "8.1.1"
   resolved "https://registry.yarnpkg.com/@nestjs/swagger/-/swagger-8.1.1.tgz#18d61a995b6b17759bca361474904d69c4406093"

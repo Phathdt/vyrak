@@ -13,10 +13,9 @@ import { ProjectManagementModule } from '@vyrak/project-management'
 
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
-import { AuthController, InvitationsController, OrganizationsController } from './controllers'
+import { AuthController, InvitationsController, OrganizationsController, ProjectsController } from './controllers'
 
 import { ResponseInterceptor, TenantContextInterceptor, TraceIdInterceptor } from '../interceptors'
-import { ProjectsController } from '../projects/projects.controller'
 import { WorkflowsModule } from '../workflows/workflows.module'
 
 @Module({

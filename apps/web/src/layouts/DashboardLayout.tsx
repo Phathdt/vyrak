@@ -5,11 +5,11 @@ import { Sidebar } from '../components/dashboard/Sidebar'
 
 export function DashboardLayout() {
   return (
-    <div className='dashboard-layout'>
+    <div className='flex h-screen overflow-hidden'>
       <Sidebar />
-      <div className='dashboard-content'>
+      <div className='flex flex-1 flex-col overflow-hidden'>
         <Header />
-        <main className='dashboard-main'>
+        <main className='flex-1 overflow-auto p-6'>
           <Outlet />
         </main>
       </div>
