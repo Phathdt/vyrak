@@ -1,4 +1,4 @@
-import type { DatabaseService } from '@vyrak/database'
+import type { DatabaseService, Prisma } from '@vyrak/database'
 
 import type {
   CreateProjectDto,
@@ -8,6 +8,17 @@ import type {
   ProjectWithStats,
   UpdateProjectDto,
 } from '../../domain'
+
+type ProjectWithCount = Prisma.ProjectGetPayload<{
+  include: {
+    _count: {
+      select: {
+        gitRepositories: true
+        workflowRuns: true
+      }
+    }
+  }
+}>
 
 export class ProjectPrismaRepository implements IProjectRepository {
   constructor(private readonly prisma: DatabaseService) {}
@@ -82,7 +93,7 @@ export class ProjectPrismaRepository implements IProjectRepository {
       ])
 
       return {
-        items: items.map((project) => ({
+        items: items.map((project: ProjectWithCount): ProjectWithStats => ({
           id: project.id,
           organizationId: project.organizationId,
           name: project.name,
