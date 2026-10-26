@@ -1,8 +1,10 @@
 import { useNavigate } from 'react-router-dom'
 
-import { StatusBadge } from './StatusBadge'
+import { Button } from '@/components/ui/button'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
-import { WorkflowRunSummaryDto } from '../../api/generated/models'
+import type { WorkflowRunSummaryDto } from '../../api/generated/models'
+import { StatusBadge } from './StatusBadge'
 
 interface WorkflowTableProps {
   workflows: WorkflowRunSummaryDto[]
@@ -45,53 +47,59 @@ export function WorkflowTable({ workflows, total, page, limit, onPageChange }: W
   }
 
   return (
-    <div className='workflow-table-container'>
-      <table className='workflow-table'>
-        <thead>
-          <tr>
-            <th>Status</th>
-            <th>Workflow</th>
-            <th>Run ID</th>
-            <th>Started</th>
-            <th>Duration</th>
-            <th>User</th>
-          </tr>
-        </thead>
-        <tbody>
-          {workflows.length === 0 ? (
-            <tr>
-              <td colSpan={6} className='empty-state'>
-                No workflows found
-              </td>
-            </tr>
-          ) : (
-            workflows.map((workflow) => (
-              <tr key={workflow.id} onClick={() => navigate(`/workflows/${workflow.id}`)} className='workflow-row'>
-                <td>
-                  <StatusBadge status={workflow.status} />
-                </td>
-                <td className='workflow-name'>{workflow.workflowKey}</td>
-                <td className='run-id'>{workflow.id.slice(0, 8)}</td>
-                <td>{workflow.startedAt ? formatDate(workflow.startedAt) : '-'}</td>
-                <td>{formatDuration(workflow.startedAt, workflow.completedAt)}</td>
-                <td>{workflow.initiatedByUserId?.slice(0, 8) || 'System'}</td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+    <div className='space-y-4'>
+      <div className='overflow-x-auto rounded-lg border'>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Status</TableHead>
+              <TableHead>Workflow</TableHead>
+              <TableHead>Run ID</TableHead>
+              <TableHead>Started</TableHead>
+              <TableHead>Duration</TableHead>
+              <TableHead>User</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {workflows.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className='h-24 text-center'>
+                  No workflows found
+                </TableCell>
+              </TableRow>
+            ) : (
+              workflows.map((workflow) => (
+                <TableRow
+                  key={workflow.id}
+                  onClick={() => navigate(`/workflows/${workflow.id}`)}
+                  className='cursor-pointer hover:bg-accent/50'
+                >
+                  <TableCell>
+                    <StatusBadge status={workflow.status} size='sm' />
+                  </TableCell>
+                  <TableCell className='font-medium'>{workflow.workflowKey}</TableCell>
+                  <TableCell className='font-mono text-sm'>{workflow.id.slice(0, 8)}</TableCell>
+                  <TableCell>{workflow.startedAt ? formatDate(workflow.startedAt) : '-'}</TableCell>
+                  <TableCell>{formatDuration(workflow.startedAt, workflow.completedAt)}</TableCell>
+                  <TableCell>{workflow.initiatedByUserId?.slice(0, 8) || 'System'}</TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
       {totalPages > 1 && (
-        <div className='pagination'>
-          <button disabled={page === 1} onClick={() => onPageChange(page - 1)} className='btn-secondary'>
+        <div className='flex items-center justify-between'>
+          <Button variant='outline' disabled={page === 1} onClick={() => onPageChange(page - 1)}>
             Previous
-          </button>
-          <span className='pagination-info'>
+          </Button>
+          <span className='text-sm text-muted-foreground'>
             Page {page} of {totalPages}
           </span>
-          <button disabled={page >= totalPages} onClick={() => onPageChange(page + 1)} className='btn-secondary'>
+          <Button variant='outline' disabled={page >= totalPages} onClick={() => onPageChange(page + 1)}>
             Next
-          </button>
+          </Button>
         </div>
       )}
     </div>

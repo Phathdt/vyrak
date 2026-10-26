@@ -1,4 +1,7 @@
+import { Loader2 } from 'lucide-react'
 import { useParams } from 'react-router-dom'
+
+import { Badge } from '@/components/ui/badge'
 
 import { StepTimeline } from '../../components/workflow/StepTimeline'
 import { WorkflowOverview } from '../../components/workflow/WorkflowOverview'
@@ -8,47 +11,72 @@ import { useWorkflowSSE } from '../../hooks/use-workflow-sse'
 export function WorkflowDetailPage() {
   const { runId } = useParams<{ runId: string }>()
 
-  if (!runId) {
-    return <div>Invalid workflow run ID</div>
-  }
+  // Call hooks unconditionally
+  const { data: workflow, isLoading, error } = useWorkflowDetail(runId || '')
+  const { connected } = useWorkflowSSE(runId || '')
 
-  const { data: workflow, isLoading, error } = useWorkflowDetail(runId)
-  const { connected } = useWorkflowSSE(runId)
+  if (!runId) {
+    return (
+      <div className='container py-8'>
+        <div className='rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-destructive'>
+          Invalid workflow run ID
+        </div>
+      </div>
+    )
+  }
 
   if (isLoading) {
     return (
-      <div className='page-loading'>
-        <div className='loading-spinner' />
-        <p>Loading workflow details...</p>
+      <div className='container py-8'>
+        <div className='flex flex-col items-center justify-center py-16'>
+          <Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
+          <p className='mt-4 text-muted-foreground'>Loading workflow details...</p>
+        </div>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className='page-error'>
-        <p>Error loading workflow: {error instanceof Error ? error.message : 'Unknown error'}</p>
+      <div className='container py-8'>
+        <div className='rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-destructive'>
+          <p>Error loading workflow: {error instanceof Error ? error.message : 'Unknown error'}</p>
+        </div>
       </div>
     )
   }
 
   if (!workflow) {
-    return <div>Workflow not found</div>
+    return (
+      <div className='container py-8'>
+        <div className='rounded-lg border p-4 text-muted-foreground'>Workflow not found</div>
+      </div>
+    )
   }
 
   return (
-    <div className='workflow-detail-page'>
-      <header className='page-header'>
-        <h1>{workflow.workflowKey}</h1>
-        {connected && <span className='live-indicator'>🔴 Live</span>}
+    <div className='container py-8'>
+      <header className='mb-8 flex items-center justify-between'>
+        <div>
+          <h1 className='text-3xl font-bold tracking-tight'>{workflow.workflowKey}</h1>
+          <p className='mt-2 text-muted-foreground'>Run ID: {workflow.id}</p>
+        </div>
+        {connected && (
+          <Badge variant='default' className='gap-1.5'>
+            <span className='h-2 w-2 animate-pulse rounded-full bg-red-500' />
+            Live
+          </Badge>
+        )}
       </header>
 
-      <WorkflowOverview workflow={workflow} />
+      <div className='space-y-8'>
+        <WorkflowOverview workflow={workflow} />
 
-      <section className='workflow-section'>
-        <h2>Step Timeline</h2>
-        <StepTimeline steps={workflow.steps} />
-      </section>
+        <section>
+          <h2 className='mb-4 text-xl font-semibold'>Step Timeline</h2>
+          <StepTimeline steps={workflow.steps} />
+        </section>
+      </div>
     </div>
   )
 }
