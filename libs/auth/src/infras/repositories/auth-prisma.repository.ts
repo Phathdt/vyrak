@@ -1,13 +1,13 @@
-import type { PrismaClient } from '@vyrak/database'
+import type { DatabaseService } from '@vyrak/database'
 
 import type { IAuthRepository, UserEntity, UserWithOrganizations } from '../../domain'
 
 export class AuthPrismaRepository implements IAuthRepository {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(private readonly databaseService: DatabaseService) {}
 
   async findByEmail(email: string): Promise<(UserEntity & { passwordHash: string | null }) | null> {
     try {
-      const user = await this.prisma.user.findUnique({
+      const user = await this.databaseService.client.user.findUnique({
         where: { email },
       })
 
@@ -33,18 +33,20 @@ export class AuthPrismaRepository implements IAuthRepository {
 
   async findUserById(userId: string): Promise<UserWithOrganizations | null> {
     try {
-      const user = await this.prisma.user.findUnique({
-        where: { id: userId },
-        include: {
-          members: {
-            include: {
-              organization: true,
+      // Use withSystemAccess to bypass tenant filter for cross-organization user lookup
+      // This is needed because we're fetching user info across all their organizations
+      return await this.databaseService.withSystemAccess(async () => {
+        return this.databaseService.client.user.findUnique({
+          where: { id: userId },
+          include: {
+            members: {
+              include: {
+                organization: true,
+              },
             },
           },
-        },
+        })
       })
-
-      return user
     } catch (error) {
       console.error('[AuthPrismaRepository] findUserById error:', error)
       throw error
@@ -53,11 +55,14 @@ export class AuthPrismaRepository implements IAuthRepository {
 
   async hasAnyOrganization(userId: string): Promise<boolean> {
     try {
-      const membership = await this.prisma.member.findFirst({
-        where: { userId },
-      })
+      // Use withSystemAccess since we're checking across all organizations
+      return await this.databaseService.withSystemAccess(async () => {
+        const membership = await this.databaseService.client.member.findFirst({
+          where: { userId },
+        })
 
-      return !!membership
+        return !!membership
+      })
     } catch (error) {
       console.error('[AuthPrismaRepository] hasAnyOrganization error:', error)
       throw error
@@ -66,34 +71,37 @@ export class AuthPrismaRepository implements IAuthRepository {
 
   async createPersonalOrganization(userId: string): Promise<{ id: string; name: string; slug: string } | null> {
     try {
-      // Get user info
-      const user = await this.prisma.user.findUnique({
-        where: { id: userId },
-      })
+      // Use withSystemAccess for system operation
+      return await this.databaseService.withSystemAccess(async () => {
+        // Get user info
+        const user = await this.databaseService.client.user.findUnique({
+          where: { id: userId },
+        })
 
-      if (!user) {
-        throw new Error('User not found')
-      }
+        if (!user) {
+          throw new Error('User not found')
+        }
 
-      // Create personal organization
-      const organization = await this.prisma.organization.create({
-        data: {
-          name: user.name ? `${user.name}'s Workspace` : 'Personal Workspace',
-          slug: `personal-${userId.slice(0, 8)}`,
-          members: {
-            create: {
-              userId: userId,
-              role: 'owner',
+        // Create personal organization
+        const organization = await this.databaseService.client.organization.create({
+          data: {
+            name: user.name ? `${user.name}'s Workspace` : 'Personal Workspace',
+            slug: `personal-${userId.slice(0, 8)}`,
+            members: {
+              create: {
+                userId: userId,
+                role: 'owner',
+              },
             },
           },
-        },
-      })
+        })
 
-      return {
-        id: organization.id,
-        name: organization.name,
-        slug: organization.slug,
-      }
+        return {
+          id: organization.id,
+          name: organization.name,
+          slug: organization.slug,
+        }
+      })
     } catch (error) {
       console.error('[AuthPrismaRepository] createPersonalOrganization error:', error)
       return null

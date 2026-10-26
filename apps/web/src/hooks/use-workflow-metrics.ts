@@ -1,5 +1,5 @@
 import { useMetricsControllerGetMetrics } from '../api/generated'
-import { useAuth } from '../contexts/auth-context'
+import { useOrganization } from '../contexts/organization-context'
 
 interface UseWorkflowMetricsParams {
   projectId?: string
@@ -9,21 +9,20 @@ interface UseWorkflowMetricsParams {
 
 export function useWorkflowMetrics(params: UseWorkflowMetricsParams = {}) {
   const { projectId, from, to } = params
-  const { organizations } = useAuth()
-
-  // Get first organization ID or use a placeholder
-  const organizationId = organizations?.[0]?.id || 'default-org'
+  const { activeOrgId } = useOrganization()
 
   return useMetricsControllerGetMetrics(
+    activeOrgId || '',
     {
-      organizationId,
+      organizationId: activeOrgId || '',
       projectId,
       from,
       to,
     },
     {
       query: {
-        queryKey: ['workflow-metrics', organizationId, projectId, from, to],
+        queryKey: ['workflow-metrics', activeOrgId, projectId, from, to],
+        enabled: !!activeOrgId,
         staleTime: 30000, // 30 seconds
       },
     }

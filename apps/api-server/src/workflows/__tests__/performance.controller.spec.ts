@@ -51,7 +51,7 @@ describe('PerformanceController', () => {
 
       mockPerformanceService.getPerformance.mockResolvedValue(mockResponse)
 
-      const result = await controller.getPerformance('run-123')
+      const result = await controller.getPerformance('org-123', 'run-123')
 
       expect(result).toEqual(mockResponse)
       expect(mockPerformanceService.getPerformance).toHaveBeenCalledWith('run-123')
@@ -60,15 +60,15 @@ describe('PerformanceController', () => {
     it('should throw NotFoundException when workflow run not found', async () => {
       mockPerformanceService.getPerformance.mockRejectedValue(new Error('Workflow run run-123 not found'))
 
-      await expect(controller.getPerformance('run-123')).rejects.toThrow(NotFoundException)
-      await expect(controller.getPerformance('run-123')).rejects.toThrow('Workflow run run-123 not found')
+      await expect(controller.getPerformance('org-123', 'run-123')).rejects.toThrow(NotFoundException)
+      await expect(controller.getPerformance('org-123', 'run-123')).rejects.toThrow('Workflow run run-123 not found')
     })
 
     it('should rethrow other errors', async () => {
       const error = new Error('Database connection error')
       mockPerformanceService.getPerformance.mockRejectedValue(error)
 
-      await expect(controller.getPerformance('run-123')).rejects.toThrow('Database connection error')
+      await expect(controller.getPerformance('org-123', 'run-123')).rejects.toThrow('Database connection error')
     })
   })
 })

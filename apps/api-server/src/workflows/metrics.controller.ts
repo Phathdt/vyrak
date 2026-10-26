@@ -1,19 +1,23 @@
-import { Controller, Get, Inject, Query } from '@nestjs/common'
+import { Controller, Get, Inject, Param, ParseUUIDPipe, Query, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { WORKFLOW_METRICS_SERVICE, type IWorkflowMetricsService } from '@vyrak/workflow-core'
 
 import { WorkflowMetricsQueryDto } from './dto/workflow-metrics-query.dto'
 import { WorkflowMetricsResponseDto } from './dto/workflow-metrics-response.dto'
 
+import { JwtAuthGuard } from '../guards/jwt-auth.guard'
+import { OrganizationMemberGuard } from '../guards/organization-member.guard'
+
 /**
  * Metrics Controller
  *
  * Provides workflow execution metrics and statistics endpoints:
- * - GET /api/workflows/metrics - Get aggregated workflow metrics
+ * - GET /api/organizations/:orgId/workflows/metrics - Get aggregated workflow metrics
  */
 @ApiTags('Workflows')
 @ApiBearerAuth()
-@Controller('workflows/metrics')
+@Controller('api/organizations/:orgId/workflows/metrics')
+@UseGuards(JwtAuthGuard, OrganizationMemberGuard)
 export class MetricsController {
   constructor(
     @Inject(WORKFLOW_METRICS_SERVICE)
@@ -28,7 +32,7 @@ export class MetricsController {
    * - Time series: metrics grouped by hour/day/week
    * - Breakdown: metrics per workflow key
    *
-   * @param query - Query parameters (organizationId, projectId, time range, granularity)
+   * @param query - Query parameters (projectId, time range, granularity)
    * @returns Workflow metrics response
    */
   @Get()
@@ -44,9 +48,13 @@ export class MetricsController {
   })
   @ApiResponse({ status: 400, description: 'Invalid query parameters' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async getMetrics(@Query() query: WorkflowMetricsQueryDto): Promise<WorkflowMetricsResponseDto> {
-    // TODO: Verify organizationId access (reuse pattern from workflows.controller.ts)
-    // For now, trust the query parameter - authorization will be added in production
-    return this.metricsService.getMetrics(query)
+  @ApiResponse({ status: 403, description: 'Forbidden - not a member of the organization' })
+  async getMetrics(
+    @Param('orgId', ParseUUIDPipe) orgId: string,
+    @Query() query: WorkflowMetricsQueryDto
+  ): Promise<WorkflowMetricsResponseDto> {
+    // OrganizationMemberGuard has already verified access and set tenant context
+    // Pass organizationId from URL param to ensure consistency
+    return this.metricsService.getMetrics({ ...query, organizationId: orgId })
   }
 }

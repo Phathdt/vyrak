@@ -32,7 +32,9 @@ describe('DatabaseService', () => {
     it('should set tenant context with organizationId', () => {
       service.setTenantContext('org-123')
 
-      expect((service as any).tenantContext).toEqual({
+      // Verify via getTenantContext (public API)
+      const context = service.getTenantContext()
+      expect(context).toEqual({
         organizationId: 'org-123',
         bypassTenantFilter: false,
       })
@@ -48,7 +50,9 @@ describe('DatabaseService', () => {
       service.setTenantContext('org-123')
       service.clearTenantContext()
 
-      expect((service as any).tenantContext).toEqual({})
+      // Verify context is cleared via getTenantContext
+      const context = service.getTenantContext()
+      expect(context).toEqual({})
     })
   })
 
@@ -58,14 +62,17 @@ describe('DatabaseService', () => {
     })
 
     it('should execute callback with organization context', async () => {
+      let capturedContext: any
+
       const result = await service.withOrganization('org-456', async () => {
-        expect((service as any).tenantContext).toEqual({
-          organizationId: 'org-456',
-          bypassTenantFilter: false,
-        })
+        capturedContext = service.getTenantContext()
         return 'test-result'
       })
 
+      expect(capturedContext).toEqual({
+        organizationId: 'org-456',
+        bypassTenantFilter: false,
+      })
       expect(result).toBe('test-result')
     })
 
@@ -73,10 +80,12 @@ describe('DatabaseService', () => {
       service.setTenantContext('org-123')
 
       await service.withOrganization('org-456', async () => {
-        expect((service as any).tenantContext.organizationId).toBe('org-456')
+        const innerContext = service.getTenantContext()
+        expect(innerContext.organizationId).toBe('org-456')
       })
 
-      expect((service as any).tenantContext).toEqual({
+      const restoredContext = service.getTenantContext()
+      expect(restoredContext).toEqual({
         organizationId: 'org-123',
         bypassTenantFilter: false,
       })
@@ -91,7 +100,8 @@ describe('DatabaseService', () => {
         })
       ).rejects.toThrow('Test error')
 
-      expect((service as any).tenantContext).toEqual({
+      const restoredContext = service.getTenantContext()
+      expect(restoredContext).toEqual({
         organizationId: 'org-123',
         bypassTenantFilter: false,
       })
@@ -104,35 +114,45 @@ describe('DatabaseService', () => {
     })
 
     it('should execute callback with bypass flag set', async () => {
+      let capturedContext: any
+
       const result = await service.withSystemAccess(async () => {
-        expect((service as any).tenantContext.bypassTenantFilter).toBe(true)
+        capturedContext = service.getTenantContext()
         return 'system-result'
       })
 
+      expect(capturedContext.bypassTenantFilter).toBe(true)
       expect(result).toBe('system-result')
     })
 
     it('should restore previous bypass flag after execution', async () => {
-      ;(service as any).tenantContext.bypassTenantFilter = false
+      service.setTenantContext('org-123') // Sets bypassTenantFilter: false
 
       await service.withSystemAccess(async () => {
-        expect((service as any).tenantContext.bypassTenantFilter).toBe(true)
+        const innerContext = service.getTenantContext()
+        expect(innerContext.bypassTenantFilter).toBe(true)
       })
 
-      expect((service as any).tenantContext.bypassTenantFilter).toBe(false)
+      const restoredContext = service.getTenantContext()
+      expect(restoredContext.bypassTenantFilter).toBe(false)
     })
 
     it('should work with organization context set', async () => {
       service.setTenantContext('org-789')
 
+      let capturedContext: any
+
       await service.withSystemAccess(async () => {
-        expect((service as any).tenantContext).toEqual({
-          organizationId: 'org-789',
-          bypassTenantFilter: true,
-        })
+        capturedContext = service.getTenantContext()
       })
 
-      expect((service as any).tenantContext).toEqual({
+      expect(capturedContext).toEqual({
+        organizationId: 'org-789',
+        bypassTenantFilter: true,
+      })
+
+      const restoredContext = service.getTenantContext()
+      expect(restoredContext).toEqual({
         organizationId: 'org-789',
         bypassTenantFilter: false,
       })

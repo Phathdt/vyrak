@@ -13,7 +13,7 @@ import { AppController } from './app.controller'
 import { AppService } from './app.service'
 import { AuthController } from './controllers'
 
-import { ResponseInterceptor, TraceIdInterceptor } from '../interceptors'
+import { ResponseInterceptor, TenantContextCleanupInterceptor, TraceIdInterceptor } from '../interceptors'
 import { MetricsModule } from '../metrics/metrics.module'
 import { OrganizationsModule } from '../organizations'
 import { WorkflowsModule } from '../workflows/workflows.module'
@@ -52,6 +52,10 @@ import { WorkflowsModule } from '../workflows/workflows.module'
     {
       provide: APP_INTERCEPTOR,
       useClass: TraceIdInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: TenantContextCleanupInterceptor,
     },
     {
       provide: APP_INTERCEPTOR,
