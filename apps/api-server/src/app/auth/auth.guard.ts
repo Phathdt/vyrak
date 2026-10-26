@@ -30,7 +30,7 @@ export class AuthGuard implements CanActivate {
       return true
     }
 
-    const request = context.switchToHttp().getRequest<Request & { userId?: string }>()
+    const request = context.switchToHttp().getRequest<Request & { user?: { userId: string; email: string } }>()
 
     // Extract JWT token from Authorization header
     const authHeader = request.headers.authorization
@@ -54,7 +54,10 @@ export class AuthGuard implements CanActivate {
         throw new UnauthorizedException('Token expired')
       }
 
-      request.userId = payload.sub
+      request.user = {
+        userId: payload.sub,
+        email: payload.email,
+      }
 
       return true
     } catch (error) {
