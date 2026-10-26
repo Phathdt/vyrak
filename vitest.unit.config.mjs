@@ -1,9 +1,19 @@
+import path from 'path'
+import { fileURLToPath } from 'url'
 import { defineConfig } from 'vitest/config'
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
 export default defineConfig({
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './apps/web/src'),
+    },
+  },
   test: {
     globals: true,
-    environment: 'node',
+    environment: 'happy-dom',
+    setupFiles: ['./apps/web/src/test/setup.ts'],
     isolate: false, // Reuse workers across files for faster execution
     testTimeout: 10_000,
     hookTimeout: 10_000,
