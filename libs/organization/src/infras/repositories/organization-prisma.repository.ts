@@ -1,7 +1,11 @@
 import type { DatabaseService, Member, Organization } from '@vyrak/database'
 
-import type { IOrganizationRepository } from '../../domain/interfaces/organization-repository.interface'
-import type { CreateOrganizationDto, OrganizationWithRole, UpdateOrganizationDto } from '../../domain/schemas'
+import type {
+  CreateOrganizationDto,
+  IOrganizationRepository,
+  OrganizationWithRole,
+  UpdateOrganizationDto,
+} from '../../domain'
 
 export class OrganizationPrismaRepository implements IOrganizationRepository {
   constructor(private readonly prisma: DatabaseService) {}
