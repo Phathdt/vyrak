@@ -1,4 +1,6 @@
 export * from './event-prisma.repository'
 export * from './step-prisma.repository'
+export * from './story-prisma.repository'
 export * from './workflow-approval-prisma.repository'
 export * from './workflow-prisma.repository'
+export * from './workflow-template-prisma.repository'

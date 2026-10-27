@@ -934,6 +934,212 @@ paths:
       security: *ref_6
       summary: Stream workflow events
       tags: *ref_7
+  /api/organizations/{orgId}/workflows/runs/{runId}/stories:
+    get:
+      description: Retrieves all stories for a workflow run ordered by execution sequence
+      operationId: WorkflowsController_getStories
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: runId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Stories retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StoryDto'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - no access to this workflow
+        '404':
+          description: Workflow run not found
+      security: *ref_6
+      summary: Get workflow stories
+      tags: *ref_7
+  /api/organizations/{orgId}/workflows/runs/{runId}/stories/{storyId}/pause:
+    post:
+      description: Marks workflow to pause after the specified story completes
+      operationId: WorkflowsController_pauseAfterStory
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: runId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: storyId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Pause requested successfully
+        '400':
+          description: Cannot pause at this story
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - no access to this workflow
+        '404':
+          description: Story or workflow not found
+      security: *ref_6
+      summary: Pause after story
+      tags: *ref_7
+  /api/organizations/{orgId}/workflows/runs/{runId}/stories/{storyId}/skip:
+    post:
+      description: Skips a story with a required reason (minimum 10 characters)
+      operationId: WorkflowsController_skipStory
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: runId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: storyId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SkipStoryDto'
+      responses:
+        '200':
+          description: Story skipped successfully
+        '400':
+          description: Invalid skip request or missing reason
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - no access to this workflow
+        '404':
+          description: Story or workflow not found
+      security: *ref_6
+      summary: Skip story
+      tags: *ref_7
+  /api/organizations/{orgId}/workflows/runs/{runId}/stories/{storyId}/retry:
+    post:
+      description: Retries a failed story from the beginning
+      operationId: WorkflowsController_retryStory
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: runId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: storyId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Story retry initiated successfully
+        '400':
+          description: Story cannot be retried (not in failed state)
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - no access to this workflow
+        '404':
+          description: Story or workflow not found
+      security: *ref_6
+      summary: Retry story
+      tags: *ref_7
+  /api/organizations/{orgId}/workflows/templates:
+    get:
+      description: Retrieves all active workflow templates available for the organization
+      operationId: WorkflowTemplatesController_listTemplates
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '200':
+          description: Templates retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WorkflowTemplateDto'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - not a member of the organization
+      security: &ref_8
+        - bearer: []
+      summary: List workflow templates
+      tags: &ref_9
+        - workflows
+  /api/organizations/{orgId}/workflows/templates/{templateId}:
+    get:
+      description: Retrieves detailed information about a specific workflow template
+      operationId: WorkflowTemplatesController_getTemplate
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema:
+            format: uuid
+            type: string
+        - name: templateId
+          required: true
+          in: path
+          description: Template ID
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '200':
+          description: Template details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowTemplateDto'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - not a member of the organization
+        '404':
+          description: Template not found
+      security: *ref_8
+      summary: Get workflow template details
+      tags: *ref_9
 info:
   title: Vyrak API
   description: Vyrak API documentation
@@ -1765,3 +1971,188 @@ components:
         - contentType
         - content
         - size
+    StoryDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier
+          example: 550e8400-e29b-41d4-a716-446655440000
+        workflowRunId:
+          type: string
+          description: Workflow run ID
+          example: 550e8400-e29b-41d4-a716-446655440000
+        orderIndex:
+          type: number
+          description: Order index (0-based)
+          example: 0
+        title:
+          type: string
+          description: Story title
+          example: Implement user authentication
+        description:
+          type: object
+          description: Story description
+          example: Implement JWT-based authentication for user login
+          nullable: true
+        acceptanceCriteria:
+          description: Acceptance criteria
+          example:
+            - User can login
+            - JWT token is returned
+          type: array
+          items:
+            type: string
+        estimatedDuration:
+          type: object
+          description: Estimated duration in minutes
+          example: 30
+          nullable: true
+        status:
+          type: string
+          description: Story execution status
+          enum:
+            - queued
+            - in_progress
+            - completed
+            - failed
+            - skipped
+            - paused
+          example: queued
+        startedAt:
+          type: object
+          description: Start timestamp
+          example: '2024-01-01T00:00:00.000Z'
+          nullable: true
+        completedAt:
+          type: object
+          description: Completion timestamp
+          example: '2024-01-01T00:30:00.000Z'
+          nullable: true
+        duration:
+          type: object
+          description: Actual duration in seconds
+          example: 1800
+          nullable: true
+        error:
+          type: object
+          description: Error message if failed
+          example: 'Build failed: missing dependency'
+          nullable: true
+        artifacts:
+          type: object
+          description: Story artifacts
+          nullable: true
+        subSteps:
+          type: object
+          description: Story sub-steps
+          nullable: true
+        createdAt:
+          type: string
+          description: Creation timestamp
+          example: '2024-01-01T00:00:00.000Z'
+        updatedAt:
+          type: string
+          description: Last update timestamp
+          example: '2024-01-01T00:00:00.000Z'
+      required:
+        - id
+        - workflowRunId
+        - orderIndex
+        - title
+        - description
+        - acceptanceCriteria
+        - estimatedDuration
+        - status
+        - startedAt
+        - completedAt
+        - duration
+        - error
+        - artifacts
+        - subSteps
+        - createdAt
+        - updatedAt
+    SkipStoryDto:
+      type: object
+      properties:
+        reason:
+          type: string
+          description: Reason for skipping the story (minimum 10 characters)
+          example: This story is no longer relevant based on updated requirements
+          minLength: 10
+          maxLength: 500
+      required:
+        - reason
+    WorkflowTemplateDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier
+          example: 550e8400-e29b-41d4-a716-446655440000
+        key:
+          type: string
+          description: Unique template key
+          example: feature-workflow
+        name:
+          type: string
+          description: Template name
+          example: Feature Development
+        description:
+          type: string
+          description: Template description
+          example: Full-cycle feature development workflow
+        icon:
+          type: string
+          description: Icon emoji or identifier
+          example: 🚀
+        storyBased:
+          type: boolean
+          description: Whether this template uses story-based execution
+          example: true
+        phases:
+          type: array
+          description: Workflow phases
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              name:
+                type: string
+              description:
+                type: string
+                nullable: true
+              estimatedDuration:
+                type: number
+                nullable: true
+        estimatedDuration:
+          type: object
+          description: Estimated duration range in minutes
+          example:
+            min: 15
+            max: 45
+        isActive:
+          type: boolean
+          description: Whether template is active
+          example: true
+        createdAt:
+          type: string
+          description: Creation timestamp
+          example: '2024-01-01T00:00:00.000Z'
+        updatedAt:
+          type: string
+          description: Last update timestamp
+          example: '2024-01-01T00:00:00.000Z'
+      required:
+        - id
+        - key
+        - name
+        - description
+        - icon
+        - storyBased
+        - phases
+        - estimatedDuration
+        - isActive
+        - createdAt
+        - updatedAt

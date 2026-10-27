@@ -17,7 +17,14 @@ export class EventStreamService {
   private readonly POLL_INTERVAL = 2000
 
   // Terminal event types that close the stream
-  private readonly TERMINAL_EVENT_TYPES = ['workflow_completed', 'workflow_failed', 'workflow_cancelled']
+  private readonly TERMINAL_EVENT_TYPES = [
+    'workflow_completed',
+    'workflow_failed',
+    'workflow_cancelled',
+    'run_succeeded',
+    'run_failed',
+    'run_cancelled',
+  ]
 
   constructor(
     @Inject(EVENT_REPOSITORY)

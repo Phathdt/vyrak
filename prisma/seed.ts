@@ -38,6 +38,7 @@ async function main() {
   await prisma.invitation.deleteMany()
   await prisma.organization.deleteMany()
   await prisma.user.deleteMany()
+  await prisma.workflowTemplate.deleteMany()
 
   console.log('🧹 Cleared existing data')
 
@@ -195,6 +196,119 @@ async function main() {
   })
 
   console.log('🚀 Created projects')
+
+  // Create workflow templates
+  const templates = [
+    {
+      key: 'feature',
+      name: 'Feature (AI SDLC)',
+      description: 'Build new features with full AI software development lifecycle',
+      icon: '🎯',
+      isActive: true,
+      storyBased: true,
+      phases: [
+        {
+          key: 'planning',
+          name: 'Planning',
+          description: 'Generate ARD and stories breakdown',
+          icon: '📋',
+          order: 1,
+          estimatedDurationMin: 5,
+          estimatedDurationMax: 10,
+          requiresApproval: true,
+          approvalMessage: 'Review ARD and stories before implementation',
+        },
+        {
+          key: 'implementation',
+          name: 'Implementation',
+          description: 'Execute stories sequentially',
+          icon: '💻',
+          order: 2,
+          estimatedDurationMin: 20,
+          estimatedDurationMax: 60,
+          requiresApproval: false,
+        },
+        {
+          key: 'review',
+          name: 'Review',
+          description: 'Code review and security scan',
+          icon: '👀',
+          order: 3,
+          estimatedDurationMin: 5,
+          estimatedDurationMax: 10,
+          requiresApproval: true,
+          approvalMessage: 'Review code changes and security findings',
+        },
+        {
+          key: 'qa',
+          name: 'QA',
+          description: 'Run tests and validation',
+          icon: '✅',
+          order: 4,
+          estimatedDurationMin: 10,
+          estimatedDurationMax: 20,
+          requiresApproval: true,
+          approvalMessage: 'Review test results before deployment',
+        },
+      ],
+      estimatedDurationMin: 30,
+      estimatedDurationMax: 90,
+    },
+    {
+      key: 'hotfix',
+      name: 'Hotfix (Fast-Track)',
+      description: 'Quick bug fixes without full planning cycle',
+      icon: '🔥',
+      isActive: true,
+      storyBased: false,
+      phases: [
+        {
+          key: 'bug_analysis',
+          name: 'Bug Analysis',
+          description: 'Reproduce bug and identify root cause',
+          icon: '🐛',
+          order: 1,
+          estimatedDurationMin: 2,
+          estimatedDurationMax: 5,
+          requiresApproval: false,
+        },
+        {
+          key: 'implementation',
+          name: 'Implementation',
+          description: 'Fix code and add regression test',
+          icon: '💻',
+          order: 2,
+          estimatedDurationMin: 5,
+          estimatedDurationMax: 15,
+          requiresApproval: false,
+        },
+        {
+          key: 'fast_review',
+          name: 'Fast Review',
+          description: 'Quick security and correctness check',
+          icon: '⚡',
+          order: 3,
+          estimatedDurationMin: 2,
+          estimatedDurationMax: 5,
+          requiresApproval: true,
+          approvalMessage: 'Review hotfix before deployment',
+        },
+      ],
+      estimatedDurationMin: 10,
+      estimatedDurationMax: 25,
+    },
+  ]
+
+  for (const template of templates) {
+    await prisma.workflowTemplate.upsert({
+      where: { key: template.key },
+      update: template,
+      create: template,
+    })
+    console.log(`📝 Template "${template.name}" seeded`)
+  }
+
+  console.log('✅ Created workflow templates')
 
   console.log('\n✅ Seed completed!')
   console.log('\n📝 Test credentials:')

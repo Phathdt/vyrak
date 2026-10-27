@@ -35,13 +35,16 @@ import {
   ListWorkflowRunsDto,
   PaginatedEventsResponseDto,
   PaginatedWorkflowRunsDto,
+  SkipStoryDto,
   StepRunResponseDto,
+  StoryDto,
   WorkflowRunResponseDto,
 } from './dto'
 import {
   toArtifactContentDto,
   toArtifactMetadataDto,
   toStepRunResponseDto,
+  toStoryDto,
   toWorkflowEventResponseDto,
   toWorkflowRunResponseDto,
 } from './mappers'
@@ -426,5 +429,128 @@ export class WorkflowsController {
 
     // Return observable stream
     return this.eventStreamService.createEventStream(runId, initialSequence)
+  }
+
+  /**
+   * GET /api/organizations/:orgId/workflows/runs/:runId/stories
+   * Get workflow stories ordered by order_index
+   */
+  @Get('workflows/runs/:runId/stories')
+  @ApiOperation({
+    summary: 'Get workflow stories',
+    description: 'Retrieves all stories for a workflow run ordered by execution sequence',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Stories retrieved successfully',
+    type: [StoryDto],
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - no access to this workflow' })
+  @ApiResponse({ status: 404, description: 'Workflow run not found' })
+  async getStories(
+    @Param('orgId', ParseUUIDPipe) orgId: string,
+    @Param('runId', ParseUUIDPipe) runId: string
+  ): Promise<StoryDto[]> {
+    // Validate workflow ownership
+    await this.validateWorkflowOwnership(runId, orgId)
+
+    const stories = await this.workflowsService.getStories(runId)
+    return stories.map(toStoryDto)
+  }
+
+  /**
+   * POST /api/organizations/:orgId/workflows/runs/:runId/stories/:storyId/pause
+   * Pause workflow execution after completing current story
+   */
+  @Post('workflows/runs/:runId/stories/:storyId/pause')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Pause after story',
+    description: 'Marks workflow to pause after the specified story completes',
+  })
+  @ApiResponse({ status: 200, description: 'Pause requested successfully' })
+  @ApiResponse({ status: 400, description: 'Cannot pause at this story' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - no access to this workflow' })
+  @ApiResponse({ status: 404, description: 'Story or workflow not found' })
+  async pauseAfterStory(
+    @Param('orgId', ParseUUIDPipe) orgId: string,
+    @Param('runId', ParseUUIDPipe) runId: string,
+    @Param('storyId', ParseUUIDPipe) storyId: string,
+    @CurrentUser() userId: string
+  ): Promise<{ message: string }> {
+    // Validate workflow ownership
+    await this.validateWorkflowOwnership(runId, orgId)
+
+    await this.workflowsService.pauseAfterStory(runId, storyId, userId)
+    return { message: 'Workflow will pause after this story completes' }
+  }
+
+  /**
+   * POST /api/organizations/:orgId/workflows/runs/:runId/stories/:storyId/skip
+   * Skip a story with reason
+   */
+  @Post('workflows/runs/:runId/stories/:storyId/skip')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Skip story',
+    description: 'Skips a story with a required reason (minimum 10 characters)',
+  })
+  @ApiResponse({ status: 200, description: 'Story skipped successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid skip request or missing reason' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - no access to this workflow' })
+  @ApiResponse({ status: 404, description: 'Story or workflow not found' })
+  async skipStory(
+    @Param('orgId', ParseUUIDPipe) orgId: string,
+    @Param('runId', ParseUUIDPipe) runId: string,
+    @Param('storyId', ParseUUIDPipe) storyId: string,
+    @CurrentUser() userId: string,
+    @Body() dto: SkipStoryDto
+  ): Promise<{ message: string }> {
+    // Validate workflow ownership
+    await this.validateWorkflowOwnership(runId, orgId)
+
+    await this.workflowsService.skipStory(runId, storyId, userId, dto.reason)
+    return { message: 'Story skipped successfully' }
+  }
+
+  /**
+   * POST /api/organizations/:orgId/workflows/runs/:runId/stories/:storyId/retry
+   * Retry a failed story
+   */
+  @Post('workflows/runs/:runId/stories/:storyId/retry')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Retry story',
+    description: 'Retries a failed story from the beginning',
+  })
+  @ApiResponse({ status: 200, description: 'Story retry initiated successfully' })
+  @ApiResponse({ status: 400, description: 'Story cannot be retried (not in failed state)' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - no access to this workflow' })
+  @ApiResponse({ status: 404, description: 'Story or workflow not found' })
+  async retryStory(
+    @Param('orgId', ParseUUIDPipe) orgId: string,
+    @Param('runId', ParseUUIDPipe) runId: string,
+    @Param('storyId', ParseUUIDPipe) storyId: string,
+    @CurrentUser() userId: string
+  ): Promise<{ message: string }> {
+    // Validate workflow ownership
+    await this.validateWorkflowOwnership(runId, orgId)
+
+    await this.workflowsService.retryStory(runId, storyId, userId)
+    return { message: 'Story retry initiated successfully' }
+  }
+
+  /**
+   * Helper method to validate workflow ownership
+   */
+  private async validateWorkflowOwnership(runId: string, orgId: string): Promise<void> {
+    const workflow = await this.workflowsService.getWorkflowRun(runId)
+    if (workflow.organizationId !== orgId) {
+      throw new Error('Workflow not found')
+    }
   }
 }

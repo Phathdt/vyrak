@@ -67,3 +67,4 @@ repomix-output*
 # Prisma generated client
 libs/database/src/generated/
 **/coverage
+apps/web/src/api/generated

@@ -94,3 +94,29 @@ export const TOOL_STEP_EXECUTOR = Symbol('TOOL_STEP_EXECUTOR')
  * Parses test results from various formats
  */
 export const TEST_RESULT_PARSER = Symbol('TEST_RESULT_PARSER')
+
+/**
+ * Workflow template repository token
+ */
+export const WORKFLOW_TEMPLATE_REPOSITORY = Symbol('WORKFLOW_TEMPLATE_REPOSITORY')
+
+/**
+ * Story repository token
+ */
+export const STORY_REPOSITORY = Symbol('STORY_REPOSITORY')
+
+/**
+ * Workflow template service token
+ */
+export const WORKFLOW_TEMPLATE_SERVICE = Symbol('WORKFLOW_TEMPLATE_SERVICE')
+
+/**
+ * Story service token
+ */
+export const STORY_SERVICE = Symbol('STORY_SERVICE')
+
+/**
+ * Workflow story execution service token
+ * Handles sequential story execution with SSE events
+ */
+export const WORKFLOW_STORY_EXECUTION_SERVICE = Symbol('WORKFLOW_STORY_EXECUTION_SERVICE')
