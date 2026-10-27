@@ -4,15 +4,29 @@ import * as React from 'react'
 interface FormFieldProps {
   children: React.ReactNode
   className?: string
+  label?: string
+  required?: boolean
+  error?: string
+  hint?: string
+  htmlFor?: string
 }
 
-const FormField = React.forwardRef<HTMLDivElement, FormFieldProps>(({ children, className }, ref) => {
-  return (
-    <div ref={ref} className={cn('flex flex-col gap-1.5', className)}>
-      {children}
-    </div>
-  )
-})
+const FormField = React.forwardRef<HTMLDivElement, FormFieldProps>(
+  ({ children, className, label, required, error, hint, htmlFor }, ref) => {
+    return (
+      <div ref={ref} className={cn('flex flex-col gap-1.5', className)}>
+        {label && (
+          <Label htmlFor={htmlFor} required={required}>
+            {label}
+          </Label>
+        )}
+        {children}
+        {hint && !error && <HelperText>{hint}</HelperText>}
+        {error && <ErrorMessage>{error}</ErrorMessage>}
+      </div>
+    )
+  }
+)
 FormField.displayName = 'FormField'
 
 interface LabelProps extends React.LabelHTMLAttributes<HTMLLabelElement> {

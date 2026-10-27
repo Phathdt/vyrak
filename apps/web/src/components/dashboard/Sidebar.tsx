@@ -1,32 +1,79 @@
+import { FolderKanban, LayoutDashboard, Settings, Workflow } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
+
+import {
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  Sidebar as SidebarRoot,
+} from '../ui/sidebar'
 
 export function Sidebar() {
   return (
-    <aside className='sidebar'>
-      <div className='sidebar-header'>
-        <h1 className='sidebar-title'>Vyrak</h1>
-      </div>
+    <SidebarRoot className='w-64'>
+      <SidebarHeader>
+        <div className='flex items-center gap-2'>
+          <div className='flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground'>
+            <Workflow className='h-5 w-5' />
+          </div>
+          <h1 className='text-xl font-bold'>Vyrak</h1>
+        </div>
+      </SidebarHeader>
 
-      <nav className='sidebar-nav'>
-        <NavLink to='/workflows' className='nav-item'>
-          <WorkflowIcon />
-          <span>Workflows</span>
-        </NavLink>
-      </nav>
-    </aside>
-  )
-}
+      <SidebarContent>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <NavLink to='/dashboard'>
+              {({ isActive }) => (
+                <SidebarMenuButton className={isActive ? 'active' : ''}>
+                  <LayoutDashboard className='h-5 w-5' />
+                  <span>Dashboard</span>
+                </SidebarMenuButton>
+              )}
+            </NavLink>
+          </SidebarMenuItem>
 
-// Icon components (simple SVG icons)
-function WorkflowIcon() {
-  return (
-    <svg width='20' height='20' viewBox='0 0 20 20' fill='none' stroke='currentColor'>
-      <path
-        strokeLinecap='round'
-        strokeLinejoin='round'
-        strokeWidth='2'
-        d='M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2'
-      />
-    </svg>
+          <SidebarMenuItem>
+            <NavLink to='/workflows'>
+              {({ isActive }) => (
+                <SidebarMenuButton className={isActive ? 'active' : ''}>
+                  <Workflow className='h-5 w-5' />
+                  <span>Workflows</span>
+                </SidebarMenuButton>
+              )}
+            </NavLink>
+          </SidebarMenuItem>
+
+          <SidebarMenuItem>
+            <NavLink to='/projects'>
+              {({ isActive }) => (
+                <SidebarMenuButton className={isActive ? 'active' : ''}>
+                  <FolderKanban className='h-5 w-5' />
+                  <span>Projects</span>
+                </SidebarMenuButton>
+              )}
+            </NavLink>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarContent>
+
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <NavLink to='/organizations'>
+              {({ isActive }) => (
+                <SidebarMenuButton className={isActive ? 'active' : ''}>
+                  <Settings className='h-5 w-5' />
+                  <span>Organizations</span>
+                </SidebarMenuButton>
+              )}
+            </NavLink>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+    </SidebarRoot>
   )
 }

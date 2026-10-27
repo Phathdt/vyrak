@@ -1,4 +1,9 @@
-import { StepRunResponseDto } from '../../api/generated/models'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { X } from 'lucide-react'
+
+import type { StepRunResponseDto } from '../../api/generated/models'
 
 interface StepDetailsProps {
   step: StepRunResponseDto
@@ -16,50 +21,52 @@ export function StepDetailsPanel({ step, onClose }: StepDetailsProps) {
   const duration = calculateDuration()
 
   return (
-    <div className='step-details-panel'>
-      <div className='panel-header'>
-        <h2>Step Details</h2>
-        <button onClick={onClose} className='close-button'>
-          ✕
-        </button>
+    <div className='fixed inset-y-0 right-0 z-50 w-full max-w-md border-l bg-background p-6 shadow-xl sm:max-w-lg'>
+      <div className='mb-6 flex items-center justify-between'>
+        <h2 className='text-xl font-semibold'>Step Details</h2>
+        <Button variant='ghost' size='sm' onClick={onClose}>
+          <X className='h-4 w-4' />
+        </Button>
       </div>
 
-      <div className='panel-content'>
-        <section className='details-section'>
-          <h3>Information</h3>
-          <div className='info-grid'>
-            <div className='info-item'>
-              <label>Step Key</label>
-              <span>{step.stepKey}</span>
+      <div className='space-y-6'>
+        <Card className='p-4'>
+          <h3 className='mb-4 font-medium'>Information</h3>
+          <div className='space-y-3'>
+            <div className='flex flex-col gap-1'>
+              <label className='text-sm text-muted-foreground'>Step Key</label>
+              <span className='text-sm'>{step.stepKey}</span>
             </div>
-            <div className='info-item'>
-              <label>Status</label>
-              <span>{step.status}</span>
+            <div className='flex flex-col gap-1'>
+              <label className='text-sm text-muted-foreground'>Status</label>
+              <div>
+                <Badge>{step.status}</Badge>
+              </div>
             </div>
-            <div className='info-item'>
-              <label>Attempt</label>
-              <span>{step.attempt + 1}</span>
+            <div className='flex flex-col gap-1'>
+              <label className='text-sm text-muted-foreground'>Attempt</label>
+              <span className='text-sm'>{step.attempt + 1}</span>
             </div>
             {duration !== null && (
-              <div className='info-item'>
-                <label>Duration</label>
-                <span>{duration}ms</span>
+              <div className='flex flex-col gap-1'>
+                <label className='text-sm text-muted-foreground'>Duration</label>
+                <span className='text-sm'>{duration}ms</span>
               </div>
             )}
             {step.outputArtifactId && (
-              <div className='info-item'>
-                <label>Output Artifact ID</label>
-                <span>{step.outputArtifactId}</span>
+              <div className='flex flex-col gap-1'>
+                <label className='text-sm text-muted-foreground'>Output Artifact ID</label>
+                <span className='font-mono text-sm'>{step.outputArtifactId}</span>
               </div>
             )}
           </div>
-        </section>
+        </Card>
 
         {step.errorMessage && (
-          <section className='details-section'>
-            <h3>Error</h3>
-            <div className='error-message'>{step.errorMessage}</div>
-          </section>
+          <Card className='border-destructive/50 bg-destructive/10 p-4'>
+            <h3 className='mb-2 font-medium text-destructive'>Error</h3>
+            <div className='text-sm text-destructive'>{step.errorMessage}</div>
+          </Card>
         )}
       </div>
     </div>

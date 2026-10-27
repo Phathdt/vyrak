@@ -1,3 +1,4 @@
+import { Loader2 } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 
 import { WorkflowFilters } from '../../components/workflow/WorkflowFilters'
@@ -34,35 +35,38 @@ export function WorkflowsPage() {
   }
 
   return (
-    <div className='workflows-page'>
-      <header className='page-header'>
-        <h1>Workflows</h1>
+    <div className='container py-8'>
+      <header className='mb-8'>
+        <h1 className='text-3xl font-bold tracking-tight'>Workflows</h1>
+        <p className='mt-2 text-muted-foreground'>Manage and monitor workflow executions</p>
       </header>
 
-      <WorkflowFilters filters={filters} onChange={handleFilterChange} />
+      <div className='space-y-6'>
+        <WorkflowFilters filters={filters} onChange={handleFilterChange} />
 
-      {isLoading && (
-        <div className='page-loading'>
-          <div className='loading-spinner' />
-          <p>Loading workflows...</p>
-        </div>
-      )}
+        {isLoading && (
+          <div className='flex flex-col items-center justify-center py-16'>
+            <Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
+            <p className='mt-4 text-muted-foreground'>Loading workflows...</p>
+          </div>
+        )}
 
-      {error && (
-        <div className='page-error'>
-          <p>Error loading workflows: {error instanceof Error ? error.message : 'Unknown error'}</p>
-        </div>
-      )}
+        {error && (
+          <div className='rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-destructive'>
+            <p>Error loading workflows: {error instanceof Error ? error.message : 'Unknown error'}</p>
+          </div>
+        )}
 
-      {data && (
-        <WorkflowTable
-          workflows={data.items}
-          total={data.total}
-          page={filters.page}
-          limit={filters.limit}
-          onPageChange={(page) => handleFilterChange({ ...filters, page })}
-        />
-      )}
+        {data && (
+          <WorkflowTable
+            workflows={data.items}
+            total={data.total}
+            page={filters.page}
+            limit={filters.limit}
+            onPageChange={(page) => handleFilterChange({ ...filters, page })}
+          />
+        )}
+      </div>
     </div>
   )
 }

@@ -320,6 +320,176 @@ paths:
       security: *ref_3
       summary: Reject invitation
       tags: *ref_4
+  /api/organizations/{orgId}/projects:
+    post:
+      operationId: ProjectsController_create
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProjectDto'
+      responses:
+        '201':
+          description: Project created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectResponse'
+        '400':
+          description: Bad request - slug already exists
+      summary: Create a new project
+      tags: &ref_5
+        - Projects
+    get:
+      operationId: ProjectsController_findAll
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: page
+          required: false
+          in: query
+          description: Page number
+          schema:
+            minimum: 1
+            default: 1
+            example: 1
+            type: number
+        - name: limit
+          required: false
+          in: query
+          description: Items per page
+          schema:
+            minimum: 1
+            maximum: 100
+            default: 10
+            example: 10
+            type: number
+        - name: search
+          required: false
+          in: query
+          description: Search by name or slug
+          schema:
+            example: my project
+            type: string
+        - name: sort
+          required: false
+          in: query
+          description: Sort field
+          schema:
+            default: createdAt
+            example: createdAt
+            type: string
+            enum:
+              - name
+              - createdAt
+              - updatedAt
+        - name: order
+          required: false
+          in: query
+          description: Sort order
+          schema:
+            default: desc
+            example: desc
+            type: string
+            enum:
+              - asc
+              - desc
+      responses:
+        '200':
+          description: Projects retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedProjectsResponse'
+      summary: List projects with pagination, search, and sorting
+      tags: *ref_5
+  /api/organizations/{orgId}/projects/{id}:
+    get:
+      operationId: ProjectsController_findOne
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Project retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectResponse'
+        '404':
+          description: Project not found
+      summary: Get project by ID
+      tags: *ref_5
+    patch:
+      operationId: ProjectsController_update
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProjectDto'
+      responses:
+        '200':
+          description: Project updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectResponse'
+        '404':
+          description: Project not found
+      summary: Update project
+      tags: *ref_5
+    delete:
+      operationId: ProjectsController_remove
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Project deleted successfully
+        '400':
+          description: Cannot delete project with active workflow runs
+        '404':
+          description: Project not found
+      summary: Delete project
+      tags: *ref_5
   /api/organizations/{orgId}/projects/{projectId}/workflows/runs:
     post:
       description: Initiates a new workflow execution with the provided requirements and repository settings
@@ -356,10 +526,10 @@ paths:
           description: Forbidden - not a member of the organization
         '404':
           description: Project not found
-      security: &ref_5
+      security: &ref_6
         - bearer: []
       summary: Create a new workflow run
-      tags: &ref_6
+      tags: &ref_7
         - workflows
   /api/organizations/{orgId}/workflows/runs:
     get:
@@ -423,9 +593,9 @@ paths:
           description: Unauthorized
         '403':
           description: Forbidden - not a member of the organization
-      security: *ref_5
+      security: *ref_6
       summary: List workflow runs
-      tags: *ref_6
+      tags: *ref_7
   /api/organizations/{orgId}/workflows/runs/{runId}:
     get:
       description: Retrieves complete details of a specific workflow run
@@ -454,9 +624,9 @@ paths:
           description: Forbidden - no access to this workflow run
         '404':
           description: Workflow run not found
-      security: *ref_5
+      security: *ref_6
       summary: Get workflow run details
-      tags: *ref_6
+      tags: *ref_7
   /api/organizations/{orgId}/workflows/runs/{runId}/approve:
     post:
       description: Approves a workflow that is waiting for human approval and resumes execution
@@ -491,9 +661,9 @@ paths:
           description: Workflow run not found
         '409':
           description: Approval already decided or plan has been regenerated
-      security: *ref_5
+      security: *ref_6
       summary: Approve a pending workflow
-      tags: *ref_6
+      tags: *ref_7
   /api/organizations/{orgId}/workflows/runs/{runId}/reject:
     post:
       description: Rejects a workflow that is waiting for human approval and cancels execution
@@ -528,9 +698,9 @@ paths:
           description: Workflow run not found
         '409':
           description: Approval already decided
-      security: *ref_5
+      security: *ref_6
       summary: Reject a pending workflow
-      tags: *ref_6
+      tags: *ref_7
   /api/organizations/{orgId}/workflows/runs/{runId}/cancel:
     post:
       description: Cancels an in-progress workflow execution
@@ -563,9 +733,9 @@ paths:
           description: Forbidden - no access to this workflow
         '404':
           description: Workflow run not found
-      security: *ref_5
+      security: *ref_6
       summary: Cancel a running workflow
-      tags: *ref_6
+      tags: *ref_7
   /api/organizations/{orgId}/workflows/runs/{runId}/steps:
     get:
       description: Retrieves all step executions for a workflow run ordered by sequence
@@ -596,9 +766,9 @@ paths:
           description: Forbidden - no access to this workflow
         '404':
           description: Workflow run not found
-      security: *ref_5
+      security: *ref_6
       summary: Get workflow run steps
-      tags: *ref_6
+      tags: *ref_7
   /api/organizations/{orgId}/workflows/runs/{runId}/events:
     get:
       description: Retrieves paginated event history for a workflow run
@@ -644,9 +814,9 @@ paths:
           description: Forbidden - no access to this workflow
         '404':
           description: Workflow run not found
-      security: *ref_5
+      security: *ref_6
       summary: Get workflow events
-      tags: *ref_6
+      tags: *ref_7
   /api/organizations/{orgId}/workflows/runs/{runId}/artifacts:
     get:
       description: Retrieves metadata for all artifacts generated by a workflow run
@@ -677,9 +847,9 @@ paths:
           description: Forbidden - no access to this workflow
         '404':
           description: Workflow run not found
-      security: *ref_5
+      security: *ref_6
       summary: List workflow artifacts
-      tags: *ref_6
+      tags: *ref_7
   /api/organizations/{orgId}/workflows/runs/{runId}/artifacts/{artifactId}:
     get:
       description: Retrieves the full content of a specific artifact
@@ -713,9 +883,9 @@ paths:
           description: Forbidden - no access to this artifact
         '404':
           description: Artifact not found
-      security: *ref_5
+      security: *ref_6
       summary: Get artifact content
-      tags: *ref_6
+      tags: *ref_7
   /api/organizations/{orgId}/workflows/runs/{runId}/events/stream:
     get:
       description: Opens SSE connection for real-time workflow event updates
@@ -761,114 +931,9 @@ paths:
           description: Forbidden - no access to this workflow
         '404':
           description: Workflow run not found
-      security: *ref_5
+      security: *ref_6
       summary: Stream workflow events
-      tags: *ref_6
-  /api/organizations/{orgId}/workflows/runs/{runId}/performance:
-    get:
-      description: Analyzes workflow run performance with step-level timing, bottleneck detection, and summary statistics
-      operationId: PerformanceController_getPerformance
-      parameters:
-        - name: orgId
-          required: true
-          in: path
-          schema:
-            type: string
-        - name: runId
-          required: true
-          in: path
-          description: Workflow run UUID
-          schema:
-            format: uuid
-            type: string
-      responses:
-        '200':
-          description: Performance stats retrieved successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/WorkflowPerformanceResponseDto'
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden - not a member of the organization
-        '404':
-          description: Workflow run not found
-      security:
-        - bearer: []
-      summary: Get detailed performance stats for a workflow run
-      tags:
-        - workflows
-  /api/organizations/{orgId}/workflows/metrics:
-    get:
-      description: Retrieve aggregated workflow metrics including summary statistics, time series data, and breakdown by workflow
-      operationId: MetricsController_getMetrics
-      parameters:
-        - name: orgId
-          required: true
-          in: path
-          schema:
-            type: string
-        - name: organizationId
-          required: true
-          in: query
-          description: Organization ID
-          schema:
-            format: uuid
-            example: 550e8400-e29b-41d4-a716-446655440000
-            type: string
-        - name: projectId
-          required: false
-          in: query
-          description: Project ID (optional, filters to specific project)
-          schema:
-            format: uuid
-            example: 660e8400-e29b-41d4-a716-446655440001
-            type: string
-        - name: from
-          required: false
-          in: query
-          description: Start of time range (ISO datetime), defaults to 7 days ago
-          schema:
-            example: '2026-10-19T00:00:00.000Z'
-            type: string
-        - name: to
-          required: false
-          in: query
-          description: End of time range (ISO datetime), defaults to now
-          schema:
-            example: '2026-10-26T10:51:00.000Z'
-            type: string
-        - name: granularity
-          required: true
-          in: query
-          description: Time series granularity
-          schema:
-            default: day
-            example: day
-            type: string
-            enum:
-              - hour
-              - day
-              - week
-      responses:
-        '200':
-          description: Metrics retrieved successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/WorkflowMetricsResponseDto'
-        '400':
-          description: Invalid query parameters
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden - not a member of the organization
-      security:
-        - bearer: []
-      summary: Get workflow execution metrics and statistics
-      tags:
-        - Workflows
+      tags: *ref_7
 info:
   title: Vyrak API
   description: Vyrak API documentation
@@ -1162,7 +1227,7 @@ components:
         expiresAt:
           format: date-time
           type: string
-          example: '2024-10-26T10:00:00Z'
+          example: '2026-10-26T10:00:00Z'
           description: Expiration timestamp
         createdAt:
           format: date-time
@@ -1178,6 +1243,118 @@ components:
         - status
         - expiresAt
         - createdAt
+    CreateProjectDto:
+      type: object
+      properties:
+        name:
+          type: string
+          example: My Project
+          description: Project name
+          minLength: 1
+          maxLength: 255
+        slug:
+          type: string
+          example: my-project
+          description: Unique project slug within organization (lowercase, alphanumeric, hyphens only)
+          pattern: ^[a-z0-9-]+$
+          minLength: 1
+          maxLength: 100
+        description:
+          type: string
+          example: This is my project description
+          description: Project description
+          maxLength: 500
+      required:
+        - name
+        - slug
+    ProjectStats:
+      type: object
+      properties:
+        repositoryCount:
+          type: number
+          example: 5
+          description: Number of repositories
+        workflowRunCount:
+          type: number
+          example: 12
+          description: Number of workflow runs
+      required:
+        - repositoryCount
+        - workflowRunCount
+    ProjectResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: uuid-here
+          description: Project ID
+        organizationId:
+          type: string
+          example: uuid-org
+          description: Organization ID
+        name:
+          type: string
+          example: My Project
+          description: Project name
+        slug:
+          type: string
+          example: my-project
+          description: Project slug
+        description:
+          type: string
+          example: Project description
+          description: Project description
+          nullable: true
+        stats:
+          description: Project statistics
+          allOf:
+            - $ref: '#/components/schemas/ProjectStats'
+        createdAt:
+          type: string
+          example: '2024-10-24T10:00:00Z'
+          description: Creation timestamp
+        updatedAt:
+          type: string
+          example: '2024-10-24T10:00:00Z'
+          description: Last update timestamp
+      required:
+        - id
+        - organizationId
+        - name
+        - slug
+        - stats
+        - createdAt
+        - updatedAt
+    PaginatedProjectsResponse:
+      type: object
+      properties:
+        items:
+          description: List of projects
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectResponse'
+        total:
+          type: number
+          example: 100
+          description: Total number of projects
+        page:
+          type: number
+          example: 1
+          description: Current page number
+        limit:
+          type: number
+          example: 10
+          description: Items per page
+        totalPages:
+          type: number
+          example: 10
+          description: Total number of pages
+      required:
+        - items
+        - total
+        - page
+        - limit
+        - totalPages
     CreateWorkflowRunDto:
       type: object
       properties:
@@ -1588,353 +1765,3 @@ components:
         - contentType
         - content
         - size
-    PerformanceStepDto:
-      type: object
-      properties:
-        stepKey:
-          type: string
-          example: planning
-          description: Step key identifier
-        status:
-          type: string
-          enum:
-            - pending
-            - running
-            - succeeded
-            - failed
-            - skipped
-          example: succeeded
-          description: Current status of the step
-        attempt:
-          type: number
-          example: 1
-          description: Latest attempt number
-        durationSeconds:
-          type: object
-          example: 45.2
-          nullable: true
-          description: Duration in seconds
-        percentageOfTotal:
-          type: object
-          example: 18.4
-          nullable: true
-          description: Percentage of total workflow duration
-        startedAt:
-          type: string
-          nullable: true
-          description: ISO timestamp when step started
-        completedAt:
-          type: string
-          nullable: true
-          description: ISO timestamp when step completed
-        isCriticalPath:
-          type: boolean
-          example: true
-          description: Whether step is on critical path
-        retries:
-          type: number
-          example: 0
-          description: Number of retries
-        errorHistory:
-          description: History of failed attempts
-          type: array
-          items:
-            type: string
-      required:
-        - stepKey
-        - status
-        - attempt
-        - durationSeconds
-        - percentageOfTotal
-        - startedAt
-        - completedAt
-        - isCriticalPath
-        - retries
-    PerformanceBottleneckDto:
-      type: object
-      properties:
-        stepKey:
-          type: string
-          example: implementation
-          description: Step key with bottleneck
-        reason:
-          type: string
-          example: Longest step duration (73.5% of total)
-          description: Reason for bottleneck
-        durationSeconds:
-          type: number
-          example: 180.5
-          description: Step duration if relevant
-        retryCount:
-          type: number
-          example: 1
-          description: Retry count if relevant
-        suggestion:
-          type: string
-          example: Consider breaking into smaller steps or parallelizing
-          description: Suggestion to resolve bottleneck
-      required:
-        - stepKey
-        - reason
-        - suggestion
-    PerformanceSummaryDto:
-      type: object
-      properties:
-        totalSteps:
-          type: number
-          example: 5
-          description: Total number of steps
-        completedSteps:
-          type: number
-          example: 5
-          description: Number of completed steps
-        failedSteps:
-          type: number
-          example: 0
-          description: Number of failed steps
-        averageStepDuration:
-          type: object
-          example: 49.12
-          nullable: true
-          description: Average duration per step in seconds
-        longestStepKey:
-          type: object
-          example: implementation
-          nullable: true
-          description: Key of longest step
-        longestStepDuration:
-          type: object
-          example: 180.5
-          nullable: true
-          description: Duration of longest step in seconds
-        totalRetries:
-          type: number
-          example: 1
-          description: Total number of retries across all steps
-      required:
-        - totalSteps
-        - completedSteps
-        - failedSteps
-        - averageStepDuration
-        - longestStepKey
-        - longestStepDuration
-        - totalRetries
-    WorkflowPerformanceResponseDto:
-      type: object
-      properties:
-        runId:
-          type: string
-          example: run-123
-          description: Workflow run ID
-        organizationId:
-          type: string
-          example: org-123
-          description: Organization ID
-        projectId:
-          type: string
-          example: proj-456
-          description: Project ID
-        workflowKey:
-          type: string
-          example: ai-sdlc-workflow
-          description: Workflow key
-        state:
-          type: string
-          example: succeeded
-          description: Workflow state
-        totalDurationSeconds:
-          type: object
-          example: 245.6
-          nullable: true
-          description: Total workflow duration in seconds
-        steps:
-          description: Performance data for each step
-          type: array
-          items:
-            $ref: '#/components/schemas/PerformanceStepDto'
-        bottlenecks:
-          description: Detected performance bottlenecks
-          type: array
-          items:
-            $ref: '#/components/schemas/PerformanceBottleneckDto'
-        summary:
-          description: Summary statistics
-          allOf:
-            - $ref: '#/components/schemas/PerformanceSummaryDto'
-      required:
-        - runId
-        - organizationId
-        - projectId
-        - workflowKey
-        - state
-        - totalDurationSeconds
-        - steps
-        - bottlenecks
-        - summary
-    MetricsSummaryDto:
-      type: object
-      properties:
-        totalRuns:
-          type: number
-          description: Total number of workflow runs
-          example: 1234
-        succeeded:
-          type: number
-          description: Number of succeeded runs
-          example: 1100
-        failed:
-          type: number
-          description: Number of failed runs
-          example: 89
-        cancelled:
-          type: number
-          description: Number of cancelled runs
-          example: 30
-        running:
-          type: number
-          description: Number of running runs
-          example: 15
-        successRate:
-          type: number
-          description: Success rate (succeeded / completed)
-          example: 0.891
-        avgDurationSeconds:
-          type: object
-          description: Average duration in seconds
-          example: 245.6
-          nullable: true
-        p50DurationSeconds:
-          type: object
-          description: P50 duration in seconds
-          example: 180
-          nullable: true
-        p95DurationSeconds:
-          type: object
-          description: P95 duration in seconds
-          example: 450
-          nullable: true
-        p99DurationSeconds:
-          type: object
-          description: P99 duration in seconds
-          example: 680
-          nullable: true
-      required:
-        - totalRuns
-        - succeeded
-        - failed
-        - cancelled
-        - running
-        - successRate
-        - avgDurationSeconds
-        - p50DurationSeconds
-        - p95DurationSeconds
-        - p99DurationSeconds
-    TimeSeriesDataPointDto:
-      type: object
-      properties:
-        timestamp:
-          type: string
-          description: Timestamp for this data point
-          example: '2026-10-19T00:00:00.000Z'
-        totalRuns:
-          type: number
-          description: Total runs in this period
-          example: 145
-        succeeded:
-          type: number
-          description: Succeeded runs in this period
-          example: 130
-        failed:
-          type: number
-          description: Failed runs in this period
-          example: 10
-        cancelled:
-          type: number
-          description: Cancelled runs in this period
-          example: 5
-        avgDurationSeconds:
-          type: object
-          description: Average duration in seconds for this period
-          example: 230.5
-          nullable: true
-      required:
-        - timestamp
-        - totalRuns
-        - succeeded
-        - failed
-        - cancelled
-        - avgDurationSeconds
-    WorkflowBreakdownDto:
-      type: object
-      properties:
-        workflowKey:
-          type: string
-          description: Workflow key
-          example: ai-sdlc-workflow
-        totalRuns:
-          type: number
-          description: Total runs for this workflow
-          example: 800
-        succeeded:
-          type: number
-          description: Succeeded runs for this workflow
-          example: 750
-        failed:
-          type: number
-          description: Failed runs for this workflow
-          example: 40
-        successRate:
-          type: number
-          description: Success rate for this workflow
-          example: 0.937
-        avgDurationSeconds:
-          type: object
-          description: Average duration in seconds for this workflow
-          example: 280.3
-          nullable: true
-      required:
-        - workflowKey
-        - totalRuns
-        - succeeded
-        - failed
-        - successRate
-        - avgDurationSeconds
-    WorkflowMetricsResponseDto:
-      type: object
-      properties:
-        organizationId:
-          type: string
-          description: Organization ID
-          example: org-123
-        projectId:
-          type: object
-          description: Project ID (null if all projects)
-          example: proj-456
-          nullable: true
-        period:
-          type: object
-          description: Time period for metrics
-          example:
-            from: '2026-10-19T00:00:00.000Z'
-            to: '2026-10-26T10:51:00.000Z'
-        summary:
-          description: Summary statistics
-          allOf:
-            - $ref: '#/components/schemas/MetricsSummaryDto'
-        timeSeries:
-          description: Time series data
-          type: array
-          items:
-            $ref: '#/components/schemas/TimeSeriesDataPointDto'
-        byWorkflow:
-          description: Breakdown by workflow
-          type: array
-          items:
-            $ref: '#/components/schemas/WorkflowBreakdownDto'
-      required:
-        - organizationId
-        - projectId
-        - period
-        - summary
-        - timeSeries
-        - byWorkflow
