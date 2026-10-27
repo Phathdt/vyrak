@@ -9,8 +9,8 @@ import {
   stopPostgres,
 } from '@vyrak/database/test-utils'
 
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { v4 as uuid } from 'uuid'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
 import { WorkflowState } from '../../domain'
 import { WorkflowPrismaRepository } from '../../infras/repositories/workflow-prisma.repository'
@@ -145,7 +145,7 @@ describe('WorkflowRepository Integration Tests', () => {
 
       // Attempt to create with same idempotency key
       await expect(
-        databaseService.withTenantContext(organization.id, () =>
+        databaseService.withOrganization(organization.id, () =>
           repository.createRun({
             organizationId: organization.id,
             projectId: project.id,
@@ -166,7 +166,7 @@ describe('WorkflowRepository Integration Tests', () => {
       const project2 = await createTestProject(prisma, org2.organization.id)
       const idempotencyKey = uuid()
 
-      const run1 = await databaseService.withTenantContext(organization.id, () =>
+      const run1 = await databaseService.withOrganization(organization.id, () =>
         repository.createRun({
           organizationId: organization.id,
           projectId: project.id,
@@ -177,7 +177,7 @@ describe('WorkflowRepository Integration Tests', () => {
         })
       )
 
-      const run2 = await databaseService.withTenantContext(org2.organization.id, () =>
+      const run2 = await databaseService.withOrganization(org2.organization.id, () =>
         repository.createRun({
           organizationId: org2.organization.id,
           projectId: project2.id,
@@ -198,7 +198,7 @@ describe('WorkflowRepository Integration Tests', () => {
     it('should find a workflow run by ID', async () => {
       if (!databaseService) return
 
-      const created = await databaseService.withTenantContext(organization.id, () =>
+      const created = await databaseService.withOrganization(organization.id, () =>
         repository.createRun({
           organizationId: organization.id,
           projectId: project.id,
@@ -208,9 +208,7 @@ describe('WorkflowRepository Integration Tests', () => {
         })
       )
 
-      const found = await databaseService.withOrganization(organization.id, () =>
-        repository.findRunById(created.id)
-      )
+      const found = await databaseService.withOrganization(organization.id, () => repository.findRunById(created.id))
 
       expect(found).toBeDefined()
       expect(found?.id).toBe(created.id)
@@ -246,9 +244,7 @@ describe('WorkflowRepository Integration Tests', () => {
       )
 
       // Try to access from different org - should return null due to tenant filter
-      const found = await databaseService.withOrganization(org2.organization.id, () =>
-        repository.findRunById(run.id)
-      )
+      const found = await databaseService.withOrganization(org2.organization.id, () => repository.findRunById(run.id))
 
       expect(found).toBeNull()
     })
@@ -260,7 +256,7 @@ describe('WorkflowRepository Integration Tests', () => {
 
       const idempotencyKey = uuid()
 
-      const created = await databaseService.withTenantContext(organization.id, () =>
+      const created = await databaseService.withOrganization(organization.id, () =>
         repository.createRun({
           organizationId: organization.id,
           projectId: project.id,
@@ -285,7 +281,7 @@ describe('WorkflowRepository Integration Tests', () => {
 
       const nonExistentKey = uuid()
 
-      const found = await databaseService.withTenantContext(organization.id, () =>
+      const found = await databaseService.withOrganization(organization.id, () =>
         repository.findRunByIdempotencyKey(organization.id, nonExistentKey)
       )
 
@@ -322,7 +318,7 @@ describe('WorkflowRepository Integration Tests', () => {
     it('should update workflow run state', async () => {
       if (!databaseService) return
 
-      const created = await databaseService.withTenantContext(organization.id, () =>
+      const created = await databaseService.withOrganization(organization.id, () =>
         repository.createRun({
           organizationId: organization.id,
           projectId: project.id,
@@ -340,9 +336,7 @@ describe('WorkflowRepository Integration Tests', () => {
         })
       )
 
-      const updated = await databaseService.withTenantContext(organization.id, () =>
-        repository.findRunById(created.id)
-      )
+      const updated = await databaseService.withOrganization(organization.id, () => repository.findRunById(created.id))
 
       expect(updated?.state).toBe(WorkflowState.RUNNING)
       expect(updated?.startedAt).toEqual(startTime)
@@ -351,7 +345,7 @@ describe('WorkflowRepository Integration Tests', () => {
     it('should update multiple state fields', async () => {
       if (!databaseService) return
 
-      const created = await databaseService.withTenantContext(organization.id, () =>
+      const created = await databaseService.withOrganization(organization.id, () =>
         repository.createRun({
           organizationId: organization.id,
           projectId: project.id,
@@ -371,9 +365,7 @@ describe('WorkflowRepository Integration Tests', () => {
         })
       )
 
-      const updated = await databaseService.withTenantContext(organization.id, () =>
-        repository.findRunById(created.id)
-      )
+      const updated = await databaseService.withOrganization(organization.id, () => repository.findRunById(created.id))
 
       expect(updated?.state).toBe(WorkflowState.SUCCEEDED)
       expect(updated?.currentStepKey).toBe('step-5')
@@ -384,7 +376,7 @@ describe('WorkflowRepository Integration Tests', () => {
       if (!databaseService) return
 
       await expect(
-        databaseService.withTenantContext(organization.id, () =>
+        databaseService.withOrganization(organization.id, () =>
           repository.updateRunState('00000000-0000-0000-0000-000000000000', {
             status: WorkflowState.RUNNING,
           })
@@ -397,7 +389,7 @@ describe('WorkflowRepository Integration Tests', () => {
     it('should cancel a workflow run', async () => {
       if (!databaseService) return
 
-      const created = await databaseService.withTenantContext(organization.id, () =>
+      const created = await databaseService.withOrganization(organization.id, () =>
         repository.createRun({
           organizationId: organization.id,
           projectId: project.id,
@@ -407,11 +399,9 @@ describe('WorkflowRepository Integration Tests', () => {
         })
       )
 
-      await databaseService.withOrganization(organization.id, () =>
-        repository.cancelRun(created.id)
-      )
+      await databaseService.withOrganization(organization.id, () => repository.cancelRun(created.id))
 
-      const cancelled = await databaseService.withTenantContext(organization.id, () =>
+      const cancelled = await databaseService.withOrganization(organization.id, () =>
         repository.findRunById(created.id)
       )
 
@@ -469,7 +459,7 @@ describe('WorkflowRepository Integration Tests', () => {
     it('should handle concurrent state updates', async () => {
       if (!databaseService) return
 
-      const created = await databaseService.withTenantContext(organization.id, () =>
+      const created = await databaseService.withOrganization(organization.id, () =>
         repository.createRun({
           organizationId: organization.id,
           projectId: project.id,
@@ -495,9 +485,7 @@ describe('WorkflowRepository Integration Tests', () => {
 
       await Promise.all(promises)
 
-      const updated = await databaseService.withTenantContext(organization.id, () =>
-        repository.findRunById(created.id)
-      )
+      const updated = await databaseService.withOrganization(organization.id, () => repository.findRunById(created.id))
 
       expect(updated?.state).toBe(WorkflowState.RUNNING)
     })

@@ -47,6 +47,10 @@ export function createTestDatabaseService(prismaClient: PrismaClient) {
       return asyncLocalStorage.run({ organizationId, bypassTenantFilter: false }, fn)
     },
 
+    async withTenantContext<T>(organizationId: string, fn: () => Promise<T>): Promise<T> {
+      return asyncLocalStorage.run({ organizationId, bypassTenantFilter: false }, fn)
+    },
+
     async withSystemAccess<T>(fn: () => Promise<T>): Promise<T> {
       const currentContext = asyncLocalStorage.getStore() ?? {}
       return asyncLocalStorage.run({ ...currentContext, bypassTenantFilter: true }, fn)

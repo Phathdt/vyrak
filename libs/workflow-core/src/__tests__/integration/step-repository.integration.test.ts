@@ -11,10 +11,11 @@ import {
 
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
+import { testData } from './test-utils'
+
 import { StepStatus, type IStepRepository, type IWorkflowRepository } from '../../domain'
 import { StepPrismaRepository } from '../../infras/repositories/step-prisma.repository'
 import { WorkflowPrismaRepository } from '../../infras/repositories/workflow-prisma.repository'
-import { testData } from './test-utils'
 
 /**
  * Integration tests for StepRepository
@@ -173,9 +174,7 @@ describe('StepRepository Integration Tests', () => {
         })
       )
 
-      const steps = await databaseService.withOrganization(orgId, async () =>
-        stepRepository.findStepsByRunId(runId)
-      )
+      const steps = await databaseService.withOrganization(orgId, async () => stepRepository.findStepsByRunId(runId))
 
       expect(steps).toHaveLength(2)
       expect(steps[0].id).toBe(step1.id)
@@ -239,9 +238,7 @@ describe('StepRepository Integration Tests', () => {
       })
 
       // Try to access from different org (should still return our step)
-      const steps = await databaseService.withOrganization(orgId, async () =>
-        stepRepository.findStepsByRunId(runId)
-      )
+      const steps = await databaseService.withOrganization(orgId, async () => stepRepository.findStepsByRunId(runId))
 
       expect(steps).toHaveLength(1)
 
@@ -270,9 +267,7 @@ describe('StepRepository Integration Tests', () => {
         })
       )
 
-      const updated = await databaseService.withOrganization(orgId, async () =>
-        stepRepository.findById(step.id)
-      )
+      const updated = await databaseService.withOrganization(orgId, async () => stepRepository.findById(step.id))
 
       expect(updated?.status).toBe(StepStatus.RUNNING)
       expect(updated?.startedAt).toEqual(startTime)
@@ -301,9 +296,7 @@ describe('StepRepository Integration Tests', () => {
         })
       )
 
-      const updated = await databaseService.withOrganization(orgId, async () =>
-        stepRepository.findById(step.id)
-      )
+      const updated = await databaseService.withOrganization(orgId, async () => stepRepository.findById(step.id))
 
       expect(updated?.status).toBe(StepStatus.SUCCEEDED)
       expect(updated?.output).toEqual(output)
@@ -333,9 +326,7 @@ describe('StepRepository Integration Tests', () => {
         })
       )
 
-      const updated = await databaseService.withOrganization(orgId, async () =>
-        stepRepository.findById(step.id)
-      )
+      const updated = await databaseService.withOrganization(orgId, async () => stepRepository.findById(step.id))
 
       expect(updated?.status).toBe(StepStatus.FAILED)
       expect(updated?.errorCode).toBe(errorCode)
@@ -374,9 +365,7 @@ describe('StepRepository Integration Tests', () => {
 
       expect(newAttempt).toBe(2)
 
-      const updated = await databaseService.withOrganization(orgId, async () =>
-        stepRepository.findById(step.id)
-      )
+      const updated = await databaseService.withOrganization(orgId, async () => stepRepository.findById(step.id))
 
       expect(updated?.attempt).toBe(2)
       expect(updated?.status).toBe(StepStatus.PENDING) // Reset to pending
@@ -404,9 +393,7 @@ describe('StepRepository Integration Tests', () => {
       )
       expect(attempt3).toBe(3)
 
-      const updated = await databaseService.withOrganization(orgId, async () =>
-        stepRepository.findById(step.id)
-      )
+      const updated = await databaseService.withOrganization(orgId, async () => stepRepository.findById(step.id))
 
       expect(updated?.attempt).toBe(3)
     })
@@ -431,19 +418,13 @@ describe('StepRepository Integration Tests', () => {
         })
       )
 
-      const failedStep = await databaseService.withOrganization(orgId, async () =>
-        stepRepository.findById(step.id)
-      )
+      const failedStep = await databaseService.withOrganization(orgId, async () => stepRepository.findById(step.id))
       expect(failedStep?.status).toBe(StepStatus.FAILED)
 
       // Increment attempt
-      await databaseService.withOrganization(orgId, async () =>
-        stepRepository.incrementAttempt(step.id)
-      )
+      await databaseService.withOrganization(orgId, async () => stepRepository.incrementAttempt(step.id))
 
-      const retried = await databaseService.withOrganization(orgId, async () =>
-        stepRepository.findById(step.id)
-      )
+      const retried = await databaseService.withOrganization(orgId, async () => stepRepository.findById(step.id))
 
       expect(retried?.status).toBe(StepStatus.PENDING)
       expect(retried?.attempt).toBe(2)
@@ -453,9 +434,7 @@ describe('StepRepository Integration Tests', () => {
       if (!databaseService) return
 
       await expect(
-        databaseService.withOrganization(orgId, async () =>
-          stepRepository.incrementAttempt('non-existent-step')
-        )
+        databaseService.withOrganization(orgId, async () => stepRepository.incrementAttempt('non-existent-step'))
       ).rejects.toThrow()
     })
   })
@@ -474,9 +453,7 @@ describe('StepRepository Integration Tests', () => {
         })
       )
 
-      const found = await databaseService.withOrganization(orgId, async () =>
-        stepRepository.findById(created.id)
-      )
+      const found = await databaseService.withOrganization(orgId, async () => stepRepository.findById(created.id))
 
       expect(found).toBeDefined()
       expect(found?.id).toBe(created.id)
@@ -527,9 +504,7 @@ describe('StepRepository Integration Tests', () => {
         })
       )
 
-      let current = await databaseService.withOrganization(orgId, async () =>
-        stepRepository.findById(step.id)
-      )
+      let current = await databaseService.withOrganization(orgId, async () => stepRepository.findById(step.id))
 
       expect(current?.status).toBe(StepStatus.FAILED)
       expect(current?.attempt).toBe(1)
@@ -557,9 +532,7 @@ describe('StepRepository Integration Tests', () => {
         })
       )
 
-      current = await databaseService.withOrganization(orgId, async () =>
-        stepRepository.findById(step.id)
-      )
+      current = await databaseService.withOrganization(orgId, async () => stepRepository.findById(step.id))
 
       expect(current?.status).toBe(StepStatus.SUCCEEDED)
       expect(current?.attempt).toBe(2)
@@ -589,9 +562,7 @@ describe('StepRepository Integration Tests', () => {
       const unique = new Set(steps.map((s) => s.id))
       expect(unique.size).toBe(10) // All IDs should be unique
 
-      const allSteps = await databaseService.withOrganization(orgId, async () =>
-        stepRepository.findStepsByRunId(runId)
-      )
+      const allSteps = await databaseService.withOrganization(orgId, async () => stepRepository.findStepsByRunId(runId))
 
       expect(allSteps).toHaveLength(10)
     })
@@ -624,9 +595,7 @@ describe('StepRepository Integration Tests', () => {
 
       await Promise.all(promises)
 
-      const updated = await databaseService.withOrganization(orgId, async () =>
-        stepRepository.findById(step.id)
-      )
+      const updated = await databaseService.withOrganization(orgId, async () => stepRepository.findById(step.id))
 
       expect(updated?.status).toBe(StepStatus.RUNNING)
     })
