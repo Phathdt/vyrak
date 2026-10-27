@@ -1,8 +1,9 @@
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 
-import type { StepRunResponseDto, WorkflowRunResponseDto } from '../../api/generated/models'
 import { StatusBadge } from './StatusBadge'
+
+import type { StepRunResponseDto, WorkflowRunResponseDto } from '../../api/generated/models'
 
 interface WorkflowOverviewProps {
   workflow: WorkflowRunResponseDto & {
@@ -69,7 +70,9 @@ export function WorkflowOverview({ workflow }: WorkflowOverviewProps) {
 
         <Card className='p-4'>
           <label className='text-sm text-muted-foreground'>Duration</label>
-          <div className='mt-2 text-sm'>{workflow.startedAt ? formatDuration(workflow.startedAt, workflow.completedAt) : '-'}</div>
+          <div className='mt-2 text-sm'>
+            {workflow.startedAt ? formatDuration(workflow.startedAt, workflow.completedAt) : '-'}
+          </div>
         </Card>
 
         <Card className='p-4'>

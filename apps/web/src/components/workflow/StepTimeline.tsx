@@ -1,12 +1,12 @@
+import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 import { AlertCircle } from 'lucide-react'
 import { useState } from 'react'
 
-import { Badge } from '@/components/ui/badge'
-import { cn } from '@/lib/utils'
-
-import type { StepRunResponseDto } from '../../api/generated/models'
 import { StatusBadge } from './StatusBadge'
 import { StepDetailsPanel } from './StepDetailsPanel'
+
+import type { StepRunResponseDto } from '../../api/generated/models'
 
 interface StepTimelineProps {
   steps: StepRunResponseDto[]

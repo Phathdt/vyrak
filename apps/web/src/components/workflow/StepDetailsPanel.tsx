@@ -1,8 +1,7 @@
-import { X } from 'lucide-react'
-
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { X } from 'lucide-react'
 
 import type { StepRunResponseDto } from '../../api/generated/models'
 

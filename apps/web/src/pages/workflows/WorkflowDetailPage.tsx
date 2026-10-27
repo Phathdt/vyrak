@@ -1,7 +1,6 @@
+import { Badge } from '@/components/ui/badge'
 import { Loader2 } from 'lucide-react'
 import { useParams } from 'react-router-dom'
-
-import { Badge } from '@/components/ui/badge'
 
 import { StepTimeline } from '../../components/workflow/StepTimeline'
 import { WorkflowOverview } from '../../components/workflow/WorkflowOverview'
