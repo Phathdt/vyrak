@@ -112,73 +112,45 @@ export const testData = {
 
 /**
  * Clean up test data from database
+ * Deletes ALL data regardless of orgId to ensure clean slate for each test
  */
-export async function cleanupTestData(orgId: string): Promise<void> {
+export async function cleanupTestData(_orgId: string): Promise<void> {
   if (!IntegrationTestSetup.databaseService) return
 
   const prisma = getPrismaClient()
 
-  // Find all users in this org to clean up later
-  const members = await prisma.member.findMany({
-    where: { organizationId: orgId },
-  })
-  const userIds = members.map((m) => m.userId)
+  // Delete ALL data from all tables in correct FK order
+  // This ensures no leftover data from previous tests
 
-  // Delete in correct order to respect foreign keys
-  // 1. Delete workflow events
-  await prisma.workflowEvent.deleteMany({
-    where: { organizationId: orgId },
-  })
+  // 1. Delete all workflow events
+  await prisma.workflowEvent.deleteMany({})
 
-  // 2. Delete stories (they reference workflow_runs)
-  await prisma.story.deleteMany({
-    where: {
-      workflowRun: {
-        organizationId: orgId,
-      },
-    },
-  })
+  // 2. Delete all stories
+  await prisma.story.deleteMany({})
 
-  // 3. Delete workflow approvals (they reference workflow_runs)
-  await prisma.workflowApproval.deleteMany({
-    where: {
-      workflowRun: {
-        organizationId: orgId,
-      },
-    },
-  })
+  // 3. Delete all workflow approvals
+  await prisma.workflowApproval.deleteMany({})
 
-  // 4. Delete workflow step runs
-  await prisma.workflowStepRun.deleteMany({
-    where: { organizationId: orgId },
-  })
+  // 4. Delete all workflow step runs
+  await prisma.workflowStepRun.deleteMany({})
 
-  // 5. Delete workflow runs (this removes the FK references to users)
-  await prisma.workflowRun.deleteMany({
-    where: { organizationId: orgId },
-  })
+  // 5. Delete all workflow runs
+  await prisma.workflowRun.deleteMany({})
 
-  // 6. Delete organization members
-  await prisma.member.deleteMany({
-    where: { organizationId: orgId },
-  })
+  // 6. Delete all invitations
+  await prisma.invitation.deleteMany({})
 
-  // 7. Delete organization projects
-  await prisma.project.deleteMany({
-    where: { organizationId: orgId },
-  })
+  // 7. Delete all organization members
+  await prisma.member.deleteMany({})
 
-  // 8. Delete organization
-  await prisma.organization.deleteMany({
-    where: { id: orgId },
-  })
+  // 8. Delete all organization projects
+  await prisma.project.deleteMany({})
 
-  // 9. Delete users that belonged to this org (now safe to delete)
-  if (userIds.length > 0) {
-    await prisma.user.deleteMany({
-      where: { id: { in: userIds } },
-    })
-  }
+  // 9. Delete all organizations
+  await prisma.organization.deleteMany({})
+
+  // 10. Delete all users
+  await prisma.user.deleteMany({})
 
   // NOTE: Do NOT reset counters here - it's handled in beforeEach
 }
