@@ -12,7 +12,7 @@ export default defineConfig({
   },
   test: {
     globals: true,
-    environment: 'happy-dom',
+    environment: 'jsdom',
     setupFiles: ['./apps/web/src/test/setup.ts'],
     isolate: false, // Reuse workers across files for faster execution
     testTimeout: 10_000,

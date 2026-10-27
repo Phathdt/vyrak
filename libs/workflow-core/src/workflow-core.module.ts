@@ -13,7 +13,10 @@ import { DatabaseModule, DatabaseService } from '@vyrak/database'
 import { AgentStepExecutor } from './application/services/agent-step-executor.service'
 import { ApprovalStepExecutor, type ILogger } from './application/services/approval-step-executor.service'
 import { ApprovalValidatorService } from './application/services/approval-validator.service'
+import { StoryService } from './application/services/story.service'
 import { ToolStepExecutor } from './application/services/tool-step-executor.service'
+import { WorkflowStoryExecutionService } from './application/services/workflow-story-execution.service'
+import { WorkflowTemplateService } from './application/services/workflow-template.service'
 import { ApproveWorkflowUseCase } from './application/use-cases/approve-workflow.use-case'
 import { CancelWorkflowUseCase } from './application/use-cases/cancel-workflow.use-case'
 import { RejectWorkflowUseCase } from './application/use-cases/reject-workflow.use-case'
@@ -22,7 +25,9 @@ import type { IArtifactRepository } from './domain/interfaces/artifact.interface
 import type { IAuthorizationService } from './domain/interfaces/authorization.interface'
 import type { IEventRepository } from './domain/interfaces/event.repository.interface'
 import type { IJobQueue, JobOptions } from './domain/interfaces/job-queue.interface'
+import type { IStoryRepository } from './domain/interfaces/story.repository.interface'
 import type { IWorkflowApprovalRepository } from './domain/interfaces/workflow-approval.repository.interface'
+import type { IWorkflowTemplateRepository } from './domain/interfaces/workflow-template.repository.interface'
 import type { IWorkflowRepository } from './domain/interfaces/workflow.repository.interface'
 import {
   AGENT_STEP_EXECUTOR,
@@ -37,15 +42,22 @@ import {
   REJECT_WORKFLOW_USE_CASE,
   START_WORKFLOW_USE_CASE,
   STEP_REPOSITORY,
+  STORY_REPOSITORY,
+  STORY_SERVICE,
   TEST_RESULT_PARSER,
   TOOL_STEP_EXECUTOR,
   WORKFLOW_APPROVAL_REPOSITORY,
   WORKFLOW_REPOSITORY,
+  WORKFLOW_STORY_EXECUTION_SERVICE,
+  WORKFLOW_TEMPLATE_REPOSITORY,
+  WORKFLOW_TEMPLATE_SERVICE,
 } from './infras/di/di'
 import { EventPrismaRepository } from './infras/repositories/event-prisma.repository'
 import { StepPrismaRepository } from './infras/repositories/step-prisma.repository'
+import { StoryPrismaRepository } from './infras/repositories/story-prisma.repository'
 import { WorkflowApprovalPrismaRepository } from './infras/repositories/workflow-approval-prisma.repository'
 import { WorkflowPrismaRepository } from './infras/repositories/workflow-prisma.repository'
+import { WorkflowTemplatePrismaRepository } from './infras/repositories/workflow-template-prisma.repository'
 import { StubAuthorizationService } from './infras/services/stub-authorization.service'
 import { TestResultParserService } from './infras/services/test-result-parser.service'
 
@@ -143,6 +155,16 @@ class StubJobQueue implements IJobQueue {
     {
       provide: WORKFLOW_APPROVAL_REPOSITORY,
       useFactory: (db: DatabaseService) => new WorkflowApprovalPrismaRepository(db.client),
+      inject: [DatabaseService],
+    },
+    {
+      provide: WORKFLOW_TEMPLATE_REPOSITORY,
+      useFactory: (db: DatabaseService) => new WorkflowTemplatePrismaRepository(db.client),
+      inject: [DatabaseService],
+    },
+    {
+      provide: STORY_REPOSITORY,
+      useFactory: (db: DatabaseService) => new StoryPrismaRepository(db.client),
       inject: [DatabaseService],
     },
     {
@@ -247,6 +269,24 @@ class StubJobQueue implements IJobQueue {
       provide: TEST_RESULT_PARSER,
       useClass: TestResultParserService,
     },
+
+    // Application services
+    {
+      provide: WORKFLOW_TEMPLATE_SERVICE,
+      useFactory: (templateRepo: IWorkflowTemplateRepository) => new WorkflowTemplateService(templateRepo),
+      inject: [WORKFLOW_TEMPLATE_REPOSITORY],
+    },
+    {
+      provide: STORY_SERVICE,
+      useFactory: (storyRepo: IStoryRepository) => new StoryService(storyRepo),
+      inject: [STORY_REPOSITORY],
+    },
+    {
+      provide: WORKFLOW_STORY_EXECUTION_SERVICE,
+      useFactory: (storyRepo: IStoryRepository, eventRepo: IEventRepository) =>
+        new WorkflowStoryExecutionService(storyRepo, eventRepo),
+      inject: [STORY_REPOSITORY, EVENT_REPOSITORY],
+    },
   ],
   exports: [
     AGENT_STEP_EXECUTOR,
@@ -264,6 +304,11 @@ class StubJobQueue implements IJobQueue {
     WORKFLOW_APPROVAL_REPOSITORY,
     ARTIFACT_REPOSITORY,
     TEST_RESULT_PARSER,
+    WORKFLOW_TEMPLATE_REPOSITORY,
+    WORKFLOW_TEMPLATE_SERVICE,
+    STORY_REPOSITORY,
+    STORY_SERVICE,
+    WORKFLOW_STORY_EXECUTION_SERVICE,
   ],
 })
 export class WorkflowCoreModule {}

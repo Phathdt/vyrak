@@ -21,7 +21,7 @@
     "generate:openapi": "yarn workspace @apps/api-server build && node dist/apps/api-server/generate-openapi.js",
     "generate:api": "yarn workspace @apps/web generate:api",
     "generate": "yarn generate:openapi && yarn generate:api && yarn db:generate",
-    "test": "vitest run",
+    "test": "vitest run --config vitest.unit.config.mjs",
     "test:unit": "vitest run --config vitest.unit.config.mjs",
     "test:unit:watch": "vitest --config vitest.unit.config.mjs",
     "test:integration": "vitest run --config vitest.integration.config.mjs",

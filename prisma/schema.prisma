@@ -142,10 +142,33 @@ model GitRepository {
   @@map("git_repositories")
 }
 
+model WorkflowTemplate {
+  id                   String   @id @default(uuid())
+  key                  String   @unique @db.VarChar(50)
+  name                 String   @db.VarChar(100)
+  description          String   @db.Text
+  icon                 String   @db.VarChar(10)
+  isActive             Boolean  @default(true) @map("is_active")
+  storyBased           Boolean  @default(true) @map("story_based")
+  phases               Json
+  estimatedDurationMin Int?     @map("estimated_duration_min")
+  estimatedDurationMax Int?     @map("estimated_duration_max")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  workflowRuns WorkflowRun[]
+
+  @@index([key])
+  @@index([isActive])
+  @@map("workflow_templates")
+}
+
 model WorkflowRun {
   id                  String    @id @default(uuid())
   projectId           String    @map("project_id")
   organizationId      String    @map("organization_id")
+  templateId          String?   @map("template_id")
+  templateKey         String?   @map("template_key") @db.VarChar(50)
   status              String    @default("pending")
   state               String    @default("pending") // pending, running, waiting_approval, completed, failed, cancelled
   workflowKey         String    @map("workflow_key")
@@ -154,6 +177,10 @@ model WorkflowRun {
   idempotencyKey      String?   @map("idempotency_key")
   input               Json?
   currentStepKey      String?   @map("current_step_key")
+  totalStories        Int       @default(0) @map("total_stories")
+  completedStories    Int       @default(0) @map("completed_stories")
+  failedStories       Int       @default(0) @map("failed_stories")
+  currentStoryId      String?   @map("current_story_id")
   cancelRequestedAt   DateTime? @map("cancel_requested_at")
   cancellationReason  String?   @db.Text @map("cancellation_reason")
   cancelledByUserId   String?   @map("cancelled_by_user_id")
@@ -172,11 +199,13 @@ model WorkflowRun {
   project      Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
   organization Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   initiatedBy  User                 @relation(fields: [initiatedByUserId], references: [id], onDelete: Restrict)
+  template     WorkflowTemplate?    @relation(fields: [templateId], references: [id], onDelete: Restrict)
   agentTasks   AgentTask[]
   artifacts    Artifact[]
   steps        WorkflowStepRun[]
   events       WorkflowEvent[]
   approvals    WorkflowApproval[]
+  stories      Story[]
 
   @@unique([organizationId, idempotencyKey], map: "workflow_runs_org_idempotency_key")
   @@index([projectId])
@@ -186,6 +215,8 @@ model WorkflowRun {
   @@index([initiatedByUserId])
   @@index([leaseExpiresAt])
   @@index([lastHeartbeatAt])
+  @@index([templateId])
+  @@index([currentStoryId])
   @@map("workflow_runs")
 }
 
@@ -224,22 +255,53 @@ model Artifact {
   @@map("artifacts")
 }
 
+model Story {
+  id                  String    @id @default(uuid())
+  workflowRunId       String    @map("workflow_run_id")
+  orderIndex          Int       @map("order_index")
+  title               String    @db.VarChar(255)
+  description         String?   @db.Text
+  acceptanceCriteria  Json?     @map("acceptance_criteria")
+  estimatedDuration   Int?      @map("estimated_duration")
+  status              String    @default("queued") @db.VarChar(50)
+  startedAt           DateTime? @map("started_at")
+  completedAt         DateTime? @map("completed_at")
+  duration            Int?
+  error               String?   @db.Text
+  artifacts           Json?
+  subSteps            Json?     @map("sub_steps")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  workflowRun WorkflowRun @relation(fields: [workflowRunId], references: [id], onDelete: Cascade)
+
+  @@unique([workflowRunId, orderIndex], map: "unique_story_order")
+  @@index([workflowRunId])
+  @@index([status])
+  @@index([workflowRunId, orderIndex])
+  @@map("stories")
+}
+
 model WorkflowStepRun {
-  id             String    @id @default(uuid())
-  runId          String    @map("run_id")
-  organizationId String    @map("organization_id")
-  stepKey        String    @map("step_key")
-  stepType       String    @map("step_type")
-  status         String    @default("pending")
-  attempt        Int       @default(1)
-  input          Json?
-  output         Json?
-  errorCode      String?   @map("error_code")
-  errorMessage   String?   @db.Text @map("error_message")
-  startedAt      DateTime? @map("started_at")
-  completedAt    DateTime? @map("completed_at")
-  createdAt      DateTime  @default(now()) @map("created_at")
-  updatedAt      DateTime  @updatedAt @map("updated_at")
+  id                  String    @id @default(uuid())
+  runId               String    @map("run_id")
+  organizationId      String    @map("organization_id")
+  stepKey             String    @map("step_key")
+  phaseKey            String?   @map("phase_key") @db.VarChar(50)
+  stepType            String    @map("step_type")
+  status              String    @default("pending")
+  attempt             Int       @default(1)
+  requiresApproval    Boolean   @default(false) @map("requires_approval")
+  currentStoryId      String?   @map("current_story_id")
+  completedStoryIds   Json      @default("[]") @map("completed_story_ids")
+  input               Json?
+  output              Json?
+  errorCode           String?   @map("error_code")
+  errorMessage        String?   @db.Text @map("error_message")
+  startedAt           DateTime? @map("started_at")
+  completedAt         DateTime? @map("completed_at")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
 
   run          WorkflowRun     @relation(fields: [runId], references: [id], onDelete: Cascade)
   organization Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -249,6 +311,7 @@ model WorkflowStepRun {
   @@index([runId])
   @@index([organizationId])
   @@index([status])
+  @@index([phaseKey])
   @@map("workflow_step_runs")
 }
 

@@ -14,6 +14,11 @@ export enum WorkflowEventType {
   RUN_CANCELLED = 'run_cancelled',
   RETRY_SCHEDULED = 'retry_scheduled',
   RECOVERY_PERFORMED = 'recovery_performed',
+  // Story-level events (Epic 13.5)
+  STORY_STARTED = 'story_started',
+  STORY_PROGRESS = 'story_progress',
+  STORY_COMPLETED = 'story_completed',
+  STORY_FAILED = 'story_failed',
 }
 
 /**
@@ -85,6 +90,33 @@ export interface RecoveryPerformedPayload {
   recoveryResult: 'success' | 'failure'
 }
 
+export interface StoryStartedPayload {
+  storyId: string
+  orderIndex: number
+  title: string
+  startedAt: Date
+}
+
+export interface StoryProgressPayload {
+  storyId: string
+  currentSubStep: string
+  timestamp: Date
+}
+
+export interface StoryCompletedPayload {
+  storyId: string
+  status: 'succeeded'
+  duration: number
+  artifacts?: unknown
+}
+
+export interface StoryFailedPayload {
+  storyId: string
+  status: 'failed'
+  error: string
+  timestamp: Date
+}
+
 /**
  * Zod schemas for payload validation
  */
@@ -154,6 +186,33 @@ export const RecoveryPerformedPayloadSchema = z.object({
   recoveryResult: z.enum(['success', 'failure']),
 })
 
+export const StoryStartedPayloadSchema = z.object({
+  storyId: z.string().uuid(),
+  orderIndex: z.number().int().min(0),
+  title: z.string().min(1),
+  startedAt: z.date(),
+})
+
+export const StoryProgressPayloadSchema = z.object({
+  storyId: z.string().uuid(),
+  currentSubStep: z.string().min(1),
+  timestamp: z.date(),
+})
+
+export const StoryCompletedPayloadSchema = z.object({
+  storyId: z.string().uuid(),
+  status: z.literal('succeeded'),
+  duration: z.number().int().min(0),
+  artifacts: z.unknown().optional(),
+})
+
+export const StoryFailedPayloadSchema = z.object({
+  storyId: z.string().uuid(),
+  status: z.literal('failed'),
+  error: z.string().min(1),
+  timestamp: z.date(),
+})
+
 /**
  * Map event types to their payload schemas
  */
@@ -168,6 +227,10 @@ const PAYLOAD_SCHEMAS: Record<WorkflowEventType, z.ZodSchema> = {
   [WorkflowEventType.RUN_CANCELLED]: RunCancelledPayloadSchema,
   [WorkflowEventType.RETRY_SCHEDULED]: RetryScheduledPayloadSchema,
   [WorkflowEventType.RECOVERY_PERFORMED]: RecoveryPerformedPayloadSchema,
+  [WorkflowEventType.STORY_STARTED]: StoryStartedPayloadSchema,
+  [WorkflowEventType.STORY_PROGRESS]: StoryProgressPayloadSchema,
+  [WorkflowEventType.STORY_COMPLETED]: StoryCompletedPayloadSchema,
+  [WorkflowEventType.STORY_FAILED]: StoryFailedPayloadSchema,
 }
 
 /**
@@ -337,6 +400,22 @@ export function isRetryScheduledPayload(payload: unknown): payload is RetrySched
 
 export function isRecoveryPerformedPayload(payload: unknown): payload is RecoveryPerformedPayload {
   return RecoveryPerformedPayloadSchema.safeParse(payload).success
+}
+
+export function isStoryStartedPayload(payload: unknown): payload is StoryStartedPayload {
+  return StoryStartedPayloadSchema.safeParse(payload).success
+}
+
+export function isStoryProgressPayload(payload: unknown): payload is StoryProgressPayload {
+  return StoryProgressPayloadSchema.safeParse(payload).success
+}
+
+export function isStoryCompletedPayload(payload: unknown): payload is StoryCompletedPayload {
+  return StoryCompletedPayloadSchema.safeParse(payload).success
+}
+
+export function isStoryFailedPayload(payload: unknown): payload is StoryFailedPayload {
+  return StoryFailedPayloadSchema.safeParse(payload).success
 }
 
 // Domain errors
