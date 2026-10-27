@@ -6,7 +6,8 @@ import { INVITATION_SERVICE, MEMBER_SERVICE, ORGANIZATION_SERVICE, OrganizationM
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-import { InvitationsController, OrganizationsController } from '../organizations.controller'
+import { InvitationsController } from '../invitations.controller'
+import { OrganizationsController } from '../organizations.controller'
 
 /**
  * Integration tests for OrganizationsController
