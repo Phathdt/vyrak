@@ -1,12 +1,6 @@
 import { faker } from '@faker-js/faker'
 import type { DatabaseService } from '@vyrak/database'
-import {
-  createTestDatabaseService,
-  getPrismaClient,
-  resetCounters,
-  startPostgres,
-  stopPostgres,
-} from '@vyrak/database/test-utils'
+import { createTestDatabaseService, getPrismaClient, startPostgres, stopPostgres } from '@vyrak/database/test-utils'
 
 import { expect } from 'vitest'
 
@@ -136,40 +130,57 @@ export async function cleanupTestData(orgId: string): Promise<void> {
     where: { organizationId: orgId },
   })
 
-  // 2. Delete workflow step runs
+  // 2. Delete stories (they reference workflow_runs)
+  await prisma.story.deleteMany({
+    where: {
+      workflowRun: {
+        organizationId: orgId,
+      },
+    },
+  })
+
+  // 3. Delete workflow approvals (they reference workflow_runs)
+  await prisma.workflowApproval.deleteMany({
+    where: {
+      workflowRun: {
+        organizationId: orgId,
+      },
+    },
+  })
+
+  // 4. Delete workflow step runs
   await prisma.workflowStepRun.deleteMany({
     where: { organizationId: orgId },
   })
 
-  // 3. Delete workflow runs (this removes the FK references to users)
+  // 5. Delete workflow runs (this removes the FK references to users)
   await prisma.workflowRun.deleteMany({
     where: { organizationId: orgId },
   })
 
-  // 4. Delete organization members
+  // 6. Delete organization members
   await prisma.member.deleteMany({
     where: { organizationId: orgId },
   })
 
-  // 5. Delete organization projects
+  // 7. Delete organization projects
   await prisma.project.deleteMany({
     where: { organizationId: orgId },
   })
 
-  // 6. Delete organization
+  // 8. Delete organization
   await prisma.organization.deleteMany({
     where: { id: orgId },
   })
 
-  // 7. Delete users that belonged to this org (now safe to delete)
+  // 9. Delete users that belonged to this org (now safe to delete)
   if (userIds.length > 0) {
     await prisma.user.deleteMany({
       where: { id: { in: userIds } },
     })
   }
 
-  // Reset counters for next test
-  resetCounters()
+  // NOTE: Do NOT reset counters here - it's handled in beforeEach
 }
 
 /**
