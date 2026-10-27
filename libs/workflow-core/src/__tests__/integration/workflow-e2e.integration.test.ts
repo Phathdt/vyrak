@@ -1,21 +1,24 @@
-import { getPrismaClient } from '@vyrak/database/test-utils'
+import {
+  createTestOrgWithOwner,
+  createTestProject,
+  getPrismaClient,
+  resetCounters,
+} from '@vyrak/database/test-utils'
 
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
-import { cleanupTestData, IntegrationTestSetup, testData } from './test-utils'
+import { cleanupTestData, IntegrationTestSetup } from './test-utils'
 
 import { StepStatus } from '../../domain/entities/step-run.entity'
 import { WorkflowState } from '../../domain/workflow-state'
 
 describe('Workflow E2E Integration Tests', () => {
-  let prisma: ReturnType<typeof getPrismaClient> | undefined
   let orgId: string
   let projectId: string
   let userId: string
 
   beforeAll(async () => {
     await IntegrationTestSetup.init()
-    prisma = IntegrationTestSetup.prisma
   })
 
   afterAll(async () => {
@@ -23,59 +26,26 @@ describe('Workflow E2E Integration Tests', () => {
   })
 
   beforeEach(async () => {
-    if (!prisma) return
+    if (!IntegrationTestSetup.databaseService) return
 
-    orgId = testData.orgId()
-    projectId = testData.projectId()
-    const userEmail = `test-user-${Math.random().toString(36).slice(2)}@test.com`
+    const prisma = getPrismaClient()
+    const { organization, user } = await createTestOrgWithOwner(prisma)
+    const project = await createTestProject(prisma, organization.id)
 
-    // Setup test user and capture the ID
-    const user = await prisma.user.upsert({
-      where: { email: userEmail },
-      update: {},
-      create: {
-        email: userEmail,
-        name: userEmail.split('@')[0],
-      },
-    })
+    orgId = organization.id
+    projectId = project.id
     userId = user.id
 
-    // Setup org and project
-    await prisma.organization.upsert({
-      where: { id: orgId },
-      update: {},
-      create: {
-        id: orgId,
-        name: `Test Org ${orgId}`,
-        slug: orgId,
-      },
-    })
-
-    await prisma.project.upsert({
-      where: {
-        organizationId_slug: {
-          organizationId: orgId,
-          slug: projectId,
-        },
-      },
-      update: {},
-      create: {
-        id: projectId,
-        organizationId: orgId,
-        name: `Test Project`,
-        slug: projectId,
-      },
-    })
+    resetCounters()
   })
 
   afterEach(async () => {
-    if (!prisma) return
-    await cleanupTestData(prisma, orgId)
+    await cleanupTestData(orgId)
   })
 
   describe('simple workflow execution', () => {
     it('should execute complete workflow: create → execute steps → complete', async () => {
-      if (!prisma) return
+      if (!IntegrationTestSetup.databaseService) return
 
       const workflowRepository = IntegrationTestSetup.workflowRepo
       const stepRepository = IntegrationTestSetup.stepRepo
@@ -256,7 +226,7 @@ describe('Workflow E2E Integration Tests', () => {
 
   describe('workflow with step retry', () => {
     it('should handle step failure and retry', async () => {
-      if (!prisma) return
+      if (!IntegrationTestSetup.databaseService) return
 
       const workflowRepository = IntegrationTestSetup.workflowRepo
       const stepRepository = IntegrationTestSetup.stepRepo
@@ -376,7 +346,7 @@ describe('Workflow E2E Integration Tests', () => {
 
   describe('workflow failure scenario', () => {
     it('should record workflow failure with error details', async () => {
-      if (!prisma) return
+      if (!IntegrationTestSetup.databaseService) return
 
       const workflowRepository = IntegrationTestSetup.workflowRepo
       const stepRepository = IntegrationTestSetup.stepRepo
@@ -476,30 +446,13 @@ describe('Workflow E2E Integration Tests', () => {
 
   describe('multi-tenant workflow isolation', () => {
     it('should keep workflows from different orgs completely isolated', async () => {
-      if (!prisma) return
+      if (!IntegrationTestSetup.databaseService) return
 
+      const prisma = getPrismaClient()
       const workflowRepository = IntegrationTestSetup.workflowRepo
 
-      const orgId2 = testData.orgId()
-      const projectId2 = testData.projectId()
-
-      // Setup second org
-      await prisma.organization.create({
-        data: {
-          id: orgId2,
-          name: `Test Org ${orgId2}`,
-          slug: orgId2,
-        },
-      })
-
-      await prisma.project.create({
-        data: {
-          id: projectId2,
-          organizationId: orgId2,
-          name: 'Test Project 2',
-          slug: projectId2,
-        },
-      })
+      const { organization: org2 } = await createTestOrgWithOwner(prisma)
+      const projectId2 = (await createTestProject(prisma, org2.id)).id
 
       // Create workflow in org1
       const run1 = await workflowRepository.createRun({
@@ -512,7 +465,7 @@ describe('Workflow E2E Integration Tests', () => {
 
       // Create workflow in org2
       const run2 = await workflowRepository.createRun({
-        organizationId: orgId2,
+        organizationId: org2.id,
         projectId: projectId2,
         workflowKey: 'workflow-2',
         workflowVersion: '1.0.0',
@@ -520,7 +473,7 @@ describe('Workflow E2E Integration Tests', () => {
       })
 
       expect(run1.organizationId).toBe(orgId)
-      expect(run2.organizationId).toBe(orgId2)
+      expect(run2.organizationId).toBe(org2.id)
       expect(run1.id).not.toBe(run2.id)
 
       // Repository layer doesn't enforce tenant isolation automatically
@@ -528,19 +481,14 @@ describe('Workflow E2E Integration Tests', () => {
       const run2FromDb = await workflowRepository.findRunById(run2.id)
 
       expect(run2FromDb).not.toBeNull()
-      expect(run2FromDb?.organizationId).toBe(orgId2)
+      expect(run2FromDb?.organizationId).toBe(org2.id)
       expect(run2FromDb?.organizationId).not.toBe(orgId)
-
-      // Cleanup
-      await prisma.workflowRun.deleteMany({ where: { organizationId: orgId2 } })
-      await prisma.project.deleteMany({ where: { organizationId: orgId2 } })
-      await prisma.organization.delete({ where: { id: orgId2 } })
     })
   })
 
   describe('workflow event history integrity', () => {
     it('should maintain complete immutable event history', async () => {
-      if (!prisma) return
+      if (!IntegrationTestSetup.databaseService) return
 
       const workflowRepository = IntegrationTestSetup.workflowRepo
       const eventRepository = IntegrationTestSetup.eventRepo

@@ -22,6 +22,12 @@ export function createTestDatabaseService(prismaClient: PrismaClient) {
   return {
     client: extendedClient,
 
+    /**
+     * Get the base Prisma client for raw queries and transactions
+     * Mirrors DatabaseService.rawClient
+     */
+    rawClient: prismaClient,
+
     setTenantContext(organizationId: string): void {
       asyncLocalStorage.enterWith({
         organizationId,

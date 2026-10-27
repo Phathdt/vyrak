@@ -1,6 +1,12 @@
 import { faker } from '@faker-js/faker'
-import type { PrismaClient } from '@vyrak/database'
-import { getPrismaClient, startPostgres, stopPostgres } from '@vyrak/database/test-utils'
+import type { DatabaseService } from '@vyrak/database'
+import {
+  createTestDatabaseService,
+  getPrismaClient,
+  resetCounters,
+  startPostgres,
+  stopPostgres,
+} from '@vyrak/database/test-utils'
 
 import { expect } from 'vitest'
 
@@ -13,26 +19,24 @@ import { WorkflowPrismaRepository } from '../../infras/repositories/workflow-pri
  */
 
 export class IntegrationTestSetup {
-  static prisma: ReturnType<typeof getPrismaClient> | undefined
+  static databaseService: ReturnType<typeof createTestDatabaseService> | undefined
   static workflowRepo: WorkflowPrismaRepository
   static stepRepo: StepPrismaRepository
   static eventRepo: EventPrismaRepository
 
   /**
-   * Initialize test with Testcontainers Prisma client
+   * Initialize test with Testcontainers Prisma client wrapped in DatabaseService
    */
   static async init(): Promise<void> {
     try {
       await startPostgres()
-      this.prisma = getPrismaClient()
+      const prisma = getPrismaClient()
+      this.databaseService = createTestDatabaseService(prisma)
 
-      // Create repository instances with Prisma client directly
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      this.workflowRepo = new WorkflowPrismaRepository(this.prisma as any)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      this.stepRepo = new StepPrismaRepository(this.prisma as any)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      this.eventRepo = new EventPrismaRepository(this.prisma as any)
+      // Create repository instances with DatabaseService
+      this.workflowRepo = new WorkflowPrismaRepository(this.databaseService as unknown as DatabaseService)
+      this.stepRepo = new StepPrismaRepository(this.databaseService as unknown as DatabaseService)
+      this.eventRepo = new EventPrismaRepository(this.databaseService as unknown as DatabaseService)
     } catch (error) {
       console.warn('PostgreSQL setup failed, skipping integration tests:', error)
     }
@@ -42,9 +46,6 @@ export class IntegrationTestSetup {
    * Cleanup test
    */
   static async cleanup(): Promise<void> {
-    if (this.prisma) {
-      await this.prisma.$disconnect()
-    }
     await stopPostgres()
   }
 
@@ -52,8 +53,8 @@ export class IntegrationTestSetup {
    * Execute query with system access (bypass tenant filter)
    */
   static async withSystemAccess<T>(fn: () => Promise<T>): Promise<T> {
-    if (!this.prisma) {
-      throw new Error('Prisma client not initialized')
+    if (!this.databaseService) {
+      throw new Error('Database service not initialized')
     }
     // Direct access without tenant filter for test setup
     return fn()
@@ -118,7 +119,11 @@ export const testData = {
 /**
  * Clean up test data from database
  */
-export async function cleanupTestData(prisma: ReturnType<typeof getPrismaClient>, orgId: string): Promise<void> {
+export async function cleanupTestData(orgId: string): Promise<void> {
+  if (!IntegrationTestSetup.databaseService) return
+
+  const prisma = getPrismaClient()
+
   // Delete in correct order to respect foreign keys
   await prisma.workflowEvent.deleteMany({
     where: { organizationId: orgId },
@@ -131,22 +136,25 @@ export async function cleanupTestData(prisma: ReturnType<typeof getPrismaClient>
   await prisma.workflowRun.deleteMany({
     where: { organizationId: orgId },
   })
+
+  // Reset counters for next test
+  resetCounters()
 }
 
 /**
  * Assert tenant isolation - ensure query results respect organization boundary
  */
 export async function assertTenantIsolation(
-  prisma: PrismaClient,
   allowedOrgId: string,
   deniedOrgId: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Generic query function return type
-  queryFn: (prisma: PrismaClient, orgId: string) => Promise<any>
+  queryFn: (orgId: string) => Promise<any>
 ): Promise<void> {
   // Query with allowed org should work
-  const allowedResult = await queryFn(prisma, allowedOrgId)
+  const allowedResult = await queryFn(allowedOrgId)
 
   // Query with denied org
+  const prisma = getPrismaClient()
   const deniedResult = await prisma.workflowRun.findMany({
     where: { organizationId: deniedOrgId },
   })

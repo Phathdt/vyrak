@@ -121,8 +121,6 @@ export async function createTestProject(
       organizationId,
       name: `Test Project ${projectCounter}`,
       slug: `test-project-${projectCounter}`,
-      description: null,
-      settings: null,
       ...override,
     },
   })
