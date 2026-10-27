@@ -1,4 +1,4 @@
-import { Prisma, PrismaClient } from '@vyrak/database'
+import { DatabaseService, Prisma } from '@vyrak/database'
 
 import {
   CreateStepParams,
@@ -12,11 +12,11 @@ import {
 } from '../../domain'
 
 export class StepPrismaRepository implements IStepRepository {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(private readonly db: DatabaseService) {}
 
   async createStepRun(params: CreateStepParams): Promise<StepRun> {
     try {
-      const step = await this.prisma.workflowStepRun.create({
+      const step = await this.db.client.workflowStepRun.create({
         data: {
           runId: params.runId,
           organizationId: params.organizationId,
@@ -38,7 +38,7 @@ export class StepPrismaRepository implements IStepRepository {
 
   async findStepsByRunId(runId: string): Promise<StepRun[]> {
     try {
-      const steps = await this.prisma.workflowStepRun.findMany({
+      const steps = await this.db.client.workflowStepRun.findMany({
         where: { runId },
         orderBy: { createdAt: 'asc' },
       })
@@ -54,7 +54,7 @@ export class StepPrismaRepository implements IStepRepository {
 
   async updateStepStatus(stepRunId: string, status: StepStatus, result?: StepUpdateResult): Promise<void> {
     try {
-      await this.prisma.workflowStepRun.update({
+      await this.db.client.workflowStepRun.update({
         where: { id: stepRunId },
         data: {
           status,
@@ -78,7 +78,7 @@ export class StepPrismaRepository implements IStepRepository {
 
   async incrementAttempt(stepRunId: string): Promise<number> {
     try {
-      const step = await this.prisma.workflowStepRun.update({
+      const step = await this.db.client.workflowStepRun.update({
         where: { id: stepRunId },
         data: {
           attempt: { increment: 1 },
@@ -100,7 +100,7 @@ export class StepPrismaRepository implements IStepRepository {
 
   async findById(stepRunId: string): Promise<StepRun | null> {
     try {
-      const step = await this.prisma.workflowStepRun.findUnique({
+      const step = await this.db.client.workflowStepRun.findUnique({
         where: { id: stepRunId },
       })
       return step ? this.mapToDomain(step) : null

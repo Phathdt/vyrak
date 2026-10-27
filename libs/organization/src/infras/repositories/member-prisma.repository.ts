@@ -1,4 +1,4 @@
-import type { DatabaseService, Member, User } from '@vyrak/database'
+import type { DatabaseService } from '@vyrak/database'
 
 import type { IMemberRepository, MemberResponse, UpdateMemberRoleDto } from '../../domain'
 
@@ -22,7 +22,7 @@ export class MemberPrismaRepository implements IMemberRepository {
         orderBy: { createdAt: 'asc' },
       })
 
-      return members.map((m: Member & { user: User }): MemberResponse => ({
+      return members.map((m): MemberResponse => ({
         id: m.id,
         role: m.role,
         createdAt: m.createdAt,
