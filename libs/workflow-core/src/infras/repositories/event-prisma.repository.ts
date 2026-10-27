@@ -17,12 +17,12 @@ export class EventPrismaRepository implements IEventRepository {
       // Lock must be held across both SELECT and INSERT to prevent race conditions
       const lockId = this.getLockId(event.runId)
 
-      // Acquire advisory lock
-      await this.db.client.$executeRaw`SELECT pg_advisory_lock(${lockId})`
+      // Acquire advisory lock (needs raw SQL)
+      await this.db.rawClient.$executeRaw`SELECT pg_advisory_lock(${lockId})`
 
       try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma TransactionClient type
-        const result = await this.db.client.$transaction(async (tx: any) => {
+        // Use raw client for transaction that needs full Prisma API
+        const result = await this.db.rawClient.$transaction(async (tx) => {
           // Get next sequence
           const sequenceResult = (await tx.$queryRaw`
             SELECT COALESCE(MAX(sequence), 0) + 1 as sequence
@@ -48,7 +48,7 @@ export class EventPrismaRepository implements IEventRepository {
         return this.mapToDomain(result)
       } finally {
         // Always release lock
-        await this.db.client.$executeRaw`SELECT pg_advisory_unlock(${lockId})`
+        await this.db.rawClient.$executeRaw`SELECT pg_advisory_unlock(${lockId})`
       }
     } catch (error: unknown) {
       throw new WorkflowRepositoryError(
@@ -70,14 +70,13 @@ export class EventPrismaRepository implements IEventRepository {
 
   async findEventsByRunId(runId: string, limit: number = 100, offset: number = 0): Promise<WorkflowEventEntity[]> {
     try {
-      const events = await this.db.client.workflowEvent.findMany({
+      const events = await this.db.rawClient.workflowEvent.findMany({
         where: { runId },
         orderBy: { sequence: 'asc' },
         take: limit,
         skip: offset,
       })
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma internal type
-      return events.map((event: any) => this.mapToDomain(event))
+      return events.map((event) => this.mapToDomain(event))
     } catch (error: unknown) {
       throw new WorkflowRepositoryError(
         'Failed to find workflow events',
@@ -89,7 +88,7 @@ export class EventPrismaRepository implements IEventRepository {
   async getNextSequence(runId: string): Promise<number> {
     try {
       // Use $queryRaw for better read-after-write consistency
-      const result = (await this.db.client.$queryRaw`
+      const result = (await this.db.rawClient.$queryRaw`
         SELECT COALESCE(MAX(sequence), 0) + 1 as sequence
         FROM workflow_events
         WHERE run_id = ${runId}

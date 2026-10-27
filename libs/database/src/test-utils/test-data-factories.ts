@@ -1,4 +1,4 @@
-import type { Member, Organization, PrismaClient, User } from '../generated/prisma/client'
+import type { Member, Organization, PrismaClient, Project, User } from '../generated/prisma/client'
 
 /**
  * Factory functions for creating test data with sensible defaults.
@@ -7,10 +7,12 @@ import type { Member, Organization, PrismaClient, User } from '../generated/pris
 
 let userCounter = 0
 let orgCounter = 0
+let projectCounter = 0
 
 export function resetCounters() {
   userCounter = 0
   orgCounter = 0
+  projectCounter = 0
 }
 
 /**
@@ -102,5 +104,26 @@ export async function createTestOrgWithOwner(
     })
 
     return { user: owner, organization, member }
+  })
+}
+
+/**
+ * Create a test project in the database
+ */
+export async function createTestProject(
+  prisma: PrismaClient,
+  organizationId: string,
+  override: Partial<Omit<Project, 'id' | 'createdAt' | 'updatedAt' | 'organizationId'>> = {}
+): Promise<Project> {
+  projectCounter++
+  return await prisma.project.create({
+    data: {
+      organizationId,
+      name: `Test Project ${projectCounter}`,
+      slug: `test-project-${projectCounter}`,
+      description: null,
+      settings: null,
+      ...override,
+    },
   })
 }

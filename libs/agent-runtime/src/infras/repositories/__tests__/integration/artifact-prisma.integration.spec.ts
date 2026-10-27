@@ -1,12 +1,12 @@
-import type { PrismaClient } from '@vyrak/database'
-import { getPrismaClient, startPostgres, stopPostgres } from '@vyrak/database/test-utils'
+import type { DatabaseService } from '@vyrak/database'
+import { getDatabase, startPostgres, stopPostgres } from '@vyrak/database/test-utils'
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { ArtifactPrismaRepository } from '../../artifact-prisma.repository'
 
 describe('ArtifactPrismaRepository Integration', () => {
-  let prisma: PrismaClient
+  let db: DatabaseService
   let repository: ArtifactPrismaRepository
   let testOrgId: string
   let testRunId: string
@@ -14,11 +14,11 @@ describe('ArtifactPrismaRepository Integration', () => {
   beforeAll(async () => {
     try {
       await startPostgres()
-      prisma = getPrismaClient()
-      repository = new ArtifactPrismaRepository(prisma)
+      db = getDatabase()
+      repository = new ArtifactPrismaRepository(db)
 
       // Create test organization once
-      const org = await prisma.organization.create({
+      const org = await db.client.organization.create({
         data: {
           name: 'Test Org Artifact',
           slug: 'test-org-artifact-' + Date.now(),
@@ -27,17 +27,15 @@ describe('ArtifactPrismaRepository Integration', () => {
       testOrgId = org.id
 
       // Create test user
-      const user = await prisma.user.create({
+      const user = await db.client.user.create({
         data: {
           email: 'test-artifact@example.com',
           name: 'Test User',
-          authProvider: 'local',
-          authProviderId: 'test-artifact-' + Date.now(),
         },
       })
 
       // Create test project
-      const project = await prisma.project.create({
+      const project = await db.client.project.create({
         data: {
           organizationId: testOrgId,
           name: 'Test Project',
@@ -46,7 +44,7 @@ describe('ArtifactPrismaRepository Integration', () => {
       })
 
       // Create test workflow run
-      const run = await prisma.workflowRun.create({
+      const run = await db.client.workflowRun.create({
         data: {
           organizationId: testOrgId,
           projectId: project.id,
@@ -67,7 +65,7 @@ describe('ArtifactPrismaRepository Integration', () => {
   })
 
   it('should create and retrieve artifact', async () => {
-    if (!prisma || !testRunId) return
+    if (!db || !testRunId) return
 
     const artifact = await repository.create({
       organizationId: testOrgId,
@@ -87,7 +85,7 @@ describe('ArtifactPrismaRepository Integration', () => {
   })
 
   it('should find artifacts by run ID', async () => {
-    if (!prisma || !testRunId) return
+    if (!db || !testRunId) return
 
     // Create multiple artifacts
     await repository.create({
@@ -113,7 +111,7 @@ describe('ArtifactPrismaRepository Integration', () => {
   })
 
   it('should find artifacts by organization', async () => {
-    if (!prisma || !testRunId) return
+    if (!db || !testRunId) return
 
     const artifacts = await repository.findByOrganization(testOrgId)
 
@@ -122,7 +120,7 @@ describe('ArtifactPrismaRepository Integration', () => {
   })
 
   it('should delete artifact', async () => {
-    if (!prisma || !testRunId) return
+    if (!db || !testRunId) return
 
     const artifact = await repository.create({
       organizationId: testOrgId,
@@ -138,7 +136,7 @@ describe('ArtifactPrismaRepository Integration', () => {
   })
 
   it('should return null for non-existent artifact', async () => {
-    if (!prisma) return
+    if (!db) return
 
     const artifact = await repository.findById('non-existent-id')
     expect(artifact).toBeNull()

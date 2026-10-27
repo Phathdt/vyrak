@@ -6,6 +6,8 @@ import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testconta
 
 import pg from 'pg'
 
+import type { DatabaseService, ExtendedPrismaClient } from '../database.service'
+import { createTenantFilterExtension } from '../extensions'
 import { PrismaClient } from '../generated/prisma/client'
 
 // Find project root by looking for package.json with workspaces
@@ -34,6 +36,7 @@ const PROJECT_ROOT = findProjectRoot()
 let globalContainer: StartedPostgreSqlContainer | null = null
 let globalPrisma: PrismaClient | null = null
 let globalPool: pg.Pool | null = null
+let globalDatabase: DatabaseService | null = null
 
 /**
  * Start the global PostgreSQL Testcontainer.
@@ -94,6 +97,16 @@ export async function startPostgres(): Promise<void> {
 
     await globalPrisma.$connect()
     console.log('Global Prisma client connected')
+
+    // Create DatabaseService-like object for tests with tenant filter bypassed
+    const extendedClient = globalPrisma.$extends(
+      createTenantFilterExtension(() => ({ bypassTenantFilter: true }))
+    ) as ExtendedPrismaClient
+    globalDatabase = {
+      client: extendedClient,
+      rawClient: globalPrisma, // Expose base Prisma client for raw queries
+      $transaction: globalPrisma.$transaction.bind(globalPrisma),
+    } as DatabaseService
   } catch (error) {
     console.error('Failed to start PostgreSQL Testcontainer:', error)
     throw error
@@ -112,6 +125,8 @@ export async function startPostgres(): Promise<void> {
  * ```
  */
 export async function stopPostgres(): Promise<void> {
+  globalDatabase = null
+
   if (globalPrisma) {
     await globalPrisma.$disconnect()
     globalPrisma = null
@@ -144,6 +159,22 @@ export function getPrismaClient(): PrismaClient {
     throw new Error('Global Prisma client not initialized. Call startPostgres() first.')
   }
   return globalPrisma
+}
+
+/**
+ * Get the global DatabaseService instance for tests.
+ * Must be called after startPostgres().
+ *
+ * @example
+ * ```typescript
+ * const db = getDatabase()
+ * ```
+ */
+export function getDatabase(): DatabaseService {
+  if (!globalDatabase) {
+    throw new Error('Global DatabaseService not initialized. Call startPostgres() first.')
+  }
+  return globalDatabase
 }
 
 /**

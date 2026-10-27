@@ -1,5 +1,5 @@
 // PostgreSQL Testcontainer setup
-export { startPostgres, stopPostgres, getConnectionString, getPrismaClient } from './postgres-setup'
+export { getConnectionString, getDatabase, getPrismaClient, startPostgres, stopPostgres } from './postgres-setup'
 
 // Test data factories
 export {
@@ -7,6 +7,7 @@ export {
   createTestOrganization,
   createTestMember,
   createTestOrgWithOwner,
+  createTestProject,
   resetCounters,
 } from './test-data-factories'
 

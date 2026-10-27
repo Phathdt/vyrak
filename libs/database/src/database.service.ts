@@ -10,16 +10,9 @@ import { PrismaClient } from './generated/prisma/client'
 
 /**
  * Type of the extended Prisma client with tenant filter
- * Uses ReturnType to preserve the full extended client type including _count and other query features
+ * Uses the base PrismaClient type which contains all model definitions
  */
-export type ExtendedPrismaClient = ReturnType<typeof createExtendedClient>
-
-/**
- * Helper function to create extended client with proper type inference
- */
-function createExtendedClient(prismaClient: PrismaClient, getStore: () => TenantFilterContext) {
-  return prismaClient.$extends(createTenantFilterExtension(getStore))
-}
+export type ExtendedPrismaClient = PrismaClient
 
 type QueryType = 'SELECT' | 'INSERT' | 'UPDATE' | 'DELETE'
 
@@ -82,8 +75,10 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     })
 
     // Extend with tenant filter using AsyncLocalStorage
-    // Use helper function to preserve full extended client types
-    this.extendedClient = createExtendedClient(this.prismaClient, () => this.asyncLocalStorage.getStore() ?? {})
+    // Cast to ExtendedPrismaClient to preserve model types
+    this.extendedClient = this.prismaClient.$extends(
+      createTenantFilterExtension(() => this.asyncLocalStorage.getStore() ?? {})
+    ) as ExtendedPrismaClient
 
     this.pool = pool
     this.enableColors = !configService.log.enableJsonFormat
@@ -94,6 +89,15 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    */
   get client(): ExtendedPrismaClient {
     return this.extendedClient
+  }
+
+  /**
+   * Get the base Prisma client for raw queries and transactions
+   * Use this when you need $executeRaw, $queryRaw, or transaction client
+   * that requires full Prisma API access
+   */
+  get rawClient(): PrismaClient {
+    return this.prismaClient
   }
 
   /**
