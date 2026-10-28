@@ -26,16 +26,19 @@ async function main() {
 
   console.log('🔐 Password hash generated')
 
-  // Clear existing data
+  // Clear existing data (order matters due to foreign keys)
   await prisma.auditLog.deleteMany()
+  await prisma.workflowApproval.deleteMany()
+  await prisma.workflowEvent.deleteMany()
+  await prisma.workflowStepRun.deleteMany()
+  await prisma.story.deleteMany()
   await prisma.agentTask.deleteMany()
   await prisma.artifact.deleteMany()
   await prisma.workflowRun.deleteMany()
   await prisma.gitRepository.deleteMany()
   await prisma.project.deleteMany()
-  await prisma.product.deleteMany()
-  await prisma.member.deleteMany()
   await prisma.invitation.deleteMany()
+  await prisma.member.deleteMany()
   await prisma.organization.deleteMany()
   await prisma.user.deleteMany()
   await prisma.workflowTemplate.deleteMany()
@@ -134,46 +137,6 @@ async function main() {
   ])
 
   console.log('🤝 Created memberships')
-
-  // Create products with UUID
-  await prisma.product.createMany({
-    data: [
-      {
-        id: '850e8400-e29b-41d4-a716-446655440001',
-        organizationId: '650e8400-e29b-41d4-a716-446655440001',
-        name: 'Premium Laptop',
-        description: 'High-performance laptop for professionals',
-        price: 1299.99,
-        stock: 50,
-      },
-      {
-        id: '850e8400-e29b-41d4-a716-446655440002',
-        organizationId: '650e8400-e29b-41d4-a716-446655440001',
-        name: 'Wireless Mouse',
-        description: 'Ergonomic wireless mouse with precision tracking',
-        price: 49.99,
-        stock: 200,
-      },
-      {
-        id: '850e8400-e29b-41d4-a716-446655440003',
-        organizationId: '650e8400-e29b-41d4-a716-446655440001',
-        name: 'Mechanical Keyboard',
-        description: 'RGB mechanical keyboard with Cherry MX switches',
-        price: 159.99,
-        stock: 100,
-      },
-      {
-        id: '850e8400-e29b-41d4-a716-446655440004',
-        organizationId: '650e8400-e29b-41d4-a716-446655440002',
-        name: 'SaaS Starter Plan',
-        description: 'Monthly subscription for small teams',
-        price: 29.99,
-        stock: 999,
-      },
-    ],
-  })
-
-  console.log('📦 Created products')
 
   // Create projects with UUID
   await prisma.project.createMany({
