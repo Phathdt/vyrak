@@ -1,8 +1,14 @@
+import * as path from 'node:path'
+
 import { PrismaPg } from '@prisma/adapter-pg'
+import { config } from 'dotenv'
 
 import * as argon2 from 'argon2'
 
 import { PrismaClient } from '../libs/database/src/generated/prisma/client'
+
+// Load environment variables from apps/api-server/.env
+config({ path: path.resolve(__dirname, '../apps/api-server/.env') })
 
 const databaseUrl = process.env.DATABASE__URL || 'postgresql://postgres:postgres@localhost:5433/vyrak'
 
@@ -168,9 +174,9 @@ async function main() {
         organizationId: '650e8400-e29b-41d4-a716-446655440001',
         projectId: '950e8400-e29b-41d4-a716-446655440001',
         name: 'vyrak-web',
+        url: 'https://github.com/acme/vyrak-web',
+        branch: 'main',
         provider: 'github',
-        providerUrl: 'https://github.com/acme/vyrak-web',
-        defaultBranch: 'main',
         status: 'active',
       },
       {
@@ -178,9 +184,9 @@ async function main() {
         organizationId: '650e8400-e29b-41d4-a716-446655440001',
         projectId: '950e8400-e29b-41d4-a716-446655440001',
         name: 'vyrak-api',
+        url: 'https://github.com/acme/vyrak-api',
+        branch: 'develop',
         provider: 'github',
-        providerUrl: 'https://github.com/acme/vyrak-api',
-        defaultBranch: 'develop',
         status: 'active',
       },
       {
@@ -188,9 +194,9 @@ async function main() {
         organizationId: '650e8400-e29b-41d4-a716-446655440001',
         projectId: '950e8400-e29b-41d4-a716-446655440002',
         name: 'mobile-ios',
+        url: 'https://github.com/acme/mobile-ios',
+        branch: 'main',
         provider: 'github',
-        providerUrl: 'https://github.com/acme/mobile-ios',
-        defaultBranch: 'main',
         status: 'active',
       },
     ],
@@ -322,76 +328,101 @@ async function main() {
       id: 'b50e8400-e29b-41d4-a716-446655440001',
       organizationId: '650e8400-e29b-41d4-a716-446655440001',
       projectId: '950e8400-e29b-41d4-a716-446655440001',
-      repositoryId: 'a50e8400-e29b-41d4-a716-446655440001',
-      initiatorId: '550e8400-e29b-41d4-a716-446655440001',
+      initiatedByUserId: '550e8400-e29b-41d4-a716-446655440001',
       workflowKey: 'feature',
-      branch: 'main',
-      requirement:
-        'Build a comprehensive user authentication system with email verification, password reset, and OAuth integration (Google, GitHub)',
-      status: 'running' as const,
-      startedAt: oneHourAgo,
+      workflowVersion: '1.0.0',
+      status: 'running',
+      state: 'running',
       idempotencyKey: 'idempotency-key-001',
+      startedAt: oneHourAgo,
+      input: JSON.stringify({
+        requirement:
+          'Build a comprehensive user authentication system with email verification, password reset, and OAuth integration (Google, GitHub)',
+      }),
+      totalStories: 3,
+      completedStories: 2,
+      failedStories: 0,
     },
     {
       id: 'b50e8400-e29b-41d4-a716-446655440002',
       organizationId: '650e8400-e29b-41d4-a716-446655440001',
       projectId: '950e8400-e29b-41d4-a716-446655440001',
-      repositoryId: 'a50e8400-e29b-41d4-a716-446655440001',
-      initiatorId: '550e8400-e29b-41d4-a716-446655440002',
+      initiatedByUserId: '550e8400-e29b-41d4-a716-446655440002',
       workflowKey: 'feature',
-      branch: 'feature/payment-integration',
-      requirement:
-        'Integrate Stripe payment gateway with subscription management, invoice generation, and webhook handling for payment events',
-      status: 'completed' as const,
+      workflowVersion: '1.0.0',
+      status: 'completed',
+      state: 'completed',
+      idempotencyKey: 'idempotency-key-002',
       startedAt: oneDayAgo,
       completedAt: new Date(oneDayAgo.getTime() + 45 * 60 * 1000),
-      idempotencyKey: 'idempotency-key-002',
+      input: JSON.stringify({
+        requirement:
+          'Integrate Stripe payment gateway with subscription management, invoice generation, and webhook handling for payment events',
+      }),
+      totalStories: 4,
+      completedStories: 4,
+      failedStories: 0,
     },
     {
       id: 'b50e8400-e29b-41d4-a716-446655440003',
       organizationId: '650e8400-e29b-41d4-a716-446655440001',
       projectId: '950e8400-e29b-41d4-a716-446655440001',
-      repositoryId: 'a50e8400-e29b-41d4-a716-446655440002',
-      initiatorId: '550e8400-e29b-41d4-a716-446655440001',
+      initiatedByUserId: '550e8400-e29b-41d4-a716-446655440001',
       workflowKey: 'hotfix',
-      branch: 'hotfix/login-bug',
-      requirement: 'Fix critical bug: users cannot login after password reset due to session token mismatch',
-      status: 'failed' as const,
+      workflowVersion: '1.0.0',
+      status: 'failed',
+      state: 'failed',
+      idempotencyKey: 'idempotency-key-003',
       startedAt: twoHoursAgo,
       completedAt: new Date(twoHoursAgo.getTime() + 15 * 60 * 1000),
-      error: JSON.stringify({
-        message: 'Test suite failed: 3 tests failing in auth.spec.ts',
-        code: 'TEST_FAILURE',
+      input: JSON.stringify({
+        requirement: 'Fix critical bug: users cannot login after password reset due to session token mismatch',
       }),
-      idempotencyKey: 'idempotency-key-003',
+      errorCode: 'TEST_FAILURE',
+      errorMessage: 'Test suite failed: 3 tests failing in auth.spec.ts',
+      totalStories: 1,
+      completedStories: 0,
+      failedStories: 1,
     },
     {
       id: 'b50e8400-e29b-41d4-a716-446655440004',
       organizationId: '650e8400-e29b-41d4-a716-446655440001',
       projectId: '950e8400-e29b-41d4-a716-446655440002',
-      repositoryId: 'a50e8400-e29b-41d4-a716-446655440003',
-      initiatorId: '550e8400-e29b-41d4-a716-446655440003',
+      initiatedByUserId: '550e8400-e29b-41d4-a716-446655440003',
       workflowKey: 'feature',
-      branch: 'develop',
-      requirement: 'Implement real-time chat feature with WebSocket support, message history, and file attachments',
-      status: 'queued' as const,
-      startedAt: null,
+      workflowVersion: '1.0.0',
+      status: 'queued',
+      state: 'pending',
       idempotencyKey: 'idempotency-key-004',
+      input: JSON.stringify({
+        requirement: 'Implement real-time chat feature with WebSocket support, message history, and file attachments',
+      }),
+      totalStories: 5,
+      completedStories: 0,
+      failedStories: 0,
     },
     {
       id: 'b50e8400-e29b-41d4-a716-446655440005',
       organizationId: '650e8400-e29b-41d4-a716-446655440001',
       projectId: '950e8400-e29b-41d4-a716-446655440001',
-      repositoryId: 'a50e8400-e29b-41d4-a716-446655440001',
-      initiatorId: '550e8400-e29b-41d4-a716-446655440001',
+      initiatedByUserId: '550e8400-e29b-41d4-a716-446655440001',
       workflowKey: 'feature',
-      branch: 'feature/dashboard-analytics',
-      requirement:
-        'Create analytics dashboard with charts, metrics, and export functionality for business intelligence',
-      status: 'cancelled' as const,
+      workflowVersion: '1.0.0',
+      status: 'cancelled',
+      state: 'cancelled',
+      idempotencyKey: 'idempotency-key-005',
       startedAt: new Date(now.getTime() - 3 * 60 * 60 * 1000),
       completedAt: new Date(now.getTime() - 2.5 * 60 * 60 * 1000),
-      idempotencyKey: 'idempotency-key-005',
+      input: JSON.stringify({
+        requirement:
+          'Create analytics dashboard with charts, metrics, and export functionality for business intelligence',
+      }),
+      cancelledByUserId: '550e8400-e29b-41d4-a716-446655440001',
+      cancelledAt: new Date(now.getTime() - 2.5 * 60 * 60 * 1000),
+      cancellationReason: 'Requirements changed, switching to different analytics provider',
+      totalStories: 3,
+      completedStories: 1,
+      failedStories: 0,
     },
   ]
 
@@ -401,182 +432,13 @@ async function main() {
 
   console.log(`🔄 Created ${workflowRuns.length} workflow runs`)
 
-  // Create workflow steps for the running workflow
-  const runningWorkflowId = 'b50e8400-e29b-41d4-a716-446655440001'
-
-  const steps = [
-    {
-      id: 'c50e8400-e29b-41d4-a716-446655440001',
-      workflowRunId: runningWorkflowId,
-      name: 'Planning',
-      description: 'Generate ARD and stories breakdown',
-      order: 1,
-      status: 'completed' as const,
-      startedAt: oneHourAgo,
-      completedAt: new Date(oneHourAgo.getTime() + 10 * 60 * 1000),
-      output: JSON.stringify({
-        ard: 'Architecture requirements document generated',
-        stories: ['Story 1: User registration', 'Story 2: Email verification', 'Story 3: OAuth integration'],
-      }),
-    },
-    {
-      id: 'c50e8400-e29b-41d4-a716-446655440002',
-      workflowRunId: runningWorkflowId,
-      name: 'Implementation',
-      description: 'Execute stories sequentially',
-      order: 2,
-      status: 'running' as const,
-      startedAt: new Date(oneHourAgo.getTime() + 10 * 60 * 1000),
-      output: JSON.stringify({
-        currentStory: 'Story 2: Email verification',
-        progress: '66%',
-      }),
-    },
-    {
-      id: 'c50e8400-e29b-41d4-a716-446655440003',
-      workflowRunId: runningWorkflowId,
-      name: 'Review',
-      description: 'Code review and security scan',
-      order: 3,
-      status: 'pending' as const,
-      startedAt: null,
-      completedAt: null,
-    },
-    {
-      id: 'c50e8400-e29b-41d4-a716-446655440004',
-      workflowRunId: runningWorkflowId,
-      name: 'QA',
-      description: 'Run tests and validation',
-      order: 4,
-      status: 'pending' as const,
-      startedAt: null,
-      completedAt: null,
-    },
-  ]
-
-  for (const step of steps) {
-    await prisma.workflowStepRun.create({ data: step })
-  }
-
-  console.log(`📊 Created ${steps.length} workflow steps`)
-
-  // Create workflow steps for the completed workflow
-  const completedWorkflowId = 'b50e8400-e29b-41d4-a716-446655440002'
-
-  const completedSteps = [
-    {
-      id: 'c50e8400-e29b-41d4-a716-446655440005',
-      workflowRunId: completedWorkflowId,
-      name: 'Planning',
-      description: 'Generate ARD and stories breakdown',
-      order: 1,
-      status: 'completed' as const,
-      startedAt: oneDayAgo,
-      completedAt: new Date(oneDayAgo.getTime() + 8 * 60 * 1000),
-      output: JSON.stringify({ ard: 'Payment system architecture', stories: 4 }),
-    },
-    {
-      id: 'c50e8400-e29b-41d4-a716-446655440006',
-      workflowRunId: completedWorkflowId,
-      name: 'Implementation',
-      description: 'Execute stories sequentially',
-      order: 2,
-      status: 'completed' as const,
-      startedAt: new Date(oneDayAgo.getTime() + 8 * 60 * 1000),
-      completedAt: new Date(oneDayAgo.getTime() + 30 * 60 * 1000),
-      output: JSON.stringify({ storiesCompleted: 4, filesModified: 12 }),
-    },
-    {
-      id: 'c50e8400-e29b-41d4-a716-446655440007',
-      workflowRunId: completedWorkflowId,
-      name: 'Review',
-      description: 'Code review and security scan',
-      order: 3,
-      status: 'completed' as const,
-      startedAt: new Date(oneDayAgo.getTime() + 30 * 60 * 1000),
-      completedAt: new Date(oneDayAgo.getTime() + 38 * 60 * 1000),
-      output: JSON.stringify({ findings: 0, approved: true }),
-    },
-    {
-      id: 'c50e8400-e29b-41d4-a716-446655440008',
-      workflowRunId: completedWorkflowId,
-      name: 'QA',
-      description: 'Run tests and validation',
-      order: 4,
-      status: 'completed' as const,
-      startedAt: new Date(oneDayAgo.getTime() + 38 * 60 * 1000),
-      completedAt: new Date(oneDayAgo.getTime() + 45 * 60 * 1000),
-      output: JSON.stringify({ testsPassed: 24, coverage: '95%' }),
-    },
-  ]
-
-  for (const step of completedSteps) {
-    await prisma.workflowStepRun.create({ data: step })
-  }
-
-  console.log(`📊 Created ${completedSteps.length} completed workflow steps`)
-
-  // Create workflow steps for the failed workflow
-  const failedWorkflowId = 'b50e8400-e29b-41d4-a716-446655440003'
-
-  const failedSteps = [
-    {
-      id: 'c50e8400-e29b-41d4-a716-446655440009',
-      workflowRunId: failedWorkflowId,
-      name: 'Bug Analysis',
-      description: 'Reproduce bug and identify root cause',
-      order: 1,
-      status: 'completed' as const,
-      startedAt: twoHoursAgo,
-      completedAt: new Date(twoHoursAgo.getTime() + 5 * 60 * 1000),
-      output: JSON.stringify({ rootCause: 'Session token format mismatch in auth middleware' }),
-    },
-    {
-      id: 'c50e8400-e29b-41d4-a716-446655440010',
-      workflowRunId: failedWorkflowId,
-      name: 'Implementation',
-      description: 'Fix code and add regression test',
-      order: 2,
-      status: 'completed' as const,
-      startedAt: new Date(twoHoursAgo.getTime() + 5 * 60 * 1000),
-      completedAt: new Date(twoHoursAgo.getTime() + 12 * 60 * 1000),
-      output: JSON.stringify({ filesModified: 2, testsAdded: 3 }),
-    },
-    {
-      id: 'c50e8400-e29b-41d4-a716-446655440011',
-      workflowRunId: failedWorkflowId,
-      name: 'Fast Review',
-      description: 'Quick security and correctness check',
-      order: 3,
-      status: 'failed' as const,
-      startedAt: new Date(twoHoursAgo.getTime() + 12 * 60 * 1000),
-      completedAt: new Date(twoHoursAgo.getTime() + 15 * 60 * 1000),
-      error: JSON.stringify({
-        message: 'Test suite failed: 3 tests failing in auth.spec.ts',
-        tests: [
-          'should login with valid credentials',
-          'should reset password successfully',
-          'should maintain session after password reset',
-        ],
-      }),
-    },
-  ]
-
-  for (const step of failedSteps) {
-    await prisma.workflowStepRun.create({ data: step })
-  }
-
-  console.log(`📊 Created ${failedSteps.length} failed workflow steps`)
-
   // Create artifacts with S3 storage (Epic 16)
   const artifacts = [
     {
       id: 'd50e8400-e29b-41d4-a716-446655440001',
       organizationId: '650e8400-e29b-41d4-a716-446655440001',
-      runId: runningWorkflowId,
-      stepKey: 'planning',
-      type: 'plan',
-      name: 'architecture-requirements.md',
+      runId: 'b50e8400-e29b-41d4-a716-446655440001',
+      filePath: 'architecture-requirements.md',
       s3Bucket: 'vyrak-artifacts',
       s3Key: '650e8400-e29b-41d4-a716-446655440001/b50e8400-e29b-41d4-a716-446655440001/architecture-requirements.md',
       contentSize: 2543,
@@ -585,10 +447,8 @@ async function main() {
     {
       id: 'd50e8400-e29b-41d4-a716-446655440002',
       organizationId: '650e8400-e29b-41d4-a716-446655440001',
-      runId: runningWorkflowId,
-      stepKey: 'planning',
-      type: 'code',
-      name: 'story-breakdown.json',
+      runId: 'b50e8400-e29b-41d4-a716-446655440001',
+      filePath: 'story-breakdown.json',
       s3Bucket: 'vyrak-artifacts',
       s3Key: '650e8400-e29b-41d4-a716-446655440001/b50e8400-e29b-41d4-a716-446655440001/story-breakdown.json',
       contentSize: 1024,
@@ -597,10 +457,8 @@ async function main() {
     {
       id: 'd50e8400-e29b-41d4-a716-446655440003',
       organizationId: '650e8400-e29b-41d4-a716-446655440001',
-      runId: completedWorkflowId,
-      stepKey: 'planning',
-      type: 'plan',
-      name: 'payment-system-design.md',
+      runId: 'b50e8400-e29b-41d4-a716-446655440002',
+      filePath: 'payment-system-design.md',
       s3Bucket: 'vyrak-artifacts',
       s3Key: '650e8400-e29b-41d4-a716-446655440001/b50e8400-e29b-41d4-a716-446655440002/payment-system-design.md',
       contentSize: 3891,
@@ -609,10 +467,8 @@ async function main() {
     {
       id: 'd50e8400-e29b-41d4-a716-446655440004',
       organizationId: '650e8400-e29b-41d4-a716-446655440001',
-      runId: completedWorkflowId,
-      stepKey: 'review',
-      type: 'report',
-      name: 'code-review-report.md',
+      runId: 'b50e8400-e29b-41d4-a716-446655440002',
+      filePath: 'code-review-report.md',
       s3Bucket: 'vyrak-artifacts',
       s3Key: '650e8400-e29b-41d4-a716-446655440001/b50e8400-e29b-41d4-a716-446655440002/code-review-report.md',
       contentSize: 1567,
@@ -621,10 +477,8 @@ async function main() {
     {
       id: 'd50e8400-e29b-41d4-a716-446655440005',
       organizationId: '650e8400-e29b-41d4-a716-446655440001',
-      runId: completedWorkflowId,
-      stepKey: 'qa',
-      type: 'report',
-      name: 'test-results.json',
+      runId: 'b50e8400-e29b-41d4-a716-446655440002',
+      filePath: 'test-results.json',
       s3Bucket: 'vyrak-artifacts',
       s3Key: '650e8400-e29b-41d4-a716-446655440001/b50e8400-e29b-41d4-a716-446655440002/test-results.json',
       contentSize: 892,
@@ -633,10 +487,8 @@ async function main() {
     {
       id: 'd50e8400-e29b-41d4-a716-446655440006',
       organizationId: '650e8400-e29b-41d4-a716-446655440001',
-      runId: failedWorkflowId,
-      stepKey: 'bug_analysis',
-      type: 'report',
-      name: 'bug-analysis.md',
+      runId: 'b50e8400-e29b-41d4-a716-446655440003',
+      filePath: 'bug-analysis.md',
       s3Bucket: 'vyrak-artifacts',
       s3Key: '650e8400-e29b-41d4-a716-446655440001/b50e8400-e29b-41d4-a716-446655440003/bug-analysis.md',
       contentSize: 712,
