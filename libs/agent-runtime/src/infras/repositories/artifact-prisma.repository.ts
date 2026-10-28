@@ -17,38 +17,46 @@ export class ArtifactRepositoryError extends Error {
 
 /**
  * Prisma implementation of artifact repository
+ * Handles metadata persistence only (content stored in S3)
  *
  * NO @Injectable decorator - plain TypeScript class
  */
 export class ArtifactPrismaRepository implements IArtifactRepository {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(private readonly databaseService: DatabaseService) {}
 
   /**
-   * Create artifact
+   * Create artifact metadata
+   * Note: Content should be uploaded to S3 before calling this
    */
   async create(params: CreateArtifactParams): Promise<ArtifactEntity> {
     try {
-      const artifact = await this.db.client.artifact.create({
+      const artifact = await this.databaseService.client.artifact.create({
         data: {
           organizationId: params.organizationId,
           runId: params.runId,
           filePath: params.filePath,
-          content: params.content,
+          s3Bucket: params.s3Bucket,
+          s3Key: params.s3Key,
+          contentSize: params.contentSize,
+          contentType: params.contentType,
         },
       })
 
       return this.mapToEntity(artifact)
     } catch (error) {
-      throw new ArtifactRepositoryError('Failed to create artifact', error instanceof Error ? error : undefined)
+      throw new ArtifactRepositoryError(
+        'Failed to create artifact metadata',
+        error instanceof Error ? error : undefined
+      )
     }
   }
 
   /**
-   * Find artifact by ID
+   * Find artifact by ID (metadata only)
    */
   async findById(artifactId: string): Promise<ArtifactEntity | null> {
     try {
-      const artifact = await this.db.client.artifact.findUnique({
+      const artifact = await this.databaseService.client.artifact.findUnique({
         where: { id: artifactId },
       })
 
@@ -62,16 +70,16 @@ export class ArtifactPrismaRepository implements IArtifactRepository {
   }
 
   /**
-   * Find artifacts by run ID
+   * Find artifacts by run ID (metadata only)
    */
   async findByRunId(runId: string): Promise<ArtifactEntity[]> {
     try {
-      const artifacts = await this.db.client.artifact.findMany({
+      const artifacts = await this.databaseService.client.artifact.findMany({
         where: { runId },
         orderBy: { createdAt: 'asc' },
       })
 
-      return artifacts.map((a: (typeof artifacts)[0]) => this.mapToEntity(a))
+      return artifacts.map((a) => this.mapToEntity(a))
     } catch (error) {
       throw new ArtifactRepositoryError(
         `Failed to find artifacts for run ${runId}`,
@@ -81,16 +89,16 @@ export class ArtifactPrismaRepository implements IArtifactRepository {
   }
 
   /**
-   * Find artifacts by organization
+   * Find artifacts by organization (metadata only)
    */
   async findByOrganization(organizationId: string): Promise<ArtifactEntity[]> {
     try {
-      const artifacts = await this.db.client.artifact.findMany({
+      const artifacts = await this.databaseService.client.artifact.findMany({
         where: { organizationId },
         orderBy: { createdAt: 'desc' },
       })
 
-      return artifacts.map((a: (typeof artifacts)[0]) => this.mapToEntity(a))
+      return artifacts.map((a) => this.mapToEntity(a))
     } catch (error) {
       throw new ArtifactRepositoryError(
         `Failed to find artifacts for organization ${organizationId}`,
@@ -100,11 +108,12 @@ export class ArtifactPrismaRepository implements IArtifactRepository {
   }
 
   /**
-   * Delete artifact
+   * Delete artifact metadata
+   * Note: S3 content should be deleted separately
    */
   async delete(artifactId: string): Promise<void> {
     try {
-      await this.db.client.artifact.delete({
+      await this.databaseService.client.artifact.delete({
         where: { id: artifactId },
       })
     } catch (error) {
@@ -123,7 +132,10 @@ export class ArtifactPrismaRepository implements IArtifactRepository {
     organizationId: string
     runId: string
     filePath: string
-    content: string
+    s3Bucket: string
+    s3Key: string
+    contentSize: number
+    contentType: string
     createdAt: Date
   }): ArtifactEntity {
     return {
@@ -131,7 +143,11 @@ export class ArtifactPrismaRepository implements IArtifactRepository {
       organizationId: artifact.organizationId,
       runId: artifact.runId,
       filePath: artifact.filePath,
-      content: artifact.content,
+      s3Bucket: artifact.s3Bucket,
+      s3Key: artifact.s3Key,
+      contentSize: artifact.contentSize,
+      contentType: artifact.contentType,
+      content: '', // Empty - content fetched from S3 by service layer
       createdAt: artifact.createdAt,
     }
   }

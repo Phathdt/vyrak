@@ -1,9 +1,10 @@
+import { S3Client } from '@aws-sdk/client-s3'
 import { Module } from '@nestjs/common'
 import { CustomConfigModule, CustomConfigService } from '@vyrak/custom-config'
 import { DatabaseModule, DatabaseService } from '@vyrak/database'
 
 import { ArtifactManager, MainRepoManager, WorkspaceManager } from './application'
-import type { IArtifactRepository } from './domain'
+import type { IArtifactRepository, IS3StorageProvider } from './domain'
 import {
   AGENT_EXECUTOR,
   ARTIFACT_MANAGER,
@@ -12,6 +13,8 @@ import {
   ClaudeCodeExecutor,
   FakeAgentExecutor,
   MAIN_REPO_MANAGER,
+  S3_STORAGE_PROVIDER,
+  S3StorageProvider,
   WORKSPACE_MANAGER,
 } from './infras'
 
@@ -24,18 +27,48 @@ import {
 @Module({
   imports: [DatabaseModule, CustomConfigModule],
   providers: [
-    // Artifact repository
+    // S3 Client provider
+    {
+      provide: S3Client,
+      useFactory: (config: CustomConfigService) => {
+        return new S3Client({
+          region: config.s3.region,
+          endpoint: config.s3.endpoint,
+          forcePathStyle: config.s3.forcePathStyle,
+          credentials: {
+            accessKeyId: config.s3.accessKeyId,
+            secretAccessKey: config.s3.secretAccessKey,
+          },
+        })
+      },
+      inject: [CustomConfigService],
+    },
+
+    // S3 Storage Provider
+    {
+      provide: S3_STORAGE_PROVIDER,
+      useFactory: (s3Client: S3Client, config: CustomConfigService) => {
+        return new S3StorageProvider(s3Client, config.s3.bucket)
+      },
+      inject: [S3Client, CustomConfigService],
+    },
+
+    // Artifact repository (metadata only)
     {
       provide: ARTIFACT_REPOSITORY,
-      useFactory: (db: DatabaseService) => new ArtifactPrismaRepository(db),
+      useFactory: (db: DatabaseService) => {
+        return new ArtifactPrismaRepository(db)
+      },
       inject: [DatabaseService],
     },
 
-    // Artifact manager
+    // Artifact manager (orchestrates S3 + repository)
     {
       provide: ARTIFACT_MANAGER,
-      useFactory: (artifactRepo: IArtifactRepository) => new ArtifactManager(artifactRepo),
-      inject: [ARTIFACT_REPOSITORY],
+      useFactory: (artifactRepo: IArtifactRepository, s3Provider: IS3StorageProvider) => {
+        return new ArtifactManager(artifactRepo, s3Provider)
+      },
+      inject: [ARTIFACT_REPOSITORY, S3_STORAGE_PROVIDER],
     },
 
     // Main repo manager
@@ -77,6 +110,6 @@ import {
       inject: [CustomConfigService],
     },
   ],
-  exports: [AGENT_EXECUTOR, WORKSPACE_MANAGER, ARTIFACT_MANAGER, ARTIFACT_REPOSITORY],
+  exports: [AGENT_EXECUTOR, WORKSPACE_MANAGER, ARTIFACT_MANAGER, ARTIFACT_REPOSITORY, S3_STORAGE_PROVIDER],
 })
 export class AgentRuntimeModule {}

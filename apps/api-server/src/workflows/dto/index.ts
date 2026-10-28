@@ -1,6 +1,7 @@
 export * from './approval-decision.dto'
 export * from './artifact-content.dto'
 export * from './artifact-metadata.dto'
+export * from './artifact-upload.dto'
 export * from './create-workflow-from-template.dto'
 export * from './create-workflow-run.dto'
 export * from './list-events-query.dto'

@@ -53,7 +53,7 @@ describe('ArtifactPrismaRepository (Integration)', () => {
   })
 
   describe('create and findById', () => {
-    it('should create and retrieve artifact', async () => {
+    it('should create and retrieve artifact metadata', async () => {
       if (!databaseService) return
 
       const prisma = getPrismaClient()
@@ -79,17 +79,21 @@ describe('ArtifactPrismaRepository (Integration)', () => {
           organizationId: organization.id,
           runId: run.id,
           filePath: 'test-plan.md',
-          content: '# Test Plan\n\nContent here',
-        })
+          s3Bucket: 'test-bucket',
+          s3Key: `${organization.id}/${run.id}/test-plan.md`,
+          contentSize: 100,
+          contentType: 'text/plain',
+        } as any)
 
         expect(artifact.id).toBeDefined()
         expect(artifact.filePath).toBe('test-plan.md')
-        expect(artifact.content).toBe('# Test Plan\n\nContent here')
+        expect(artifact.s3Key).toBe(`${organization.id}/${run.id}/test-plan.md`)
+        expect(artifact.content).toBe('') // Empty - content in S3
 
         // Retrieve artifact
         const retrieved = await repository.findById(artifact.id)
         expect(retrieved).toBeDefined()
-        expect(retrieved?.content).toBe('# Test Plan\n\nContent here')
+        expect(retrieved?.s3Key).toBe(`${organization.id}/${run.id}/test-plan.md`)
       })
     })
   })
@@ -122,15 +126,21 @@ describe('ArtifactPrismaRepository (Integration)', () => {
           organizationId: organization.id,
           runId: run.id,
           filePath: 'plan.md',
-          content: 'Plan content',
-        })
+          s3Bucket: 'test-bucket',
+          s3Key: `${organization.id}/${run.id}/plan.md`,
+          contentSize: 50,
+          contentType: 'text/plain',
+        } as any)
 
         await repository.create({
           organizationId: organization.id,
           runId: run.id,
           filePath: 'implementation.md',
-          content: 'Implementation content',
-        })
+          s3Bucket: 'test-bucket',
+          s3Key: `${organization.id}/${run.id}/implementation.md`,
+          contentSize: 75,
+          contentType: 'text/plain',
+        } as any)
 
         const artifacts = await repository.findByRunId(run.id)
 
@@ -169,8 +179,11 @@ describe('ArtifactPrismaRepository (Integration)', () => {
           organizationId: organization.id,
           runId: run.id,
           filePath: 'artifact.md',
-          content: 'Artifact content',
-        })
+          s3Bucket: 'test-bucket',
+          s3Key: `${organization.id}/${run.id}/artifact.md`,
+          contentSize: 60,
+          contentType: 'text/plain',
+        } as any)
 
         const artifacts = await repository.findByOrganization(organization.id)
 
@@ -181,7 +194,7 @@ describe('ArtifactPrismaRepository (Integration)', () => {
   })
 
   describe('delete', () => {
-    it('should delete artifact', async () => {
+    it('should delete artifact metadata', async () => {
       if (!databaseService) return
 
       const prisma = getPrismaClient()
@@ -207,8 +220,11 @@ describe('ArtifactPrismaRepository (Integration)', () => {
           organizationId: organization.id,
           runId: run.id,
           filePath: 'to-delete.md',
-          content: 'Delete me',
-        })
+          s3Bucket: 'test-bucket',
+          s3Key: `${organization.id}/${run.id}/to-delete.md`,
+          contentSize: 40,
+          contentType: 'text/plain',
+        } as any)
 
         await repository.delete(artifact.id)
 

@@ -134,6 +134,53 @@ export class WorkflowsService {
   }
 
   /**
+   * Generate pre-signed URL for artifact upload
+   */
+  async generateUploadUrl(
+    orgId: string,
+    runId: string,
+    dto: { filePath: string; contentType?: string }
+  ): Promise<{ uploadUrl: string; s3Key: string; bucket: string; expiresIn: number }> {
+    // Verify workflow run exists and user has access
+    await this.getWorkflowRun(runId)
+
+    return this.artifactManager.generateUploadUrl({
+      organizationId: orgId,
+      runId,
+      filePath: dto.filePath,
+      contentType: dto.contentType,
+    })
+  }
+
+  /**
+   * Confirm artifact upload and save metadata
+   */
+  async confirmUpload(
+    orgId: string,
+    runId: string,
+    dto: {
+      s3Key: string
+      s3Bucket: string
+      contentSize: number
+      contentType: string
+      filePath: string
+    }
+  ): Promise<string> {
+    // Verify workflow run exists and user has access
+    await this.getWorkflowRun(runId)
+
+    return this.artifactManager.confirmUpload({
+      organizationId: orgId,
+      runId,
+      filePath: dto.filePath,
+      s3Key: dto.s3Key,
+      s3Bucket: dto.s3Bucket,
+      contentSize: dto.contentSize,
+      contentType: dto.contentType,
+    })
+  }
+
+  /**
    * List artifacts for a workflow run
    * Tenant filter is automatically applied by DatabaseService
    */

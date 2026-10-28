@@ -2,23 +2,6 @@ import type { ArtifactEntity } from '@vyrak/agent-runtime'
 
 import type { ArtifactContentDto, ArtifactMetadataDto } from '../dto'
 
-function calculateSize(content: string): number {
-  return Buffer.byteLength(content, 'utf8')
-}
-
-function inferContentType(filePath: string): string {
-  if (filePath.endsWith('.json')) {
-    return 'application/json'
-  }
-  if (filePath.endsWith('.md')) {
-    return 'text/markdown'
-  }
-  if (filePath.endsWith('.txt')) {
-    return 'text/plain'
-  }
-  return 'text/plain'
-}
-
 function inferArtifactType(
   filePath: string
 ): 'plan' | 'implementation_report' | 'test_result' | 'approval_plan' | 'other' {
@@ -45,18 +28,17 @@ export function toArtifactMetadataDto(artifact: ArtifactEntity, runId: string): 
     stepKey: null, // Not tracked in current ArtifactEntity schema
     type: inferArtifactType(artifact.filePath),
     name: artifact.filePath.split('/').pop() ?? 'Unnamed artifact',
-    size: calculateSize(artifact.content),
-    contentType: inferContentType(artifact.filePath),
+    size: artifact.contentSize, // Use stored size from database
+    contentType: artifact.contentType, // Use stored content type from database
     createdAt: artifact.createdAt.toISOString(),
   }
 }
 
 export function toArtifactContentDto(artifact: ArtifactEntity, runId: string): ArtifactContentDto {
-  const contentType = inferContentType(artifact.filePath)
   let content: string | Record<string, unknown> = artifact.content
 
   // Try to parse JSON content
-  if (contentType === 'application/json') {
+  if (artifact.contentType === 'application/json') {
     try {
       content = JSON.parse(artifact.content)
     } catch {
@@ -69,8 +51,8 @@ export function toArtifactContentDto(artifact: ArtifactEntity, runId: string): A
     id: artifact.id,
     runId,
     name: artifact.filePath.split('/').pop() ?? 'Unnamed artifact',
-    contentType,
+    contentType: artifact.contentType, // Use stored content type from database
     content,
-    size: calculateSize(artifact.content),
+    size: artifact.contentSize, // Use stored size from database
   }
 }
