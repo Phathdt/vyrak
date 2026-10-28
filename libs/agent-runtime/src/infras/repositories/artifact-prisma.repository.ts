@@ -1,16 +1,10 @@
 import type { DatabaseService } from '@vyrak/database'
 
-import type { ArtifactEntity, CreateArtifactParams, IArtifactRepository } from '../../domain'
-
-/**
- * Extended params for repository layer with S3 metadata
- */
-interface CreateArtifactWithS3Params extends CreateArtifactParams {
-  s3Bucket: string
-  s3Key: string
-  contentSize: number
-  contentType: string
-}
+import type {
+  ArtifactEntity,
+  CreateArtifactWithS3Params,
+  IArtifactRepository,
+} from '../../domain'
 
 /**
  * Artifact repository error

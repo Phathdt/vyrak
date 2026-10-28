@@ -43,7 +43,7 @@ export class ArtifactManager implements IArtifactManager {
       s3Key,
       contentSize: Buffer.byteLength(params.content, 'utf8'),
       contentType: 'text/plain',
-    } as Parameters<typeof this.artifactRepository.create>[0])
+    })
 
     return artifact.id
   }
