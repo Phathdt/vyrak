@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 
 import { ToastContainer } from '../../components/ui/toast'
+import { ApprovalBanner, ApprovalSection, ApprovalStatusCard } from '../../components/workflow/approval'
 import { CancelWorkflowModal } from '../../components/workflow/cancel-workflow-modal'
 import { ProgressBar } from '../../components/workflow/progress-bar'
 import { SSEConnectionIndicator } from '../../components/workflow/sse-connection-indicator'
@@ -14,6 +15,8 @@ import { useToast } from '../../hooks/use-toast'
 import { useWorkflowCancel } from '../../hooks/use-workflow-cancel'
 import { useWorkflowDetail } from '../../hooks/use-workflow-detail'
 import { useWorkflowSSE } from '../../hooks/use-workflow-sse'
+
+import '../../styles/workflow-approval.css'
 
 export function WorkflowDetailPage() {
   const { runId } = useParams<{ runId: string }>()
@@ -189,6 +192,15 @@ export function WorkflowDetailPage() {
           <section>
             <WorkflowOverview workflow={workflow} />
           </section>
+
+          {/* Approval Banner */}
+          <ApprovalBanner workflowId={workflow.id} status={workflow.status} startedAt={workflow.startedAt} />
+
+          {/* Approval Section - Plan Viewer (only for waiting_approval) */}
+          <ApprovalSection workflow={workflow} />
+
+          {/* Approval Status Card - Shows after approval/rejection decision */}
+          <ApprovalStatusCard workflow={workflow} />
 
           {/* Progress Section */}
           <section>
