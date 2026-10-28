@@ -36,7 +36,7 @@ test.describe('Workflow Management E2E', () => {
       await workflowsPage.expectPageLoaded()
       await workflowsPage.searchWorkflows('test workflow')
       // Verify search was applied
-      const searchInput = workflowsPage.page.locator('input[placeholder*="search"], [data-testid*="search"]')
+      const searchInput = workflowsPage.getPage().locator('input[placeholder*="search"], [data-testid*="search"]')
       await expect(searchInput).toHaveValue(/test workflow/i)
     })
 
@@ -46,7 +46,7 @@ test.describe('Workflow Management E2E', () => {
       const initialUrl = workflowsPage.getCurrentUrl()
 
       // Try to go to next page if available
-      const nextButton = workflowsPage.page.getByRole('button', { name: /next/i })
+      const nextButton = workflowsPage.getPage().getByRole('button', { name: /next/i })
       const isNextDisabled = await nextButton.isDisabled()
 
       if (!isNextDisabled) {
@@ -61,13 +61,13 @@ test.describe('Workflow Management E2E', () => {
       await workflowsPage.expectPageLoaded()
       await workflowsPage.searchWorkflows('some query')
 
-      const clearButton = workflowsPage.page.getByRole('button', { name: /clear filters/i })
+      const clearButton = workflowsPage.getPage().getByRole('button', { name: /clear filters/i })
       const isClearVisible = await clearButton.isVisible().catch(() => false)
 
       if (isClearVisible) {
         await workflowsPage.clearFilters()
         // Verify filters are cleared
-        const searchInput = workflowsPage.page.locator('input[placeholder*="search"]')
+        const searchInput = workflowsPage.getPage().locator('input[placeholder*="search"]')
         await expect(searchInput).toHaveValue('')
       }
     })
@@ -88,15 +88,15 @@ test.describe('Workflow Management E2E', () => {
       await createPage.expectPageLoaded()
 
       // Try to submit empty form
-      const submitButton = createPage.page.getByRole('button', { name: /create|submit/i }).first()
+      const submitButton = createPage.getPage().getByRole('button', { name: /create|submit/i }).first()
       const isSubmitDisabled = await submitButton.isDisabled()
 
       // Submit button should be disabled or form should show errors
       if (!isSubmitDisabled) {
         await submitButton.click()
         // Wait to see if validation errors appear
-        await createPage.page.waitForTimeout(500)
-        const errorCount = await createPage.page.locator('[role="alert"], .error').count()
+        await createPage.getPage().waitForTimeout(500)
+        const errorCount = await createPage.getPage().locator('[role="alert"], .error').count()
         expect(errorCount).toBeGreaterThan(0)
       }
     })
@@ -105,11 +105,11 @@ test.describe('Workflow Management E2E', () => {
       await createPage.navigate()
       await createPage.expectPageLoaded()
 
-      const requirementTextarea = createPage.page.locator('textarea[name="requirement"]')
+      const requirementTextarea = createPage.getPage().locator('textarea[name="requirement"]')
       await requirementTextarea.waitFor({ state: 'attached', timeout: TEST_TIMEOUTS.ACTION })
       await requirementTextarea.fill('short')
 
-      const errorElement = createPage.page.locator('[class*="error"], [data-testid*="error"]')
+      const errorElement = createPage.getPage().locator('[class*="error"], [data-testid*="error"]')
       const isErrorVisible = await errorElement.isVisible().catch(() => false)
 
       if (isErrorVisible) {
@@ -121,16 +121,16 @@ test.describe('Workflow Management E2E', () => {
       await createPage.navigate()
       await createPage.expectPageLoaded()
 
-      const requirementTextarea = createPage.page.locator('textarea[name="requirement"]')
+      const requirementTextarea = createPage.getPage().locator('textarea[name="requirement"]')
       await requirementTextarea.waitFor({ state: 'attached', timeout: TEST_TIMEOUTS.ACTION })
       const testText = 'This is a test requirement that should be saved as draft'
       await requirementTextarea.fill(testText)
 
       // Wait for auto-save
-      await createPage.page.waitForTimeout(1000)
+      await createPage.getPage().waitForTimeout(1000)
 
       // Reload page
-      await createPage.page.reload()
+      await createPage.getPage().reload()
       await createPage.expectPageLoaded()
 
       // Check if draft was loaded
@@ -331,7 +331,7 @@ test.describe('Workflow Management E2E', () => {
         const row = rows.nth(i)
         await row.click()
 
-        const canCancel = await detailPage.page
+        const canCancel = await detailPage.getPage()
           .getByRole('button', { name: /cancel workflow/i })
           .isVisible()
           .catch(() => false)
@@ -357,7 +357,7 @@ test.describe('Workflow Management E2E', () => {
         const row = rows.nth(i)
         await row.click()
 
-        const canCancel = await detailPage.page
+        const canCancel = await detailPage.getPage()
           .getByRole('button', { name: /cancel workflow/i })
           .isVisible()
           .catch(() => false)
@@ -385,7 +385,7 @@ test.describe('Workflow Management E2E', () => {
         const row = rows.nth(i)
         await row.click()
 
-        const canCancel = await detailPage.page
+        const canCancel = await detailPage.getPage()
           .getByRole('button', { name: /cancel workflow/i })
           .isVisible()
           .catch(() => false)
@@ -434,15 +434,15 @@ test.describe('Workflow Management E2E', () => {
   })
 
   test.describe('7. Error Handling & Edge Cases', () => {
-    test('should handle invalid workflow ID gracefully', async ({ authenticatedPage }) => {
+    test('should handle invalid workflow ID gracefully', async () => {
       await detailPage.navigate('invalid-workflow-id-12345')
 
       // Should show error or not found message
-      const errorVisible = await detailPage.page
+      const errorVisible = await detailPage.getPage()
         .locator('[role="alert"]')
         .isVisible()
         .catch(() => false)
-      const notFoundVisible = await detailPage.page
+      const notFoundVisible = await detailPage.getPage()
         .locator('text=/not found|invalid/i')
         .isVisible()
         .catch(() => false)

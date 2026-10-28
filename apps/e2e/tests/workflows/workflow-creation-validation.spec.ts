@@ -21,7 +21,7 @@ test.describe('Workflow Creation - Form Validation', () => {
 
   test('should show submit button in correct state', async ({}) => {
     // Empty form should have disabled submit
-    const submitButton = createPage.page.getByRole('button', { name: /create|submit/i }).first()
+    const submitButton = createPage.getPage().getByRole('button', { name: /create|submit/i }).first()
     await submitButton.waitFor({ state: 'attached', timeout: TEST_TIMEOUTS.ACTION })
     const isDisabled = await submitButton.isDisabled()
 
@@ -32,27 +32,27 @@ test.describe('Workflow Creation - Form Validation', () => {
   })
 
   test('should validate requirement minimum length', async ({}) => {
-    const requirement = createPage.page.locator('textarea[name="requirement"]')
+    const requirement = createPage.getPage().locator('textarea[name="requirement"]')
     await requirement.waitFor({ state: 'attached', timeout: TEST_TIMEOUTS.ACTION })
     await requirement.fill('short')
 
     // Trigger validation by tabbing out
     await requirement.press('Tab')
-    await createPage.page.waitForTimeout(500)
+    await createPage.getPage().waitForTimeout(500)
 
     // Should show error or keep submit disabled
-    const errors = await createPage.page.locator('[role="alert"], .error').count()
+    const errors = await createPage.getPage().locator('[role="alert"], .error').count()
     expect(errors >= 0).toBeTruthy()
   })
 
   test('should validate requirement maximum length', async ({}) => {
-    const requirement = createPage.page.locator('textarea[name="requirement"]')
+    const requirement = createPage.getPage().locator('textarea[name="requirement"]')
     await requirement.waitFor({ state: 'attached', timeout: TEST_TIMEOUTS.ACTION })
     const longText = 'a'.repeat(5001)
     await requirement.fill(longText)
 
     await requirement.press('Tab')
-    await createPage.page.waitForTimeout(500)
+    await createPage.getPage().waitForTimeout(500)
 
     const characterCount = await createPage.getCharacterCount()
     if (characterCount) {
@@ -61,14 +61,14 @@ test.describe('Workflow Creation - Form Validation', () => {
   })
 
   test('should reject invalid branch name format', async ({}) => {
-    const branch = createPage.page.locator('input[name="branch"]')
+    const branch = createPage.getPage().locator('input[name="branch"]')
     await branch.waitFor({ state: 'attached', timeout: TEST_TIMEOUTS.ACTION })
     await branch.fill('invalid@branch#name')
 
     await branch.press('Tab')
-    await createPage.page.waitForTimeout(500)
+    await createPage.getPage().waitForTimeout(500)
 
-    const errors = await createPage.page.locator('[role="alert"], .error').count()
+    const errors = await createPage.getPage().locator('[role="alert"], .error').count()
     expect(errors >= 0).toBeTruthy()
   })
 
@@ -76,12 +76,12 @@ test.describe('Workflow Creation - Form Validation', () => {
     const validBranches = ['main', 'develop', 'feature/test', 'bugfix/123', 'release-1.0']
 
     for (const branch of validBranches) {
-      const branchInput = createPage.page.locator('input[name="branch"]')
+      const branchInput = createPage.getPage().locator('input[name="branch"]')
       await branchInput.waitFor({ state: 'attached', timeout: TEST_TIMEOUTS.ACTION })
       await branchInput.clear()
       await branchInput.fill(branch)
 
-      const errors = await createPage.page.locator('[role="alert"], .error').count()
+      const errors = await createPage.getPage().locator('[role="alert"], .error').count()
       // Valid branches shouldn't cause errors
       expect(errors).toBe(0)
 
@@ -90,16 +90,16 @@ test.describe('Workflow Creation - Form Validation', () => {
   })
 
   test('should auto-save form draft', async ({}) => {
-    const requirement = createPage.page.locator('textarea[name="requirement"]')
+    const requirement = createPage.getPage().locator('textarea[name="requirement"]')
     await requirement.waitFor({ state: 'attached', timeout: TEST_TIMEOUTS.ACTION })
     const testText = 'This is a draft test for auto-save functionality'
     await requirement.fill(testText)
 
     // Wait for auto-save (typically 30 seconds, but let's check faster)
-    await createPage.page.waitForTimeout(2000)
+    await createPage.getPage().waitForTimeout(2000)
 
     // Check localStorage for draft
-    const draft = await createPage.page.evaluate(() => {
+    const draft = await createPage.getPage().evaluate(() => {
       const storedDraft = localStorage.getItem('workflow_draft')
       return storedDraft ? JSON.parse(storedDraft) : null
     })
@@ -114,23 +114,23 @@ test.describe('Workflow Creation - Form Validation', () => {
   })
 
   test('should navigate to advanced options', async ({}) => {
-    const advancedButton = createPage.page.getByRole('button', { name: /advanced|more/i })
+    const advancedButton = createPage.getPage().getByRole('button', { name: /advanced|more/i })
     const advancedVisible = await advancedButton.isVisible().catch(() => false)
 
     if (advancedVisible) {
       await createPage.toggleAdvanced()
       // Advanced section should become visible or form should expand
-      await createPage.page.waitForTimeout(500)
+      await createPage.getPage().waitForTimeout(500)
     }
   })
 
   test('should clear form on reset', async ({}) => {
-    const requirement = createPage.page.locator('textarea[name="requirement"]')
+    const requirement = createPage.getPage().locator('textarea[name="requirement"]')
     await requirement.waitFor({ state: 'attached', timeout: TEST_TIMEOUTS.ACTION })
     await requirement.fill('Test content')
 
     // Look for a reset button or just reload
-    await createPage.page.reload()
+    await createPage.getPage().reload()
     await createPage.expectPageLoaded()
 
     const content = await requirement.inputValue()

@@ -140,7 +140,7 @@ test.describe('Project Detail Page', () => {
     await projectCards.first().click()
 
     // Should show loading indicator (but might be too fast to catch)
-    const loadingIndicator = await authenticatedPage
+    await authenticatedPage
       .locator('[data-testid="loading-skeleton"], .spinner, text=/loading/i')
       .isVisible()
       .catch(() => false)

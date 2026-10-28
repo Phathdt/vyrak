@@ -38,7 +38,7 @@ test.describe('Dashboard - Stats & Data Display', () => {
     const optionCount = await dashboardPage.getOrgSelectorOptions()
 
     if (optionCount > 2) {
-      const initialText = await dashboardPage.getStatCardText('activeOrg')
+      await dashboardPage.getStatCardText('activeOrg')
       await dashboardPage.selectOrganizationByIndex(2)
       const newText = await dashboardPage.getStatCardText('activeOrg')
       expect(newText).toBeTruthy()

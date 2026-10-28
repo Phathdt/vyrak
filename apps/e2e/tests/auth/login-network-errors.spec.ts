@@ -1,5 +1,3 @@
-import { TEST_TIMEOUTS } from '@config/test.config'
-import { URLS } from '@config/urls.config'
 import { LoginPage } from '@page-objects/auth/login.page'
 import { expect, test } from '@playwright/test'
 
@@ -27,7 +25,7 @@ test.describe('Login Network Error Scenarios', () => {
 
     await test.step('verify timeout handling', async () => {
       // Get error message from toast - wait for it to appear with 3s timeout
-      const errorMessage = await loginPage.getErrorText(3000)
+      await loginPage.getErrorText(3000)
 
       // Should either show user-friendly error or stay on login page gracefully
       // (app behavior may vary - error message is not guaranteed in all scenarios)
@@ -65,7 +63,7 @@ test.describe('Login Network Error Scenarios', () => {
     })
   })
 
-  test('should handle network offline scenario', async ({ page, context }) => {
+  test('should handle network offline scenario', async ({ context }) => {
     await loginPage.navigate()
 
     // Go offline
@@ -80,7 +78,7 @@ test.describe('Login Network Error Scenarios', () => {
 
     await test.step('verify offline handling', async () => {
       // Wait for error to appear with 3s timeout (may not always appear)
-      const errorMessage = await loginPage.getErrorText(3000)
+      await loginPage.getErrorText(3000)
 
       // Should stay on login page
       await loginPage.expectOnLoginPage()
@@ -115,7 +113,7 @@ test.describe('Login Network Error Scenarios', () => {
 
     await test.step('verify error recovery', async () => {
       // Should show error message with 3s timeout (may not always appear)
-      const errorMessage = await loginPage.getErrorText(3000)
+      await loginPage.getErrorText(3000)
 
       // Should still be on login page
       await loginPage.expectOnLoginPage()
@@ -142,7 +140,7 @@ test.describe('Login Network Error Scenarios', () => {
 
     await test.step('verify malformed response handling', async () => {
       // App should handle gracefully - get error message with 3s timeout (may not appear)
-      const errorMessage = await loginPage.getErrorText(3000)
+      await loginPage.getErrorText(3000)
 
       // Should stay on login page
       await loginPage.expectOnLoginPage()
@@ -227,7 +225,7 @@ test.describe('Login Network Error Scenarios', () => {
 
     await test.step('verify 403 handling', async () => {
       // Should show error message with 3s timeout (may not always appear)
-      const errorMessage = await loginPage.getErrorText(3000)
+      await loginPage.getErrorText(3000)
 
       // Should stay on login page
       await loginPage.expectOnLoginPage()
@@ -255,7 +253,7 @@ test.describe('Login Network Error Scenarios', () => {
 
     await test.step('verify content type error handling', async () => {
       // Should handle gracefully - show error message with 3s timeout (may not appear)
-      const errorMessage = await loginPage.getErrorText(3000)
+      await loginPage.getErrorText(3000)
 
       // Should stay on login page
       await loginPage.expectOnLoginPage()
@@ -284,7 +282,7 @@ test.describe('Login Network Error Scenarios', () => {
       expect(requestAborted).toBe(true)
 
       // Should show error message with 3s timeout (may not always appear)
-      const errorMessage = await loginPage.getErrorText(3000)
+      await loginPage.getErrorText(3000)
 
       // Should stay on login page, not crash
       await loginPage.expectOnLoginPage()

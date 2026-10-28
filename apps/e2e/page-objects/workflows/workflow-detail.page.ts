@@ -10,43 +10,39 @@ export class WorkflowDetailPage extends BasePage {
 
   // Locators - Header
   private get workflowTitle() {
-    return this.page.locator('h1', { hasText: /workflow|run/i })
+    return this.getPage().locator('h1', { hasText: /workflow|run/i })
   }
 
   private get statusBadge() {
-    return this.page.locator('[data-testid*="status"], [class*="badge"], [role="status"]').first()
+    return this.getPage().locator('[data-testid*="status"], [class*="badge"], [role="status"]').first()
   }
 
   private get connectionIndicator() {
-    return this.page.locator('text=/live|connected|disconnected|reconnecting/i')
+    return this.getPage().locator('text=/live|connected|disconnected|reconnecting/i')
   }
 
   // Locators - Cancel Button
   private get cancelWorkflowButton() {
-    return this.page.getByRole('button', { name: /cancel workflow|cancel/i })
+    return this.getPage().getByRole('button', { name: /cancel workflow|cancel/i })
   }
 
   // Locators - Overview Section
-  private get overviewSection() {
-    return this.page.locator('section', { has: this.page.locator('text=/overview/i') })
-  }
-
   private get workflowKeyBadge() {
-    return this.page.locator('[class*="font-mono"], [data-testid*="workflow-key"]').first()
+    return this.getPage().locator('[class*="font-mono"], [data-testid*="workflow-key"]').first()
   }
 
   // Locators - Progress Section
   private get progressBar() {
-    return this.page.locator('[role="progressbar"], [data-testid*="progress"], [class*="progress"]').first()
+    return this.getPage().locator('[role="progressbar"], [data-testid*="progress"], [class*="progress"]').first()
   }
 
   private get progressText() {
-    return this.page.locator('text=/completed.*steps|progress/i')
+    return this.getPage().locator('text=/completed.*steps|progress/i')
   }
 
   // Locators - Step Timeline
   private get stepTimelineSection() {
-    return this.page.locator('section', { has: this.page.locator('text=/step|timeline/i') })
+    return this.getPage().locator('section', { has: this.getPage().locator('text=/step|timeline/i') })
   }
 
   private get stepCards() {
@@ -54,16 +50,16 @@ export class WorkflowDetailPage extends BasePage {
   }
 
   private getStepCardByName(stepName: string) {
-    return this.page.locator(`text=${stepName}`).locator('..')
+    return this.getPage().locator(`text=${stepName}`).locator('..')
   }
 
   private get stepTimelineInitializing() {
-    return this.page.locator('text=/no steps yet|initializing/i')
+    return this.getPage().locator('text=/no steps yet|initializing/i')
   }
 
   // Locators - Step Details Panel
   private get stepDetailsPanel() {
-    return this.page.locator('[role="dialog"], [class*="panel"], aside').first()
+    return this.getPage().locator('[role="dialog"], [class*="panel"], aside').first()
   }
 
   private get stepDetailsPanelTitle() {
@@ -74,10 +70,6 @@ export class WorkflowDetailPage extends BasePage {
     return this.stepDetailsPanel
       .locator('button[aria-label*="Close"], button:has-text("✕"), button[aria-label*="close"]')
       .first()
-  }
-
-  private get stepDurationText() {
-    return this.stepDetailsPanel.locator('text=/duration|time/i')
   }
 
   private get stepOutputSection() {
@@ -94,7 +86,7 @@ export class WorkflowDetailPage extends BasePage {
 
   // Locators - Cancel Modal
   private get cancelModal() {
-    return this.page.locator('[role="dialog"]').last()
+    return this.getPage().locator('[role="dialog"]').last()
   }
 
   private get cancelModalTitle() {
@@ -123,7 +115,7 @@ export class WorkflowDetailPage extends BasePage {
 
   // Locators - Toasts
   private get toastContainer() {
-    return this.page.locator('[role="region"][aria-live], [class*="toast"], [data-testid*="toast"]').first()
+    return this.getPage().locator('[role="region"][aria-live], [class*="toast"], [data-testid*="toast"]').first()
   }
 
   private get successToast() {
@@ -136,15 +128,15 @@ export class WorkflowDetailPage extends BasePage {
 
   // Locators - Loading & Error States
   private get loadingSpinner() {
-    return this.page.locator('[role="status"], svg[class*="spin"], [class*="loader"]')
+    return this.getPage().locator('[role="status"], svg[class*="spin"], [class*="loader"]')
   }
 
   private get errorMessage() {
-    return this.page.locator('[role="alert"]').first()
+    return this.getPage().locator('[role="alert"]').first()
   }
 
   private get notFoundMessage() {
-    return this.page.locator('text=/workflow not found|invalid workflow|not found/i')
+    return this.getPage().locator('text=/workflow not found|invalid workflow|not found/i')
   }
 
   // Actions - Navigation
@@ -168,7 +160,7 @@ export class WorkflowDetailPage extends BasePage {
   async confirmCancel(): Promise<void> {
     await this.confirmCancelButton.click()
     // Wait for cancel operation
-    await this.page.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.API_CALL })
+    await this.getPage().waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.API_CALL })
   }
 
   async cancelModalGoBack(): Promise<void> {
@@ -219,7 +211,7 @@ export class WorkflowDetailPage extends BasePage {
   async expectPageLoaded(): Promise<void> {
     // Just give the page a moment to settle
     // Don't wait for network idle as it can hang on SSE connections
-    await this.page.waitForTimeout(500)
+    await this.getPage().waitForTimeout(500)
   }
 
   async expectStatusVisible(): Promise<void> {

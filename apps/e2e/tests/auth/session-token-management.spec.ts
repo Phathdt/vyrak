@@ -98,11 +98,11 @@ test.describe('Session Token Management', () => {
       )
 
       await loginPage.navigate()
-      await loginPage.page.goto(URLS.ROUTES.HOME)
+      await loginPage.getPage().goto(URLS.ROUTES.HOME)
 
       await test.step(`verify rejection of invalid token: ${invalidToken}`, async () => {
         // Should redirect to login since token is invalid
-        const url = loginPage.page.url()
+        const url = loginPage.getPage().url()
 
         // Either redirects to login or stays on page with error
         // Both are acceptable
@@ -203,7 +203,7 @@ test.describe('Session Token Management', () => {
 
       // Open page 2 - should also be authenticated (same browser context)
       const loginPage2 = new LoginPage(page2)
-      await loginPage2.page.goto(URLS.ROUTES.HOME)
+      await loginPage2.getPage().goto(URLS.ROUTES.HOME)
 
       await test.step('verify concurrent session', async () => {
         const token2 = await StorageHelper.getAuthToken(page2)
@@ -213,8 +213,8 @@ test.describe('Session Token Management', () => {
         expect(token2).toBeTruthy()
 
         // Should both be able to access protected pages
-        await expect(loginPage1.page).not.toHaveURL(/\/login/)
-        await expect(loginPage2.page).not.toHaveURL(/\/login/)
+        await expect(loginPage1.getPage()).not.toHaveURL(/\/login/)
+        await expect(loginPage2.getPage()).not.toHaveURL(/\/login/)
       })
     } finally {
       await page1.close()

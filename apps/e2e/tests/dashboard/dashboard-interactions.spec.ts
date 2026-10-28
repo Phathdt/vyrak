@@ -29,7 +29,7 @@ test.describe('Dashboard - User Interactions', () => {
     const optionCount = await dashboardPage.getOrgSelectorOptions()
 
     if (optionCount > 2) {
-      const initialSelection = await dashboardPage.getActiveOrgId()
+      await dashboardPage.getActiveOrgId()
       await dashboardPage.selectOrganizationByIndex(2)
       const newSelection = await dashboardPage.getActiveOrgId()
       expect(newSelection).not.toBe('')

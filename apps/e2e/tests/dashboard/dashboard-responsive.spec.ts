@@ -1,4 +1,4 @@
-import { expect, test } from '@fixtures/auth.fixture'
+import { test } from '@fixtures/auth.fixture'
 import { DashboardPage } from '@page-objects/dashboard/dashboard.page'
 
 test.describe('Dashboard - Responsive Design', () => {

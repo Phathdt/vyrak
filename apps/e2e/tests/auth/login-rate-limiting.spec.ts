@@ -1,4 +1,3 @@
-import { TEST_TIMEOUTS } from '@config/test.config'
 import { LoginPage } from '@page-objects/auth/login.page'
 import { expect, test } from '@playwright/test'
 
@@ -42,10 +41,10 @@ test.describe('Login Rate Limiting', () => {
 
     await test.step('verify rate limiting behavior', async () => {
       // Check if submit button is disabled or error appears immediately
-      const submitDisabled = await loginPage.page.getByRole('button', { name: /sign in/i }).isDisabled()
+      const submitDisabled = await loginPage.getPage().getByRole('button', { name: /sign in/i }).isDisabled()
 
       // Or check if error message mentions rate limiting
-      const errorText = await loginPage.page
+      const errorText = await loginPage.getPage()
         .locator('[role="alert"]')
         .first()
         .textContent({ timeout: 2000 })
@@ -74,11 +73,11 @@ test.describe('Login Rate Limiting', () => {
     await loginPage.navigate()
 
     await test.step('verify recovery possibility', async () => {
-      const isDisabled = await loginPage.page.getByRole('button', { name: /sign in/i }).isDisabled()
+      const isDisabled = await loginPage.getPage().getByRole('button', { name: /sign in/i }).isDisabled()
 
       // If disabled, it should have a message indicating when it will be available
       if (isDisabled) {
-        const errorText = await loginPage.page
+        const errorText = await loginPage.getPage()
           .locator('[role="alert"]')
           .first()
           .textContent({ timeout: 2000 })
@@ -110,7 +109,7 @@ test.describe('Login Rate Limiting', () => {
 
     await test.step('verify valid login still works', async () => {
       // Should redirect to home, not show rate limit error
-      await loginPage.expectRedirectedToHome({ timeout: TEST_TIMEOUTS.NAVIGATION })
+      await loginPage.expectRedirectedToHome()
     })
   })
 
@@ -123,7 +122,7 @@ test.describe('Login Rate Limiting', () => {
       await loginPage.fillAndSubmit('invalid@example.com', `WrongPassword${i}!`)
 
       await test.step(`failed attempt ${i + 1}`, async () => {
-        await loginPage.page.waitForTimeout(200)
+        await loginPage.getPage().waitForTimeout(200)
       })
     }
 
@@ -131,7 +130,7 @@ test.describe('Login Rate Limiting', () => {
     await loginPage.navigate()
 
     await test.step('verify no permanent account lockout', async () => {
-      const errorText = await loginPage.page
+      const errorText = await loginPage.getPage()
         .locator('[role="alert"]')
         .first()
         .textContent({ timeout: 2000 })
@@ -148,17 +147,17 @@ test.describe('Login Rate Limiting', () => {
     for (let i = 0; i < 3; i++) {
       await loginPage.navigate()
       await loginPage.fillAndSubmit('invalid@example.com', 'WrongPassword123!')
-      await loginPage.page.waitForTimeout(300)
+      await loginPage.getPage().waitForTimeout(300)
     }
 
     await loginPage.navigate()
 
     await test.step('verify rate limit feedback is visible', async () => {
-      const submitButton = loginPage.page.getByRole('button', { name: /sign in/i })
+      const submitButton = loginPage.getPage().getByRole('button', { name: /sign in/i })
 
       // Check for visual feedback
       const isDisabled = await submitButton.isDisabled().catch(() => false)
-      const hasErrorMessage = await loginPage.page
+      const hasErrorMessage = await loginPage.getPage()
         .locator('[role="alert"]')
         .first()
         .isVisible({ timeout: 2000 })

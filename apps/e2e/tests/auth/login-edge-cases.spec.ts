@@ -1,4 +1,3 @@
-import { TEST_TIMEOUTS } from '@config/test.config'
 import { StorageHelper } from '@helpers/storage.helper'
 import { LoginPage } from '@page-objects/auth/login.page'
 import { expect, test } from '@playwright/test'
@@ -11,7 +10,7 @@ test.describe('Login Edge Cases', () => {
     await loginPage.navigate()
   })
 
-  test('should handle very long email input gracefully', async ({ page }) => {
+  test('should handle very long email input gracefully', async () => {
     const veryLongEmail = `${'a'.repeat(250)}@example.com`
     await loginPage.fillEmail(veryLongEmail)
     await loginPage.fillPassword('Password123!')

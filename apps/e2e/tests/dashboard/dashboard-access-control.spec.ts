@@ -1,6 +1,5 @@
 import { expect, test } from '@fixtures/auth.fixture'
 import { StorageHelper } from '@helpers/storage.helper'
-import { LoginPage } from '@page-objects/auth/login.page'
 import { DashboardPage } from '@page-objects/dashboard/dashboard.page'
 
 test.describe('Dashboard - Access Control & Permissions', () => {
@@ -29,7 +28,7 @@ test.describe('Dashboard - Access Control & Permissions', () => {
     dashboardPage = new DashboardPage(authenticatedPage)
     await dashboardPage.navigate()
 
-    await dashboardPage.expectUserGreetingVisible()
+    await dashboardPage.expectUserInfoVisible()
   })
 
   test('should allow users to view their own user information', async ({ authenticatedPage }) => {
@@ -78,7 +77,7 @@ test.describe('Dashboard - Access Control & Permissions', () => {
     dashboardPage = new DashboardPage(authenticatedPage)
     await dashboardPage.navigate()
 
-    await dashboardPage.expectUserGreetingVisible()
+    await dashboardPage.expectUserInfoVisible()
   })
 
   test('should have proper authorization headers when making API calls', async ({ authenticatedPage }) => {
@@ -100,7 +99,7 @@ test.describe('Dashboard - Access Control & Permissions', () => {
     await dashboardPage.navigate()
 
     if (apiCallMade) {
-      expect(hadAuthHeader || apiCallMade).toBe(true)
+      expect(hadAuthHeader).toBe(true)
     }
   })
 })

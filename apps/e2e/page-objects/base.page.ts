@@ -5,6 +5,13 @@ export abstract class BasePage {
   constructor(protected readonly page: Page) {}
 
   /**
+   * Get the Playwright page instance
+   */
+  getPage(): Page {
+    return this.page
+  }
+
+  /**
    * Navigate to a URL and wait for page load
    */
   async goto(url: string): Promise<void> {

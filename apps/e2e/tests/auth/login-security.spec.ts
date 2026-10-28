@@ -1,5 +1,3 @@
-import { TEST_TIMEOUTS } from '@config/test.config'
-import { URLS } from '@config/urls.config'
 import { LoginPage } from '@page-objects/auth/login.page'
 import { expect, test } from '@playwright/test'
 
@@ -120,7 +118,7 @@ test.describe('Login Security Scenarios', () => {
         await loginPage.expectOnLoginPage()
 
         // Error message should not contain SQL-related errors
-        const errorText = await loginPage.page
+        const errorText = await loginPage.getPage()
           .locator('[role="alert"]')
           .first()
           .textContent({ timeout: 2000 })
@@ -187,7 +185,7 @@ test.describe('Login Security Scenarios', () => {
     })
   })
 
-  test('should prevent case-sensitive email exploitation', async ({ page }) => {
+  test('should prevent case-sensitive email exploitation', async () => {
     const testUser = {
       email: process.env.TEST_USER_EMAIL || 'admin@vyrak.dev',
       password: process.env.TEST_USER_PASSWORD || 'Password123!',
@@ -207,7 +205,8 @@ test.describe('Login Security Scenarios', () => {
       await test.step(`verify case handling for: ${email}`, async () => {
         // Should either log in (if case-insensitive) or show error (if case-sensitive)
         // Both are acceptable, just verify consistent behavior
-        const onLoginPage = await loginPage.page.url().then((url) => url.includes('/login'))
+        const currentUrl = loginPage.getPage().url()
+        const onLoginPage = currentUrl.includes('/login')
 
         // If it redirected away from login, it was case-insensitive (good)
         // If it stayed on login, it was case-sensitive (also acceptable)

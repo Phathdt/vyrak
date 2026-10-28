@@ -66,7 +66,7 @@ test.describe('Dashboard - Navigation & Routing', () => {
   test('should display welcome message with user info', async () => {
     await dashboardPage.navigate()
     await dashboardPage.expectWelcomeMessageVisible()
-    await dashboardPage.expectUserGreetingVisible()
+    await dashboardPage.expectUserInfoVisible()
   })
 
   test('should keep user session intact during dashboard navigation', async ({ authenticatedPage }) => {

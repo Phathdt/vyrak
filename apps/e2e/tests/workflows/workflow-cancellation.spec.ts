@@ -1,4 +1,3 @@
-import { TEST_TIMEOUTS } from '@config/test.config'
 import { expect, test } from '@fixtures/auth.fixture'
 import { WorkflowDetailPage, WorkflowsPage } from '@page-objects/workflows'
 

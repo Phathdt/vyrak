@@ -9,47 +9,39 @@ export class WorkflowsPage extends BasePage {
   }
 
   // Locators - Header & Navigation
-  private get pageTitle() {
-    return this.page.locator('h1').filter({ hasText: 'Workflows' })
-  }
-
   private get pageContainer() {
-    return this.page.getByTestId('workflows-page')
+    return this.getPage().getByTestId('workflows-page')
   }
 
   private get createWorkflowButton() {
-    return this.page.getByRole('button', { name: /create workflow|create/i })
+    return this.getPage().getByRole('button', { name: /create workflow|create/i })
   }
 
   // Locators - Empty States
   private get emptyStateMessage() {
-    return this.page.locator('text=/no workflows yet|no workflows match/i')
-  }
-
-  private get emptyStateCreateButton() {
-    return this.page.locator('button', { hasText: /create.*workflow/i }).first()
+    return this.getPage().locator('text=/no workflows yet|no workflows match/i')
   }
 
   // Locators - Filters
   private get searchInput() {
-    return this.page.getByTestId('workflows-search').or(this.page.getByPlaceholder(/search|filter/i))
+    return this.getPage().getByTestId('workflows-search').or(this.getPage().getByPlaceholder(/search|filter/i))
   }
 
   private get statusFilterButton() {
-    return this.page.locator('button', { hasText: /status/i })
+    return this.getPage().locator('button', { hasText: /status/i })
   }
 
   private get dateRangeSelect() {
-    return this.page.locator('select, [role="combobox"]').nth(0)
+    return this.getPage().locator('select, [role="combobox"]').nth(0)
   }
 
   private get clearFiltersButton() {
-    return this.page.getByRole('button', { name: /clear filters/i })
+    return this.getPage().getByRole('button', { name: /clear filters/i })
   }
 
   // Locators - Table & Pagination
   private get workflowTable() {
-    return this.page.getByTestId('workflows-list').or(this.page.locator('table, [role="table"]'))
+    return this.getPage().getByTestId('workflows-list').or(this.getPage().locator('table, [role="table"]'))
   }
 
   private get workflowRows() {
@@ -57,20 +49,20 @@ export class WorkflowsPage extends BasePage {
   }
 
   private get previousPageButton() {
-    return this.page.getByTestId('workflows-pagination-prev').or(this.page.getByRole('button', { name: /previous/i }))
+    return this.getPage().getByTestId('workflows-pagination-prev').or(this.getPage().getByRole('button', { name: /previous/i }))
   }
 
   private get nextPageButton() {
-    return this.page.getByTestId('workflows-pagination-next').or(this.page.getByRole('button', { name: /next/i }))
+    return this.getPage().getByTestId('workflows-pagination-next').or(this.getPage().getByRole('button', { name: /next/i }))
   }
 
   private get paginationInfo() {
-    return this.page.locator('text=/showing.*of.*workflows/i')
+    return this.getPage().locator('text=/showing.*of.*workflows/i')
   }
 
   // Locators - Error States
   private get errorMessage() {
-    return this.page.locator('[role="alert"], .error')
+    return this.getPage().locator('[role="alert"], .error')
   }
 
   // Actions - Navigation
@@ -80,9 +72,9 @@ export class WorkflowsPage extends BasePage {
     // First try data-testid, then fallback to generic selectors
     const container = this.page
       .getByTestId('workflows-page')
-      .or(this.page.locator('main'))
-      .or(this.page.locator('[role="main"]'))
-      .or(this.page.locator('.container'))
+      .or(this.getPage().locator('main'))
+      .or(this.getPage().locator('[role="main"]'))
+      .or(this.getPage().locator('.container'))
 
     // Just check if something rendered, don't be strict
     try {
@@ -94,11 +86,11 @@ export class WorkflowsPage extends BasePage {
 
   async clickCreateWorkflow(): Promise<void> {
     // Try data-testid first, then fallback to role-based selector
-    const button = this.page.getByTestId('create-workflow-button').or(this.createWorkflowButton)
+    const button = this.getPage().getByTestId('create-workflow-button').or(this.createWorkflowButton)
     await button.waitFor({ state: 'visible', timeout: TEST_TIMEOUTS.ACTION })
     // Use Promise.all to ensure navigation happens before continuing
     await Promise.all([
-      this.page.waitForURL(/.*\/workflows\/create/, { timeout: TEST_TIMEOUTS.NAVIGATION }),
+      this.getPage().waitForURL(/.*\/workflows\/create/, { timeout: TEST_TIMEOUTS.NAVIGATION }),
       button.click(),
     ])
   }
@@ -107,17 +99,17 @@ export class WorkflowsPage extends BasePage {
   async searchWorkflows(query: string): Promise<void> {
     await this.searchInput.fill(query)
     // Wait for debounce (300ms) + API call
-    await this.page.waitForTimeout(500)
+    await this.getPage().waitForTimeout(500)
   }
 
   async filterByStatus(status: string): Promise<void> {
     await this.statusFilterButton.click()
-    await this.page.getByLabel(status).click()
+    await this.getPage().getByLabel(status).click()
   }
 
   async selectDateRange(range: string): Promise<void> {
     await this.dateRangeSelect.click()
-    await this.page.getByLabel(new RegExp(range, 'i')).click()
+    await this.getPage().getByLabel(new RegExp(range, 'i')).click()
   }
 
   async clearFilters(): Promise<void> {
@@ -127,12 +119,12 @@ export class WorkflowsPage extends BasePage {
   // Actions - Pagination
   async goToNextPage(): Promise<void> {
     await this.nextPageButton.click()
-    await this.page.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.API_CALL })
+    await this.getPage().waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.API_CALL })
   }
 
   async goToPreviousPage(): Promise<void> {
     await this.previousPageButton.click()
-    await this.page.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.API_CALL })
+    await this.getPage().waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.API_CALL })
   }
 
   async clickWorkflowRow(index: number): Promise<void> {
@@ -141,7 +133,7 @@ export class WorkflowsPage extends BasePage {
   }
 
   async clickWorkflowByName(name: string): Promise<void> {
-    await this.page.locator(`text=${name}`).click()
+    await this.getPage().locator(`text=${name}`).click()
   }
 
   // Actions - Table Interactions
@@ -190,7 +182,7 @@ export class WorkflowsPage extends BasePage {
 
   async expectEmptyState(): Promise<void> {
     // Check for either empty state or no results message
-    const emptyState = this.page.getByTestId('workflows-empty-state').or(this.emptyStateMessage)
+    const emptyState = this.getPage().getByTestId('workflows-empty-state').or(this.emptyStateMessage)
     await expect(emptyState).toBeVisible({ timeout: TEST_TIMEOUTS.ACTION })
   }
 
@@ -233,6 +225,6 @@ export class WorkflowsPage extends BasePage {
   }
 
   async expectWorkflowsNotFound(): Promise<void> {
-    await expect(this.page.locator('text=/no workflows match/i')).toBeVisible({ timeout: TEST_TIMEOUTS.ACTION })
+    await expect(this.getPage().locator('text=/no workflows match/i')).toBeVisible({ timeout: TEST_TIMEOUTS.ACTION })
   }
 }
