@@ -8,6 +8,7 @@ export const TENANT_OWNED_MODELS = [
   'WorkflowRun',
   'WorkflowStepRun',
   'WorkflowEvent',
+  'WorkflowApproval',
   'AgentTask',
   'Artifact',
 ] as const

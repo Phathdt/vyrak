@@ -53,17 +53,18 @@ model Organization {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  members          Member[]
-  invitations      Invitation[]
-  products         Product[]
-  projects         Project[]
-  gitRepositories  GitRepository[]
-  workflowRuns     WorkflowRun[]
-  workflowStepRuns WorkflowStepRun[]
-  workflowEvents   WorkflowEvent[]
-  agentTasks       AgentTask[]
-  artifacts        Artifact[]
-  auditLogs        AuditLog[]
+  members           Member[]
+  invitations       Invitation[]
+  products          Product[]
+  projects          Project[]
+  gitRepositories   GitRepository[]
+  workflowRuns      WorkflowRun[]
+  workflowStepRuns  WorkflowStepRun[]
+  workflowEvents    WorkflowEvent[]
+  workflowApprovals WorkflowApproval[]
+  agentTasks        AgentTask[]
+  artifacts         Artifact[]
+  auditLogs         AuditLog[]
 
   @@map("organizations")
 }
@@ -339,6 +340,7 @@ model WorkflowEvent {
 
 model WorkflowApproval {
   id                 String    @id @default(uuid())
+  organizationId     String    @map("organization_id")
   workflowRunId      String    @unique @map("workflow_run_id")
   status             String    @default("pending") // pending, approved, rejected
   planArtifactId     String    @map("plan_artifact_id")
@@ -351,8 +353,10 @@ model WorkflowApproval {
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
 
-  workflowRun WorkflowRun @relation(fields: [workflowRunId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  workflowRun  WorkflowRun  @relation(fields: [workflowRunId], references: [id], onDelete: Cascade)
 
+  @@index([organizationId])
   @@index([workflowRunId])
   @@index([status])
   @@index([createdAt])

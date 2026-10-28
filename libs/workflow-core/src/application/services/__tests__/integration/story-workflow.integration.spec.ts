@@ -397,7 +397,7 @@ describe('Story-Based Workflow Integration Tests', () => {
   })
 
   describe('WorkflowStoryExecutionService', () => {
-    it.skip('should execute story with 4 sub-steps', async () => {
+    it('should execute story with 4 sub-steps', async () => {
       if (!databaseService) return
 
       const executionRun = await createTestWorkflowRun()
@@ -417,7 +417,7 @@ describe('Story-Based Workflow Integration Tests', () => {
       expect(completed.subSteps).toBeDefined()
     })
 
-    it.skip('should emit story events during execution', async () => {
+    it('should emit story events during execution', async () => {
       if (!databaseService) return
 
       const executionRun = await createTestWorkflowRun()
@@ -467,7 +467,7 @@ describe('Story-Based Workflow Integration Tests', () => {
       }
     })
 
-    it.skip('should calculate story duration correctly', async () => {
+    it('should calculate story duration correctly', async () => {
       if (!databaseService) return
 
       const executionRun = await createTestWorkflowRun()

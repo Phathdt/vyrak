@@ -23,6 +23,16 @@ export class EventPrismaRepository implements IEventRepository {
       try {
         // Use raw client for transaction that needs full Prisma API
         const result = await this.db.rawClient.$transaction(async (tx) => {
+          // Get organizationId from workflow run if not provided
+          let orgId = event.organizationId
+          if (!orgId) {
+            const run = await tx.workflowRun.findUniqueOrThrow({
+              where: { id: event.runId },
+              select: { organizationId: true },
+            })
+            orgId = run.organizationId
+          }
+
           // Get next sequence
           const sequenceResult = (await tx.$queryRaw`
             SELECT COALESCE(MAX(sequence), 0) + 1 as sequence
@@ -36,7 +46,7 @@ export class EventPrismaRepository implements IEventRepository {
           return await tx.workflowEvent.create({
             data: {
               runId: event.runId,
-              organizationId: event.organizationId,
+              organizationId: orgId,
               stepRunId: event.stepRunId ?? null,
               sequence: nextSequence,
               eventType: event.eventType,

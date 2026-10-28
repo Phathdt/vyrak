@@ -178,12 +178,8 @@ describe('WorkflowPrismaRepository - Lease Operations (Integration)', () => {
         expect(renewed).toBe(true)
 
         const updatedLease = await prisma.workflowRun.findUnique({ where: { id: run.id } })
-        expect(updatedLease?.leaseExpiresAt?.getTime()).toBeGreaterThan(
-          initialLease?.leaseExpiresAt?.getTime() || 0
-        )
-        expect(updatedLease?.lastHeartbeatAt?.getTime()).toBeGreaterThan(
-          initialLease?.lastHeartbeatAt?.getTime() || 0
-        )
+        expect(updatedLease?.leaseExpiresAt?.getTime()).toBeGreaterThan(initialLease?.leaseExpiresAt?.getTime() || 0)
+        expect(updatedLease?.lastHeartbeatAt?.getTime()).toBeGreaterThan(initialLease?.lastHeartbeatAt?.getTime() || 0)
       })
     })
 
@@ -292,9 +288,7 @@ describe('WorkflowPrismaRepository - Lease Operations (Integration)', () => {
         await repository.updateHeartbeat(run.id, workerId)
 
         const updated = await prisma.workflowRun.findUnique({ where: { id: run.id } })
-        expect(updated?.lastHeartbeatAt?.getTime()).toBeGreaterThan(
-          initial?.lastHeartbeatAt?.getTime() || 0
-        )
+        expect(updated?.lastHeartbeatAt?.getTime()).toBeGreaterThan(initial?.lastHeartbeatAt?.getTime() || 0)
       })
     })
 
