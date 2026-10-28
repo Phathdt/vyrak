@@ -1,7 +1,13 @@
-import { PrismaClient } from '@vyrak/database'
-import { createTestOrgWithOwner, getPrismaClient, startPostgres, stopPostgres } from '@vyrak/database/test-utils'
+import type { DatabaseService } from '@vyrak/database'
+import {
+  createTestDatabaseService,
+  createTestOrgWithOwner,
+  getPrismaClient,
+  startPostgres,
+  stopPostgres,
+} from '@vyrak/database/test-utils'
 
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
 import { EventPrismaRepository } from '../../../../infras/repositories/event-prisma.repository'
 import { StoryPrismaRepository } from '../../../../infras/repositories/story-prisma.repository'
@@ -11,7 +17,7 @@ import { WorkflowStoryExecutionService } from '../../workflow-story-execution.se
 import { WorkflowTemplateService } from '../../workflow-template.service'
 
 describe('Story-Based Workflow Integration Tests', () => {
-  let prisma: PrismaClient
+  let databaseService: ReturnType<typeof createTestDatabaseService> | undefined
   let templateService: WorkflowTemplateService
   let storyService: StoryService
   let executionService: WorkflowStoryExecutionService
@@ -21,17 +27,18 @@ describe('Story-Based Workflow Integration Tests', () => {
   beforeAll(async () => {
     try {
       await startPostgres()
-      prisma = getPrismaClient()
+      const prisma = getPrismaClient()
+      databaseService = createTestDatabaseService(prisma)
 
       // Create test data
       const result = await createTestOrgWithOwner(prisma)
       org = result.organization
       user = result.user
 
-      // Initialize repositories and services
-      const templateRepo = new WorkflowTemplatePrismaRepository(prisma)
-      const storyRepo = new StoryPrismaRepository(prisma)
-      const eventRepo = new EventPrismaRepository(prisma)
+      // Initialize repositories and services with DatabaseService
+      const templateRepo = new WorkflowTemplatePrismaRepository(databaseService as unknown as DatabaseService)
+      const storyRepo = new StoryPrismaRepository(databaseService as unknown as DatabaseService)
+      const eventRepo = new EventPrismaRepository(databaseService as unknown as DatabaseService)
 
       templateService = new WorkflowTemplateService(templateRepo)
       storyService = new StoryService(storyRepo)
@@ -45,37 +52,51 @@ describe('Story-Based Workflow Integration Tests', () => {
     await stopPostgres()
   })
 
+  beforeEach(async () => {
+    if (!databaseService) return
+
+    const prisma = getPrismaClient()
+    // Clean up test data - use raw prisma since cleanup doesn't need tenant context
+    await prisma.story.deleteMany()
+    await prisma.workflowRun.deleteMany()
+    await prisma.project.deleteMany()
+  })
+
   const createTestWorkflowRun = async () => {
-    if (!prisma) return null
+    if (!databaseService) return null
 
-    const template = await prisma.workflowTemplate.findFirst({
-      where: { key: 'feature' },
-    })
+    return await databaseService.withOrganization(org.id, async () => {
+      const template = await databaseService.withSystemAccess(async () => {
+        return await databaseService.client.workflowTemplate.findFirst({
+          where: { key: 'feature' },
+        })
+      })
 
-    const project = await prisma.project.create({
-      data: {
-        organizationId: org.id,
-        name: `Test Project ${Date.now()}`,
-        slug: `test-project-${Date.now()}`,
-      },
-    })
+      const project = await databaseService.client.project.create({
+        data: {
+          organizationId: org.id,
+          name: `Test Project ${Date.now()}`,
+          slug: `test-project-${Date.now()}`,
+        },
+      })
 
-    return await prisma.workflowRun.create({
-      data: {
-        projectId: project.id,
-        organizationId: org.id,
-        templateId: template?.id,
-        templateKey: template?.key || 'feature',
-        workflowKey: 'test-workflow',
-        workflowVersion: '1.0.0',
-        initiatedByUserId: user.id,
-      },
+      return await databaseService.client.workflowRun.create({
+        data: {
+          projectId: project.id,
+          organizationId: org.id,
+          templateId: template?.id,
+          templateKey: template?.key || 'feature',
+          workflowKey: 'test-workflow',
+          workflowVersion: '1.0.0',
+          initiatedByUserId: user.id,
+        },
+      })
     })
   }
 
   describe('WorkflowTemplateService', () => {
     it('should list active workflow templates', async () => {
-      if (!prisma) return
+      if (!databaseService) return
 
       const templates = await templateService.listTemplates()
 
@@ -85,7 +106,7 @@ describe('Story-Based Workflow Integration Tests', () => {
     })
 
     it('should get template by ID', async () => {
-      if (!prisma) return
+      if (!databaseService) return
 
       const templates = await templateService.listTemplates()
       if (templates.length === 0) return
@@ -97,25 +118,27 @@ describe('Story-Based Workflow Integration Tests', () => {
     })
 
     it('should get template by key', async () => {
-      if (!prisma) return
+      if (!databaseService) return
 
-      const existing = await prisma.workflowTemplate.findUnique({
-        where: { key: 'feature' },
-      })
-
-      if (!existing) {
-        await prisma.workflowTemplate.create({
-          data: {
-            key: 'feature',
-            name: 'Feature',
-            description: 'Feature workflow',
-            icon: '📝',
-            isActive: true,
-            storyBased: true,
-            phases: [],
-          },
+      await databaseService.withSystemAccess(async () => {
+        const existing = await databaseService.client.workflowTemplate.findUnique({
+          where: { key: 'feature' },
         })
-      }
+
+        if (!existing) {
+          await databaseService.client.workflowTemplate.create({
+            data: {
+              key: 'feature',
+              name: 'Feature',
+              description: 'Feature workflow',
+              icon: '📝',
+              isActive: true,
+              storyBased: true,
+              phases: [],
+            },
+          })
+        }
+      })
 
       const template = await templateService.getTemplateByKey('feature')
 
@@ -124,7 +147,7 @@ describe('Story-Based Workflow Integration Tests', () => {
     })
 
     it('should validate template is active', async () => {
-      if (!prisma) return
+      if (!databaseService) return
 
       const templates = await templateService.listTemplates()
       if (templates.length === 0) return
@@ -137,7 +160,7 @@ describe('Story-Based Workflow Integration Tests', () => {
 
   describe('StoryService', () => {
     it('should create stories with order index', async () => {
-      if (!prisma) return
+      if (!databaseService) return
 
       const workflowRun = await createTestWorkflowRun()
       if (!workflowRun) return
@@ -159,7 +182,7 @@ describe('Story-Based Workflow Integration Tests', () => {
     })
 
     it('should get stories ordered by orderIndex', async () => {
-      if (!prisma) return
+      if (!databaseService) return
 
       const workflowRun = await createTestWorkflowRun()
       if (!workflowRun) return
@@ -179,7 +202,7 @@ describe('Story-Based Workflow Integration Tests', () => {
     })
 
     it('should reject 0 stories for feature template', async () => {
-      if (!prisma) return
+      if (!databaseService) return
 
       const workflowRun = await createTestWorkflowRun()
       if (!workflowRun) return
@@ -194,7 +217,7 @@ describe('Story-Based Workflow Integration Tests', () => {
     })
 
     it('should reject 21 stories for feature template', async () => {
-      if (!prisma) return
+      if (!databaseService) return
 
       const workflowRun = await createTestWorkflowRun()
       if (!workflowRun) return
@@ -213,7 +236,7 @@ describe('Story-Based Workflow Integration Tests', () => {
     })
 
     it('should allow 1-20 stories for feature template', async () => {
-      if (!prisma) return
+      if (!databaseService) return
 
       const workflowRun = await createTestWorkflowRun()
       if (!workflowRun) return
@@ -237,7 +260,7 @@ describe('Story-Based Workflow Integration Tests', () => {
     })
 
     it('should reject 2 stories for hotfix template', async () => {
-      if (!prisma) return
+      if (!databaseService) return
 
       const workflowRun = await createTestWorkflowRun()
       if (!workflowRun) return
@@ -252,7 +275,7 @@ describe('Story-Based Workflow Integration Tests', () => {
     })
 
     it('should update story status to running', async () => {
-      if (!prisma) return
+      if (!databaseService) return
 
       const workflowRun = await createTestWorkflowRun()
       if (!workflowRun) return
@@ -270,7 +293,7 @@ describe('Story-Based Workflow Integration Tests', () => {
     })
 
     it('should update story status to completed with duration', async () => {
-      if (!prisma) return
+      if (!databaseService) return
 
       const workflowRun = await createTestWorkflowRun()
       if (!workflowRun) return
@@ -291,7 +314,7 @@ describe('Story-Based Workflow Integration Tests', () => {
     })
 
     it('should append sub-step to story', async () => {
-      if (!prisma) return
+      if (!databaseService) return
 
       const workflowRun = await createTestWorkflowRun()
       if (!workflowRun) return
@@ -312,7 +335,7 @@ describe('Story-Based Workflow Integration Tests', () => {
     })
 
     it('should save story artifacts', async () => {
-      if (!prisma) return
+      if (!databaseService) return
 
       const workflowRun = await createTestWorkflowRun()
       if (!workflowRun) return
@@ -330,7 +353,7 @@ describe('Story-Based Workflow Integration Tests', () => {
     })
 
     it('should skip story with reason', async () => {
-      if (!prisma) return
+      if (!databaseService) return
 
       const workflowRun = await createTestWorkflowRun()
       if (!workflowRun) return
@@ -348,7 +371,7 @@ describe('Story-Based Workflow Integration Tests', () => {
     })
 
     it('should retry failed story', async () => {
-      if (!prisma) return
+      if (!databaseService) return
 
       const workflowRun = await createTestWorkflowRun()
       if (!workflowRun) return
@@ -359,9 +382,11 @@ describe('Story-Based Workflow Integration Tests', () => {
         stories: [{ title: 'Retry Test' }],
       })
 
-      await prisma.story.update({
-        where: { id: stories[0].id },
-        data: { status: 'failed', error: 'Test error' },
+      await databaseService.withOrganization(org.id, async () => {
+        await databaseService.client.story.update({
+          where: { id: stories[0].id },
+          data: { status: 'failed', error: 'Test error' },
+        })
       })
 
       const retried = await storyService.retryStory(stories[0].id)
@@ -372,8 +397,8 @@ describe('Story-Based Workflow Integration Tests', () => {
   })
 
   describe('WorkflowStoryExecutionService', () => {
-    it.skip('should execute story with 4 sub-steps', async () => {
-      if (!prisma) return
+    it('should execute story with 4 sub-steps', async () => {
+      if (!databaseService) return
 
       const executionRun = await createTestWorkflowRun()
       if (!executionRun) return
@@ -392,8 +417,8 @@ describe('Story-Based Workflow Integration Tests', () => {
       expect(completed.subSteps).toBeDefined()
     })
 
-    it.skip('should emit story events during execution', async () => {
-      if (!prisma) return
+    it('should emit story events during execution', async () => {
+      if (!databaseService) return
 
       const executionRun = await createTestWorkflowRun()
       if (!executionRun) return
@@ -406,10 +431,12 @@ describe('Story-Based Workflow Integration Tests', () => {
 
       await executionService.executeStory(stories[0].id)
 
-      const events = await prisma.workflowEvent.findMany({
-        where: {
-          runId: executionRun.id,
-        },
+      const events = await databaseService.withOrganization(org.id, async () => {
+        return await databaseService.client.workflowEvent.findMany({
+          where: {
+            runId: executionRun.id,
+          },
+        })
       })
 
       const eventTypes = events.map((e) => e.eventType)
@@ -421,7 +448,7 @@ describe('Story-Based Workflow Integration Tests', () => {
     })
 
     it('should execute multiple stories sequentially', async () => {
-      if (!prisma) return
+      if (!databaseService) return
 
       const executionRun = await createTestWorkflowRun()
       if (!executionRun) return
@@ -440,8 +467,8 @@ describe('Story-Based Workflow Integration Tests', () => {
       }
     })
 
-    it.skip('should calculate story duration correctly', async () => {
-      if (!prisma) return
+    it('should calculate story duration correctly', async () => {
+      if (!databaseService) return
 
       const executionRun = await createTestWorkflowRun()
       if (!executionRun) return

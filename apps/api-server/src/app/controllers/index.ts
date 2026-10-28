@@ -1,4 +1,4 @@
 export * from './auth.controller'
-
-export * from './organizations'
-export * from './projects'
+export * from './invitations.controller'
+export * from './organizations.controller'
+export * from './projects.controller'

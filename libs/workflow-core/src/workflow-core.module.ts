@@ -139,32 +139,32 @@ class StubJobQueue implements IJobQueue {
     // Repositories
     {
       provide: WORKFLOW_REPOSITORY,
-      useFactory: (db: DatabaseService) => new WorkflowPrismaRepository(db.client),
+      useFactory: (db: DatabaseService) => new WorkflowPrismaRepository(db),
       inject: [DatabaseService],
     },
     {
       provide: STEP_REPOSITORY,
-      useFactory: (db: DatabaseService) => new StepPrismaRepository(db.client),
+      useFactory: (db: DatabaseService) => new StepPrismaRepository(db),
       inject: [DatabaseService],
     },
     {
       provide: EVENT_REPOSITORY,
-      useFactory: (db: DatabaseService) => new EventPrismaRepository(db.client),
+      useFactory: (db: DatabaseService) => new EventPrismaRepository(db),
       inject: [DatabaseService],
     },
     {
       provide: WORKFLOW_APPROVAL_REPOSITORY,
-      useFactory: (db: DatabaseService) => new WorkflowApprovalPrismaRepository(db.client),
+      useFactory: (db: DatabaseService) => new WorkflowApprovalPrismaRepository(db),
       inject: [DatabaseService],
     },
     {
       provide: WORKFLOW_TEMPLATE_REPOSITORY,
-      useFactory: (db: DatabaseService) => new WorkflowTemplatePrismaRepository(db.client),
+      useFactory: (db: DatabaseService) => new WorkflowTemplatePrismaRepository(db),
       inject: [DatabaseService],
     },
     {
       provide: STORY_REPOSITORY,
-      useFactory: (db: DatabaseService) => new StoryPrismaRepository(db.client),
+      useFactory: (db: DatabaseService) => new StoryPrismaRepository(db),
       inject: [DatabaseService],
     },
     {

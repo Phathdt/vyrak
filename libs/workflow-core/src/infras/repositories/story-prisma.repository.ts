@@ -1,4 +1,4 @@
-import { Prisma, type PrismaClient, type Story } from '@vyrak/database'
+import { Prisma, type DatabaseService, type Story } from '@vyrak/database'
 
 import type {
   CreateStoryData,
@@ -8,12 +8,12 @@ import type {
 } from '../../domain/interfaces/story.repository.interface'
 
 export class StoryPrismaRepository implements IStoryRepository {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(private readonly db: DatabaseService) {}
 
   async createMany(stories: CreateStoryData[]): Promise<Story[]> {
-    const created = await this.prisma.$transaction(
+    const created = await this.db.client.$transaction(
       stories.map((story) =>
-        this.prisma.story.create({
+        this.db.client.story.create({
           data: {
             workflowRunId: story.workflowRunId,
             orderIndex: story.orderIndex,
@@ -32,20 +32,20 @@ export class StoryPrismaRepository implements IStoryRepository {
   }
 
   async findByWorkflowRunId(workflowRunId: string): Promise<Story[]> {
-    return this.prisma.story.findMany({
+    return this.db.client.story.findMany({
       where: { workflowRunId },
       orderBy: { orderIndex: 'asc' },
     })
   }
 
   async findById(storyId: string): Promise<Story | null> {
-    return this.prisma.story.findUnique({
+    return this.db.client.story.findUnique({
       where: { id: storyId },
     })
   }
 
   async updateStatus(storyId: string, data: UpdateStoryStatusData): Promise<Story> {
-    return this.prisma.story.update({
+    return this.db.client.story.update({
       where: { id: storyId },
       data: {
         status: data.status,
@@ -57,7 +57,7 @@ export class StoryPrismaRepository implements IStoryRepository {
   }
 
   async appendSubStep(storyId: string, subStep: SubStepData): Promise<Story> {
-    const story = await this.prisma.story.findUnique({
+    const story = await this.db.client.story.findUnique({
       where: { id: storyId },
       select: { subSteps: true },
     })
@@ -69,21 +69,21 @@ export class StoryPrismaRepository implements IStoryRepository {
     const currentSubSteps = Array.isArray(story.subSteps) ? story.subSteps : []
     const updatedSubSteps = [...currentSubSteps, subStep]
 
-    return this.prisma.story.update({
+    return this.db.client.story.update({
       where: { id: storyId },
       data: { subSteps: updatedSubSteps as Prisma.InputJsonValue },
     })
   }
 
   async saveArtifacts(storyId: string, artifacts: unknown): Promise<Story> {
-    return this.prisma.story.update({
+    return this.db.client.story.update({
       where: { id: storyId },
       data: { artifacts: (artifacts ?? Prisma.JsonNull) as Prisma.InputJsonValue },
     })
   }
 
   async skip(storyId: string, reason: string): Promise<Story> {
-    return this.prisma.story.update({
+    return this.db.client.story.update({
       where: { id: storyId },
       data: {
         status: 'skipped',
@@ -93,7 +93,7 @@ export class StoryPrismaRepository implements IStoryRepository {
   }
 
   async retry(storyId: string): Promise<Story> {
-    return this.prisma.story.update({
+    return this.db.client.story.update({
       where: { id: storyId },
       data: {
         status: 'queued',
@@ -106,7 +106,7 @@ export class StoryPrismaRepository implements IStoryRepository {
   }
 
   async updateSubStep(storyId: string, subStepName: string, status: string, error?: string): Promise<Story> {
-    const story = await this.prisma.story.findUnique({
+    const story = await this.db.client.story.findUnique({
       where: { id: storyId },
       select: { subSteps: true },
     })
@@ -130,7 +130,7 @@ export class StoryPrismaRepository implements IStoryRepository {
       error,
     }
 
-    return this.prisma.story.update({
+    return this.db.client.story.update({
       where: { id: storyId },
       data: { subSteps: updatedSubSteps as unknown as Prisma.InputJsonValue },
     })

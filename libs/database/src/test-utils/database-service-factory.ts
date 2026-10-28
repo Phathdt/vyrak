@@ -22,6 +22,12 @@ export function createTestDatabaseService(prismaClient: PrismaClient) {
   return {
     client: extendedClient,
 
+    /**
+     * Get the base Prisma client for raw queries and transactions
+     * Mirrors DatabaseService.rawClient
+     */
+    rawClient: prismaClient,
+
     setTenantContext(organizationId: string): void {
       asyncLocalStorage.enterWith({
         organizationId,
@@ -38,6 +44,10 @@ export function createTestDatabaseService(prismaClient: PrismaClient) {
     },
 
     async withOrganization<T>(organizationId: string, fn: () => Promise<T>): Promise<T> {
+      return asyncLocalStorage.run({ organizationId, bypassTenantFilter: false }, fn)
+    },
+
+    async withTenantContext<T>(organizationId: string, fn: () => Promise<T>): Promise<T> {
       return asyncLocalStorage.run({ organizationId, bypassTenantFilter: false }, fn)
     },
 

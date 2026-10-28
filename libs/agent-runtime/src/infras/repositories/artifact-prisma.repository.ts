@@ -1,4 +1,4 @@
-import type { PrismaClient } from '@vyrak/database'
+import type { DatabaseService } from '@vyrak/database'
 
 import type { ArtifactEntity, CreateArtifactParams, IArtifactRepository } from '../../domain'
 
@@ -21,14 +21,14 @@ export class ArtifactRepositoryError extends Error {
  * NO @Injectable decorator - plain TypeScript class
  */
 export class ArtifactPrismaRepository implements IArtifactRepository {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(private readonly db: DatabaseService) {}
 
   /**
    * Create artifact
    */
   async create(params: CreateArtifactParams): Promise<ArtifactEntity> {
     try {
-      const artifact = await this.prisma.artifact.create({
+      const artifact = await this.db.client.artifact.create({
         data: {
           organizationId: params.organizationId,
           runId: params.runId,
@@ -48,7 +48,7 @@ export class ArtifactPrismaRepository implements IArtifactRepository {
    */
   async findById(artifactId: string): Promise<ArtifactEntity | null> {
     try {
-      const artifact = await this.prisma.artifact.findUnique({
+      const artifact = await this.db.client.artifact.findUnique({
         where: { id: artifactId },
       })
 
@@ -66,7 +66,7 @@ export class ArtifactPrismaRepository implements IArtifactRepository {
    */
   async findByRunId(runId: string): Promise<ArtifactEntity[]> {
     try {
-      const artifacts = await this.prisma.artifact.findMany({
+      const artifacts = await this.db.client.artifact.findMany({
         where: { runId },
         orderBy: { createdAt: 'asc' },
       })
@@ -85,7 +85,7 @@ export class ArtifactPrismaRepository implements IArtifactRepository {
    */
   async findByOrganization(organizationId: string): Promise<ArtifactEntity[]> {
     try {
-      const artifacts = await this.prisma.artifact.findMany({
+      const artifacts = await this.db.client.artifact.findMany({
         where: { organizationId },
         orderBy: { createdAt: 'desc' },
       })
@@ -104,7 +104,7 @@ export class ArtifactPrismaRepository implements IArtifactRepository {
    */
   async delete(artifactId: string): Promise<void> {
     try {
-      await this.prisma.artifact.delete({
+      await this.db.client.artifact.delete({
         where: { id: artifactId },
       })
     } catch (error) {

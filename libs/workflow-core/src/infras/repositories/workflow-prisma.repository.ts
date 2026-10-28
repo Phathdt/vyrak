@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto'
-import { Prisma, PrismaClient, WorkflowRun as PrismaWorkflowRun } from '@vyrak/database'
+import { DatabaseService, Prisma, WorkflowRun as PrismaWorkflowRun } from '@vyrak/database'
 
 import {
   CreateRunParams,
@@ -19,11 +19,11 @@ import {
  * Maps between Prisma models and domain entities
  */
 export class WorkflowPrismaRepository implements IWorkflowRepository {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(private readonly db: DatabaseService) {}
 
   async createRun(params: CreateRunParams): Promise<WorkflowRun> {
     try {
-      const run = await this.prisma.workflowRun.create({
+      const run = await this.db.client.workflowRun.create({
         data: {
           organizationId: params.organizationId,
           projectId: params.projectId,
@@ -52,7 +52,7 @@ export class WorkflowPrismaRepository implements IWorkflowRepository {
 
   async findRunById(runId: string): Promise<WorkflowRun | null> {
     try {
-      const run = await this.prisma.workflowRun.findUnique({
+      const run = await this.db.client.workflowRun.findUnique({
         where: { id: runId },
       })
 
@@ -67,7 +67,7 @@ export class WorkflowPrismaRepository implements IWorkflowRepository {
 
   async updateRunState(runId: string, state: WorkflowStateUpdate): Promise<void> {
     try {
-      await this.prisma.workflowRun.update({
+      await this.db.client.workflowRun.update({
         where: { id: runId },
         data: {
           status: state.status,
@@ -94,7 +94,7 @@ export class WorkflowPrismaRepository implements IWorkflowRepository {
 
   async findRunByIdempotencyKey(orgId: string, key: string): Promise<WorkflowRun | null> {
     try {
-      const run = await this.prisma.workflowRun.findUnique({
+      const run = await this.db.client.workflowRun.findUnique({
         where: {
           organizationId_idempotencyKey: {
             organizationId: orgId,
@@ -121,13 +121,13 @@ export class WorkflowPrismaRepository implements IWorkflowRepository {
       }
 
       const [runs, total] = await Promise.all([
-        this.prisma.workflowRun.findMany({
+        this.db.client.workflowRun.findMany({
           where,
           orderBy: { createdAt: 'desc' },
           skip: params.skip,
           take: params.limit,
         }),
-        this.prisma.workflowRun.count({ where }),
+        this.db.client.workflowRun.count({ where }),
       ])
 
       return [runs.map((run: PrismaWorkflowRun) => this.mapToDomain(run)), total]
@@ -141,7 +141,7 @@ export class WorkflowPrismaRepository implements IWorkflowRepository {
 
   async cancelRun(runId: string): Promise<void> {
     try {
-      await this.prisma.workflowRun.update({
+      await this.db.client.workflowRun.update({
         where: { id: runId },
         data: {
           cancelRequestedAt: new Date(),
@@ -165,7 +165,7 @@ export class WorkflowPrismaRepository implements IWorkflowRepository {
 
     try {
       // Atomic update: only set lease if no active lease exists
-      const result = await this.prisma.workflowRun.updateMany({
+      const result = await this.db.client.workflowRun.updateMany({
         where: {
           id: runId,
           OR: [{ leaseOwnerId: null }, { leaseExpiresAt: { lt: now } }],
@@ -192,7 +192,7 @@ export class WorkflowPrismaRepository implements IWorkflowRepository {
 
     try {
       // Only renew if current owner
-      const result = await this.prisma.workflowRun.updateMany({
+      const result = await this.db.client.workflowRun.updateMany({
         where: {
           id: runId,
           leaseOwnerId: workerId,
@@ -214,7 +214,7 @@ export class WorkflowPrismaRepository implements IWorkflowRepository {
 
   async releaseLease(runId: string, workerId: string): Promise<void> {
     try {
-      await this.prisma.workflowRun.updateMany({
+      await this.db.client.workflowRun.updateMany({
         where: {
           id: runId,
           leaseOwnerId: workerId,
@@ -234,7 +234,7 @@ export class WorkflowPrismaRepository implements IWorkflowRepository {
 
   async updateHeartbeat(runId: string, workerId: string): Promise<void> {
     try {
-      await this.prisma.workflowRun.updateMany({
+      await this.db.client.workflowRun.updateMany({
         where: {
           id: runId,
           leaseOwnerId: workerId,
@@ -254,7 +254,7 @@ export class WorkflowPrismaRepository implements IWorkflowRepository {
   async findExpiredLeases(limit = 100): Promise<string[]> {
     try {
       const now = new Date()
-      const runs = await this.prisma.workflowRun.findMany({
+      const runs = await this.db.client.workflowRun.findMany({
         where: {
           leaseOwnerId: { not: null },
           leaseExpiresAt: { lt: now },
@@ -264,7 +264,7 @@ export class WorkflowPrismaRepository implements IWorkflowRepository {
         take: limit,
       })
 
-      return runs.map((run) => run.id)
+      return runs.map((run: { id: string }) => run.id)
     } catch (error) {
       throw new WorkflowRepositoryError(
         'Failed to find expired leases',

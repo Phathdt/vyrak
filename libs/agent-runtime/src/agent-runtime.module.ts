@@ -27,7 +27,7 @@ import {
     // Artifact repository
     {
       provide: ARTIFACT_REPOSITORY,
-      useFactory: (db: DatabaseService) => new ArtifactPrismaRepository(db.client),
+      useFactory: (db: DatabaseService) => new ArtifactPrismaRepository(db),
       inject: [DatabaseService],
     },
 

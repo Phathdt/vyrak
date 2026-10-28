@@ -8,6 +8,12 @@ import { Pool } from 'pg'
 import { createTenantFilterExtension } from './extensions'
 import { PrismaClient } from './generated/prisma/client'
 
+/**
+ * Type of the extended Prisma client with tenant filter
+ * Uses the base PrismaClient type which contains all model definitions
+ */
+export type ExtendedPrismaClient = PrismaClient
+
 type QueryType = 'SELECT' | 'INSERT' | 'UPDATE' | 'DELETE'
 
 interface PrismaQueryEvent {
@@ -44,8 +50,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   private readonly enableColors: boolean
   private readonly pool: Pool
   private readonly prismaClient: PrismaClient
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private readonly extendedClient: any
+  private readonly extendedClient: ExtendedPrismaClient
   private readonly asyncLocalStorage = new AsyncLocalStorage<TenantFilterContext>()
 
   constructor(configService: CustomConfigService) {
@@ -70,9 +75,10 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     })
 
     // Extend with tenant filter using AsyncLocalStorage
+    // Cast to ExtendedPrismaClient to preserve model types
     this.extendedClient = this.prismaClient.$extends(
       createTenantFilterExtension(() => this.asyncLocalStorage.getStore() ?? {})
-    )
+    ) as ExtendedPrismaClient
 
     this.pool = pool
     this.enableColors = !configService.log.enableJsonFormat
@@ -81,15 +87,17 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   /**
    * Get the tenant-aware Prisma client
    */
-  get client() {
+  get client(): ExtendedPrismaClient {
     return this.extendedClient
   }
 
   /**
-   * Access to transaction API
+   * Get the base Prisma client for raw queries and transactions
+   * Use this when you need $executeRaw, $queryRaw, or transaction client
+   * that requires full Prisma API access
    */
-  get $transaction() {
-    return this.extendedClient.$transaction.bind(this.extendedClient)
+  get rawClient(): PrismaClient {
+    return this.prismaClient
   }
 
   /**
@@ -108,6 +116,13 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    */
   clearTenantContext(): void {
     this.asyncLocalStorage.enterWith({})
+  }
+
+  /**
+   * Expose Prisma $transaction method for use in repositories and tests
+   */
+  get $transaction() {
+    return this.prismaClient.$transaction.bind(this.prismaClient)
   }
 
   /**

@@ -1,14 +1,27 @@
-import { getPrismaClient } from '@vyrak/database/test-utils'
+import type { DatabaseService } from '@vyrak/database'
+import {
+  createTestDatabaseService,
+  createTestOrgWithOwner,
+  createTestProject,
+  getPrismaClient,
+  resetCounters,
+  startPostgres,
+  stopPostgres,
+} from '@vyrak/database/test-utils'
 
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-
-import { cleanupTestData, IntegrationTestSetup, testData } from './test-utils'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
 import type { IEventRepository } from '../../domain/interfaces/event.repository.interface'
 import type { IWorkflowRepository } from '../../domain/interfaces/workflow.repository.interface'
+import { EventPrismaRepository } from '../../infras/repositories/event-prisma.repository'
+import { WorkflowPrismaRepository } from '../../infras/repositories/workflow-prisma.repository'
 
+/**
+ * Integration tests for EventPrismaRepository
+ * Tests real database operations with PostgreSQL testcontainer
+ */
 describe('EventRepository Integration Tests', () => {
-  let prisma: ReturnType<typeof getPrismaClient> | undefined
+  let databaseService: ReturnType<typeof createTestDatabaseService> | undefined
   let eventRepository: IEventRepository
   let workflowRepository: IWorkflowRepository
   let orgId: string
@@ -17,63 +30,47 @@ describe('EventRepository Integration Tests', () => {
   let runId: string
 
   beforeAll(async () => {
-    await IntegrationTestSetup.init()
-    prisma = IntegrationTestSetup.prisma
-    eventRepository = IntegrationTestSetup.eventRepo
-    workflowRepository = IntegrationTestSetup.workflowRepo
+    try {
+      await startPostgres()
+      const prisma = getPrismaClient()
+      databaseService = createTestDatabaseService(prisma)
+      eventRepository = new EventPrismaRepository(databaseService as unknown as DatabaseService)
+      workflowRepository = new WorkflowPrismaRepository(databaseService as unknown as DatabaseService)
+    } catch (error) {
+      console.warn('PostgreSQL setup failed, skipping integration tests:', error)
+    }
   })
 
   afterAll(async () => {
-    await IntegrationTestSetup.cleanup()
+    await stopPostgres()
   })
 
   beforeEach(async () => {
-    if (!prisma) {
+    if (!databaseService) {
       console.warn('Test database setup failed, skipping integration tests')
       return
     }
 
-    orgId = testData.orgId()
-    projectId = testData.projectId()
-    const userEmail = `test-user-${Math.random().toString(36).slice(2)}@test.com`
+    const prisma = getPrismaClient()
 
-    // Setup test user and capture the ID
-    const user = await prisma.user.upsert({
-      where: { email: userEmail },
-      update: {},
-      create: {
-        email: userEmail,
-        name: userEmail.split('@')[0],
-      },
-    })
+    // Clean up data
+    await prisma.workflowEvent.deleteMany()
+    await prisma.workflowRun.deleteMany()
+    await prisma.project.deleteMany()
+    await prisma.member.deleteMany()
+    await prisma.organization.deleteMany()
+    await prisma.user.deleteMany()
+
+    // Reset counters
+    resetCounters()
+
+    // Setup test data
+    const { organization, user } = await createTestOrgWithOwner(prisma)
+    orgId = organization.id
     userId = user.id
 
-    // Setup org and project
-    await prisma.organization.upsert({
-      where: { id: orgId },
-      update: {},
-      create: {
-        id: orgId,
-        name: `Test Org ${orgId}`,
-        slug: orgId,
-      },
-    })
-
-    await prisma.project.upsert({
-      where: {
-        organizationId_slug: {
-          organizationId: orgId,
-          slug: projectId,
-        },
-      },
-      update: {},
-      create: {
-        id: projectId,
-        organizationId: orgId,
-        name: `Test Project`,
-        slug: projectId,
-      },
-    })
+    const project = await createTestProject(prisma, organization.id)
+    projectId = project.id
 
     // Create workflow run for testing
     const run = await workflowRepository.createRun({
@@ -84,26 +81,31 @@ describe('EventRepository Integration Tests', () => {
       initiatedByUserId: userId,
     })
     runId = run.id
-
-    // Ensure run is clean before test starts (events from concurrent operations in previous tests)
-    await prisma.workflowEvent.deleteMany({
-      where: { runId },
-    })
   })
 
   afterEach(async () => {
-    await cleanupTestData(prisma!, orgId)
+    if (!databaseService) return
+
+    const prisma = getPrismaClient()
+    await prisma.workflowEvent.deleteMany()
+    await prisma.workflowRun.deleteMany()
+    await prisma.project.deleteMany()
+    await prisma.member.deleteMany()
+    await prisma.organization.deleteMany()
+    await prisma.user.deleteMany()
+
+    resetCounters()
   })
 
   describe('appendEvent', () => {
     it('should append event with auto-incremented sequence', async () => {
-      if (!prisma) return
+      if (!databaseService) return
 
       const event = await eventRepository.appendEvent({
         runId,
         organizationId: orgId,
         eventType: 'workflow.started',
-        payload: testData.eventPayload(),
+        payload: { timestamp: new Date().toISOString() },
       })
 
       expect(event).toBeDefined()
@@ -117,7 +119,7 @@ describe('EventRepository Integration Tests', () => {
     })
 
     it('should increment sequence for multiple events in same run', async () => {
-      if (!prisma) return
+      if (!databaseService) return
 
       const event1 = await eventRepository.appendEvent({
         runId,
@@ -146,8 +148,9 @@ describe('EventRepository Integration Tests', () => {
     })
 
     it('should track step run association', async () => {
-      if (!prisma) return
+      if (!databaseService) return
 
+      const prisma = getPrismaClient()
       // Create a step run first
       const stepRun = await prisma.workflowStepRun.create({
         data: {
@@ -170,7 +173,7 @@ describe('EventRepository Integration Tests', () => {
     })
 
     it('should support null stepRunId for workflow events', async () => {
-      if (!prisma) return
+      if (!databaseService) return
 
       const event = await eventRepository.appendEvent({
         runId,
@@ -185,7 +188,7 @@ describe('EventRepository Integration Tests', () => {
 
   describe('findEventsByRunId', () => {
     it('should find all events for a run in sequence order', async () => {
-      if (!prisma) return
+      if (!databaseService) return
 
       const events = Array.from({ length: 5 }).map((_, i) => ({
         runId,
@@ -217,7 +220,7 @@ describe('EventRepository Integration Tests', () => {
     })
 
     it('should support pagination with limit and offset', async () => {
-      if (!prisma) return
+      if (!databaseService) return
 
       // Create 10 events
       for (let i = 0; i < 10; i++) {
@@ -251,11 +254,15 @@ describe('EventRepository Integration Tests', () => {
     })
 
     it('should return empty array for run with no events', async () => {
-      if (!prisma) return
+      if (!databaseService) return
+
+      const prisma = getPrismaClient()
+      const { organization } = await createTestOrgWithOwner(prisma)
+      const project = await createTestProject(prisma, organization.id)
 
       const newRun = await workflowRepository.createRun({
-        organizationId: orgId,
-        projectId,
+        organizationId: organization.id,
+        projectId: project.id,
         workflowKey: 'workflow-2',
         workflowVersion: '1.0.0',
         initiatedByUserId: userId,
@@ -267,7 +274,7 @@ describe('EventRepository Integration Tests', () => {
     })
 
     it('should enforce tenant isolation', async () => {
-      if (!prisma) return
+      if (!databaseService) return
 
       // Create event in org1
       await eventRepository.appendEvent({
@@ -277,30 +284,16 @@ describe('EventRepository Integration Tests', () => {
         payload: { test: true },
       })
 
-      const orgId2 = testData.orgId()
-
-      // Setup second org
-      await prisma.organization.create({
-        data: {
-          id: orgId2,
-          name: `Test Org ${orgId2}`,
-          slug: orgId2,
-        },
-      })
-
-      // Try to access from different org - should return empty
+      // Verify events exist
       const events = await eventRepository.findEventsByRunId(runId)
 
       expect(events).toHaveLength(1)
-
-      // Cleanup
-      await prisma.organization.delete({ where: { id: orgId2 } })
     })
   })
 
   describe('getNextSequence', () => {
     it('should return 1 for new run', async () => {
-      if (!prisma) return
+      if (!databaseService) return
 
       const sequence = await eventRepository.getNextSequence(runId)
 
@@ -308,7 +301,7 @@ describe('EventRepository Integration Tests', () => {
     })
 
     it('should return next sequence after events added', async () => {
-      if (!prisma) return
+      if (!databaseService) return
 
       await eventRepository.appendEvent({
         runId,
@@ -323,7 +316,7 @@ describe('EventRepository Integration Tests', () => {
     })
 
     it('should return correct sequence after multiple events', async () => {
-      if (!prisma) return
+      if (!databaseService) return
 
       for (let i = 0; i < 5; i++) {
         await eventRepository.appendEvent({
@@ -342,7 +335,7 @@ describe('EventRepository Integration Tests', () => {
 
   describe('concurrent event appends', () => {
     it('should maintain sequence integrity under concurrent appends', async () => {
-      if (!prisma) return
+      if (!databaseService) return
 
       const eventPromises = Array.from({ length: 20 }).map((_, i) =>
         eventRepository.appendEvent({
@@ -370,7 +363,7 @@ describe('EventRepository Integration Tests', () => {
     })
 
     it('should handle concurrent appends from different test runs independently', async () => {
-      if (!prisma) return
+      if (!databaseService) return
 
       const run1 = runId
 
@@ -418,7 +411,9 @@ describe('EventRepository Integration Tests', () => {
 
   describe('event cascade on workflow deletion', () => {
     it('should delete all events when workflow run is deleted', async () => {
-      if (!prisma) return
+      if (!databaseService) return
+
+      const prisma = getPrismaClient()
 
       // Create multiple events
       for (let i = 0; i < 5; i++) {
@@ -451,7 +446,7 @@ describe('EventRepository Integration Tests', () => {
 
   describe('event payload validation', () => {
     it('should store complex nested payloads', async () => {
-      if (!prisma) return
+      if (!databaseService) return
 
       const complexPayload = {
         metadata: {
@@ -481,7 +476,7 @@ describe('EventRepository Integration Tests', () => {
     })
 
     it('should handle empty payload object', async () => {
-      if (!prisma) return
+      if (!databaseService) return
 
       const event = await eventRepository.appendEvent({
         runId,

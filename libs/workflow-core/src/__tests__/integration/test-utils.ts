@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker'
-import type { PrismaClient } from '@vyrak/database'
-import { getPrismaClient, startPostgres, stopPostgres } from '@vyrak/database/test-utils'
+import type { DatabaseService } from '@vyrak/database'
+import { createTestDatabaseService, getPrismaClient, startPostgres, stopPostgres } from '@vyrak/database/test-utils'
 
 import { expect } from 'vitest'
 
@@ -13,26 +13,24 @@ import { WorkflowPrismaRepository } from '../../infras/repositories/workflow-pri
  */
 
 export class IntegrationTestSetup {
-  static prisma: ReturnType<typeof getPrismaClient> | undefined
+  static databaseService: ReturnType<typeof createTestDatabaseService> | undefined
   static workflowRepo: WorkflowPrismaRepository
   static stepRepo: StepPrismaRepository
   static eventRepo: EventPrismaRepository
 
   /**
-   * Initialize test with Testcontainers Prisma client
+   * Initialize test with Testcontainers Prisma client wrapped in DatabaseService
    */
   static async init(): Promise<void> {
     try {
       await startPostgres()
-      this.prisma = getPrismaClient()
+      const prisma = getPrismaClient()
+      this.databaseService = createTestDatabaseService(prisma)
 
-      // Create repository instances with Prisma client directly
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      this.workflowRepo = new WorkflowPrismaRepository(this.prisma as any)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      this.stepRepo = new StepPrismaRepository(this.prisma as any)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      this.eventRepo = new EventPrismaRepository(this.prisma as any)
+      // Create repository instances with DatabaseService
+      this.workflowRepo = new WorkflowPrismaRepository(this.databaseService as unknown as DatabaseService)
+      this.stepRepo = new StepPrismaRepository(this.databaseService as unknown as DatabaseService)
+      this.eventRepo = new EventPrismaRepository(this.databaseService as unknown as DatabaseService)
     } catch (error) {
       console.warn('PostgreSQL setup failed, skipping integration tests:', error)
     }
@@ -42,9 +40,6 @@ export class IntegrationTestSetup {
    * Cleanup test
    */
   static async cleanup(): Promise<void> {
-    if (this.prisma) {
-      await this.prisma.$disconnect()
-    }
     await stopPostgres()
   }
 
@@ -52,8 +47,8 @@ export class IntegrationTestSetup {
    * Execute query with system access (bypass tenant filter)
    */
   static async withSystemAccess<T>(fn: () => Promise<T>): Promise<T> {
-    if (!this.prisma) {
-      throw new Error('Prisma client not initialized')
+    if (!this.databaseService) {
+      throw new Error('Database service not initialized')
     }
     // Direct access without tenant filter for test setup
     return fn()
@@ -117,36 +112,63 @@ export const testData = {
 
 /**
  * Clean up test data from database
+ * Deletes ALL data regardless of orgId to ensure clean slate for each test
  */
-export async function cleanupTestData(prisma: ReturnType<typeof getPrismaClient>, orgId: string): Promise<void> {
-  // Delete in correct order to respect foreign keys
-  await prisma.workflowEvent.deleteMany({
-    where: { organizationId: orgId },
-  })
+export async function cleanupTestData(_orgId: string): Promise<void> {
+  if (!IntegrationTestSetup.databaseService) return
 
-  await prisma.workflowStepRun.deleteMany({
-    where: { organizationId: orgId },
-  })
+  const prisma = getPrismaClient()
 
-  await prisma.workflowRun.deleteMany({
-    where: { organizationId: orgId },
-  })
+  // Delete ALL data from all tables in correct FK order
+  // This ensures no leftover data from previous tests
+
+  // 1. Delete all workflow events
+  await prisma.workflowEvent.deleteMany({})
+
+  // 2. Delete all stories
+  await prisma.story.deleteMany({})
+
+  // 3. Delete all workflow approvals
+  await prisma.workflowApproval.deleteMany({})
+
+  // 4. Delete all workflow step runs
+  await prisma.workflowStepRun.deleteMany({})
+
+  // 5. Delete all workflow runs
+  await prisma.workflowRun.deleteMany({})
+
+  // 6. Delete all invitations
+  await prisma.invitation.deleteMany({})
+
+  // 7. Delete all organization members
+  await prisma.member.deleteMany({})
+
+  // 8. Delete all organization projects
+  await prisma.project.deleteMany({})
+
+  // 9. Delete all organizations
+  await prisma.organization.deleteMany({})
+
+  // 10. Delete all users
+  await prisma.user.deleteMany({})
+
+  // NOTE: Do NOT reset counters here - it's handled in beforeEach
 }
 
 /**
  * Assert tenant isolation - ensure query results respect organization boundary
  */
 export async function assertTenantIsolation(
-  prisma: PrismaClient,
   allowedOrgId: string,
   deniedOrgId: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Generic query function return type
-  queryFn: (prisma: PrismaClient, orgId: string) => Promise<any>
+  queryFn: (orgId: string) => Promise<any>
 ): Promise<void> {
   // Query with allowed org should work
-  const allowedResult = await queryFn(prisma, allowedOrgId)
+  const allowedResult = await queryFn(allowedOrgId)
 
   // Query with denied org
+  const prisma = getPrismaClient()
   const deniedResult = await prisma.workflowRun.findMany({
     where: { organizationId: deniedOrgId },
   })

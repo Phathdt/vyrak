@@ -1,4 +1,4 @@
-import type { PrismaClient } from '@vyrak/database'
+import type { DatabaseService } from '@vyrak/database'
 
 import {
   ApprovalStatus,
@@ -14,12 +14,16 @@ import type { IWorkflowApprovalRepository } from '../../domain/interfaces/workfl
  * NO @Injectable() decorator - plain TypeScript class registered via factory
  */
 export class WorkflowApprovalPrismaRepository implements IWorkflowApprovalRepository {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(private readonly db: DatabaseService) {}
 
   async save(approval: WorkflowApproval): Promise<void> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Extended Prisma client type safety
-    const prismaExt = this.prisma as any
-    await prismaExt.workflowApproval.upsert({
+    // Fetch organizationId from workflow run for tenant isolation
+    const run = await this.db.client.workflowRun.findUniqueOrThrow({
+      where: { id: approval.workflowRunId },
+      select: { organizationId: true },
+    })
+
+    await this.db.client.workflowApproval.upsert({
       where: { id: approval.id },
       update: {
         status: approval.status,
@@ -32,10 +36,16 @@ export class WorkflowApprovalPrismaRepository implements IWorkflowApprovalReposi
       },
       create: {
         id: approval.id,
+        organizationId: run.organizationId,
         workflowRunId: approval.workflowRunId,
         status: approval.status,
         planArtifactId: approval.planArtifactId,
         planArtifactHash: approval.planArtifactHash,
+        decidedByUserId: approval.decidedByUserId ?? null,
+        decidedAt: approval.decidedAt ?? null,
+        comment: approval.comment ?? null,
+        invalidatedAt: approval.invalidatedAt ?? null,
+        invalidationReason: approval.invalidationReason ?? null,
         createdAt: approval.createdAt,
         updatedAt: approval.updatedAt,
       },
@@ -43,9 +53,7 @@ export class WorkflowApprovalPrismaRepository implements IWorkflowApprovalReposi
   }
 
   async findById(id: string): Promise<WorkflowApproval | null> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Extended Prisma client type safety
-    const prismaExt = this.prisma as any
-    const record = await prismaExt.workflowApproval.findUnique({
+    const record = await this.db.client.workflowApproval.findUnique({
       where: { id },
     })
 
@@ -53,9 +61,7 @@ export class WorkflowApprovalPrismaRepository implements IWorkflowApprovalReposi
   }
 
   async findByRunId(runId: string): Promise<WorkflowApproval | null> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Extended Prisma client type safety
-    const prismaExt = this.prisma as any
-    const record = await prismaExt.workflowApproval.findUnique({
+    const record = await this.db.client.workflowApproval.findUnique({
       where: { workflowRunId: runId },
     })
 
@@ -63,9 +69,7 @@ export class WorkflowApprovalPrismaRepository implements IWorkflowApprovalReposi
   }
 
   async findPendingByRunId(runId: string): Promise<WorkflowApproval | null> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Extended Prisma client type safety
-    const prismaExt = this.prisma as any
-    const record = await prismaExt.workflowApproval.findFirst({
+    const record = await this.db.client.workflowApproval.findFirst({
       where: {
         workflowRunId: runId,
         status: ApprovalStatus.PENDING,
