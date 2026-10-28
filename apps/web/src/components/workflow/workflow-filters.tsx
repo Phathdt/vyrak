@@ -1,9 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
-
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Search, X } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 
 interface WorkflowFiltersProps {
   filters: {
@@ -28,15 +27,9 @@ const STATUS_OPTIONS = [
   { value: 'cancelled', label: 'Cancelled', icon: '🚫' },
 ]
 
-export function WorkflowFilters({
-  filters,
-  onChange,
-  projectOptions = [],
-}: WorkflowFiltersProps) {
+export function WorkflowFilters({ filters, onChange, projectOptions = [] }: WorkflowFiltersProps) {
   const [searchInput, setSearchInput] = useState(filters.search || '')
-  const [showCustomDateRange, setShowCustomDateRange] = useState(
-    filters.dateRange === 'custom'
-  )
+  const [showCustomDateRange, setShowCustomDateRange] = useState(filters.dateRange === 'custom')
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Debounce search input (300ms)
@@ -108,17 +101,19 @@ export function WorkflowFilters({
     })
   }
 
-  const hasActiveFilters =
-    filters.status || filters.search || filters.projectId || filters.dateRange
+  const hasActiveFilters = filters.status || filters.search || filters.projectId || filters.dateRange
 
   const selectedStatuses = filters.status?.split(',') || []
 
   return (
-    <div className='flex flex-col gap-6 rounded-lg border bg-card p-6'>
+    <div className='flex flex-col gap-6 rounded-lg border bg-card p-6' data-testid='workflows-filters'>
       <div className='flex flex-wrap items-end gap-4'>
         {/* Search Input */}
         <div className='flex flex-1 flex-col gap-2' style={{ minWidth: '300px' }}>
-          <Label htmlFor='workflow-search' className='text-xs font-medium uppercase tracking-wide text-muted-foreground'>
+          <Label
+            htmlFor='workflow-search'
+            className='text-xs font-medium uppercase tracking-wide text-muted-foreground'
+          >
             Search
           </Label>
           <div className='relative'>
@@ -130,6 +125,7 @@ export function WorkflowFilters({
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder='Search by requirement or run ID...'
               className='pl-10'
+              data-testid='workflows-search'
             />
             {searchInput && (
               <button
@@ -137,6 +133,7 @@ export function WorkflowFilters({
                 onClick={() => setSearchInput('')}
                 className='absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground'
                 aria-label='Clear search'
+                data-testid='workflows-search-clear'
               >
                 <X className='h-4 w-4' />
               </button>
@@ -147,16 +144,18 @@ export function WorkflowFilters({
         {/* Project Filter */}
         {projectOptions.length > 0 && (
           <div className='flex flex-col gap-2' style={{ minWidth: '200px' }}>
-            <Label htmlFor='project-filter' className='text-xs font-medium uppercase tracking-wide text-muted-foreground'>
+            <Label
+              htmlFor='project-filter'
+              className='text-xs font-medium uppercase tracking-wide text-muted-foreground'
+            >
               Project
             </Label>
             <select
               id='project-filter'
               value={filters.projectId || ''}
-              onChange={(e) =>
-                onChange({ projectId: e.target.value || undefined, page: 1 })
-              }
+              onChange={(e) => onChange({ projectId: e.target.value || undefined, page: 1 })}
               className='flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+              data-testid='workflows-filter-project'
             >
               <option value=''>All Projects</option>
               {projectOptions.map((project) => (
@@ -170,7 +169,10 @@ export function WorkflowFilters({
 
         {/* Date Range Filter */}
         <div className='flex flex-col gap-2' style={{ minWidth: '200px' }}>
-          <Label htmlFor='date-range-filter' className='text-xs font-medium uppercase tracking-wide text-muted-foreground'>
+          <Label
+            htmlFor='date-range-filter'
+            className='text-xs font-medium uppercase tracking-wide text-muted-foreground'
+          >
             Date Range
           </Label>
           <select
@@ -178,6 +180,7 @@ export function WorkflowFilters({
             value={filters.dateRange || ''}
             onChange={(e) => handleDateRangeChange(e.target.value)}
             className='flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+            data-testid='workflows-filter-date-range'
           >
             <option value=''>All Time</option>
             <option value='24h'>Last 24 Hours</option>
@@ -194,6 +197,7 @@ export function WorkflowFilters({
             variant='outline'
             onClick={clearFilters}
             className='h-10'
+            data-testid='workflows-clear-filters'
           >
             Clear Filters
           </Button>
@@ -202,9 +206,11 @@ export function WorkflowFilters({
 
       {/* Custom Date Range */}
       {showCustomDateRange && (
-        <div className='flex gap-4 rounded-md border bg-muted/50 p-4'>
+        <div className='flex gap-4 rounded-md border bg-muted/50 p-4' data-testid='workflows-filter-custom-date'>
           <div className='flex flex-1 flex-col gap-2'>
-            <Label htmlFor='date-from' className='text-xs font-medium'>From</Label>
+            <Label htmlFor='date-from' className='text-xs font-medium'>
+              From
+            </Label>
             <Input
               id='date-from'
               type='date'
@@ -216,10 +222,13 @@ export function WorkflowFilters({
                 )
               }
               max={filters.dateTo?.split('T')[0] || new Date().toISOString().split('T')[0]}
+              data-testid='workflows-filter-date-from'
             />
           </div>
           <div className='flex flex-1 flex-col gap-2'>
-            <Label htmlFor='date-to' className='text-xs font-medium'>To</Label>
+            <Label htmlFor='date-to' className='text-xs font-medium'>
+              To
+            </Label>
             <Input
               id='date-to'
               type='date'
@@ -232,6 +241,7 @@ export function WorkflowFilters({
               }
               min={filters.dateFrom?.split('T')[0]}
               max={new Date().toISOString().split('T')[0]}
+              data-testid='workflows-filter-date-to'
             />
           </div>
         </div>
@@ -240,7 +250,7 @@ export function WorkflowFilters({
       {/* Status Filter (Multi-select chips) */}
       <div className='flex flex-col gap-3'>
         <Label className='text-xs font-medium uppercase tracking-wide text-muted-foreground'>Status</Label>
-        <div className='flex flex-wrap gap-2'>
+        <div className='flex flex-wrap gap-2' data-testid='workflows-filter-status'>
           {STATUS_OPTIONS.map((statusOption) => (
             <button
               key={statusOption.value}
@@ -252,6 +262,7 @@ export function WorkflowFilters({
                   : 'border-border bg-background hover:bg-muted'
               }`}
               aria-pressed={selectedStatuses.includes(statusOption.value)}
+              data-testid={`workflows-filter-status-${statusOption.value}`}
             >
               <span>{statusOption.icon}</span>
               <span>{statusOption.label}</span>

@@ -36,17 +36,19 @@ export function WorkflowsPage() {
   }
 
   const hasWorkflows = data && data.items.length > 0
-  const noWorkflowsAtAll = data && data.total === 0 && !filters.status && !filters.search && !filters.projectId && !filters.dateRange
-  const noResultsForFilters = data && data.items.length === 0 && (filters.status || filters.search || filters.projectId || filters.dateRange)
+  const noWorkflowsAtAll =
+    data && data.total === 0 && !filters.status && !filters.search && !filters.projectId && !filters.dateRange
+  const noResultsForFilters =
+    data && data.items.length === 0 && (filters.status || filters.search || filters.projectId || filters.dateRange)
 
   return (
-    <div className='container py-8'>
+    <div className='container py-8' data-testid='workflows-page'>
       <header className='mb-8 flex items-center justify-between'>
         <div>
           <h1 className='text-3xl font-bold tracking-tight'>Workflows</h1>
           <p className='mt-2 text-muted-foreground'>Monitor and manage your AI-powered development workflows</p>
         </div>
-        <Button asChild>
+        <Button asChild data-testid='create-workflow-button'>
           <Link to='/workflows/create'>
             <Plus className='mr-2 h-4 w-4' />
             Create Workflow
@@ -59,23 +61,30 @@ export function WorkflowsPage() {
           filters={filters}
           onChange={handleFilterChange}
           projectOptions={[]}
+          data-testid='workflows-filters'
         />
 
         {isLoading && (
-          <div className='flex flex-col items-center justify-center py-16'>
+          <div className='flex flex-col items-center justify-center py-16' data-testid='workflows-loading'>
             <Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
             <p className='mt-4 text-muted-foreground'>Loading workflows...</p>
           </div>
         )}
 
         {error && (
-          <div className='rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-destructive'>
+          <div
+            className='rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-destructive'
+            data-testid='workflows-error'
+          >
             <p>Error loading workflows: {error instanceof Error ? error.message : 'Unknown error'}</p>
           </div>
         )}
 
         {noWorkflowsAtAll && (
-          <div className='flex flex-col items-center justify-center rounded-lg border-2 border-dashed py-16 text-center'>
+          <div
+            className='flex flex-col items-center justify-center rounded-lg border-2 border-dashed py-16 text-center'
+            data-testid='workflows-empty-state'
+          >
             <div className='mb-4 text-6xl opacity-50'>📋</div>
             <h2 className='mb-2 text-2xl font-semibold'>No workflows yet</h2>
             <p className='mb-6 max-w-md text-muted-foreground'>
@@ -91,7 +100,10 @@ export function WorkflowsPage() {
         )}
 
         {noResultsForFilters && (
-          <div className='flex flex-col items-center justify-center rounded-lg border-2 border-dashed py-16 text-center'>
+          <div
+            className='flex flex-col items-center justify-center rounded-lg border-2 border-dashed py-16 text-center'
+            data-testid='workflows-no-results'
+          >
             <div className='mb-4 text-6xl opacity-50'>🔍</div>
             <h2 className='mb-2 text-2xl font-semibold'>No workflows match your filters</h2>
             <p className='mb-6 max-w-md text-muted-foreground'>
@@ -99,15 +111,18 @@ export function WorkflowsPage() {
             </p>
             <Button
               variant='outline'
-              onClick={() => handleFilterChange({
-                status: undefined,
-                search: undefined,
-                projectId: undefined,
-                dateRange: undefined,
-                dateFrom: undefined,
-                dateTo: undefined,
-                page: 1,
-              })}
+              onClick={() =>
+                handleFilterChange({
+                  status: undefined,
+                  search: undefined,
+                  projectId: undefined,
+                  dateRange: undefined,
+                  dateFrom: undefined,
+                  dateTo: undefined,
+                  page: 1,
+                })
+              }
+              data-testid='workflows-clear-filters'
             >
               Clear Filters
             </Button>

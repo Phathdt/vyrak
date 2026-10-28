@@ -20,29 +20,27 @@ export function useWorkflowCancel(runId: string, options?: CancelWorkflowOptions
     }
 
     // Check current status before cancelling
-    const currentData = queryClient.getQueryData(['workflow-run', activeOrgId, runId]) as unknown as Record<string, unknown>
+    const currentData = queryClient.getQueryData(['workflow-run', activeOrgId, runId]) as unknown as Record<
+      string,
+      unknown
+    >
 
     if (currentData) {
       const terminalStates = ['succeeded', 'failed', 'cancelled']
       const status = String(currentData.status)
       if (terminalStates.includes(status)) {
-        throw new Error(
-          `Cannot cancel workflow: it has already ${status === 'cancelled' ? 'been cancelled' : status}`
-        )
+        throw new Error(`Cannot cancel workflow: it has already ${status === 'cancelled' ? 'been cancelled' : status}`)
       }
     }
 
     // Optimistic update: set status to "cancelling"
-    queryClient.setQueryData(
-      ['workflow-run', activeOrgId, runId],
-      (old: unknown) => {
-        if (!old) return old
-        return {
-          ...(old as Record<string, unknown>),
-          status: 'cancelling',
-        }
+    queryClient.setQueryData(['workflow-run', activeOrgId, runId], (old: unknown) => {
+      if (!old) return old
+      return {
+        ...(old as Record<string, unknown>),
+        status: 'cancelling',
       }
-    )
+    })
 
     try {
       // Call API with comment field (maps to reason)
@@ -66,7 +64,9 @@ export function useWorkflowCancel(runId: string, options?: CancelWorkflowOptions
       const err = error as unknown as Record<string, unknown>
       if (err.status === 409 || (err.response as Record<string, unknown>)?.status === 409) {
         // Backend says workflow already in terminal state
-        const message = ((err.response as Record<string, unknown>)?.data as Record<string, unknown>)?.message || 'Workflow has already completed'
+        const message =
+          ((err.response as Record<string, unknown>)?.data as Record<string, unknown>)?.message ||
+          'Workflow has already completed'
         options?.onError?.(new Error(String(message)))
         throw new Error(String(message))
       }

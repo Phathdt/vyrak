@@ -3,10 +3,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useNavigate } from 'react-router-dom'
 
 import { StatusBadge } from './StatusBadge'
-import { useDurationCounter } from '../../hooks/use-duration-counter'
-import { formatDuration, formatRelativeTime } from '../../lib/utils/duration-utils'
 
 import type { WorkflowRunSummaryDto } from '../../api/generated/models'
+import { useDurationCounter } from '../../hooks/use-duration-counter'
+import { formatDuration, formatRelativeTime } from '../../lib/utils/duration-utils'
 
 interface WorkflowTableProps {
   workflows: WorkflowRunSummaryDto[]
@@ -29,7 +29,7 @@ export function WorkflowTable({ workflows, total, page, limit, onPageChange }: W
 
   return (
     <div className='flex flex-col gap-6'>
-      <div className='overflow-x-auto rounded-lg border'>
+      <div className='overflow-x-auto rounded-lg border' data-testid='workflows-list'>
         <Table>
           <TableHeader>
             <TableRow>
@@ -51,7 +51,10 @@ export function WorkflowTable({ workflows, total, page, limit, onPageChange }: W
       </div>
 
       {/* Pagination */}
-      <div className='flex items-center justify-between rounded-lg border bg-card p-4'>
+      <div
+        className='flex items-center justify-between rounded-lg border bg-card p-4'
+        data-testid='workflows-pagination'
+      >
         <p className='text-sm text-muted-foreground'>
           Showing {startIndex}-{endIndex} of {total} workflows
         </p>
@@ -62,6 +65,7 @@ export function WorkflowTable({ workflows, total, page, limit, onPageChange }: W
             size='sm'
             onClick={() => onPageChange(page - 1)}
             disabled={page === 1}
+            data-testid='workflows-pagination-prev'
           >
             ← Previous
           </Button>
@@ -70,11 +74,7 @@ export function WorkflowTable({ workflows, total, page, limit, onPageChange }: W
             {Array.from({ length: totalPages }, (_, i) => i + 1)
               .filter((p) => {
                 // Show first, last, current, and adjacent pages
-                return (
-                  p === 1 ||
-                  p === totalPages ||
-                  Math.abs(p - page) <= 1
-                )
+                return p === 1 || p === totalPages || Math.abs(p - page) <= 1
               })
               .map((p, index, array) => {
                 const showEllipsis = index > 0 && p - array[index - 1] > 1
@@ -87,6 +87,7 @@ export function WorkflowTable({ workflows, total, page, limit, onPageChange }: W
                       size='sm'
                       onClick={() => onPageChange(p)}
                       className='min-w-10'
+                      data-testid={`workflows-pagination-page-${p}`}
                     >
                       {p}
                     </Button>
@@ -100,6 +101,7 @@ export function WorkflowTable({ workflows, total, page, limit, onPageChange }: W
             size='sm'
             onClick={() => onPageChange(page + 1)}
             disabled={page === totalPages}
+            data-testid='workflows-pagination-next'
           >
             Next →
           </Button>
@@ -111,17 +113,10 @@ export function WorkflowTable({ workflows, total, page, limit, onPageChange }: W
 
 function WorkflowRow({ workflow, navigate }: { workflow: WorkflowRunSummaryDto; navigate: (path: string) => void }) {
   const isActive = workflow.status === 'running' || workflow.status === 'queued'
-  const duration = useDurationCounter(
-    workflow.startedAt,
-    workflow.completedAt,
-    isActive
-  )
+  const duration = useDurationCounter(workflow.startedAt, workflow.completedAt, isActive)
 
   return (
-    <TableRow
-      onClick={() => navigate(`/workflows/${workflow.id}`)}
-      className='cursor-pointer hover:bg-accent/50'
-    >
+    <TableRow onClick={() => navigate(`/workflows/${workflow.id}`)} className='cursor-pointer hover:bg-accent/50'>
       <TableCell>
         <StatusBadge status={workflow.status} size='sm' />
       </TableCell>
@@ -129,18 +124,14 @@ function WorkflowRow({ workflow, navigate }: { workflow: WorkflowRunSummaryDto; 
       <TableCell className='font-mono text-sm'>{workflow.id.slice(0, 8)}</TableCell>
       <TableCell>
         {workflow.startedAt ? (
-          <span title={new Date(workflow.startedAt).toLocaleString()}>
-            {formatRelativeTime(workflow.startedAt)}
-          </span>
+          <span title={new Date(workflow.startedAt).toLocaleString()}>{formatRelativeTime(workflow.startedAt)}</span>
         ) : (
           <span className='text-muted-foreground'>-</span>
         )}
       </TableCell>
       <TableCell>
         {duration !== null ? (
-          <span className={isActive ? 'text-cyan-400 font-medium' : ''}>
-            {formatDuration(duration)}
-          </span>
+          <span className={isActive ? 'text-cyan-400 font-medium' : ''}>{formatDuration(duration)}</span>
         ) : (
           <span className='text-muted-foreground'>-</span>
         )}

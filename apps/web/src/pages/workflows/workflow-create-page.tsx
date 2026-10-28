@@ -27,9 +27,7 @@ export function WorkflowCreatePage() {
       {/* Page Header */}
       <div className='mb-8'>
         <h1 className='text-3xl font-bold mb-2'>Create Workflow</h1>
-        <p className='text-muted-foreground'>
-          Submit a development requirement to start an AI-powered workflow
-        </p>
+        <p className='text-muted-foreground'>Submit a development requirement to start an AI-powered workflow</p>
       </div>
 
       {/* Workflow Form */}

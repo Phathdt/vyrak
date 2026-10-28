@@ -1,8 +1,8 @@
 export const TEST_TIMEOUTS = {
   QUICK_CHECK: 1000,
-  ACTION: 10000,
-  NAVIGATION: 10000,
-  API_CALL: 15000,
+  ACTION: 3000,
+  NAVIGATION: 5000,
+  API_CALL: 10000,
 } as const
 
 export const TEST_CONFIG = {

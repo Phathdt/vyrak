@@ -27,7 +27,7 @@ export function ProjectsFilters({
   isSearching = false,
 }: ProjectsFiltersProps) {
   return (
-    <div className='flex flex-col sm:flex-row gap-4 mb-6'>
+    <div className='flex flex-col sm:flex-row gap-4 mb-6' data-testid='projects-filters'>
       {/* Search Input */}
       <div className='flex-1'>
         <div className='relative'>
@@ -54,6 +54,7 @@ export function ProjectsFilters({
             onChange={(e) => onSearchChange(e.target.value)}
             className='block w-full pl-10 pr-10 py-2 bg-card border border-border rounded-lg text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent-cyan focus:border-transparent transition-colors'
             aria-label='Search projects'
+            data-testid='projects-search'
           />
           {isSearching && (
             <div className='absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none'>
@@ -78,6 +79,7 @@ export function ProjectsFilters({
               onClick={onClearSearch}
               className='absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground hover:text-foreground transition-colors'
               aria-label='Clear search'
+              data-testid='projects-search-clear'
             >
               <svg className='h-5 w-5' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
                 <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M6 18L18 6M6 6l12 12' />
@@ -97,6 +99,7 @@ export function ProjectsFilters({
           value={sort}
           onChange={(e) => onSortChange(e.target.value as SortOption)}
           className='flex-1 px-3 py-2 bg-card border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent-cyan focus:border-transparent transition-colors cursor-pointer'
+          data-testid='projects-sort'
         >
           {sortOptions.map((option) => (
             <option key={option.value} value={option.value}>

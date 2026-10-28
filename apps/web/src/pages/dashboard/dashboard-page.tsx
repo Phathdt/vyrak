@@ -24,16 +24,16 @@ export function DashboardPage() {
   const activeOrg = organizations.find((org) => org.id === activeOrgId)
 
   return (
-    <div className='min-h-screen bg-background' data-testid='dashboard-content'>
+    <div className='min-h-screen bg-background' data-testid='dashboard-main-content'>
       <div className='max-w-7xl mx-auto p-4 md:p-6 lg:p-8'>
         {/* Header */}
         <header className='mb-8 pb-6 border-b border-border'>
           <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
             <div>
-              <h1 className='text-3xl font-bold tracking-tight mb-1' data-testid='welcome-message'>
+              <h1 className='text-3xl font-bold tracking-tight mb-1' data-testid='dashboard-welcome'>
                 Dashboard
               </h1>
-              <p className='text-muted-foreground' data-testid='user-info'>
+              <p className='text-muted-foreground' data-testid='dashboard-user-info'>
                 Welcome back, {user?.name || user?.email}
               </p>
             </div>
@@ -52,7 +52,10 @@ export function DashboardPage() {
         </header>
 
         {/* Stats Grid */}
-        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8'>
+        <div
+          className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8'
+          data-testid='dashboard-stats-section'
+        >
           <StatsCard
             title='Total Organizations'
             value={organizations.length}
@@ -67,6 +70,7 @@ export function DashboardPage() {
               </svg>
             }
             variant='default'
+            data-testid='stat-card-organizations'
           />
 
           <StatsCard
@@ -84,6 +88,7 @@ export function DashboardPage() {
             }
             variant='success'
             description={activeOrg?.role ? `Your role: ${activeOrg.role}` : undefined}
+            data-testid='stat-card-active-org'
           />
 
           <StatsCard
@@ -100,6 +105,7 @@ export function DashboardPage() {
               </svg>
             }
             variant='accent'
+            data-testid='stat-card-status'
           />
 
           <StatsCard
@@ -116,12 +122,13 @@ export function DashboardPage() {
               </svg>
             }
             description={activeOrg ? `in ${activeOrg.name}` : 'No active organization'}
+            data-testid='stat-card-role'
           />
         </div>
 
         {/* Organization Selector */}
         {organizations.length > 0 && (
-          <Card className='mb-8'>
+          <Card className='mb-8' data-testid='org-selector-section'>
             <CardHeader>
               <CardTitle>Active Organization</CardTitle>
               <CardDescription>Select the organization you want to work with</CardDescription>
@@ -132,16 +139,17 @@ export function DashboardPage() {
                 onChange={(e) => setActiveOrgId(e.target.value || null)}
                 className='w-full px-3 py-2 bg-input border border-border rounded-md text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors min-h-[44px] md:min-h-[36px]'
                 aria-label='Select active organization'
+                data-testid='org-selector'
               >
                 <option value=''>Select an organization</option>
                 {organizations.map((org) => (
-                  <option key={org.id} value={org.id}>
+                  <option key={org.id} value={org.id} data-testid={`org-option-${org.id}`}>
                     {org.name} ({org.role})
                   </option>
                 ))}
               </select>
               {activeOrg && (
-                <p className='text-sm text-muted-foreground mt-3'>
+                <p className='text-sm text-muted-foreground mt-3' data-testid='org-selector-slug'>
                   Slug: <span className='font-mono'>{activeOrg.slug}</span>
                 </p>
               )}
@@ -150,7 +158,7 @@ export function DashboardPage() {
         )}
 
         {/* Quick Links */}
-        <section className='mb-8'>
+        <section className='mb-8' data-testid='quick-actions-section'>
           <h2 className='text-xl font-semibold mb-4'>Quick Actions</h2>
           {organizations.length === 0 ? (
             <EmptyState
@@ -175,7 +183,12 @@ export function DashboardPage() {
             />
           ) : (
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-              <Card variant='interactive' className='group' onClick={() => (window.location.href = '/organizations')}>
+              <Card
+                variant='interactive'
+                className='group'
+                onClick={() => (window.location.href = '/organizations')}
+                data-testid='quick-action-organizations'
+              >
                 <CardHeader>
                   <div className='flex items-start gap-3'>
                     <div className='flex-shrink-0 w-10 h-10 rounded-lg bg-accent-cyan/10 flex items-center justify-center group-hover:bg-accent-cyan/20 transition-colors'>
@@ -201,6 +214,7 @@ export function DashboardPage() {
                   variant='interactive'
                   className='group'
                   onClick={() => (window.location.href = `/organizations/${activeOrgId}/settings`)}
+                  data-testid='quick-action-settings'
                 >
                   <CardHeader>
                     <div className='flex items-start gap-3'>
@@ -233,26 +247,26 @@ export function DashboardPage() {
         </section>
 
         {/* User Info */}
-        <Card>
+        <Card data-testid='user-info-section'>
           <CardHeader>
             <CardTitle>User Information</CardTitle>
             <CardDescription>Your account details</CardDescription>
           </CardHeader>
           <CardContent>
             <dl className='grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm'>
-              <div>
+              <div data-testid='user-info-id'>
                 <dt className='font-medium text-muted-foreground mb-1'>User ID</dt>
                 <dd className='font-mono text-xs break-all'>{user?.id}</dd>
               </div>
-              <div>
+              <div data-testid='user-info-email'>
                 <dt className='font-medium text-muted-foreground mb-1'>Email</dt>
                 <dd className='break-all'>{user?.email}</dd>
               </div>
-              <div>
+              <div data-testid='user-info-name'>
                 <dt className='font-medium text-muted-foreground mb-1'>Name</dt>
                 <dd>{user?.name || <span className='text-muted-foreground'>Not set</span>}</dd>
               </div>
-              <div>
+              <div data-testid='user-info-org-count'>
                 <dt className='font-medium text-muted-foreground mb-1'>Organizations</dt>
                 <dd>
                   {organizations.length} {organizations.length === 1 ? 'organization' : 'organizations'}

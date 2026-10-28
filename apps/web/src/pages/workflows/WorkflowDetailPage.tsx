@@ -1,15 +1,14 @@
-import { useEffect, useRef, useState } from 'react'
-
 import { Button } from '@/components/ui/button'
 import { Loader2 } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 
+import { ToastContainer } from '../../components/ui/toast'
 import { CancelWorkflowModal } from '../../components/workflow/cancel-workflow-modal'
 import { ProgressBar } from '../../components/workflow/progress-bar'
 import { SSEConnectionIndicator } from '../../components/workflow/sse-connection-indicator'
-import { StepTimeline } from '../../components/workflow/StepTimeline'
 import { StatusBadge } from '../../components/workflow/StatusBadge'
-import { ToastContainer } from '../../components/ui/toast'
+import { StepTimeline } from '../../components/workflow/StepTimeline'
 import { WorkflowOverview } from '../../components/workflow/WorkflowOverview'
 import { useToast } from '../../hooks/use-toast'
 import { useWorkflowCancel } from '../../hooks/use-workflow-cancel'

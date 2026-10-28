@@ -15,6 +15,7 @@ const isCI = !!process.env.CI
 
 export default defineConfig({
   testDir: '../tests',
+  globalSetup: './global-setup.ts',
   fullyParallel: !isCI, // Sequential in CI to avoid conflicts
   forbidOnly: isCI,
   retries: isCI ? 2 : 0,
@@ -38,19 +39,19 @@ export default defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
-    // Firefox and Webkit only for local full testing
-    ...(!isCI
-      ? [
-          {
-            name: 'firefox',
-            use: { ...devices['Desktop Firefox'] },
-          },
-          {
-            name: 'webkit',
-            use: { ...devices['Desktop Safari'] },
-          },
-        ]
-      : []),
+    // Firefox and Webkit disabled - focus on Chromium only
+    // ...(!isCI
+    //   ? [
+    //       {
+    //         name: 'firefox',
+    //         use: { ...devices['Desktop Firefox'] },
+    //       },
+    //       {
+    //         name: 'webkit',
+    //         use: { ...devices['Desktop Safari'] },
+    //       },
+    //     ]
+    //   : []),
   ],
   webServer: isCI
     ? undefined

@@ -47,6 +47,7 @@
     "db:migrate:deploy": "prisma migrate deploy --config=prisma/prisma.config.ts",
     "db:status": "prisma migrate status --config=prisma/prisma.config.ts",
     "db:seed": "tsx prisma/seed.ts",
+    "db:seed:e2e": "tsx prisma/seed-e2e.ts",
     "db:studio": "prisma studio",
     "ctix": "node generate-indexes.js",
     "prepare": "lefthook install",

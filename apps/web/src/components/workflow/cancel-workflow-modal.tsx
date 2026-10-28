@@ -1,9 +1,8 @@
-import { useState, type FormEvent } from 'react'
-
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { useState, type FormEvent } from 'react'
 
 interface CancelWorkflowModalProps {
   workflowId: string
@@ -14,13 +13,7 @@ interface CancelWorkflowModalProps {
   error: string | null
 }
 
-export function CancelWorkflowModal({
-  workflowId,
-  onConfirm,
-  onCancel,
-  isLoading,
-  error,
-}: CancelWorkflowModalProps) {
+export function CancelWorkflowModal({ workflowId, onConfirm, onCancel, isLoading, error }: CancelWorkflowModalProps) {
   const [acknowledged, setAcknowledged] = useState(false)
   const [reason, setReason] = useState('')
 
@@ -75,7 +68,9 @@ export function CancelWorkflowModal({
             </p>
             <div className='flex items-center gap-2 rounded-md bg-muted p-3'>
               <span className='text-xs font-medium text-muted-foreground'>Workflow ID:</span>
-              <code className='rounded bg-muted-foreground/20 px-2 py-0.5 font-mono text-xs'>{workflowId.slice(0, 8)}...</code>
+              <code className='rounded bg-muted-foreground/20 px-2 py-0.5 font-mono text-xs'>
+                {workflowId.slice(0, 8)}...
+              </code>
             </div>
           </div>
 
@@ -98,9 +93,7 @@ export function CancelWorkflowModal({
               disabled={isLoading}
               maxLength={500}
             />
-            <p className='text-xs text-muted-foreground'>
-              {reason.length} / 500 characters
-            </p>
+            <p className='text-xs text-muted-foreground'>{reason.length} / 500 characters</p>
           </div>
 
           <div className='flex items-center gap-3 rounded-md border bg-muted/50 p-4'>
@@ -116,19 +109,10 @@ export function CancelWorkflowModal({
           </div>
 
           <div className='flex justify-end gap-3 border-t pt-6'>
-            <Button
-              type='button'
-              variant='outline'
-              onClick={onCancel}
-              disabled={isLoading}
-            >
+            <Button type='button' variant='outline' onClick={onCancel} disabled={isLoading}>
               Go Back
             </Button>
-            <Button
-              type='submit'
-              variant='destructive'
-              disabled={!acknowledged || isLoading}
-            >
+            <Button type='submit' variant='destructive' disabled={!acknowledged || isLoading}>
               {isLoading ? 'Cancelling...' : 'Confirm Cancel'}
             </Button>
           </div>
