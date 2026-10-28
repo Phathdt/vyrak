@@ -22,7 +22,7 @@ const ROOT_PACKAGE_JSON = path.join(__dirname, '..', 'package.json')
 const NPM_PACKAGE_VERSIONS: Record<string, string> = {}
 
 // Packages that should only be in devDependencies (not dependencies)
-const DEV_ONLY_PACKAGES = new Set(['@nestjs/testing', '@types/node', 'typescript', '@swc/core', 'eslint', 'prettier'])
+const DEV_ONLY_PACKAGES = new Set(['@nestjs/testing', '@types/node', 'typescript', '@swc/core', 'eslint', 'oxfmt'])
 
 /**
  * Load always-keep dependencies from .keep-deps file in module directory.
@@ -116,7 +116,7 @@ function loadRootPackageVersions(): void {
       ...rootPkg.devDependencies,
     }
     Object.assign(NPM_PACKAGE_VERSIONS, allDeps)
-  } catch (error) {
+  } catch (_error) {
     console.error('Warning: Could not load root package.json')
   }
 }

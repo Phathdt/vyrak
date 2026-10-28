@@ -1,6 +1,6 @@
 import { PrismaPg } from '@prisma/adapter-pg'
-
 import * as argon2 from 'argon2'
+import { v4 as uuidv4 } from 'uuid'
 
 import { PrismaClient } from '../libs/database/src/generated/prisma/client'
 
@@ -48,13 +48,7 @@ async function hashPassword(password: string): Promise<string> {
   })
 }
 
-/**
- * Generate UUIDv4-like string with custom prefix for readability
- */
-function generateId(prefix: string, index: number): string {
-  const padded = String(index).padStart(3, '0')
-  return `${prefix}-0000-0000-0000-00000000${padded}`
-}
+// UUID generation handled by uuidv4() import
 
 // ============================================================================
 // Main Seed Function
@@ -99,7 +93,7 @@ async function main() {
     const users = await Promise.all([
       prisma.user.create({
         data: {
-          id: generateId('user', 1),
+          id: uuidv4(),
           email: 'admin@vyrak.dev',
           name: 'Admin User',
           emailVerified: true,
@@ -108,7 +102,7 @@ async function main() {
       }),
       prisma.user.create({
         data: {
-          id: generateId('user', 2),
+          id: uuidv4(),
           email: 'john@vyrak.dev',
           name: 'John Doe',
           emailVerified: true,
@@ -117,7 +111,7 @@ async function main() {
       }),
       prisma.user.create({
         data: {
-          id: generateId('user', 3),
+          id: uuidv4(),
           email: 'jane@vyrak.dev',
           name: 'Jane Smith',
           emailVerified: true,
@@ -126,7 +120,7 @@ async function main() {
       }),
       prisma.user.create({
         data: {
-          id: generateId('user', 4),
+          id: uuidv4(),
           email: 'alice@vyrak.dev',
           name: 'Alice Johnson',
           emailVerified: true,
@@ -135,7 +129,7 @@ async function main() {
       }),
       prisma.user.create({
         data: {
-          id: generateId('user', 5),
+          id: uuidv4(),
           email: 'bob@vyrak.dev',
           name: 'Bob Wilson',
           emailVerified: true,
@@ -155,7 +149,7 @@ async function main() {
     const orgs = await Promise.all([
       prisma.organization.create({
         data: {
-          id: generateId('org', 1),
+          id: uuidv4(),
           name: 'Acme Corporation',
           slug: 'acme-corp',
           logo: null,
@@ -168,7 +162,7 @@ async function main() {
       }),
       prisma.organization.create({
         data: {
-          id: generateId('org', 2),
+          id: uuidv4(),
           name: 'Startup Inc',
           slug: 'startup-inc',
           logo: null,
@@ -181,7 +175,7 @@ async function main() {
       }),
       prisma.organization.create({
         data: {
-          id: generateId('org', 3),
+          id: uuidv4(),
           name: 'Tech Startup',
           slug: 'tech-startup',
           logo: null,
@@ -194,7 +188,7 @@ async function main() {
       }),
       prisma.organization.create({
         data: {
-          id: generateId('org', 4),
+          id: uuidv4(),
           name: 'Inactive Corp',
           slug: 'inactive-corp',
           logo: null,
@@ -221,7 +215,7 @@ async function main() {
       // Acme Corporation members
       prisma.member.create({
         data: {
-          id: generateId('member', 1),
+          id: uuidv4(),
           userId: adminUser.id,
           organizationId: acmeOrg.id,
           role: 'owner',
@@ -229,7 +223,7 @@ async function main() {
       }),
       prisma.member.create({
         data: {
-          id: generateId('member', 2),
+          id: uuidv4(),
           userId: johnUser.id,
           organizationId: acmeOrg.id,
           role: 'admin',
@@ -239,7 +233,7 @@ async function main() {
       // Startup Inc members
       prisma.member.create({
         data: {
-          id: generateId('member', 3),
+          id: uuidv4(),
           userId: janeUser.id,
           organizationId: startupOrg.id,
           role: 'owner',
@@ -249,7 +243,7 @@ async function main() {
       // Tech Startup members
       prisma.member.create({
         data: {
-          id: generateId('member', 4),
+          id: uuidv4(),
           userId: aliceUser.id,
           organizationId: techOrg.id,
           role: 'owner',
@@ -257,7 +251,7 @@ async function main() {
       }),
       prisma.member.create({
         data: {
-          id: generateId('member', 5),
+          id: uuidv4(),
           userId: bobUser.id,
           organizationId: techOrg.id,
           role: 'member',
@@ -276,7 +270,7 @@ async function main() {
       // Acme Corporation projects
       prisma.project.create({
         data: {
-          id: generateId('proj', 1),
+          id: uuidv4(),
           organizationId: acmeOrg.id,
           name: 'Web Platform',
           slug: 'web-platform',
@@ -285,7 +279,7 @@ async function main() {
       }),
       prisma.project.create({
         data: {
-          id: generateId('proj', 2),
+          id: uuidv4(),
           organizationId: acmeOrg.id,
           name: 'Mobile App',
           slug: 'mobile-app',
@@ -294,7 +288,7 @@ async function main() {
       }),
       prisma.project.create({
         data: {
-          id: generateId('proj', 3),
+          id: uuidv4(),
           organizationId: acmeOrg.id,
           name: 'Backend API',
           slug: 'backend-api',
@@ -305,7 +299,7 @@ async function main() {
       // Startup Inc projects
       prisma.project.create({
         data: {
-          id: generateId('proj', 4),
+          id: uuidv4(),
           organizationId: startupOrg.id,
           name: 'SaaS Dashboard',
           slug: 'saas-dashboard',
@@ -314,7 +308,7 @@ async function main() {
       }),
       prisma.project.create({
         data: {
-          id: generateId('proj', 5),
+          id: uuidv4(),
           organizationId: startupOrg.id,
           name: 'Analytics Engine',
           slug: 'analytics-engine',
@@ -325,7 +319,7 @@ async function main() {
       // Tech Startup projects
       prisma.project.create({
         data: {
-          id: generateId('proj', 6),
+          id: uuidv4(),
           organizationId: techOrg.id,
           name: 'AI Model Server',
           slug: 'ai-model-server',
@@ -334,7 +328,7 @@ async function main() {
       }),
       prisma.project.create({
         data: {
-          id: generateId('proj', 7),
+          id: uuidv4(),
           organizationId: techOrg.id,
           name: 'Data Pipeline',
           slug: 'data-pipeline',
@@ -354,7 +348,7 @@ async function main() {
       // Acme projects
       prisma.gitRepository.create({
         data: {
-          id: generateId('repo', 1),
+          id: uuidv4(),
           projectId: projects[0].id,
           organizationId: acmeOrg.id,
           name: 'vyrak-web',
@@ -366,7 +360,7 @@ async function main() {
       }),
       prisma.gitRepository.create({
         data: {
-          id: generateId('repo', 2),
+          id: uuidv4(),
           projectId: projects[0].id,
           organizationId: acmeOrg.id,
           name: 'vyrak-web-staging',
@@ -378,7 +372,7 @@ async function main() {
       }),
       prisma.gitRepository.create({
         data: {
-          id: generateId('repo', 3),
+          id: uuidv4(),
           projectId: projects[1].id,
           organizationId: acmeOrg.id,
           name: 'mobile-ios',
@@ -390,7 +384,7 @@ async function main() {
       }),
       prisma.gitRepository.create({
         data: {
-          id: generateId('repo', 4),
+          id: uuidv4(),
           projectId: projects[2].id,
           organizationId: acmeOrg.id,
           name: 'vyrak-api',
@@ -404,7 +398,7 @@ async function main() {
       // Startup projects
       prisma.gitRepository.create({
         data: {
-          id: generateId('repo', 5),
+          id: uuidv4(),
           projectId: projects[3].id,
           organizationId: startupOrg.id,
           name: 'saas-dashboard',
@@ -416,7 +410,7 @@ async function main() {
       }),
       prisma.gitRepository.create({
         data: {
-          id: generateId('repo', 6),
+          id: uuidv4(),
           projectId: projects[4].id,
           organizationId: startupOrg.id,
           name: 'analytics-engine',
@@ -430,7 +424,7 @@ async function main() {
       // Tech Startup projects
       prisma.gitRepository.create({
         data: {
-          id: generateId('repo', 7),
+          id: uuidv4(),
           projectId: projects[5].id,
           organizationId: techOrg.id,
           name: 'ai-model-server',
@@ -442,7 +436,7 @@ async function main() {
       }),
       prisma.gitRepository.create({
         data: {
-          id: generateId('repo', 8),
+          id: uuidv4(),
           projectId: projects[6].id,
           organizationId: techOrg.id,
           name: 'data-pipeline',
@@ -472,7 +466,7 @@ async function main() {
       // RUNNING workflow
       prisma.workflowRun.create({
         data: {
-          id: generateId('run', 1),
+          id: uuidv4(),
           projectId: projects[0].id,
           organizationId: acmeOrg.id,
           initiatedByUserId: adminUser.id,
@@ -480,11 +474,11 @@ async function main() {
           workflowVersion: '1.0.0',
           status: 'running',
           state: 'running',
-          idempotencyKey: 'e2e-run-001',
+          idempotencyKey: uuidv4(),
           startedAt: oneHourAgo,
-          input: JSON.stringify({
+          input: {
             requirement: 'Build comprehensive user authentication with OAuth integration',
-          }),
+          },
           totalStories: 4,
           completedStories: 1,
           failedStories: 0,
@@ -494,7 +488,7 @@ async function main() {
       // COMPLETED workflow
       prisma.workflowRun.create({
         data: {
-          id: generateId('run', 2),
+          id: uuidv4(),
           projectId: projects[0].id,
           organizationId: acmeOrg.id,
           initiatedByUserId: johnUser.id,
@@ -502,12 +496,12 @@ async function main() {
           workflowVersion: '1.0.0',
           status: 'completed',
           state: 'completed',
-          idempotencyKey: 'e2e-run-002',
+          idempotencyKey: uuidv4(),
           startedAt: twoDaysAgo,
           completedAt: new Date(twoDaysAgo.getTime() + 45 * 60 * 1000),
-          input: JSON.stringify({
+          input: {
             requirement: 'Integrate Stripe payment gateway',
-          }),
+          },
           totalStories: 3,
           completedStories: 3,
           failedStories: 0,
@@ -521,7 +515,7 @@ async function main() {
       // FAILED workflow
       prisma.workflowRun.create({
         data: {
-          id: generateId('run', 3),
+          id: uuidv4(),
           projectId: projects[0].id,
           organizationId: acmeOrg.id,
           initiatedByUserId: adminUser.id,
@@ -529,12 +523,12 @@ async function main() {
           workflowVersion: '1.0.0',
           status: 'failed',
           state: 'failed',
-          idempotencyKey: 'e2e-run-003',
+          idempotencyKey: uuidv4(),
           startedAt: oneDayAgo,
           completedAt: new Date(oneDayAgo.getTime() + 20 * 60 * 1000),
-          input: JSON.stringify({
+          input: {
             requirement: 'Fix critical login bug',
-          }),
+          },
           totalStories: 1,
           completedStories: 0,
           failedStories: 1,
@@ -550,7 +544,7 @@ async function main() {
       // QUEUED workflow
       prisma.workflowRun.create({
         data: {
-          id: generateId('run', 4),
+          id: uuidv4(),
           projectId: projects[1].id,
           organizationId: acmeOrg.id,
           initiatedByUserId: johnUser.id,
@@ -558,10 +552,10 @@ async function main() {
           workflowVersion: '1.0.0',
           status: 'queued',
           state: 'pending',
-          idempotencyKey: 'e2e-run-004',
-          input: JSON.stringify({
+          idempotencyKey: uuidv4(),
+          input: {
             requirement: 'Implement real-time chat with WebSocket',
-          }),
+          },
           totalStories: 5,
           completedStories: 0,
           failedStories: 0,
@@ -571,7 +565,7 @@ async function main() {
       // CANCELLED workflow
       prisma.workflowRun.create({
         data: {
-          id: generateId('run', 5),
+          id: uuidv4(),
           projectId: projects[1].id,
           organizationId: acmeOrg.id,
           initiatedByUserId: johnUser.id,
@@ -579,12 +573,12 @@ async function main() {
           workflowVersion: '1.0.0',
           status: 'cancelled',
           state: 'cancelled',
-          idempotencyKey: 'e2e-run-005',
+          idempotencyKey: uuidv4(),
           startedAt: threeHoursAgo,
           completedAt: twoHoursAgo,
-          input: JSON.stringify({
+          input: {
             requirement: 'Add dashboard analytics',
-          }),
+          },
           totalStories: 3,
           completedStories: 1,
           failedStories: 0,
@@ -597,7 +591,7 @@ async function main() {
       // Startup Inc workflows
       prisma.workflowRun.create({
         data: {
-          id: generateId('run', 6),
+          id: uuidv4(),
           projectId: projects[3].id,
           organizationId: startupOrg.id,
           initiatedByUserId: janeUser.id,
@@ -605,12 +599,12 @@ async function main() {
           workflowVersion: '1.0.0',
           status: 'completed',
           state: 'completed',
-          idempotencyKey: 'e2e-run-006',
+          idempotencyKey: uuidv4(),
           startedAt: oneDayAgo,
           completedAt: new Date(oneDayAgo.getTime() + 60 * 60 * 1000),
-          input: JSON.stringify({
+          input: {
             requirement: 'Add user profile management',
-          }),
+          },
           totalStories: 4,
           completedStories: 4,
           failedStories: 0,
@@ -620,7 +614,7 @@ async function main() {
       // Tech Startup workflows
       prisma.workflowRun.create({
         data: {
-          id: generateId('run', 7),
+          id: uuidv4(),
           projectId: projects[5].id,
           organizationId: techOrg.id,
           initiatedByUserId: aliceUser.id,
@@ -628,11 +622,11 @@ async function main() {
           workflowVersion: '1.0.0',
           status: 'waiting_approval',
           state: 'waiting_approval',
-          idempotencyKey: 'e2e-run-007',
+          idempotencyKey: uuidv4(),
           startedAt: twoHoursAgo,
-          input: JSON.stringify({
+          input: {
             requirement: 'Deploy new ML model version',
-          }),
+          },
           totalStories: 2,
           completedStories: 1,
           failedStories: 0,
@@ -641,7 +635,7 @@ async function main() {
 
       prisma.workflowRun.create({
         data: {
-          id: generateId('run', 8),
+          id: uuidv4(),
           projectId: projects[6].id,
           organizationId: techOrg.id,
           initiatedByUserId: bobUser.id,
@@ -649,11 +643,11 @@ async function main() {
           workflowVersion: '1.0.0',
           status: 'running',
           state: 'running',
-          idempotencyKey: 'e2e-run-008',
+          idempotencyKey: uuidv4(),
           startedAt: new Date(now.getTime() - 30 * 60 * 1000),
-          input: JSON.stringify({
+          input: {
             requirement: 'Fix data pipeline memory leak',
-          }),
+          },
           totalStories: 1,
           completedStories: 0,
           failedStories: 0,
@@ -672,7 +666,7 @@ async function main() {
       data: [
         // Running workflow stories
         {
-          id: generateId('story', 1),
+          id: uuidv4(),
           workflowRunId: workflowRuns[0].id,
           orderIndex: 1,
           title: 'Setup Authentication Module',
@@ -693,7 +687,7 @@ async function main() {
           }),
         },
         {
-          id: generateId('story', 2),
+          id: uuidv4(),
           workflowRunId: workflowRuns[0].id,
           orderIndex: 2,
           title: 'Implement OAuth Integration',
@@ -705,7 +699,7 @@ async function main() {
           artifacts: JSON.stringify({ progress: '70%' }),
         },
         {
-          id: generateId('story', 3),
+          id: uuidv4(),
           workflowRunId: workflowRuns[0].id,
           orderIndex: 3,
           title: 'Add Email Verification',
@@ -714,7 +708,7 @@ async function main() {
           status: 'queued',
         },
         {
-          id: generateId('story', 4),
+          id: uuidv4(),
           workflowRunId: workflowRuns[0].id,
           orderIndex: 4,
           title: 'Password Reset Functionality',
@@ -725,7 +719,7 @@ async function main() {
 
         // Completed workflow stories
         {
-          id: generateId('story', 5),
+          id: uuidv4(),
           workflowRunId: workflowRuns[1].id,
           orderIndex: 1,
           title: 'Stripe Integration Setup',
@@ -736,7 +730,7 @@ async function main() {
           duration: 15,
         },
         {
-          id: generateId('story', 6),
+          id: uuidv4(),
           workflowRunId: workflowRuns[1].id,
           orderIndex: 2,
           title: 'Payment Processing',
@@ -747,7 +741,7 @@ async function main() {
           duration: 20,
         },
         {
-          id: generateId('story', 7),
+          id: uuidv4(),
           workflowRunId: workflowRuns[1].id,
           orderIndex: 3,
           title: 'Invoice Generation',
@@ -760,7 +754,7 @@ async function main() {
 
         // Failed workflow stories
         {
-          id: generateId('story', 8),
+          id: uuidv4(),
           workflowRunId: workflowRuns[2].id,
           orderIndex: 1,
           title: 'Fix Login Session Bug',
@@ -777,7 +771,7 @@ async function main() {
 
         // Startup Inc workflow stories
         {
-          id: generateId('story', 9),
+          id: uuidv4(),
           workflowRunId: workflowRuns[5].id,
           orderIndex: 1,
           title: 'User Profile Schema',
@@ -788,7 +782,7 @@ async function main() {
           duration: 15,
         },
         {
-          id: generateId('story', 10),
+          id: uuidv4(),
           workflowRunId: workflowRuns[5].id,
           orderIndex: 2,
           title: 'Profile API Endpoints',
@@ -799,7 +793,7 @@ async function main() {
           duration: 25,
         },
         {
-          id: generateId('story', 11),
+          id: uuidv4(),
           workflowRunId: workflowRuns[5].id,
           orderIndex: 3,
           title: 'Profile UI Components',
@@ -810,7 +804,7 @@ async function main() {
           duration: 10,
         },
         {
-          id: generateId('story', 12),
+          id: uuidv4(),
           workflowRunId: workflowRuns[5].id,
           orderIndex: 4,
           title: 'Avatar Upload Feature',
@@ -823,7 +817,7 @@ async function main() {
 
         // Tech Startup workflow stories
         {
-          id: generateId('story', 13),
+          id: uuidv4(),
           workflowRunId: workflowRuns[6].id,
           orderIndex: 1,
           title: 'Model Validation',
@@ -834,7 +828,7 @@ async function main() {
           duration: 30,
         },
         {
-          id: generateId('story', 14),
+          id: uuidv4(),
           workflowRunId: workflowRuns[6].id,
           orderIndex: 2,
           title: 'Model Deployment',
@@ -845,7 +839,7 @@ async function main() {
 
         // Data Pipeline workflow stories
         {
-          id: generateId('story', 15),
+          id: uuidv4(),
           workflowRunId: workflowRuns[7].id,
           orderIndex: 1,
           title: 'Identify Memory Leak',
@@ -868,7 +862,7 @@ async function main() {
       // Running workflow steps
       prisma.workflowStepRun.create({
         data: {
-          id: generateId('step', 1),
+          id: uuidv4(),
           runId: workflowRuns[0].id,
           organizationId: acmeOrg.id,
           stepKey: 'planning',
@@ -887,7 +881,7 @@ async function main() {
       }),
       prisma.workflowStepRun.create({
         data: {
-          id: generateId('step', 2),
+          id: uuidv4(),
           runId: workflowRuns[0].id,
           organizationId: acmeOrg.id,
           stepKey: 'implementation',
@@ -906,7 +900,7 @@ async function main() {
       }),
       prisma.workflowStepRun.create({
         data: {
-          id: generateId('step', 3),
+          id: uuidv4(),
           runId: workflowRuns[0].id,
           organizationId: acmeOrg.id,
           stepKey: 'review',
@@ -919,7 +913,7 @@ async function main() {
       }),
       prisma.workflowStepRun.create({
         data: {
-          id: generateId('step', 4),
+          id: uuidv4(),
           runId: workflowRuns[0].id,
           organizationId: acmeOrg.id,
           stepKey: 'qa',
@@ -934,7 +928,7 @@ async function main() {
       // Completed workflow steps
       prisma.workflowStepRun.create({
         data: {
-          id: generateId('step', 5),
+          id: uuidv4(),
           runId: workflowRuns[1].id,
           organizationId: acmeOrg.id,
           stepKey: 'planning',
@@ -949,7 +943,7 @@ async function main() {
       }),
       prisma.workflowStepRun.create({
         data: {
-          id: generateId('step', 6),
+          id: uuidv4(),
           runId: workflowRuns[1].id,
           organizationId: acmeOrg.id,
           stepKey: 'implementation',
@@ -964,7 +958,7 @@ async function main() {
       }),
       prisma.workflowStepRun.create({
         data: {
-          id: generateId('step', 7),
+          id: uuidv4(),
           runId: workflowRuns[1].id,
           organizationId: acmeOrg.id,
           stepKey: 'review',
@@ -979,7 +973,7 @@ async function main() {
       }),
       prisma.workflowStepRun.create({
         data: {
-          id: generateId('step', 8),
+          id: uuidv4(),
           runId: workflowRuns[1].id,
           organizationId: acmeOrg.id,
           stepKey: 'qa',
@@ -996,7 +990,7 @@ async function main() {
       // Failed workflow steps
       prisma.workflowStepRun.create({
         data: {
-          id: generateId('step', 9),
+          id: uuidv4(),
           runId: workflowRuns[2].id,
           organizationId: acmeOrg.id,
           stepKey: 'bug_analysis',
@@ -1013,7 +1007,7 @@ async function main() {
       }),
       prisma.workflowStepRun.create({
         data: {
-          id: generateId('step', 10),
+          id: uuidv4(),
           runId: workflowRuns[2].id,
           organizationId: acmeOrg.id,
           stepKey: 'implementation',
@@ -1028,7 +1022,7 @@ async function main() {
       }),
       prisma.workflowStepRun.create({
         data: {
-          id: generateId('step', 11),
+          id: uuidv4(),
           runId: workflowRuns[2].id,
           organizationId: acmeOrg.id,
           stepKey: 'fast_review',
@@ -1046,9 +1040,86 @@ async function main() {
           }),
         },
       }),
+
+      // Additional failed steps with different error types
+      prisma.workflowStepRun.create({
+        data: {
+          id: uuidv4(),
+          runId: workflowRuns[2].id,
+          organizationId: acmeOrg.id,
+          stepKey: 'database_migration',
+          phaseKey: 'database',
+          stepType: 'migration',
+          status: 'failed',
+          attempt: 2,
+          completedStoryIds: JSON.stringify([]),
+          startedAt: new Date(oneDayAgo.getTime() - 60 * 60 * 1000),
+          completedAt: new Date(oneDayAgo.getTime() - 55 * 60 * 1000),
+          errorCode: 'DATABASE_ERROR',
+          errorMessage: 'Connection timeout: Unable to connect to PostgreSQL database after 30 seconds',
+          output: JSON.stringify({
+            host: 'db.production.example.com',
+            port: 5432,
+            retries: 3,
+            lastError: 'ETIMEDOUT',
+          }),
+        },
+      }),
+      prisma.workflowStepRun.create({
+        data: {
+          id: uuidv4(),
+          runId: workflowRuns[7].id,
+          organizationId: techOrg.id,
+          stepKey: 'build',
+          phaseKey: 'build',
+          stepType: 'build',
+          status: 'failed',
+          attempt: 1,
+          completedStoryIds: JSON.stringify([]),
+          startedAt: new Date(now.getTime() - 45 * 60 * 1000),
+          completedAt: new Date(now.getTime() - 40 * 60 * 1000),
+          errorCode: 'BUILD_FAILURE',
+          errorMessage: 'TypeScript compilation failed with 5 errors in src/pipeline/processor.ts',
+          output: JSON.stringify({
+            errors: [
+              "TS2304: Cannot find name 'ProcessorConfig'",
+              "TS2339: Property 'batchSize' does not exist on type 'Config'",
+              "TS2345: Argument of type 'string' is not assignable to parameter of type 'number'",
+            ],
+            exitCode: 1,
+          }),
+        },
+      }),
+      prisma.workflowStepRun.create({
+        data: {
+          id: uuidv4(),
+          runId: workflowRuns[4].id,
+          organizationId: acmeOrg.id,
+          stepKey: 'deployment',
+          phaseKey: 'deployment',
+          stepType: 'deployment',
+          status: 'failed',
+          attempt: 1,
+          completedStoryIds: JSON.stringify([]),
+          startedAt: new Date(threeHoursAgo.getTime() + 30 * 60 * 1000),
+          completedAt: new Date(threeHoursAgo.getTime() + 35 * 60 * 1000),
+          errorCode: 'DEPLOYMENT_ERROR',
+          errorMessage:
+            'Kubernetes deployment failed: ImagePullBackOff - Failed to pull image "acme/mobile-app:v2.3.1"',
+          output: JSON.stringify({
+            namespace: 'production',
+            deployment: 'mobile-app',
+            error: 'Failed to pull image',
+            reason: 'ImagePullBackOff',
+            message: 'Back-off pulling image "acme/mobile-app:v2.3.1"',
+          }),
+        },
+      }),
     ])
 
-    console.log(`✅ Created ${stepRuns.length} workflow step runs`)
+    console.log(
+      `✅ Created ${stepRuns.length} workflow step runs (including ${stepRuns.filter((s) => s.status === 'failed').length} failed steps)`
+    )
 
     // ========================================================================
     // 10. Create Workflow Approvals
@@ -1059,11 +1130,11 @@ async function main() {
       // Completed workflow approval
       prisma.workflowApproval.create({
         data: {
-          id: generateId('approval', 1),
+          id: uuidv4(),
           organizationId: acmeOrg.id,
           workflowRunId: workflowRuns[1].id,
           status: 'approved',
-          planArtifactId: generateId('artifact', 1),
+          planArtifactId: uuidv4(),
           planArtifactHash: 'hash123abc',
           decidedByUserId: adminUser.id,
           decidedAt: new Date(twoDaysAgo.getTime() + 8 * 60 * 1000),
@@ -1074,11 +1145,11 @@ async function main() {
       // Waiting approval workflow approval
       prisma.workflowApproval.create({
         data: {
-          id: generateId('approval', 2),
+          id: uuidv4(),
           organizationId: techOrg.id,
           workflowRunId: workflowRuns[6].id,
           status: 'pending',
-          planArtifactId: generateId('artifact', 2),
+          planArtifactId: uuidv4(),
           planArtifactHash: 'hash456def',
         },
       }),
@@ -1095,7 +1166,7 @@ async function main() {
       // Running workflow events
       prisma.workflowEvent.create({
         data: {
-          id: generateId('event', 1),
+          id: uuidv4(),
           runId: workflowRuns[0].id,
           organizationId: acmeOrg.id,
           stepRunId: stepRuns[0].id,
@@ -1109,7 +1180,7 @@ async function main() {
       }),
       prisma.workflowEvent.create({
         data: {
-          id: generateId('event', 2),
+          id: uuidv4(),
           runId: workflowRuns[0].id,
           organizationId: acmeOrg.id,
           stepRunId: stepRuns[0].id,
@@ -1123,7 +1194,7 @@ async function main() {
       }),
       prisma.workflowEvent.create({
         data: {
-          id: generateId('event', 3),
+          id: uuidv4(),
           runId: workflowRuns[0].id,
           organizationId: acmeOrg.id,
           stepRunId: stepRuns[1].id,
@@ -1138,7 +1209,7 @@ async function main() {
       // Completed workflow events
       prisma.workflowEvent.create({
         data: {
-          id: generateId('event', 4),
+          id: uuidv4(),
           runId: workflowRuns[1].id,
           organizationId: acmeOrg.id,
           sequence: 1,
@@ -1150,7 +1221,7 @@ async function main() {
       }),
       prisma.workflowEvent.create({
         data: {
-          id: generateId('event', 5),
+          id: uuidv4(),
           runId: workflowRuns[1].id,
           organizationId: acmeOrg.id,
           sequence: 2,
@@ -1174,7 +1245,7 @@ async function main() {
     const artifacts = await Promise.all([
       prisma.artifact.create({
         data: {
-          id: generateId('artifact', 1),
+          id: uuidv4(),
           runId: workflowRuns[1].id,
           organizationId: acmeOrg.id,
           filePath: 'ARD.md',
@@ -1189,7 +1260,7 @@ async function main() {
       }),
       prisma.artifact.create({
         data: {
-          id: generateId('artifact', 2),
+          id: uuidv4(),
           runId: workflowRuns[0].id,
           organizationId: acmeOrg.id,
           filePath: 'IMPLEMENTATION_PLAN.md',
@@ -1211,7 +1282,7 @@ async function main() {
     const auditLogs = await prisma.auditLog.createMany({
       data: [
         {
-          id: generateId('audit', 1),
+          id: uuidv4(),
           organizationId: acmeOrg.id,
           userId: adminUser.id,
           event: 'workflow.started',
@@ -1222,7 +1293,7 @@ async function main() {
           userAgent: 'E2E Test',
         },
         {
-          id: generateId('audit', 2),
+          id: uuidv4(),
           organizationId: acmeOrg.id,
           userId: johnUser.id,
           event: 'workflow.started',
@@ -1233,7 +1304,7 @@ async function main() {
           userAgent: 'E2E Test',
         },
         {
-          id: generateId('audit', 3),
+          id: uuidv4(),
           organizationId: acmeOrg.id,
           userId: adminUser.id,
           event: 'workflow.cancelled',

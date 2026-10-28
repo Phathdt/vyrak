@@ -40,22 +40,21 @@ TEST_USER_PASSWORD=Test123456!
 ### Local Development
 
 ```bash
-# Run all tests (headless)
-yarn test:e2e
-
-# Run tests với browser visible
-yarn test:e2e:headed
-
-# Run tests với UI mode (interactive)
-yarn test:e2e:ui
-
-# Run tests với debug mode
-yarn workspace @vyrak/e2e test:debug
-
-# Run specific browser
-yarn workspace @vyrak/e2e test:chromium
+# Using yarn scripts (recommended)
+yarn test:e2e                                # Run all tests (headless)
+yarn test:e2e:headed                         # Run tests with browser visible
+yarn test:e2e:ui                             # Run tests with UI mode (interactive)
+yarn workspace @vyrak/e2e test:debug         # Run tests with debug mode
+yarn workspace @vyrak/e2e test:chromium      # Run specific browser
 yarn workspace @vyrak/e2e test:firefox
 yarn workspace @vyrak/e2e test:webkit
+
+# Direct npx commands (from apps/e2e directory)
+npx playwright test                          # Run all tests
+npx playwright test --headed                 # Run with browser visible
+npx playwright test --ui                     # Run with UI mode
+npx playwright test --debug                  # Run with debug mode
+npx playwright test --list                   # List all tests without running
 ```
 
 ### CI Environment

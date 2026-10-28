@@ -49,12 +49,12 @@ export function WorkflowsPage() {
           <h1 className='text-3xl font-bold tracking-tight'>Workflows</h1>
           <p className='mt-2 text-muted-foreground'>Monitor and manage your AI-powered development workflows</p>
         </div>
-        <Button asChild data-testid='create-workflow-button'>
-          <Link to='/workflows/create'>
+        <Link to='/workflows/create'>
+          <Button data-testid='create-workflow-button'>
             <Plus className='mr-2 h-4 w-4' />
             Create Workflow
-          </Link>
-        </Button>
+          </Button>
+        </Link>
       </header>
 
       <div className='space-y-6'>
@@ -91,12 +91,12 @@ export function WorkflowsPage() {
             <p className='mb-6 max-w-md text-muted-foreground'>
               Get started by creating your first AI-powered workflow
             </p>
-            <Button asChild>
-              <Link to='/workflows/create'>
+            <Link to='/workflows/create'>
+              <Button>
                 <Plus className='mr-2 h-4 w-4' />
                 Create Your First Workflow
-              </Link>
-            </Button>
+              </Button>
+            </Link>
           </div>
         )}
 

@@ -480,12 +480,16 @@ test.describe('Workflow Management E2E', () => {
       })
 
       await createPage.navigate()
-      const errorVisible = await authenticatedPage
-        .locator('[role="alert"]')
-        .isVisible()
-        .catch(() => false)
 
-      expect(errorVisible).toBeTruthy()
+      // Wait for the error toast to appear (API call should fail and trigger error handler)
+      const errorAlert = authenticatedPage.locator('[role="alert"]')
+      try {
+        await errorAlert.waitFor({ state: 'visible', timeout: 5000 })
+        expect(true).toBeTruthy()
+      } catch {
+        // If no alert appears, the test fails
+        expect(false).toBeTruthy()
+      }
     })
   })
 
