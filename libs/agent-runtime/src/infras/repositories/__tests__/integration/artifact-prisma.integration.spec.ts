@@ -1,60 +1,32 @@
 import type { DatabaseService } from '@vyrak/database'
-import { getDatabase, startPostgres, stopPostgres } from '@vyrak/database/test-utils'
+import {
+  createTestDatabaseService,
+  createTestOrgWithOwner,
+  createTestProject,
+  getPrismaClient,
+  resetCounters,
+  startPostgres,
+  stopPostgres,
+} from '@vyrak/database/test-utils'
 
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
 import { ArtifactPrismaRepository } from '../../artifact-prisma.repository'
 
-describe('ArtifactPrismaRepository Integration', () => {
-  let db: DatabaseService
+/**
+ * Integration tests for ArtifactPrismaRepository
+ * Tests real database operations with PostgreSQL testcontainer
+ */
+describe('ArtifactPrismaRepository (Integration)', () => {
+  let databaseService: ReturnType<typeof createTestDatabaseService> | undefined
   let repository: ArtifactPrismaRepository
-  let testOrgId: string
-  let testRunId: string
 
   beforeAll(async () => {
     try {
       await startPostgres()
-      db = getDatabase()
-      repository = new ArtifactPrismaRepository(db)
-
-      // Create test organization once
-      const org = await db.client.organization.create({
-        data: {
-          name: 'Test Org Artifact',
-          slug: 'test-org-artifact-' + Date.now(),
-        },
-      })
-      testOrgId = org.id
-
-      // Create test user
-      const user = await db.client.user.create({
-        data: {
-          email: 'test-artifact@example.com',
-          name: 'Test User',
-        },
-      })
-
-      // Create test project
-      const project = await db.client.project.create({
-        data: {
-          organizationId: testOrgId,
-          name: 'Test Project',
-          slug: 'test-project-' + Date.now(),
-        },
-      })
-
-      // Create test workflow run
-      const run = await db.client.workflowRun.create({
-        data: {
-          organizationId: testOrgId,
-          projectId: project.id,
-          initiatedByUserId: user.id,
-          workflowKey: 'test-workflow',
-          workflowVersion: '1.0.0',
-          status: 'running',
-        },
-      })
-      testRunId = run.id
+      const prisma = getPrismaClient()
+      databaseService = createTestDatabaseService(prisma)
+      repository = new ArtifactPrismaRepository(databaseService as unknown as DatabaseService)
     } catch (error) {
       console.warn('PostgreSQL setup failed, skipping integration tests:', error)
     }
@@ -64,81 +36,199 @@ describe('ArtifactPrismaRepository Integration', () => {
     await stopPostgres()
   })
 
-  it('should create and retrieve artifact', async () => {
-    if (!db || !testRunId) return
+  beforeEach(async () => {
+    if (!databaseService) return
 
-    const artifact = await repository.create({
-      organizationId: testOrgId,
-      runId: testRunId,
-      filePath: 'test-plan.md',
-      content: '# Test Plan\n\nContent here',
-    })
+    const prisma = getPrismaClient()
+    // Clean up data in correct order
+    await prisma.artifact.deleteMany()
+    await prisma.workflowRun.deleteMany()
+    await prisma.project.deleteMany()
+    await prisma.member.deleteMany()
+    await prisma.organization.deleteMany()
+    await prisma.user.deleteMany()
 
-    expect(artifact.id).toBeDefined()
-    expect(artifact.filePath).toBe('test-plan.md')
-    expect(artifact.content).toBe('# Test Plan\n\nContent here')
-
-    // Retrieve artifact
-    const retrieved = await repository.findById(artifact.id)
-    expect(retrieved).toBeDefined()
-    expect(retrieved?.content).toBe('# Test Plan\n\nContent here')
+    // Reset counters
+    resetCounters()
   })
 
-  it('should find artifacts by run ID', async () => {
-    if (!db || !testRunId) return
+  describe('create and findById', () => {
+    it('should create and retrieve artifact', async () => {
+      if (!databaseService) return
 
-    // Create multiple artifacts
-    await repository.create({
-      organizationId: testOrgId,
-      runId: testRunId,
-      filePath: 'plan.md',
-      content: 'Plan content',
+      const prisma = getPrismaClient()
+      const { organization, user } = await createTestOrgWithOwner(prisma)
+      const project = await createTestProject(prisma, organization.id)
+
+      // Create test workflow run using system access
+      const run = await databaseService.withSystemAccess(async () => {
+        return await prisma.workflowRun.create({
+          data: {
+            organizationId: organization.id,
+            projectId: project.id,
+            initiatedByUserId: user.id,
+            workflowKey: 'test-workflow',
+            workflowVersion: '1.0.0',
+            status: 'running',
+          },
+        })
+      })
+
+      await databaseService.withOrganization(organization.id, async () => {
+        const artifact = await repository.create({
+          organizationId: organization.id,
+          runId: run.id,
+          filePath: 'test-plan.md',
+          content: '# Test Plan\n\nContent here',
+        })
+
+        expect(artifact.id).toBeDefined()
+        expect(artifact.filePath).toBe('test-plan.md')
+        expect(artifact.content).toBe('# Test Plan\n\nContent here')
+
+        // Retrieve artifact
+        const retrieved = await repository.findById(artifact.id)
+        expect(retrieved).toBeDefined()
+        expect(retrieved?.content).toBe('# Test Plan\n\nContent here')
+      })
     })
-
-    await repository.create({
-      organizationId: testOrgId,
-      runId: testRunId,
-      filePath: 'implementation.md',
-      content: 'Implementation content',
-    })
-
-    const artifacts = await repository.findByRunId(testRunId)
-
-    expect(artifacts.length).toBeGreaterThanOrEqual(2)
-    const filePaths = artifacts.map((a) => a.filePath)
-    expect(filePaths).toContain('plan.md')
-    expect(filePaths).toContain('implementation.md')
   })
 
-  it('should find artifacts by organization', async () => {
-    if (!db || !testRunId) return
+  describe('findByRunId', () => {
+    it('should find artifacts by run ID', async () => {
+      if (!databaseService) return
 
-    const artifacts = await repository.findByOrganization(testOrgId)
+      const prisma = getPrismaClient()
+      const { organization, user } = await createTestOrgWithOwner(prisma)
+      const project = await createTestProject(prisma, organization.id)
 
-    expect(artifacts.length).toBeGreaterThanOrEqual(1)
-    expect(artifacts[0].organizationId).toBe(testOrgId)
-  })
+      // Create test workflow run using system access
+      const run = await databaseService.withSystemAccess(async () => {
+        return await prisma.workflowRun.create({
+          data: {
+            organizationId: organization.id,
+            projectId: project.id,
+            initiatedByUserId: user.id,
+            workflowKey: 'test-workflow',
+            workflowVersion: '1.0.0',
+            status: 'running',
+          },
+        })
+      })
 
-  it('should delete artifact', async () => {
-    if (!db || !testRunId) return
+      await databaseService.withOrganization(organization.id, async () => {
+        // Create multiple artifacts
+        await repository.create({
+          organizationId: organization.id,
+          runId: run.id,
+          filePath: 'plan.md',
+          content: 'Plan content',
+        })
 
-    const artifact = await repository.create({
-      organizationId: testOrgId,
-      runId: testRunId,
-      filePath: 'to-delete.md',
-      content: 'Delete me',
+        await repository.create({
+          organizationId: organization.id,
+          runId: run.id,
+          filePath: 'implementation.md',
+          content: 'Implementation content',
+        })
+
+        const artifacts = await repository.findByRunId(run.id)
+
+        expect(artifacts.length).toBeGreaterThanOrEqual(2)
+        const filePaths = artifacts.map((a) => a.filePath)
+        expect(filePaths).toContain('plan.md')
+        expect(filePaths).toContain('implementation.md')
+      })
     })
-
-    await repository.delete(artifact.id)
-
-    const retrieved = await repository.findById(artifact.id)
-    expect(retrieved).toBeNull()
   })
 
-  it('should return null for non-existent artifact', async () => {
-    if (!db) return
+  describe('findByOrganization', () => {
+    it('should find artifacts by organization', async () => {
+      if (!databaseService) return
 
-    const artifact = await repository.findById('non-existent-id')
-    expect(artifact).toBeNull()
+      const prisma = getPrismaClient()
+      const { organization, user } = await createTestOrgWithOwner(prisma)
+      const project = await createTestProject(prisma, organization.id)
+
+      // Create test workflow run using system access
+      const run = await databaseService.withSystemAccess(async () => {
+        return await prisma.workflowRun.create({
+          data: {
+            organizationId: organization.id,
+            projectId: project.id,
+            initiatedByUserId: user.id,
+            workflowKey: 'test-workflow',
+            workflowVersion: '1.0.0',
+            status: 'running',
+          },
+        })
+      })
+
+      await databaseService.withOrganization(organization.id, async () => {
+        await repository.create({
+          organizationId: organization.id,
+          runId: run.id,
+          filePath: 'artifact.md',
+          content: 'Artifact content',
+        })
+
+        const artifacts = await repository.findByOrganization(organization.id)
+
+        expect(artifacts.length).toBeGreaterThanOrEqual(1)
+        expect(artifacts[0].organizationId).toBe(organization.id)
+      })
+    })
+  })
+
+  describe('delete', () => {
+    it('should delete artifact', async () => {
+      if (!databaseService) return
+
+      const prisma = getPrismaClient()
+      const { organization, user } = await createTestOrgWithOwner(prisma)
+      const project = await createTestProject(prisma, organization.id)
+
+      // Create test workflow run using system access
+      const run = await databaseService.withSystemAccess(async () => {
+        return await prisma.workflowRun.create({
+          data: {
+            organizationId: organization.id,
+            projectId: project.id,
+            initiatedByUserId: user.id,
+            workflowKey: 'test-workflow',
+            workflowVersion: '1.0.0',
+            status: 'running',
+          },
+        })
+      })
+
+      await databaseService.withOrganization(organization.id, async () => {
+        const artifact = await repository.create({
+          organizationId: organization.id,
+          runId: run.id,
+          filePath: 'to-delete.md',
+          content: 'Delete me',
+        })
+
+        await repository.delete(artifact.id)
+
+        const retrieved = await repository.findById(artifact.id)
+        expect(retrieved).toBeNull()
+      })
+    })
+  })
+
+  describe('findById with non-existent artifact', () => {
+    it('should return null for non-existent artifact', async () => {
+      if (!databaseService) return
+
+      const prisma = getPrismaClient()
+      const { organization } = await createTestOrgWithOwner(prisma)
+
+      await databaseService.withOrganization(organization.id, async () => {
+        const artifact = await repository.findById('non-existent-id')
+        expect(artifact).toBeNull()
+      })
+    })
   })
 })

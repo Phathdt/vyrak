@@ -64,31 +64,35 @@ describe('StepPrismaRepository (Integration)', () => {
       const { organization, user } = await createTestOrgWithOwner(prisma)
       const project = await createTestProject(prisma, organization.id)
 
-      const workflowRun = await workflowRepository.createRun({
-        organizationId: organization.id,
-        projectId: project.id,
-        workflowKey: 'test-workflow',
-        workflowVersion: '1.0.0',
-        initiatedByUserId: user.id,
+      const result = await databaseService.withOrganization(organization.id, async () => {
+        const workflowRun = await workflowRepository.createRun({
+          organizationId: organization.id,
+          projectId: project.id,
+          workflowKey: 'test-workflow',
+          workflowVersion: '1.0.0',
+          initiatedByUserId: user.id,
+        })
+
+        const step = await repository.createStepRun({
+          runId: workflowRun.id,
+          organizationId: organization.id,
+          stepKey: 'test-step',
+          stepType: 'agent',
+          input: { key: 'value' },
+        })
+
+        return { workflowRun, step }
       })
 
-      const result = await repository.createStepRun({
-        runId: workflowRun.id,
-        organizationId: organization.id,
-        stepKey: 'test-step',
-        stepType: 'agent',
-        input: { key: 'value' },
-      })
-
-      expect(result).toMatchObject({
-        runId: workflowRun.id,
+      expect(result.step).toMatchObject({
+        runId: result.workflowRun.id,
         organizationId: organization.id,
         stepKey: 'test-step',
         stepType: 'agent',
         status: StepStatus.PENDING,
         attempt: 1,
       })
-      expect(result.id).toBeDefined()
+      expect(result.step.id).toBeDefined()
     })
   })
 
@@ -100,29 +104,31 @@ describe('StepPrismaRepository (Integration)', () => {
       const { organization, user } = await createTestOrgWithOwner(prisma)
       const project = await createTestProject(prisma, organization.id)
 
-      const workflowRun = await workflowRepository.createRun({
-        organizationId: organization.id,
-        projectId: project.id,
-        workflowKey: 'test-workflow',
-        workflowVersion: '1.0.0',
-        initiatedByUserId: user.id,
-      })
+      const result = await databaseService.withOrganization(organization.id, async () => {
+        const workflowRun = await workflowRepository.createRun({
+          organizationId: organization.id,
+          projectId: project.id,
+          workflowKey: 'test-workflow',
+          workflowVersion: '1.0.0',
+          initiatedByUserId: user.id,
+        })
 
-      await repository.createStepRun({
-        runId: workflowRun.id,
-        organizationId: organization.id,
-        stepKey: 'step-1',
-        stepType: 'agent',
-      })
+        await repository.createStepRun({
+          runId: workflowRun.id,
+          organizationId: organization.id,
+          stepKey: 'step-1',
+          stepType: 'agent',
+        })
 
-      await repository.createStepRun({
-        runId: workflowRun.id,
-        organizationId: organization.id,
-        stepKey: 'step-2',
-        stepType: 'agent',
-      })
+        await repository.createStepRun({
+          runId: workflowRun.id,
+          organizationId: organization.id,
+          stepKey: 'step-2',
+          stepType: 'agent',
+        })
 
-      const result = await repository.findStepsByRunId(workflowRun.id)
+        return await repository.findStepsByRunId(workflowRun.id)
+      })
 
       expect(result).toHaveLength(2)
       expect(result[0].stepKey).toBe('step-1')
@@ -138,25 +144,27 @@ describe('StepPrismaRepository (Integration)', () => {
       const { organization, user } = await createTestOrgWithOwner(prisma)
       const project = await createTestProject(prisma, organization.id)
 
-      const workflowRun = await workflowRepository.createRun({
-        organizationId: organization.id,
-        projectId: project.id,
-        workflowKey: 'test-workflow',
-        workflowVersion: '1.0.0',
-        initiatedByUserId: user.id,
+      await databaseService.withOrganization(organization.id, async () => {
+        const workflowRun = await workflowRepository.createRun({
+          organizationId: organization.id,
+          projectId: project.id,
+          workflowKey: 'test-workflow',
+          workflowVersion: '1.0.0',
+          initiatedByUserId: user.id,
+        })
+
+        const step = await repository.createStepRun({
+          runId: workflowRun.id,
+          organizationId: organization.id,
+          stepKey: 'test-step',
+          stepType: 'agent',
+        })
+
+        await repository.updateStepStatus(step.id, StepStatus.RUNNING)
+
+        const steps = await repository.findStepsByRunId(workflowRun.id)
+        expect(steps[0].status).toBe(StepStatus.RUNNING)
       })
-
-      const step = await repository.createStepRun({
-        runId: workflowRun.id,
-        organizationId: organization.id,
-        stepKey: 'test-step',
-        stepType: 'agent',
-      })
-
-      await repository.updateStepStatus(step.id, StepStatus.RUNNING)
-
-      const steps = await repository.findStepsByRunId(workflowRun.id)
-      expect(steps[0].status).toBe(StepStatus.RUNNING)
     })
   })
 })

@@ -56,30 +56,34 @@ describe('ProjectPrismaRepository (Integration)', () => {
       const prisma = getPrismaClient()
       const { organization } = await createTestOrgWithOwner(prisma)
 
-      const result = await repository.create(organization.id, {
-        name: 'Test Project',
-        slug: 'test-project',
-        description: 'Test description',
-      })
+      await databaseService.withOrganization(organization.id, async () => {
+        const result = await repository.create(organization.id, {
+          name: 'Test Project',
+          slug: 'test-project',
+          description: 'Test description',
+        })
 
-      expect(result).toMatchObject({
-        name: 'Test Project',
-        slug: 'test-project',
-        description: 'Test description',
-        organizationId: organization.id,
-        repositoryCount: 0,
-        workflowRunCount: 0,
-      })
-      expect(result.id).toBeDefined()
-      expect(result.createdAt).toBeInstanceOf(Date)
-      expect(result.updatedAt).toBeInstanceOf(Date)
+        expect(result).toMatchObject({
+          name: 'Test Project',
+          slug: 'test-project',
+          description: 'Test description',
+          organizationId: organization.id,
+        })
+        expect(result.stats).toMatchObject({
+          repositoryCount: 0,
+          workflowRunCount: 0,
+        })
+        expect(result.id).toBeDefined()
+        expect(result.createdAt).toBeInstanceOf(Date)
+        expect(result.updatedAt).toBeInstanceOf(Date)
 
-      // Verify in database
-      const project = await prisma.project.findUnique({
-        where: { id: result.id },
+        // Verify in database
+        const project = await prisma.project.findUnique({
+          where: { id: result.id },
+        })
+        expect(project).toBeDefined()
+        expect(project?.name).toBe('Test Project')
       })
-      expect(project).toBeDefined()
-      expect(project?.name).toBe('Test Project')
     })
   })
 
@@ -90,17 +94,19 @@ describe('ProjectPrismaRepository (Integration)', () => {
       const prisma = getPrismaClient()
       const { organization } = await createTestOrgWithOwner(prisma)
 
-      const created = await repository.create(organization.id, {
-        name: 'Test Project',
-        slug: 'test-project',
-      })
+      await databaseService.withOrganization(organization.id, async () => {
+        const created = await repository.create(organization.id, {
+          name: 'Test Project',
+          slug: 'test-project',
+        })
 
-      const result = await repository.findOne(organization.id, created.id)
+        const result = await repository.findOne(organization.id, created.id)
 
-      expect(result).toMatchObject({
-        id: created.id,
-        name: 'Test Project',
-        slug: 'test-project',
+        expect(result).toMatchObject({
+          id: created.id,
+          name: 'Test Project',
+          slug: 'test-project',
+        })
       })
     })
 
@@ -110,9 +116,11 @@ describe('ProjectPrismaRepository (Integration)', () => {
       const prisma = getPrismaClient()
       const { organization } = await createTestOrgWithOwner(prisma)
 
-      const result = await repository.findOne(organization.id, 'non-existent-id')
+      await databaseService.withOrganization(organization.id, async () => {
+        const result = await repository.findOne(organization.id, 'non-existent-id')
 
-      expect(result).toBeNull()
+        expect(result).toBeNull()
+      })
     })
   })
 
@@ -123,29 +131,31 @@ describe('ProjectPrismaRepository (Integration)', () => {
       const prisma = getPrismaClient()
       const { organization } = await createTestOrgWithOwner(prisma)
 
-      // Create test projects
-      await repository.create(organization.id, {
-        name: 'Project 1',
-        slug: 'project-1',
-      })
-      await repository.create(organization.id, {
-        name: 'Project 2',
-        slug: 'project-2',
-      })
+      await databaseService.withOrganization(organization.id, async () => {
+        // Create test projects
+        await repository.create(organization.id, {
+          name: 'Project 1',
+          slug: 'project-1',
+        })
+        await repository.create(organization.id, {
+          name: 'Project 2',
+          slug: 'project-2',
+        })
 
-      const result = await repository.findAll(organization.id, {
-        page: 1,
-        limit: 10,
-        sort: 'createdAt',
-        order: 'desc',
-      })
+        const result = await repository.findAll(organization.id, {
+          page: 1,
+          limit: 10,
+          sort: 'createdAt',
+          order: 'desc',
+        })
 
-      expect(result.items).toHaveLength(2)
-      expect(result.total).toBe(2)
-      expect(result).toMatchObject({
-        page: 1,
-        limit: 10,
-        totalPages: 1,
+        expect(result.items).toHaveLength(2)
+        expect(result.total).toBe(2)
+        expect(result).toMatchObject({
+          page: 1,
+          limit: 10,
+          totalPages: 1,
+        })
       })
     })
   })

@@ -55,7 +55,7 @@ describe('EventPrismaRepository (Integration)', () => {
     resetCounters()
   })
 
-  describe('recordEvent', () => {
+  describe('appendEvent', () => {
     it('should record workflow event', async () => {
       if (!databaseService) return
 
@@ -63,28 +63,30 @@ describe('EventPrismaRepository (Integration)', () => {
       const { organization, user } = await createTestOrgWithOwner(prisma)
       const project = await createTestProject(prisma, organization.id)
 
-      const workflowRun = await workflowRepository.createRun({
-        organizationId: organization.id,
-        projectId: project.id,
-        workflowKey: 'test-workflow',
-        workflowVersion: '1.0.0',
-        initiatedByUserId: user.id,
-      })
+      await databaseService.withOrganization(organization.id, async () => {
+        const workflowRun = await workflowRepository.createRun({
+          organizationId: organization.id,
+          projectId: project.id,
+          workflowKey: 'test-workflow',
+          workflowVersion: '1.0.0',
+          initiatedByUserId: user.id,
+        })
 
-      const result = await repository.recordEvent({
-        runId: workflowRun.id,
-        organizationId: organization.id,
-        eventType: 'workflow.started',
-        payload: { message: 'Workflow started' },
-      })
+        const result = await repository.appendEvent({
+          runId: workflowRun.id,
+          organizationId: organization.id,
+          eventType: 'workflow.started',
+          payload: { message: 'Workflow started' },
+        })
 
-      expect(result).toMatchObject({
-        runId: workflowRun.id,
-        organizationId: organization.id,
-        eventType: 'workflow.started',
+        expect(result).toMatchObject({
+          runId: workflowRun.id,
+          organizationId: organization.id,
+          eventType: 'workflow.started',
+        })
+        expect(result.id).toBeDefined()
+        expect(result.createdAt).toBeInstanceOf(Date)
       })
-      expect(result.id).toBeDefined()
-      expect(result.timestamp).toBeInstanceOf(Date)
     })
   })
 
@@ -96,33 +98,35 @@ describe('EventPrismaRepository (Integration)', () => {
       const { organization, user } = await createTestOrgWithOwner(prisma)
       const project = await createTestProject(prisma, organization.id)
 
-      const workflowRun = await workflowRepository.createRun({
-        organizationId: organization.id,
-        projectId: project.id,
-        workflowKey: 'test-workflow',
-        workflowVersion: '1.0.0',
-        initiatedByUserId: user.id,
+      await databaseService.withOrganization(organization.id, async () => {
+        const workflowRun = await workflowRepository.createRun({
+          organizationId: organization.id,
+          projectId: project.id,
+          workflowKey: 'test-workflow',
+          workflowVersion: '1.0.0',
+          initiatedByUserId: user.id,
+        })
+
+        await repository.appendEvent({
+          runId: workflowRun.id,
+          organizationId: organization.id,
+          eventType: 'workflow.started',
+          payload: {},
+        })
+
+        await repository.appendEvent({
+          runId: workflowRun.id,
+          organizationId: organization.id,
+          eventType: 'workflow.completed',
+          payload: {},
+        })
+
+        const result = await repository.findEventsByRunId(workflowRun.id)
+
+        expect(result).toHaveLength(2)
+        expect(result[0].eventType).toBe('workflow.started')
+        expect(result[1].eventType).toBe('workflow.completed')
       })
-
-      await repository.recordEvent({
-        runId: workflowRun.id,
-        organizationId: organization.id,
-        eventType: 'workflow.started',
-        payload: {},
-      })
-
-      await repository.recordEvent({
-        runId: workflowRun.id,
-        organizationId: organization.id,
-        eventType: 'workflow.completed',
-        payload: {},
-      })
-
-      const result = await repository.findEventsByRunId(workflowRun.id)
-
-      expect(result).toHaveLength(2)
-      expect(result[0].eventType).toBe('workflow.started')
-      expect(result[1].eventType).toBe('workflow.completed')
     })
   })
 })

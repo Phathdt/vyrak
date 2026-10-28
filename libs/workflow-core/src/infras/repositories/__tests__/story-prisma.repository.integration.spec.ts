@@ -63,38 +63,40 @@ describe('StoryPrismaRepository (Integration)', () => {
       const { organization, user } = await createTestOrgWithOwner(prisma)
       const project = await createTestProject(prisma, organization.id)
 
-      const workflowRun = await workflowRepository.createRun({
-        organizationId: organization.id,
-        projectId: project.id,
-        workflowKey: 'test-workflow',
-        workflowVersion: '1.0.0',
-        initiatedByUserId: user.id,
+      await databaseService.withOrganization(organization.id, async () => {
+        const workflowRun = await workflowRepository.createRun({
+          organizationId: organization.id,
+          projectId: project.id,
+          workflowKey: 'test-workflow',
+          workflowVersion: '1.0.0',
+          initiatedByUserId: user.id,
+        })
+
+        const stories = [
+          {
+            workflowRunId: workflowRun.id,
+            orderIndex: 0,
+            title: 'Story 1',
+            description: 'First story',
+            acceptanceCriteria: ['Criterion 1'],
+            estimatedDuration: 300,
+          },
+          {
+            workflowRunId: workflowRun.id,
+            orderIndex: 1,
+            title: 'Story 2',
+            description: 'Second story',
+            acceptanceCriteria: ['Criterion 2'],
+            estimatedDuration: 600,
+          },
+        ]
+
+        const result = await repository.createMany(stories)
+
+        expect(result).toHaveLength(2)
+        expect(result[0].title).toBe('Story 1')
+        expect(result[1].title).toBe('Story 2')
       })
-
-      const stories = [
-        {
-          workflowRunId: workflowRun.id,
-          orderIndex: 0,
-          title: 'Story 1',
-          description: 'First story',
-          acceptanceCriteria: ['Criterion 1'],
-          estimatedDuration: 300,
-        },
-        {
-          workflowRunId: workflowRun.id,
-          orderIndex: 1,
-          title: 'Story 2',
-          description: 'Second story',
-          acceptanceCriteria: ['Criterion 2'],
-          estimatedDuration: 600,
-        },
-      ]
-
-      const result = await repository.createMany(stories)
-
-      expect(result).toHaveLength(2)
-      expect(result[0].title).toBe('Story 1')
-      expect(result[1].title).toBe('Story 2')
     })
   })
 
@@ -106,36 +108,38 @@ describe('StoryPrismaRepository (Integration)', () => {
       const { organization, user } = await createTestOrgWithOwner(prisma)
       const project = await createTestProject(prisma, organization.id)
 
-      const workflowRun = await workflowRepository.createRun({
-        organizationId: organization.id,
-        projectId: project.id,
-        workflowKey: 'test-workflow',
-        workflowVersion: '1.0.0',
-        initiatedByUserId: user.id,
+      await databaseService.withOrganization(organization.id, async () => {
+        const workflowRun = await workflowRepository.createRun({
+          organizationId: organization.id,
+          projectId: project.id,
+          workflowKey: 'test-workflow',
+          workflowVersion: '1.0.0',
+          initiatedByUserId: user.id,
+        })
+
+        await repository.createMany([
+          {
+            workflowRunId: workflowRun.id,
+            orderIndex: 1,
+            title: 'Second Story',
+            description: 'Should appear second',
+            estimatedDuration: 300,
+          },
+          {
+            workflowRunId: workflowRun.id,
+            orderIndex: 0,
+            title: 'First Story',
+            description: 'Should appear first',
+            estimatedDuration: 300,
+          },
+        ])
+
+        const result = await repository.findByWorkflowRunId(workflowRun.id)
+
+        expect(result).toHaveLength(2)
+        expect(result[0].title).toBe('First Story')
+        expect(result[1].title).toBe('Second Story')
       })
-
-      await repository.createMany([
-        {
-          workflowRunId: workflowRun.id,
-          orderIndex: 1,
-          title: 'Second Story',
-          description: 'Should appear second',
-          estimatedDuration: 300,
-        },
-        {
-          workflowRunId: workflowRun.id,
-          orderIndex: 0,
-          title: 'First Story',
-          description: 'Should appear first',
-          estimatedDuration: 300,
-        },
-      ])
-
-      const result = await repository.findByWorkflowRunId(workflowRun.id)
-
-      expect(result).toHaveLength(2)
-      expect(result[0].title).toBe('First Story')
-      expect(result[1].title).toBe('Second Story')
     })
   })
 
@@ -147,38 +151,42 @@ describe('StoryPrismaRepository (Integration)', () => {
       const { organization, user } = await createTestOrgWithOwner(prisma)
       const project = await createTestProject(prisma, organization.id)
 
-      const workflowRun = await workflowRepository.createRun({
-        organizationId: organization.id,
-        projectId: project.id,
-        workflowKey: 'test-workflow',
-        workflowVersion: '1.0.0',
-        initiatedByUserId: user.id,
-      })
+      await databaseService.withOrganization(organization.id, async () => {
+        const workflowRun = await workflowRepository.createRun({
+          organizationId: organization.id,
+          projectId: project.id,
+          workflowKey: 'test-workflow',
+          workflowVersion: '1.0.0',
+          initiatedByUserId: user.id,
+        })
 
-      const [created] = await repository.createMany([
-        {
-          workflowRunId: workflowRun.id,
-          orderIndex: 0,
+        const [created] = await repository.createMany([
+          {
+            workflowRunId: workflowRun.id,
+            orderIndex: 0,
+            title: 'Test Story',
+            description: 'Test description',
+            estimatedDuration: 300,
+          },
+        ])
+
+        const result = await repository.findById(created.id)
+
+        expect(result).toMatchObject({
+          id: created.id,
           title: 'Test Story',
-          description: 'Test description',
-          estimatedDuration: 300,
-        },
-      ])
-
-      const result = await repository.findById(created.id)
-
-      expect(result).toMatchObject({
-        id: created.id,
-        title: 'Test Story',
+        })
       })
     })
 
     it('should return null when not found', async () => {
       if (!databaseService) return
 
-      const result = await repository.findById('non-existent-id')
+      await databaseService.withOrganization('test-org-id', async () => {
+        const result = await repository.findById('non-existent-id')
 
-      expect(result).toBeNull()
+        expect(result).toBeNull()
+      })
     })
   })
 
@@ -190,34 +198,36 @@ describe('StoryPrismaRepository (Integration)', () => {
       const { organization, user } = await createTestOrgWithOwner(prisma)
       const project = await createTestProject(prisma, organization.id)
 
-      const workflowRun = await workflowRepository.createRun({
-        organizationId: organization.id,
-        projectId: project.id,
-        workflowKey: 'test-workflow',
-        workflowVersion: '1.0.0',
-        initiatedByUserId: user.id,
+      await databaseService.withOrganization(organization.id, async () => {
+        const workflowRun = await workflowRepository.createRun({
+          organizationId: organization.id,
+          projectId: project.id,
+          workflowKey: 'test-workflow',
+          workflowVersion: '1.0.0',
+          initiatedByUserId: user.id,
+        })
+
+        const [created] = await repository.createMany([
+          {
+            workflowRunId: workflowRun.id,
+            orderIndex: 0,
+            title: 'Test Story',
+            description: 'Test description',
+            estimatedDuration: 300,
+          },
+        ])
+
+        const startedAt = new Date()
+        await repository.updateStatus(created.id, {
+          status: 'running',
+          startedAt,
+        })
+
+        const result = await repository.findById(created.id)
+
+        expect(result?.status).toBe('running')
+        expect(result?.startedAt).toEqual(startedAt)
       })
-
-      const [created] = await repository.createMany([
-        {
-          workflowRunId: workflowRun.id,
-          orderIndex: 0,
-          title: 'Test Story',
-          description: 'Test description',
-          estimatedDuration: 300,
-        },
-      ])
-
-      const startedAt = new Date()
-      await repository.updateStatus(created.id, {
-        status: 'running',
-        startedAt,
-      })
-
-      const result = await repository.findById(created.id)
-
-      expect(result?.status).toBe('running')
-      expect(result?.startedAt).toEqual(startedAt)
     })
   })
 
@@ -229,34 +239,36 @@ describe('StoryPrismaRepository (Integration)', () => {
       const { organization, user } = await createTestOrgWithOwner(prisma)
       const project = await createTestProject(prisma, organization.id)
 
-      const workflowRun = await workflowRepository.createRun({
-        organizationId: organization.id,
-        projectId: project.id,
-        workflowKey: 'test-workflow',
-        workflowVersion: '1.0.0',
-        initiatedByUserId: user.id,
+      await databaseService.withOrganization(organization.id, async () => {
+        const workflowRun = await workflowRepository.createRun({
+          organizationId: organization.id,
+          projectId: project.id,
+          workflowKey: 'test-workflow',
+          workflowVersion: '1.0.0',
+          initiatedByUserId: user.id,
+        })
+
+        const [created] = await repository.createMany([
+          {
+            workflowRunId: workflowRun.id,
+            orderIndex: 0,
+            title: 'Test Story',
+            description: 'Test description',
+            estimatedDuration: 300,
+          },
+        ])
+
+        const subStep = {
+          name: 'Test substep',
+          status: 'completed' as const,
+          completedAt: new Date(),
+        }
+
+        const result = await repository.appendSubStep(created.id, subStep)
+
+        expect(Array.isArray(result.subSteps)).toBe(true)
+        expect(result.subSteps).toHaveLength(1)
       })
-
-      const [created] = await repository.createMany([
-        {
-          workflowRunId: workflowRun.id,
-          orderIndex: 0,
-          title: 'Test Story',
-          description: 'Test description',
-          estimatedDuration: 300,
-        },
-      ])
-
-      const subStep = {
-        description: 'Test substep',
-        status: 'completed' as const,
-        timestamp: new Date(),
-      }
-
-      const result = await repository.appendSubStep(created.id, subStep)
-
-      expect(Array.isArray(result.subSteps)).toBe(true)
-      expect(result.subSteps).toHaveLength(1)
     })
   })
 })

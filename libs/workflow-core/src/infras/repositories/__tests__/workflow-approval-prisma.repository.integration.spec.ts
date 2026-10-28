@@ -9,6 +9,7 @@ import {
   stopPostgres,
 } from '@vyrak/database/test-utils'
 
+import { randomUUID } from 'crypto'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
 import { ApprovalStatus } from '../../../domain/entities/workflow-approval.entity'
@@ -64,31 +65,33 @@ describe('WorkflowApprovalPrismaRepository (Integration)', () => {
       const { organization, user } = await createTestOrgWithOwner(prisma)
       const project = await createTestProject(prisma, organization.id)
 
-      const workflowRun = await workflowRepository.createRun({
-        organizationId: organization.id,
-        projectId: project.id,
-        workflowKey: 'test-workflow',
-        workflowVersion: '1.0.0',
-        initiatedByUserId: user.id,
-      })
+      await databaseService.withOrganization(organization.id, async () => {
+        const workflowRun = await workflowRepository.createRun({
+          organizationId: organization.id,
+          projectId: project.id,
+          workflowKey: 'test-workflow',
+          workflowVersion: '1.0.0',
+          initiatedByUserId: user.id,
+        })
 
-      const approval = {
-        id: 'approval-1',
-        workflowRunId: workflowRun.id,
-        status: ApprovalStatus.PENDING,
-        planArtifactId: 'artifact-1',
-        planArtifactHash: 'hash-1',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }
+        const approval = {
+          id: randomUUID(),
+          workflowRunId: workflowRun.id,
+          status: ApprovalStatus.PENDING,
+          planArtifactId: randomUUID(),
+          planArtifactHash: 'hash-1',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }
 
-      await repository.save(approval)
+        await repository.save(approval)
 
-      const result = await repository.findById(approval.id)
-      expect(result).toMatchObject({
-        id: approval.id,
-        workflowRunId: workflowRun.id,
-        status: ApprovalStatus.PENDING,
+        const result = await repository.findById(approval.id)
+        expect(result).toMatchObject({
+          id: approval.id,
+          workflowRunId: workflowRun.id,
+          status: ApprovalStatus.PENDING,
+        })
       })
     })
 
@@ -99,40 +102,42 @@ describe('WorkflowApprovalPrismaRepository (Integration)', () => {
       const { organization, user } = await createTestOrgWithOwner(prisma)
       const project = await createTestProject(prisma, organization.id)
 
-      const workflowRun = await workflowRepository.createRun({
-        organizationId: organization.id,
-        projectId: project.id,
-        workflowKey: 'test-workflow',
-        workflowVersion: '1.0.0',
-        initiatedByUserId: user.id,
+      await databaseService.withOrganization(organization.id, async () => {
+        const workflowRun = await workflowRepository.createRun({
+          organizationId: organization.id,
+          projectId: project.id,
+          workflowKey: 'test-workflow',
+          workflowVersion: '1.0.0',
+          initiatedByUserId: user.id,
+        })
+
+        const approval = {
+          id: randomUUID(),
+          workflowRunId: workflowRun.id,
+          status: ApprovalStatus.PENDING,
+          planArtifactId: randomUUID(),
+          planArtifactHash: 'hash-1',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }
+
+        await repository.save(approval)
+
+        // Update approval
+        const updatedApproval = {
+          ...approval,
+          status: ApprovalStatus.APPROVED,
+          decidedByUserId: user.id,
+          decidedAt: new Date(),
+          updatedAt: new Date(),
+        }
+
+        await repository.save(updatedApproval)
+
+        const result = await repository.findById(approval.id)
+        expect(result?.status).toBe(ApprovalStatus.APPROVED)
+        expect(result?.decidedByUserId).toBe(user.id)
       })
-
-      const approval = {
-        id: 'approval-1',
-        workflowRunId: workflowRun.id,
-        status: ApprovalStatus.PENDING,
-        planArtifactId: 'artifact-1',
-        planArtifactHash: 'hash-1',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }
-
-      await repository.save(approval)
-
-      // Update approval
-      const updatedApproval = {
-        ...approval,
-        status: ApprovalStatus.APPROVED,
-        decidedByUserId: user.id,
-        decidedAt: new Date(),
-        updatedAt: new Date(),
-      }
-
-      await repository.save(updatedApproval)
-
-      const result = await repository.findById(approval.id)
-      expect(result?.status).toBe(ApprovalStatus.APPROVED)
-      expect(result?.decidedByUserId).toBe(user.id)
     })
   })
 
@@ -144,28 +149,30 @@ describe('WorkflowApprovalPrismaRepository (Integration)', () => {
       const { organization, user } = await createTestOrgWithOwner(prisma)
       const project = await createTestProject(prisma, organization.id)
 
-      const workflowRun = await workflowRepository.createRun({
-        organizationId: organization.id,
-        projectId: project.id,
-        workflowKey: 'test-workflow',
-        workflowVersion: '1.0.0',
-        initiatedByUserId: user.id,
+      await databaseService.withOrganization(organization.id, async () => {
+        const workflowRun = await workflowRepository.createRun({
+          organizationId: organization.id,
+          projectId: project.id,
+          workflowKey: 'test-workflow',
+          workflowVersion: '1.0.0',
+          initiatedByUserId: user.id,
+        })
+
+        const approval = {
+          id: randomUUID(),
+          workflowRunId: workflowRun.id,
+          status: ApprovalStatus.PENDING,
+          planArtifactId: randomUUID(),
+          planArtifactHash: 'hash-1',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }
+
+        await repository.save(approval)
+
+        const result = await repository.findByRunId(workflowRun.id)
+        expect(result?.workflowRunId).toBe(workflowRun.id)
       })
-
-      const approval = {
-        id: 'approval-1',
-        workflowRunId: workflowRun.id,
-        status: ApprovalStatus.PENDING,
-        planArtifactId: 'artifact-1',
-        planArtifactHash: 'hash-1',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }
-
-      await repository.save(approval)
-
-      const result = await repository.findByRunId(workflowRun.id)
-      expect(result?.workflowRunId).toBe(workflowRun.id)
     })
   })
 
@@ -177,28 +184,30 @@ describe('WorkflowApprovalPrismaRepository (Integration)', () => {
       const { organization, user } = await createTestOrgWithOwner(prisma)
       const project = await createTestProject(prisma, organization.id)
 
-      const workflowRun = await workflowRepository.createRun({
-        organizationId: organization.id,
-        projectId: project.id,
-        workflowKey: 'test-workflow',
-        workflowVersion: '1.0.0',
-        initiatedByUserId: user.id,
+      await databaseService.withOrganization(organization.id, async () => {
+        const workflowRun = await workflowRepository.createRun({
+          organizationId: organization.id,
+          projectId: project.id,
+          workflowKey: 'test-workflow',
+          workflowVersion: '1.0.0',
+          initiatedByUserId: user.id,
+        })
+
+        const approval = {
+          id: randomUUID(),
+          workflowRunId: workflowRun.id,
+          status: ApprovalStatus.PENDING,
+          planArtifactId: randomUUID(),
+          planArtifactHash: 'hash-1',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }
+
+        await repository.save(approval)
+
+        const result = await repository.findPendingByRunId(workflowRun.id)
+        expect(result?.status).toBe(ApprovalStatus.PENDING)
       })
-
-      const approval = {
-        id: 'approval-1',
-        workflowRunId: workflowRun.id,
-        status: ApprovalStatus.PENDING,
-        planArtifactId: 'artifact-1',
-        planArtifactHash: 'hash-1',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }
-
-      await repository.save(approval)
-
-      const result = await repository.findPendingByRunId(workflowRun.id)
-      expect(result?.status).toBe(ApprovalStatus.PENDING)
     })
 
     it('should return null for invalidated approval', async () => {
@@ -208,30 +217,32 @@ describe('WorkflowApprovalPrismaRepository (Integration)', () => {
       const { organization, user } = await createTestOrgWithOwner(prisma)
       const project = await createTestProject(prisma, organization.id)
 
-      const workflowRun = await workflowRepository.createRun({
-        organizationId: organization.id,
-        projectId: project.id,
-        workflowKey: 'test-workflow',
-        workflowVersion: '1.0.0',
-        initiatedByUserId: user.id,
+      await databaseService.withOrganization(organization.id, async () => {
+        const workflowRun = await workflowRepository.createRun({
+          organizationId: organization.id,
+          projectId: project.id,
+          workflowKey: 'test-workflow',
+          workflowVersion: '1.0.0',
+          initiatedByUserId: user.id,
+        })
+
+        const approval = {
+          id: randomUUID(),
+          workflowRunId: workflowRun.id,
+          status: ApprovalStatus.PENDING,
+          planArtifactId: randomUUID(),
+          planArtifactHash: 'hash-1',
+          invalidatedAt: new Date(),
+          invalidationReason: 'Plan changed',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }
+
+        await repository.save(approval)
+
+        const result = await repository.findPendingByRunId(workflowRun.id)
+        expect(result).toBeNull()
       })
-
-      const approval = {
-        id: 'approval-1',
-        workflowRunId: workflowRun.id,
-        status: ApprovalStatus.PENDING,
-        planArtifactId: 'artifact-1',
-        planArtifactHash: 'hash-1',
-        invalidatedAt: new Date(),
-        invalidationReason: 'Plan changed',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }
-
-      await repository.save(approval)
-
-      const result = await repository.findPendingByRunId(workflowRun.id)
-      expect(result).toBeNull()
     })
   })
 })

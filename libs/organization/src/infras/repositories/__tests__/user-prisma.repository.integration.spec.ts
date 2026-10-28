@@ -55,20 +55,24 @@ describe('UserPrismaRepository (Integration)', () => {
       const prisma = getPrismaClient()
       const user = await createTestUser(prisma)
 
-      const result = await repository.findByEmail(user.email)
+      await databaseService.withSystemAccess(async () => {
+        const result = await repository.findByEmail(user.email)
 
-      expect(result).toMatchObject({
-        id: user.id,
-        email: user.email,
+        expect(result).toMatchObject({
+          id: user.id,
+          email: user.email,
+        })
       })
     })
 
     it('should return null when not found', async () => {
       if (!databaseService) return
 
-      const result = await repository.findByEmail('nonexistent@example.com')
+      await databaseService.withSystemAccess(async () => {
+        const result = await repository.findByEmail('nonexistent@example.com')
 
-      expect(result).toBeNull()
+        expect(result).toBeNull()
+      })
     })
   })
 
@@ -79,20 +83,24 @@ describe('UserPrismaRepository (Integration)', () => {
       const prisma = getPrismaClient()
       const user = await createTestUser(prisma)
 
-      const result = await repository.findById(user.id)
+      await databaseService.withSystemAccess(async () => {
+        const result = await repository.findById(user.id)
 
-      expect(result).toMatchObject({
-        id: user.id,
-        email: user.email,
+        expect(result).toMatchObject({
+          id: user.id,
+          email: user.email,
+        })
       })
     })
 
     it('should return null when not found', async () => {
       if (!databaseService) return
 
-      const result = await repository.findById('non-existent-id')
+      await databaseService.withSystemAccess(async () => {
+        const result = await repository.findById('non-existent-id')
 
-      expect(result).toBeNull()
+        expect(result).toBeNull()
+      })
     })
   })
 })

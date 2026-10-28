@@ -60,25 +60,27 @@ describe('WorkflowPrismaRepository (Integration)', () => {
       const { organization, user } = await createTestOrgWithOwner(prisma)
       const project = await createTestProject(prisma, organization.id)
 
-      const result = await repository.createRun({
-        organizationId: organization.id,
-        projectId: project.id,
-        workflowKey: 'test-workflow',
-        workflowVersion: '1.0.0',
-        initiatedByUserId: user.id,
-        input: { key: 'value' },
-      })
+      await databaseService.withOrganization(organization.id, async () => {
+        const result = await repository.createRun({
+          organizationId: organization.id,
+          projectId: project.id,
+          workflowKey: 'test-workflow',
+          workflowVersion: '1.0.0',
+          initiatedByUserId: user.id,
+          input: { key: 'value' },
+        })
 
-      expect(result).toMatchObject({
-        organizationId: organization.id,
-        projectId: project.id,
-        workflowKey: 'test-workflow',
-        workflowVersion: '1.0.0',
-        initiatedByUserId: user.id,
-        status: WorkflowState.QUEUED,
+        expect(result).toMatchObject({
+          organizationId: organization.id,
+          projectId: project.id,
+          workflowKey: 'test-workflow',
+          workflowVersion: '1.0.0',
+          initiatedByUserId: user.id,
+          state: WorkflowState.QUEUED,
+        })
+        expect(result.id).toBeDefined()
+        expect(result.idempotencyKey).toBeDefined()
       })
-      expect(result.id).toBeDefined()
-      expect(result.idempotencyKey).toBeDefined()
     })
   })
 
@@ -90,28 +92,32 @@ describe('WorkflowPrismaRepository (Integration)', () => {
       const { organization, user } = await createTestOrgWithOwner(prisma)
       const project = await createTestProject(prisma, organization.id)
 
-      const created = await repository.createRun({
-        organizationId: organization.id,
-        projectId: project.id,
-        workflowKey: 'test-workflow',
-        workflowVersion: '1.0.0',
-        initiatedByUserId: user.id,
-      })
+      await databaseService.withOrganization(organization.id, async () => {
+        const created = await repository.createRun({
+          organizationId: organization.id,
+          projectId: project.id,
+          workflowKey: 'test-workflow',
+          workflowVersion: '1.0.0',
+          initiatedByUserId: user.id,
+        })
 
-      const result = await repository.findRunById(created.id)
+        const result = await repository.findRunById(created.id)
 
-      expect(result).toMatchObject({
-        id: created.id,
-        workflowKey: 'test-workflow',
+        expect(result).toMatchObject({
+          id: created.id,
+          workflowKey: 'test-workflow',
+        })
       })
     })
 
     it('should return null when not found', async () => {
       if (!databaseService) return
 
-      const result = await repository.findRunById('non-existent-id')
+      await databaseService.withOrganization('test-org-id', async () => {
+        const result = await repository.findRunById('non-existent-id')
 
-      expect(result).toBeNull()
+        expect(result).toBeNull()
+      })
     })
   })
 
@@ -123,23 +129,25 @@ describe('WorkflowPrismaRepository (Integration)', () => {
       const { organization, user } = await createTestOrgWithOwner(prisma)
       const project = await createTestProject(prisma, organization.id)
 
-      const created = await repository.createRun({
-        organizationId: organization.id,
-        projectId: project.id,
-        workflowKey: 'test-workflow',
-        workflowVersion: '1.0.0',
-        initiatedByUserId: user.id,
+      await databaseService.withOrganization(organization.id, async () => {
+        const created = await repository.createRun({
+          organizationId: organization.id,
+          projectId: project.id,
+          workflowKey: 'test-workflow',
+          workflowVersion: '1.0.0',
+          initiatedByUserId: user.id,
+        })
+
+        await repository.updateRunState(created.id, {
+          status: WorkflowState.RUNNING,
+          startedAt: new Date(),
+        })
+
+        const result = await repository.findRunById(created.id)
+
+        expect(result?.state).toBe(WorkflowState.RUNNING)
+        expect(result?.startedAt).toBeInstanceOf(Date)
       })
-
-      await repository.updateRunState(created.id, {
-        status: WorkflowState.RUNNING,
-        startedAt: new Date(),
-      })
-
-      const result = await repository.findRunById(created.id)
-
-      expect(result?.status).toBe(WorkflowState.RUNNING)
-      expect(result?.startedAt).toBeInstanceOf(Date)
     })
   })
 })
