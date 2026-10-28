@@ -147,6 +147,40 @@ All services are plain TypeScript classes (no `@Injectable()`) registered via DI
 
 **Documentation:** See `/docs/monitoring-metrics-api.md` for complete API reference.
 
+### Artifact Storage (Epic 16)
+
+Workflow artifacts are stored in S3-compatible object storage (Floci for local development, AWS S3 for production):
+
+**Storage Architecture:**
+- **Database:** Metadata only (file path, S3 key, size, content type, timestamps)
+- **S3:** Actual artifact content (on-demand fetching)
+- **Repository:** `ArtifactS3Repository` in `libs/agent-runtime/src/infras/repositories/`
+
+**API Endpoints:**
+- `GET /api/organizations/:orgId/workflows/runs/:runId/artifacts` - List artifact metadata
+- `GET /api/organizations/:orgId/workflows/runs/:runId/artifacts/:artifactId` - Get artifact with content
+
+**Configuration (apps/api-server/.env):**
+```bash
+S3__ENDPOINT=http://localhost:4566
+S3__REGION=us-east-1
+S3__BUCKET=vyrak-artifacts
+S3__ACCESS_KEY_ID=test
+S3__SECRET_ACCESS_KEY=test
+S3__FORCE_PATH_STYLE=true
+```
+
+**Key Features:**
+- Content fetched from S3 only when explicitly requested (`includeContent: true`)
+- S3 keys follow pattern: `{orgId}/{runId}/{filename}`
+- Automatic content type detection
+- Tenant isolation via organization ID in key path
+
+**Local Development:**
+- Uses Floci (lightweight S3-compatible storage via LocalStack)
+- Setup: `yarn docker:floci && yarn floci:setup`
+- Access: `aws --endpoint-url=http://localhost:4566 s3 ls s3://vyrak-artifacts`
+
 ### Tech Stack
 
 **Backend:**

@@ -1,5 +1,3 @@
-import type { DatabaseService } from '@vyrak/database'
-
 import type { ArtifactEntity, CreateArtifactParams, IArtifactRepository } from '../../domain'
 
 /**
@@ -16,123 +14,51 @@ export class ArtifactRepositoryError extends Error {
 }
 
 /**
- * Prisma implementation of artifact repository
+ * DEPRECATED: Prisma implementation of artifact repository
+ *
+ * This repository is kept for reference only.
+ * Use ArtifactS3Repository for S3-backed storage.
  *
  * NO @Injectable decorator - plain TypeScript class
  */
 export class ArtifactPrismaRepository implements IArtifactRepository {
-  constructor(private readonly db: DatabaseService) {}
-
   /**
    * Create artifact
+   * @deprecated Use ArtifactS3Repository instead
    */
-  async create(params: CreateArtifactParams): Promise<ArtifactEntity> {
-    try {
-      const artifact = await this.db.client.artifact.create({
-        data: {
-          organizationId: params.organizationId,
-          runId: params.runId,
-          filePath: params.filePath,
-          content: params.content,
-        },
-      })
-
-      return this.mapToEntity(artifact)
-    } catch (error) {
-      throw new ArtifactRepositoryError('Failed to create artifact', error instanceof Error ? error : undefined)
-    }
+  async create(_params: CreateArtifactParams): Promise<ArtifactEntity> {
+    throw new Error('ArtifactPrismaRepository is deprecated. Use ArtifactS3Repository instead.')
   }
 
   /**
    * Find artifact by ID
+   * @deprecated Use ArtifactS3Repository instead
    */
-  async findById(artifactId: string): Promise<ArtifactEntity | null> {
-    try {
-      const artifact = await this.db.client.artifact.findUnique({
-        where: { id: artifactId },
-      })
-
-      return artifact ? this.mapToEntity(artifact) : null
-    } catch (error) {
-      throw new ArtifactRepositoryError(
-        `Failed to find artifact ${artifactId}`,
-        error instanceof Error ? error : undefined
-      )
-    }
+  async findById(_artifactId: string): Promise<ArtifactEntity | null> {
+    throw new Error('ArtifactPrismaRepository is deprecated. Use ArtifactS3Repository instead.')
   }
 
   /**
    * Find artifacts by run ID
+   * @deprecated Use ArtifactS3Repository instead
    */
-  async findByRunId(runId: string): Promise<ArtifactEntity[]> {
-    try {
-      const artifacts = await this.db.client.artifact.findMany({
-        where: { runId },
-        orderBy: { createdAt: 'asc' },
-      })
-
-      return artifacts.map((a: (typeof artifacts)[0]) => this.mapToEntity(a))
-    } catch (error) {
-      throw new ArtifactRepositoryError(
-        `Failed to find artifacts for run ${runId}`,
-        error instanceof Error ? error : undefined
-      )
-    }
+  async findByRunId(_runId: string): Promise<ArtifactEntity[]> {
+    throw new Error('ArtifactPrismaRepository is deprecated. Use ArtifactS3Repository instead.')
   }
 
   /**
    * Find artifacts by organization
+   * @deprecated Use ArtifactS3Repository instead
    */
-  async findByOrganization(organizationId: string): Promise<ArtifactEntity[]> {
-    try {
-      const artifacts = await this.db.client.artifact.findMany({
-        where: { organizationId },
-        orderBy: { createdAt: 'desc' },
-      })
-
-      return artifacts.map((a: (typeof artifacts)[0]) => this.mapToEntity(a))
-    } catch (error) {
-      throw new ArtifactRepositoryError(
-        `Failed to find artifacts for organization ${organizationId}`,
-        error instanceof Error ? error : undefined
-      )
-    }
+  async findByOrganization(_organizationId: string): Promise<ArtifactEntity[]> {
+    throw new Error('ArtifactPrismaRepository is deprecated. Use ArtifactS3Repository instead.')
   }
 
   /**
    * Delete artifact
+   * @deprecated Use ArtifactS3Repository instead
    */
-  async delete(artifactId: string): Promise<void> {
-    try {
-      await this.db.client.artifact.delete({
-        where: { id: artifactId },
-      })
-    } catch (error) {
-      throw new ArtifactRepositoryError(
-        `Failed to delete artifact ${artifactId}`,
-        error instanceof Error ? error : undefined
-      )
-    }
-  }
-
-  /**
-   * Map Prisma model to domain entity
-   */
-  private mapToEntity(artifact: {
-    id: string
-    organizationId: string
-    runId: string
-    filePath: string
-    content: string
-    createdAt: Date
-  }): ArtifactEntity {
-    return {
-      id: artifact.id,
-      organizationId: artifact.organizationId,
-      runId: artifact.runId,
-      filePath: artifact.filePath,
-      content: artifact.content,
-      createdAt: artifact.createdAt,
-    }
+  async delete(_artifactId: string): Promise<void> {
+    throw new Error('ArtifactPrismaRepository is deprecated. Use ArtifactS3Repository instead.')
   }
 }

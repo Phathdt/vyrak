@@ -1,12 +1,17 @@
 /**
  * Artifact entity for domain layer
+ * Content is stored in S3, not in the database
  */
 export interface ArtifactEntity {
   id: string
   organizationId: string
   runId: string
   filePath: string
-  content: string
+  s3Bucket: string
+  s3Key: string
+  contentSize: number
+  contentType: string
+  content: string // Fetched from S3 on-demand (empty for list operations)
   createdAt: Date
 }
 

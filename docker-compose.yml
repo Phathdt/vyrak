@@ -26,6 +26,25 @@ services:
       timeout: 3s
       retries: 5
 
+  floci:
+    image: floci/floci:latest
+    container_name: vyrak-floci
+    ports:
+      - "4566:4566"  # S3-compatible API
+    environment:
+      - SERVICES=s3
+      - AWS_DEFAULT_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+    volumes:
+      - floci-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
   mailcrab:
     image: marlonb/mailcrab:latest
     container_name: vyrak-mailcrab
@@ -98,3 +117,6 @@ services:
   #   depends_on:
   #     - api
   #   restart: unless-stopped
+
+volumes:
+  floci-data:

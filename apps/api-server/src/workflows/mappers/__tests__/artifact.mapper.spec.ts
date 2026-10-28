@@ -4,16 +4,39 @@ import { describe, expect, it } from 'vitest'
 
 import { toArtifactContentDto, toArtifactMetadataDto } from '../artifact.mapper'
 
+// Helper to infer content type from file path
+function inferContentType(filePath: string): string {
+  if (filePath.endsWith('.json')) {
+    return 'application/json'
+  }
+  if (filePath.endsWith('.md')) {
+    return 'text/markdown'
+  }
+  if (filePath.endsWith('.txt')) {
+    return 'text/plain'
+  }
+  return 'text/plain'
+}
+
+// Helper to create test artifact with S3 fields
+function createTestArtifact(filePath: string, content: string): ArtifactEntity {
+  return {
+    id: '123e4567-e89b-12d3-a456-426614174000',
+    organizationId: '123e4567-e89b-12d3-a456-426614174001',
+    runId: '123e4567-e89b-12d3-a456-426614174002',
+    filePath,
+    s3Bucket: 'test-bucket',
+    s3Key: `artifacts/test/${filePath}`,
+    contentSize: Buffer.byteLength(content, 'utf8'),
+    contentType: inferContentType(filePath),
+    content,
+    createdAt: new Date('2024-01-01T00:00:00.000Z'),
+  }
+}
+
 describe('toArtifactMetadataDto', () => {
   it('should map artifact to metadata DTO', () => {
-    const artifact: ArtifactEntity = {
-      id: '123e4567-e89b-12d3-a456-426614174000',
-      organizationId: '123e4567-e89b-12d3-a456-426614174001',
-      runId: '123e4567-e89b-12d3-a456-426614174002',
-      filePath: 'plans/implementation-plan.md',
-      content: '# Implementation Plan\n\nThis is the plan.',
-      createdAt: new Date('2024-01-01T00:00:00.000Z'),
-    }
+    const artifact = createTestArtifact('plans/implementation-plan.md', '# Implementation Plan\n\nThis is the plan.')
 
     const result = toArtifactMetadataDto(artifact, artifact.runId)
 
@@ -27,14 +50,7 @@ describe('toArtifactMetadataDto', () => {
   })
 
   it('should infer plan type from filename', () => {
-    const artifact: ArtifactEntity = {
-      id: '123e4567-e89b-12d3-a456-426614174000',
-      organizationId: '123e4567-e89b-12d3-a456-426614174001',
-      runId: '123e4567-e89b-12d3-a456-426614174002',
-      filePath: 'plans/phase-01-plan.md',
-      content: 'Plan content',
-      createdAt: new Date('2024-01-01T00:00:00.000Z'),
-    }
+    const artifact = createTestArtifact('plans/phase-01-plan.md', 'Plan content')
 
     const result = toArtifactMetadataDto(artifact, artifact.runId)
 
@@ -42,14 +58,7 @@ describe('toArtifactMetadataDto', () => {
   })
 
   it('should infer implementation_report type from filename', () => {
-    const artifact: ArtifactEntity = {
-      id: '123e4567-e89b-12d3-a456-426614174000',
-      organizationId: '123e4567-e89b-12d3-a456-426614174001',
-      runId: '123e4567-e89b-12d3-a456-426614174002',
-      filePath: 'reports/implementation-report.md',
-      content: 'Report content',
-      createdAt: new Date('2024-01-01T00:00:00.000Z'),
-    }
+    const artifact = createTestArtifact('reports/implementation-report.md', 'Report content')
 
     const result = toArtifactMetadataDto(artifact, artifact.runId)
 
@@ -57,14 +66,7 @@ describe('toArtifactMetadataDto', () => {
   })
 
   it('should infer test_result type from filename', () => {
-    const artifact: ArtifactEntity = {
-      id: '123e4567-e89b-12d3-a456-426614174000',
-      organizationId: '123e4567-e89b-12d3-a456-426614174001',
-      runId: '123e4567-e89b-12d3-a456-426614174002',
-      filePath: 'results/test-results.json',
-      content: '{}',
-      createdAt: new Date('2024-01-01T00:00:00.000Z'),
-    }
+    const artifact = createTestArtifact('results/test-results.json', '{}')
 
     const result = toArtifactMetadataDto(artifact, artifact.runId)
 
@@ -72,14 +74,7 @@ describe('toArtifactMetadataDto', () => {
   })
 
   it('should infer approval_plan type from filename with both keywords', () => {
-    const artifact: ArtifactEntity = {
-      id: '123e4567-e89b-12d3-a456-426614174000',
-      organizationId: '123e4567-e89b-12d3-a456-426614174001',
-      runId: '123e4567-e89b-12d3-a456-426614174002',
-      filePath: 'plans/approval-plan.md',
-      content: 'Approval plan content',
-      createdAt: new Date('2024-01-01T00:00:00.000Z'),
-    }
+    const artifact = createTestArtifact('plans/approval-plan.md', 'Approval plan content')
 
     const result = toArtifactMetadataDto(artifact, artifact.runId)
 
@@ -87,14 +82,7 @@ describe('toArtifactMetadataDto', () => {
   })
 
   it('should infer other type for unknown filenames', () => {
-    const artifact: ArtifactEntity = {
-      id: '123e4567-e89b-12d3-a456-426614174000',
-      organizationId: '123e4567-e89b-12d3-a456-426614174001',
-      runId: '123e4567-e89b-12d3-a456-426614174002',
-      filePath: 'misc/config.yaml',
-      content: 'config: true',
-      createdAt: new Date('2024-01-01T00:00:00.000Z'),
-    }
+    const artifact = createTestArtifact('misc/config.yaml', 'config: true')
 
     const result = toArtifactMetadataDto(artifact, artifact.runId)
 
@@ -102,14 +90,7 @@ describe('toArtifactMetadataDto', () => {
   })
 
   it('should infer content type for markdown files', () => {
-    const artifact: ArtifactEntity = {
-      id: '123e4567-e89b-12d3-a456-426614174000',
-      organizationId: '123e4567-e89b-12d3-a456-426614174001',
-      runId: '123e4567-e89b-12d3-a456-426614174002',
-      filePath: 'docs/readme.md',
-      content: '# README',
-      createdAt: new Date('2024-01-01T00:00:00.000Z'),
-    }
+    const artifact = createTestArtifact('docs/readme.md', '# README')
 
     const result = toArtifactMetadataDto(artifact, artifact.runId)
 
@@ -117,14 +98,7 @@ describe('toArtifactMetadataDto', () => {
   })
 
   it('should infer content type for JSON files', () => {
-    const artifact: ArtifactEntity = {
-      id: '123e4567-e89b-12d3-a456-426614174000',
-      organizationId: '123e4567-e89b-12d3-a456-426614174001',
-      runId: '123e4567-e89b-12d3-a456-426614174002',
-      filePath: 'data/config.json',
-      content: '{"key": "value"}',
-      createdAt: new Date('2024-01-01T00:00:00.000Z'),
-    }
+    const artifact = createTestArtifact('data/config.json', '{"key": "value"}')
 
     const result = toArtifactMetadataDto(artifact, artifact.runId)
 
@@ -132,14 +106,7 @@ describe('toArtifactMetadataDto', () => {
   })
 
   it('should infer content type for text files', () => {
-    const artifact: ArtifactEntity = {
-      id: '123e4567-e89b-12d3-a456-426614174000',
-      organizationId: '123e4567-e89b-12d3-a456-426614174001',
-      runId: '123e4567-e89b-12d3-a456-426614174002',
-      filePath: 'logs/output.txt',
-      content: 'log content',
-      createdAt: new Date('2024-01-01T00:00:00.000Z'),
-    }
+    const artifact = createTestArtifact('logs/output.txt', 'log content')
 
     const result = toArtifactMetadataDto(artifact, artifact.runId)
 
@@ -147,14 +114,7 @@ describe('toArtifactMetadataDto', () => {
   })
 
   it('should default to text/plain for unknown extensions', () => {
-    const artifact: ArtifactEntity = {
-      id: '123e4567-e89b-12d3-a456-426614174000',
-      organizationId: '123e4567-e89b-12d3-a456-426614174001',
-      runId: '123e4567-e89b-12d3-a456-426614174002',
-      filePath: 'data/file.xyz',
-      content: 'content',
-      createdAt: new Date('2024-01-01T00:00:00.000Z'),
-    }
+    const artifact = createTestArtifact('data/file.xyz', 'content')
 
     const result = toArtifactMetadataDto(artifact, artifact.runId)
 
@@ -163,14 +123,7 @@ describe('toArtifactMetadataDto', () => {
 
   it('should calculate size for string content', () => {
     const content = 'Hello, World!'
-    const artifact: ArtifactEntity = {
-      id: '123e4567-e89b-12d3-a456-426614174000',
-      organizationId: '123e4567-e89b-12d3-a456-426614174001',
-      runId: '123e4567-e89b-12d3-a456-426614174002',
-      filePath: 'test.txt',
-      content,
-      createdAt: new Date('2024-01-01T00:00:00.000Z'),
-    }
+    const artifact = createTestArtifact('test.txt', content)
 
     const result = toArtifactMetadataDto(artifact, artifact.runId)
 
@@ -178,14 +131,7 @@ describe('toArtifactMetadataDto', () => {
   })
 
   it('should handle stepKey as null', () => {
-    const artifact: ArtifactEntity = {
-      id: '123e4567-e89b-12d3-a456-426614174000',
-      organizationId: '123e4567-e89b-12d3-a456-426614174001',
-      runId: '123e4567-e89b-12d3-a456-426614174002',
-      filePath: 'artifact.txt',
-      content: 'content',
-      createdAt: new Date('2024-01-01T00:00:00.000Z'),
-    }
+    const artifact = createTestArtifact('artifact.txt', 'content')
 
     const result = toArtifactMetadataDto(artifact, artifact.runId)
 
@@ -193,14 +139,7 @@ describe('toArtifactMetadataDto', () => {
   })
 
   it('should extract name from file path', () => {
-    const artifact: ArtifactEntity = {
-      id: '123e4567-e89b-12d3-a456-426614174000',
-      organizationId: '123e4567-e89b-12d3-a456-426614174001',
-      runId: '123e4567-e89b-12d3-a456-426614174002',
-      filePath: 'deeply/nested/path/to/file.md',
-      content: 'content',
-      createdAt: new Date('2024-01-01T00:00:00.000Z'),
-    }
+    const artifact = createTestArtifact('deeply/nested/path/to/file.md', 'content')
 
     const result = toArtifactMetadataDto(artifact, artifact.runId)
 
@@ -210,14 +149,7 @@ describe('toArtifactMetadataDto', () => {
 
 describe('toArtifactContentDto', () => {
   it('should map artifact to content DTO with string content', () => {
-    const artifact: ArtifactEntity = {
-      id: '123e4567-e89b-12d3-a456-426614174000',
-      organizationId: '123e4567-e89b-12d3-a456-426614174001',
-      runId: '123e4567-e89b-12d3-a456-426614174002',
-      filePath: 'plan.md',
-      content: '# Plan\n\nThis is the plan content.',
-      createdAt: new Date('2024-01-01T00:00:00.000Z'),
-    }
+    const artifact = createTestArtifact('plan.md', '# Plan\n\nThis is the plan content.')
 
     const result = toArtifactContentDto(artifact, artifact.runId)
 
@@ -231,14 +163,7 @@ describe('toArtifactContentDto', () => {
 
   it('should map artifact to content DTO with JSON content', () => {
     const jsonContent = '{"status": "success", "data": {"id": "123"}}'
-    const artifact: ArtifactEntity = {
-      id: '123e4567-e89b-12d3-a456-426614174000',
-      organizationId: '123e4567-e89b-12d3-a456-426614174001',
-      runId: '123e4567-e89b-12d3-a456-426614174002',
-      filePath: 'results/output.json',
-      content: jsonContent,
-      createdAt: new Date('2024-01-01T00:00:00.000Z'),
-    }
+    const artifact = createTestArtifact('results/output.json', jsonContent)
 
     const result = toArtifactContentDto(artifact, artifact.runId)
 
@@ -252,14 +177,7 @@ describe('toArtifactContentDto', () => {
 
   it('should keep invalid JSON as string', () => {
     const invalidJson = '{"incomplete": '
-    const artifact: ArtifactEntity = {
-      id: '123e4567-e89b-12d3-a456-426614174000',
-      organizationId: '123e4567-e89b-12d3-a456-426614174001',
-      runId: '123e4567-e89b-12d3-a456-426614174002',
-      filePath: 'data/invalid.json',
-      content: invalidJson,
-      createdAt: new Date('2024-01-01T00:00:00.000Z'),
-    }
+    const artifact = createTestArtifact('data/invalid.json', invalidJson)
 
     const result = toArtifactContentDto(artifact, artifact.runId)
 
@@ -269,14 +187,7 @@ describe('toArtifactContentDto', () => {
 
   it('should calculate size for string content', () => {
     const content = 'Test content'
-    const artifact: ArtifactEntity = {
-      id: '123e4567-e89b-12d3-a456-426614174000',
-      organizationId: '123e4567-e89b-12d3-a456-426614174001',
-      runId: '123e4567-e89b-12d3-a456-426614174002',
-      filePath: 'test.txt',
-      content,
-      createdAt: new Date('2024-01-01T00:00:00.000Z'),
-    }
+    const artifact = createTestArtifact('test.txt', content)
 
     const result = toArtifactContentDto(artifact, artifact.runId)
 
@@ -284,14 +195,7 @@ describe('toArtifactContentDto', () => {
   })
 
   it('should handle empty string content', () => {
-    const artifact: ArtifactEntity = {
-      id: '123e4567-e89b-12d3-a456-426614174000',
-      organizationId: '123e4567-e89b-12d3-a456-426614174001',
-      runId: '123e4567-e89b-12d3-a456-426614174002',
-      filePath: 'empty.txt',
-      content: '',
-      createdAt: new Date('2024-01-01T00:00:00.000Z'),
-    }
+    const artifact = createTestArtifact('empty.txt', '')
 
     const result = toArtifactContentDto(artifact, artifact.runId)
 
@@ -301,14 +205,7 @@ describe('toArtifactContentDto', () => {
 
   it('should handle multi-byte UTF-8 characters', () => {
     const content = 'Hello 世界 🌍'
-    const artifact: ArtifactEntity = {
-      id: '123e4567-e89b-12d3-a456-426614174000',
-      organizationId: '123e4567-e89b-12d3-a456-426614174001',
-      runId: '123e4567-e89b-12d3-a456-426614174002',
-      filePath: 'unicode.txt',
-      content,
-      createdAt: new Date('2024-01-01T00:00:00.000Z'),
-    }
+    const artifact = createTestArtifact('unicode.txt', content)
 
     const result = toArtifactContentDto(artifact, artifact.runId)
 
@@ -328,14 +225,7 @@ describe('toArtifactContentDto', () => {
       },
     })
 
-    const artifact: ArtifactEntity = {
-      id: '123e4567-e89b-12d3-a456-426614174000',
-      organizationId: '123e4567-e89b-12d3-a456-426614174001',
-      runId: '123e4567-e89b-12d3-a456-426614174002',
-      filePath: 'complex.json',
-      content: jsonContent,
-      createdAt: new Date('2024-01-01T00:00:00.000Z'),
-    }
+    const artifact = createTestArtifact('complex.json', jsonContent)
 
     const result = toArtifactContentDto(artifact, artifact.runId)
 

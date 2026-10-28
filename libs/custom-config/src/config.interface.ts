@@ -1,3 +1,4 @@
+import type { S3Config } from './configs/s3.config'
 import type { WorkspaceConfig } from './workspace.config'
 
 export interface DatabaseConfig {
@@ -35,6 +36,7 @@ export interface AppConfig {
   workspace: WorkspaceConfig
   agentRuntime: AgentRuntimeConfig
   jwt: JwtConfig
+  s3: S3Config
   frontendUrl: string
   [key: string]: unknown
 }

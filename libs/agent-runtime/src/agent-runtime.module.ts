@@ -1,3 +1,4 @@
+import { S3Client } from '@aws-sdk/client-s3'
 import { Module } from '@nestjs/common'
 import { CustomConfigModule, CustomConfigService } from '@vyrak/custom-config'
 import { DatabaseModule, DatabaseService } from '@vyrak/database'
@@ -8,7 +9,7 @@ import {
   AGENT_EXECUTOR,
   ARTIFACT_MANAGER,
   ARTIFACT_REPOSITORY,
-  ArtifactPrismaRepository,
+  ArtifactS3Repository,
   ClaudeCodeExecutor,
   FakeAgentExecutor,
   MAIN_REPO_MANAGER,
@@ -24,11 +25,30 @@ import {
 @Module({
   imports: [DatabaseModule, CustomConfigModule],
   providers: [
-    // Artifact repository
+    // S3 Client provider
+    {
+      provide: S3Client,
+      useFactory: (config: CustomConfigService) => {
+        return new S3Client({
+          region: config.s3.region,
+          endpoint: config.s3.endpoint,
+          forcePathStyle: config.s3.forcePathStyle,
+          credentials: {
+            accessKeyId: config.s3.accessKeyId,
+            secretAccessKey: config.s3.secretAccessKey,
+          },
+        })
+      },
+      inject: [CustomConfigService],
+    },
+
+    // Artifact repository with S3
     {
       provide: ARTIFACT_REPOSITORY,
-      useFactory: (db: DatabaseService) => new ArtifactPrismaRepository(db),
-      inject: [DatabaseService],
+      useFactory: (db: DatabaseService, s3Client: S3Client, config: CustomConfigService) => {
+        return new ArtifactS3Repository(db, s3Client, config.s3.bucket)
+      },
+      inject: [DatabaseService, S3Client, CustomConfigService],
     },
 
     // Artifact manager

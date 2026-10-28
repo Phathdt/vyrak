@@ -1178,7 +1178,13 @@ async function main() {
           runId: workflowRuns[1].id,
           organizationId: acmeOrg.id,
           filePath: 'ARD.md',
-          content: '# Architecture Requirements Document\n\n## Payment Integration\n\n...',
+          s3Bucket: 'vyrak-artifacts',
+          s3Key: `${acmeOrg.id}/${workflowRuns[1].id}/ARD.md`,
+          contentSize: Buffer.byteLength(
+            '# Architecture Requirements Document\n\n## Payment Integration\n\n...',
+            'utf-8'
+          ),
+          contentType: 'text/plain',
         },
       }),
       prisma.artifact.create({
@@ -1187,7 +1193,10 @@ async function main() {
           runId: workflowRuns[0].id,
           organizationId: acmeOrg.id,
           filePath: 'IMPLEMENTATION_PLAN.md',
-          content: '# Implementation Plan\n\n## Phase 1: Authentication\n\n...',
+          s3Bucket: 'vyrak-artifacts',
+          s3Key: `${acmeOrg.id}/${workflowRuns[0].id}/IMPLEMENTATION_PLAN.md`,
+          contentSize: Buffer.byteLength('# Implementation Plan\n\n## Phase 1: Authentication\n\n...', 'utf-8'),
+          contentType: 'text/plain',
         },
       }),
     ])

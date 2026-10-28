@@ -190,6 +190,31 @@ export class CustomConfigService {
       }
     }
 
+    // Validate S3 config
+    if (this._config.s3) {
+      const s3 = this._config.s3
+
+      if (isPlaceholder(s3.endpoint)) {
+        errors.push('s3.endpoint must be configured')
+      }
+
+      if (isPlaceholder(s3.region)) {
+        errors.push('s3.region must be configured')
+      }
+
+      if (isPlaceholder(s3.bucket)) {
+        errors.push('s3.bucket must be configured')
+      }
+
+      if (isPlaceholder(s3.accessKeyId)) {
+        errors.push('s3.accessKeyId must be configured')
+      }
+
+      if (isPlaceholder(s3.secretAccessKey)) {
+        errors.push('s3.secretAccessKey must be configured')
+      }
+    }
+
     if (errors.length > 0) {
       const errorMessage = `Configuration validation failed:\n${errors.map((e) => `  - ${e}`).join('\n')}`
       BootstrapLogger.error(errorMessage)
