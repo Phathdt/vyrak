@@ -21,13 +21,11 @@
  * Usage: node --import @swc-node/register/esm-register src/generate-openapi.ts
  */
 import 'dotenv/config'
-
-import fs from 'node:fs'
-import path from 'node:path'
 import { NestFactory } from '@nestjs/core'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
-
 import { dump as yamlDump } from 'js-yaml'
+import fs from 'node:fs'
+import path from 'node:path'
 
 import { AppModule } from './app'
 

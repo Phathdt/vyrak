@@ -1,5 +1,4 @@
 import * as fs from 'fs'
-
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { AgentType, type AgentExecutionInput } from '../../../../domain'

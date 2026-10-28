@@ -1,5 +1,4 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { RemoveRepositoryModal } from '../RemoveRepositoryModal'

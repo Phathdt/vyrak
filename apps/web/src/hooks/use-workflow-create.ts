@@ -4,8 +4,9 @@ import { v4 as uuidv4 } from 'uuid'
 import { useWorkflowsControllerCreateWorkflowRun } from '../api/generated'
 import { useAuth } from '../contexts/auth-context'
 import { useOrganization } from '../contexts/organization-context'
-import type { CreateWorkflowFormData } from '../lib/schemas/workflow-schemas'
 import { clearWorkflowDraft } from '../lib/utils/local-storage'
+
+import type { CreateWorkflowFormData } from '../lib/schemas/workflow-schemas'
 
 export function useWorkflowCreate() {
   const navigate = useNavigate()

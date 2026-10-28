@@ -2,7 +2,6 @@ import { Processor, WorkerHost } from '@nestjs/bullmq'
 import { Logger } from '@nestjs/common'
 import { DatabaseService } from '@vyrak/database'
 import { WorkflowExecutorService } from '@vyrak/workflow-core'
-
 import { Job } from 'bullmq'
 
 interface WorkflowJobData {

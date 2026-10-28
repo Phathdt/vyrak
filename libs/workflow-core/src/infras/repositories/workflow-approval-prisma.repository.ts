@@ -1,11 +1,11 @@
-import type { DatabaseService } from '@vyrak/database'
-
 import {
   ApprovalStatus,
   WorkflowApprovalSchema,
   type WorkflowApproval,
 } from '../../domain/entities/workflow-approval.entity'
+
 import type { IWorkflowApprovalRepository } from '../../domain/interfaces/workflow-approval.repository.interface'
+import type { DatabaseService } from '@vyrak/database'
 
 /**
  * Prisma implementation of workflow approval repository

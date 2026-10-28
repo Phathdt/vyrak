@@ -1,6 +1,5 @@
-import type { Story, WorkflowTemplate } from '@vyrak/database'
-
 import type { StoryDto, WorkflowTemplateDto } from '../dto'
+import type { Story, WorkflowTemplate } from '@vyrak/database'
 
 /**
  * Map WorkflowTemplate entity to DTO

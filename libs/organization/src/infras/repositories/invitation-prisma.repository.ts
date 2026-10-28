@@ -1,6 +1,5 @@
-import type { DatabaseService, Invitation } from '@vyrak/database'
-
 import type { IInvitationRepository, InvitationResponse, InviteMemberDto } from '../../domain'
+import type { DatabaseService, Invitation } from '@vyrak/database'
 
 export class InvitationPrismaRepository implements IInvitationRepository {
   constructor(private readonly prisma: DatabaseService) {}

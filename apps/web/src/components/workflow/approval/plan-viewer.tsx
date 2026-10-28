@@ -1,14 +1,14 @@
 import { useState } from 'react'
 
+import {
+  useWorkflowsControllerGetArtifact,
+  useWorkflowsControllerListArtifacts,
+} from '../../../api/generated/workflows/workflows'
 import { MarkdownRenderer } from './markdown-renderer'
 import { PlanFullScreenModal } from './plan-full-screen-modal'
 import { PlanViewerActions } from './plan-viewer-actions'
 
 import type { ArtifactMetadataDto } from '../../../api/generated/models'
-import {
-  useWorkflowsControllerGetArtifact,
-  useWorkflowsControllerListArtifacts,
-} from '../../../api/generated/workflows/workflows'
 
 interface PlanViewerProps {
   orgId: string

@@ -1,9 +1,10 @@
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 
-import type { StepRunResponseDto, WorkflowRunResponseDto } from '../../api/generated/models'
 import { useDurationCounter } from '../../hooks/use-duration-counter'
 import { formatAbsoluteTime, formatDuration, formatRelativeTime } from '../../lib/utils/duration-utils'
+
+import type { StepRunResponseDto, WorkflowRunResponseDto } from '../../api/generated/models'
 
 interface WorkflowOverviewProps {
   workflow: WorkflowRunResponseDto & {

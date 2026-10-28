@@ -1,5 +1,4 @@
 import { fireEvent, render, screen } from '@testing-library/react'
-
 import { BrowserRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 

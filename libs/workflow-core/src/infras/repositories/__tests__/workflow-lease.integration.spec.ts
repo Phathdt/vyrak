@@ -1,4 +1,3 @@
-import type { DatabaseService } from '@vyrak/database'
 import {
   createTestDatabaseService,
   createTestOrgWithOwner,
@@ -8,11 +7,12 @@ import {
   startPostgres,
   stopPostgres,
 } from '@vyrak/database/test-utils'
-
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
 import { WorkflowState } from '../../../domain'
 import { WorkflowPrismaRepository } from '../workflow-prisma.repository'
+
+import type { DatabaseService } from '@vyrak/database'
 
 describe('WorkflowPrismaRepository - Lease Operations (Integration)', () => {
   let databaseService: ReturnType<typeof createTestDatabaseService> | undefined

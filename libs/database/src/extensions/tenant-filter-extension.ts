@@ -1,6 +1,5 @@
-import { isOrganizationModel, isTenantOwned, ORGANIZATION_ID_FIELD } from './tenant-models'
-
 import { Prisma } from '../generated/prisma/client'
+import { isOrganizationModel, isTenantOwned, ORGANIZATION_ID_FIELD } from './tenant-models'
 
 interface TenantFilterContext {
   organizationId?: string

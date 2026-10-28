@@ -1,6 +1,5 @@
-import type { DatabaseService } from '@vyrak/database'
-
 import type { IMemberRepository, MemberResponse, UpdateMemberRoleDto } from '../../domain'
+import type { DatabaseService } from '@vyrak/database'
 
 export class MemberPrismaRepository implements IMemberRepository {
   constructor(private readonly prisma: DatabaseService) {}

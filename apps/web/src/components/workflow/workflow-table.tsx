@@ -1,12 +1,13 @@
-import { Button } from '@/components/ui/button'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useNavigate } from 'react-router-dom'
 
+import { Button } from '@/components/ui/button'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+
+import { useDurationCounter } from '../../hooks/use-duration-counter'
+import { formatDuration, formatRelativeTime } from '../../lib/utils/duration-utils'
 import { StatusBadge } from './StatusBadge'
 
 import type { WorkflowRunSummaryDto } from '../../api/generated/models'
-import { useDurationCounter } from '../../hooks/use-duration-counter'
-import { formatDuration, formatRelativeTime } from '../../lib/utils/duration-utils'
 
 interface WorkflowTableProps {
   workflows: WorkflowRunSummaryDto[]

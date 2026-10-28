@@ -1,6 +1,5 @@
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common'
 import { DatabaseService } from '@vyrak/database'
-
 import { Request } from 'express'
 
 interface AuthenticatedRequest extends Request {

@@ -1,0 +1,5 @@
+# Add files here to ignore them from oxfmt formatting
+/dist
+/coverage
+/apps/web/src/api/generated
+/node_modules

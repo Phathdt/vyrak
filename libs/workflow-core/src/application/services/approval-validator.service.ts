@@ -1,8 +1,9 @@
-import { createHash } from 'crypto'
 import { Logger } from '@nestjs/common'
+import { createHash } from 'crypto'
 
 import { invalidate as invalidateApprovalFn, isPending } from '../../domain/entities/workflow-approval.entity'
 import { ArtifactNotFoundError, WorkflowApprovalNotFoundError } from '../../domain/errors'
+
 import type { IEventRepository, IWorkflowApprovalRepository } from '../../domain/interfaces'
 import type { IArtifact, IArtifactRepository } from '../../domain/interfaces/artifact.interface'
 

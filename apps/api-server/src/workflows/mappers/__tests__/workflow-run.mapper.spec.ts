@@ -1,5 +1,4 @@
 import { WorkflowRun, WorkflowState } from '@vyrak/workflow-core'
-
 import { describe, expect, it } from 'vitest'
 
 import { toWorkflowRunResponseDto, toWorkflowRunSummaryDto } from '../workflow-run.mapper'

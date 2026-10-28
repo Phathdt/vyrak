@@ -1,5 +1,4 @@
 import { CreateBucketCommand, HeadBucketCommand, S3Client } from '@aws-sdk/client-s3'
-
 import { GenericContainer, type StartedTestContainer } from 'testcontainers'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 

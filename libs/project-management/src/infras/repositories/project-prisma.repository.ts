@@ -1,5 +1,3 @@
-import type { DatabaseService, Prisma } from '@vyrak/database'
-
 import type {
   CreateProjectDto,
   IProjectRepository,
@@ -8,6 +6,7 @@ import type {
   ProjectWithStats,
   UpdateProjectDto,
 } from '../../domain'
+import type { DatabaseService, Prisma } from '@vyrak/database'
 
 type ProjectWithCount = Prisma.ProjectGetPayload<{
   include: {

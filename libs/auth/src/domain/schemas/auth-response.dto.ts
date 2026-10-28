@@ -1,5 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger'
-
 import { z } from 'zod'
 
 export const AuthResponseSchema = z.object({

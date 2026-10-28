@@ -1,11 +1,11 @@
-import type { IArtifactManager, IWorkspaceManager } from '@vyrak/agent-runtime'
-
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { WorkflowRun } from '../../../domain/entities/workflow-run.entity'
 import { StepStatus, StepType } from '../../../domain/step-types'
 import { ToolStepExecutor, type ITestResultParser, type TestResults } from '../tool-step-executor.service'
+
+import type { WorkflowRun } from '../../../domain/entities/workflow-run.entity'
 import type { StepDefinition } from '../workflow-definition'
+import type { IArtifactManager, IWorkspaceManager } from '@vyrak/agent-runtime'
 
 describe('ToolStepExecutor', () => {
   let toolStepExecutor: ToolStepExecutor

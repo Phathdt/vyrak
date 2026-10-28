@@ -21,14 +21,6 @@ import { ApproveWorkflowUseCase } from './application/use-cases/approve-workflow
 import { CancelWorkflowUseCase } from './application/use-cases/cancel-workflow.use-case'
 import { RejectWorkflowUseCase } from './application/use-cases/reject-workflow.use-case'
 import { StartWorkflowUseCase } from './application/use-cases/start-workflow.use-case'
-import type { IArtifactRepository } from './domain/interfaces/artifact.interface'
-import type { IAuthorizationService } from './domain/interfaces/authorization.interface'
-import type { IEventRepository } from './domain/interfaces/event.repository.interface'
-import type { IJobQueue, JobOptions } from './domain/interfaces/job-queue.interface'
-import type { IStoryRepository } from './domain/interfaces/story.repository.interface'
-import type { IWorkflowApprovalRepository } from './domain/interfaces/workflow-approval.repository.interface'
-import type { IWorkflowTemplateRepository } from './domain/interfaces/workflow-template.repository.interface'
-import type { IWorkflowRepository } from './domain/interfaces/workflow.repository.interface'
 import {
   AGENT_STEP_EXECUTOR,
   APPROVAL_STEP_EXECUTOR,
@@ -60,6 +52,15 @@ import { WorkflowPrismaRepository } from './infras/repositories/workflow-prisma.
 import { WorkflowTemplatePrismaRepository } from './infras/repositories/workflow-template-prisma.repository'
 import { StubAuthorizationService } from './infras/services/stub-authorization.service'
 import { TestResultParserService } from './infras/services/test-result-parser.service'
+
+import type { IArtifactRepository } from './domain/interfaces/artifact.interface'
+import type { IAuthorizationService } from './domain/interfaces/authorization.interface'
+import type { IEventRepository } from './domain/interfaces/event.repository.interface'
+import type { IJobQueue, JobOptions } from './domain/interfaces/job-queue.interface'
+import type { IStoryRepository } from './domain/interfaces/story.repository.interface'
+import type { IWorkflowApprovalRepository } from './domain/interfaces/workflow-approval.repository.interface'
+import type { IWorkflowTemplateRepository } from './domain/interfaces/workflow-template.repository.interface'
+import type { IWorkflowRepository } from './domain/interfaces/workflow.repository.interface'
 
 /**
  * Logger adapter for application services

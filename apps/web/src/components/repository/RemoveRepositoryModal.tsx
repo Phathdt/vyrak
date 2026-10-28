@@ -1,11 +1,12 @@
+import { AlertTriangle, Loader2, Trash2 } from 'lucide-react'
+import { useEffect, useState } from 'react'
+
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/form-field'
 import { Input } from '@/components/ui/input'
 import { Modal, ModalBody, ModalFooter, ModalHeader, ModalTitle } from '@/components/ui/modal'
 import { useToast } from '@/components/ui/toast'
 import { useRepositories } from '@/hooks/use-repositories'
-import { AlertTriangle, Loader2, Trash2 } from 'lucide-react'
-import { useEffect, useState } from 'react'
 
 interface RemoveRepositoryModalProps {
   repositoryId: string

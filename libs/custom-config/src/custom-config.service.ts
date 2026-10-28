@@ -1,7 +1,6 @@
 import * as fs from 'fs'
-import * as path from 'path'
-
 import * as yaml from 'js-yaml'
+import * as path from 'path'
 
 import { BootstrapLogger } from './bootstrap-logger'
 import { AppConfig } from './config.interface'

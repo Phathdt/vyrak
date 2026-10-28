@@ -1,6 +1,5 @@
-import type { WorkflowEventEntity } from '@vyrak/workflow-core'
-
 import type { WorkflowEventResponseDto } from '../dto'
+import type { WorkflowEventEntity } from '@vyrak/workflow-core'
 
 const SENSITIVE_KEYS = [
   'password',

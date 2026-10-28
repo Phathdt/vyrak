@@ -1,9 +1,10 @@
 import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common'
 
-import type { WorkflowRun } from '../../domain/entities/workflow-run.entity'
-import type { IWorkflowRepository } from '../../domain/interfaces/workflow.repository.interface'
 import { WorkflowState } from '../../domain/workflow-state'
 import { WORKFLOW_REPOSITORY } from '../../infras/di/di'
+
+import type { WorkflowRun } from '../../domain/entities/workflow-run.entity'
+import type { IWorkflowRepository } from '../../domain/interfaces/workflow.repository.interface'
 
 /**
  * Input for cancelling a workflow

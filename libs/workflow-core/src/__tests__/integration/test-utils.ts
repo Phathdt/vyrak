@@ -1,12 +1,12 @@
 import { faker } from '@faker-js/faker'
-import type { DatabaseService } from '@vyrak/database'
 import { createTestDatabaseService, getPrismaClient, startPostgres, stopPostgres } from '@vyrak/database/test-utils'
-
 import { expect } from 'vitest'
 
 import { EventPrismaRepository } from '../../infras/repositories/event-prisma.repository'
 import { StepPrismaRepository } from '../../infras/repositories/step-prisma.repository'
 import { WorkflowPrismaRepository } from '../../infras/repositories/workflow-prisma.repository'
+
+import type { DatabaseService } from '@vyrak/database'
 
 /**
  * Test database utilities for integration tests

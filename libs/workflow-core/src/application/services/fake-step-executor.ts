@@ -1,8 +1,7 @@
-import { IStepExecutor, StepExecutorResult } from './step-executor.interface'
-import { StepDefinition } from './workflow-definition'
-
 import { StepStatus, StepType } from '../../domain'
 import { WorkflowRun } from '../../domain/entities'
+import { IStepExecutor, StepExecutorResult } from './step-executor.interface'
+import { StepDefinition } from './workflow-definition'
 
 /**
  * Fake step executor for testing purposes

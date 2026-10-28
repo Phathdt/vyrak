@@ -1,9 +1,9 @@
-import type { IEventRepository } from '@vyrak/workflow-core'
-
 import { firstValueFrom, take, takeUntil, timeout, timer, toArray } from 'rxjs'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { EventStreamService } from '../services/event-stream.service'
+
+import type { IEventRepository } from '@vyrak/workflow-core'
 
 describe('EventStreamService Integration Tests', () => {
   let service: EventStreamService

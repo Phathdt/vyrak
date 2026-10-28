@@ -1,8 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
 
 import { listProjects } from '../api/projects-api'
-import type { ListProjectsParams } from '../api/types/projects'
 import { useOrganization } from '../contexts/organization-context'
+
+import type { ListProjectsParams } from '../api/types/projects'
 
 export type SortOption = 'name' | '-name' | 'createdAt' | '-createdAt' | 'updatedAt' | '-updatedAt'
 

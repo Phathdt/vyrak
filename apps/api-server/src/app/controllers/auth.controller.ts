@@ -1,7 +1,6 @@
 import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { AuthResponseDto, AuthService, CurrentUserResponseDto, LoginDto } from '@vyrak/auth'
-
 import { Request } from 'express'
 
 import { JwtAuthGuard } from '../../guards'

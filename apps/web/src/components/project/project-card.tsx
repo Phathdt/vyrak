@@ -1,6 +1,7 @@
+import { useNavigate } from 'react-router-dom'
+
 import { Card } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
-import { useNavigate } from 'react-router-dom'
 
 interface ProjectCardProps {
   id: string

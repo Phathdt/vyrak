@@ -1,8 +1,9 @@
+import { Plus } from 'lucide-react'
+import { useState } from 'react'
+
 import { LoadingSkeleton } from '@/components/loading-skeleton'
 import { Button } from '@/components/ui/button'
 import { useRepositories } from '@/hooks/use-repositories'
-import { Plus } from 'lucide-react'
-import { useState } from 'react'
 
 import { RemoveRepositoryModal } from './RemoveRepositoryModal'
 import { RepositoryCard } from './repository-card'

@@ -1,10 +1,10 @@
+import { useToast } from '../../../hooks/use-toast'
+import { ToastContainer } from '../../ui/toast'
 import { ApproveButton } from './approve-button'
 import { PlanViewer } from './plan-viewer'
 import { RejectButton } from './reject-button'
 
 import type { WorkflowRunResponseDto } from '../../../api/generated/models'
-import { useToast } from '../../../hooks/use-toast'
-import { ToastContainer } from '../../ui/toast'
 
 interface ApprovalSectionProps {
   workflow: WorkflowRunResponseDto

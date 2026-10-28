@@ -4,7 +4,6 @@ import { CustomConfigModule, CustomConfigService } from '@vyrak/custom-config'
 import { DatabaseModule, DatabaseService } from '@vyrak/database'
 
 import { ArtifactManager, MainRepoManager, WorkspaceManager } from './application'
-import type { IArtifactRepository, IS3StorageProvider } from './domain'
 import {
   AGENT_EXECUTOR,
   ARTIFACT_MANAGER,
@@ -17,6 +16,8 @@ import {
   S3StorageProvider,
   WORKSPACE_MANAGER,
 } from './infras'
+
+import type { IArtifactRepository, IS3StorageProvider } from './domain'
 
 /**
  * Agent Runtime Module

@@ -1,8 +1,7 @@
-import { AsyncLocalStorage } from 'node:async_hooks'
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { CustomConfigService } from '@vyrak/custom-config'
-
+import { AsyncLocalStorage } from 'node:async_hooks'
 import { Pool } from 'pg'
 
 import { createTenantFilterExtension } from './extensions'

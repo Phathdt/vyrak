@@ -1,11 +1,9 @@
 import * as fs from 'fs'
 import * as path from 'path'
-
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { ClaudeCodeExecutor } from './claude-code-executor'
-
 import { AgentType, ArtifactType, type AgentExecutionInput } from '../../domain'
+import { ClaudeCodeExecutor } from './claude-code-executor'
 
 describe('ClaudeCodeExecutor', () => {
   let executor: ClaudeCodeExecutor

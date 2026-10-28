@@ -1,6 +1,8 @@
 // Manual API client for projects
 // Temporary implementation until Orval generation works
 
+import { apiClient } from '../lib/api-client'
+
 import type {
   CreateProjectDto,
   ListProjectsParams,
@@ -8,8 +10,6 @@ import type {
   Project,
   UpdateProjectDto,
 } from './types/projects'
-
-import { apiClient } from '../lib/api-client'
 
 export async function listProjects(orgId: string, params: ListProjectsParams = {}): Promise<PaginatedProjects> {
   const response = await apiClient.get<PaginatedProjects>(`/api/organizations/${orgId}/projects`, { params })

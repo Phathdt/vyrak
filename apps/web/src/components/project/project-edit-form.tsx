@@ -1,13 +1,14 @@
 import { useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
 
-import type { Project } from '@/api/types/projects'
 import { Modal, ModalBody, ModalHeader, ModalTitle } from '@/components/ui/modal'
 import { useOrganization } from '@/contexts/organization-context'
 import { useUpdateProject } from '@/hooks/use-project-detail'
-import type { CreateProjectInput } from '@/lib/schemas/project-schema'
-import { useState } from 'react'
 
 import { ProjectForm } from './project-form'
+
+import type { Project } from '@/api/types/projects'
+import type { CreateProjectInput } from '@/lib/schemas/project-schema'
 
 interface ProjectEditFormProps {
   project: {

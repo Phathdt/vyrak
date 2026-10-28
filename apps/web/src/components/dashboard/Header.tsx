@@ -1,3 +1,6 @@
+import { ChevronDown, LogOut, User } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -6,8 +9,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { ChevronDown, LogOut, User } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
 
 import { useAuth } from '../../contexts/auth-context'
 import { OrganizationSelector } from '../organizations/organization-selector'

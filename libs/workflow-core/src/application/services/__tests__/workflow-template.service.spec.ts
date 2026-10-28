@@ -1,10 +1,10 @@
 import { NotFoundException } from '@nestjs/common'
-import type { WorkflowTemplate } from '@vyrak/database'
-
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { IWorkflowTemplateRepository } from '../../../domain/interfaces/workflow-template.repository.interface'
 import { WorkflowTemplateService } from '../workflow-template.service'
+
+import type { IWorkflowTemplateRepository } from '../../../domain/interfaces/workflow-template.repository.interface'
+import type { WorkflowTemplate } from '@vyrak/database'
 
 describe('WorkflowTemplateService', () => {
   let service: WorkflowTemplateService

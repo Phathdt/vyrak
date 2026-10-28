@@ -1,0 +1,24 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "printWidth": 120,
+  "semi": false,
+  "singleQuote": true,
+  "jsxSingleQuote": true,
+  "tabWidth": 2,
+  "trailingComma": "es5",
+  "bracketSpacing": true,
+  "sortImports": {
+    "newlinesBetween": false,
+    "groups": [
+      ["value-builtin", "value-external"],
+      { "newlinesBetween": true },
+      "value-internal",
+      { "newlinesBetween": true },
+      ["value-parent", "value-sibling", "value-index"],
+      { "newlinesBetween": true },
+      "type-import",
+      "unknown"
+    ],
+    "internalPattern": ["@vyrak/**", "@apps/**", "@libs/**", "@/"]
+  }
+}

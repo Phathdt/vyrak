@@ -1,11 +1,11 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { renderHook, waitFor } from '@testing-library/react'
-
-import type { ReactNode } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import * as workflowsApi from '../../api/generated/workflows/workflows'
 import { useApproveWorkflow, useRejectWorkflow } from '../use-workflow-approval'
+
+import type { ReactNode } from 'react'
 
 // Mock the API
 vi.mock('../../api/generated/workflows/workflows', () => ({

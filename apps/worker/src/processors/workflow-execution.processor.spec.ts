@@ -1,7 +1,6 @@
 import { Test } from '@nestjs/testing'
 import { DatabaseService } from '@vyrak/database'
 import { WorkflowExecutorService } from '@vyrak/workflow-core'
-
 import { Job } from 'bullmq'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 

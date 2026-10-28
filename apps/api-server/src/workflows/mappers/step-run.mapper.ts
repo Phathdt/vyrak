@@ -1,6 +1,5 @@
-import type { StepRun } from '@vyrak/workflow-core'
-
 import type { StepRunResponseDto } from '../dto'
+import type { StepRun } from '@vyrak/workflow-core'
 
 export function toStepRunResponseDto(step: StepRun): StepRunResponseDto {
   return {

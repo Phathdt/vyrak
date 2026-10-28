@@ -11,12 +11,11 @@ import { DatabaseModule } from '@vyrak/database'
 import { OrganizationModule } from '@vyrak/organization'
 import { ProjectManagementModule } from '@vyrak/project-management'
 
+import { ResponseInterceptor, TenantContextInterceptor, TraceIdInterceptor } from '../interceptors'
+import { WorkflowsModule } from '../workflows/workflows.module'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
 import { AuthController, InvitationsController, OrganizationsController, ProjectsController } from './controllers'
-
-import { ResponseInterceptor, TenantContextInterceptor, TraceIdInterceptor } from '../interceptors'
-import { WorkflowsModule } from '../workflows/workflows.module'
 
 @Module({
   imports: [

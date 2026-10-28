@@ -1,6 +1,5 @@
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common'
 import { DatabaseService } from '@vyrak/database'
-
 import { Request } from 'express'
 import { Observable } from 'rxjs'
 

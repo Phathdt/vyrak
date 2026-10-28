@@ -1,7 +1,6 @@
 import * as fs from 'fs'
-import * as path from 'path'
-
 import * as yaml from 'js-yaml'
+import * as path from 'path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { CustomConfigService } from './custom-config.service'

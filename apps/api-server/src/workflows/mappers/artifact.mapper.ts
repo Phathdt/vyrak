@@ -1,6 +1,5 @@
-import type { ArtifactEntity } from '@vyrak/agent-runtime'
-
 import type { ArtifactContentDto, ArtifactMetadataDto } from '../dto'
+import type { ArtifactEntity } from '@vyrak/agent-runtime'
 
 function inferArtifactType(
   filePath: string

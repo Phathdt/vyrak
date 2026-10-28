@@ -1,7 +1,8 @@
-import { Button, type ButtonProps } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
 import { CheckCircle2, RefreshCw, XCircle } from 'lucide-react'
 import { useState } from 'react'
+
+import { Button, type ButtonProps } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 interface TestConnectionButtonProps extends Omit<ButtonProps, 'onClick'> {
   onTest: () => Promise<void>

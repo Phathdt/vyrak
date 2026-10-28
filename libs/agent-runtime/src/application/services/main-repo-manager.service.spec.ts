@@ -1,11 +1,9 @@
 import { execSync } from 'node:child_process'
 import * as fs from 'node:fs/promises'
-
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { MainRepoManager } from './main-repo-manager.service'
-
 import { MainRepoError } from '../../domain'
+import { MainRepoManager } from './main-repo-manager.service'
 
 // Mock node modules
 vi.mock('node:child_process')

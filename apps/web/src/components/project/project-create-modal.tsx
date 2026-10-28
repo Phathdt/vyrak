@@ -1,14 +1,15 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
 
 import { getErrorMessage } from '@/api/client'
 import { createProject } from '@/api/projects-api'
 import { Modal, ModalBody, ModalHeader, ModalTitle } from '@/components/ui/modal'
 import { useOrganization } from '@/contexts/organization-context'
 import { useToast } from '@/hooks/use-toast'
-import type { CreateProjectInput } from '@/lib/schemas/project-schema'
-import { useNavigate } from 'react-router-dom'
 
 import { ProjectForm } from './project-form'
+
+import type { CreateProjectInput } from '@/lib/schemas/project-schema'
 
 interface ProjectCreateModalProps {
   open: boolean

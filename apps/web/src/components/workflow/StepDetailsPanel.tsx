@@ -1,11 +1,11 @@
 import { X } from 'lucide-react'
 
-import { StatusBadge } from './StatusBadge'
-
-import type { StepRunResponseDto } from '../../api/generated/models'
 import { useDurationCounter } from '../../hooks/use-duration-counter'
 import { formatAbsoluteTime, formatDuration } from '../../lib/utils/duration-utils'
 import { JsonViewer } from '../ui/json-viewer'
+import { StatusBadge } from './StatusBadge'
+
+import type { StepRunResponseDto } from '../../api/generated/models'
 
 interface StepDetailsProps {
   step: StepRunResponseDto

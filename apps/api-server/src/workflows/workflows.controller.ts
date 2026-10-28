@@ -23,9 +23,11 @@ import {
   type RejectWorkflowUseCase,
   type StartWorkflowUseCase,
 } from '@vyrak/workflow-core'
-
 import { Observable } from 'rxjs'
 
+import { CurrentUser } from '../auth/decorators'
+import { JwtAuthGuard } from '../guards/jwt-auth.guard'
+import { OrganizationMemberGuard } from '../guards/organization-member.guard'
 import {
   ApprovalDecisionDto,
   ArtifactContentDto,
@@ -54,10 +56,6 @@ import {
 } from './mappers'
 import { EventStreamService } from './services'
 import { WorkflowsService } from './workflows.service'
-
-import { CurrentUser } from '../auth/decorators'
-import { JwtAuthGuard } from '../guards/jwt-auth.guard'
-import { OrganizationMemberGuard } from '../guards/organization-member.guard'
 
 @ApiTags('workflows')
 @Controller('api/organizations/:orgId')

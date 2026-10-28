@@ -1,14 +1,14 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common'
-import type { Story } from '@vyrak/database'
-
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import { StoryService } from '../story.service'
 
 import type {
   CreateStoryData,
   IStoryRepository,
   SubStepData,
 } from '../../../domain/interfaces/story.repository.interface'
-import { StoryService } from '../story.service'
+import type { Story } from '@vyrak/database'
 
 describe('StoryService', () => {
   let service: StoryService

@@ -1,4 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useEffect, useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { useNavigate, useParams } from 'react-router-dom'
+import { z } from 'zod'
 
 import { UpdateMemberRoleDtoRole } from '@/api/generated/models'
 import {
@@ -18,10 +22,6 @@ import { ErrorMessage, FormField, HelperText, Label } from '@/components/ui/form
 import { Input } from '@/components/ui/input'
 import { Modal, ModalDescription, ModalFooter, ModalHeader, ModalTitle } from '@/components/ui/modal'
 import { useToast } from '@/components/ui/toast'
-import { useEffect, useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { useNavigate, useParams } from 'react-router-dom'
-import { z } from 'zod'
 
 const updateOrgSchema = z.object({
   name: z.string().min(1).max(100).optional(),

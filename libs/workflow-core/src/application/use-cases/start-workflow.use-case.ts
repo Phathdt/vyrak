@@ -1,8 +1,9 @@
 import { Inject } from '@nestjs/common'
 
+import { EVENT_REPOSITORY, WORKFLOW_REPOSITORY } from '../../infras/di'
+
 import type { WorkflowRun } from '../../domain/entities'
 import type { IEventRepository, IWorkflowRepository } from '../../domain/interfaces'
-import { EVENT_REPOSITORY, WORKFLOW_REPOSITORY } from '../../infras/di'
 import type { StartWorkflowInput } from '../dtos/start-workflow.dto'
 
 /**

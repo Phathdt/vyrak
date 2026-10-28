@@ -1,6 +1,7 @@
 import { AsyncLocalStorage } from 'node:async_hooks'
 
 import { createTenantFilterExtension } from '../extensions'
+
 import type { PrismaClient } from '../generated/prisma/client'
 
 interface TenantFilterContext {

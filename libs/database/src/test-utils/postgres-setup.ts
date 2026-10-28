@@ -1,14 +1,14 @@
+import { PrismaPg } from '@prisma/adapter-pg'
+import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql'
 import { execSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import path from 'node:path'
-import { PrismaPg } from '@prisma/adapter-pg'
-import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql'
-
 import pg from 'pg'
 
-import type { DatabaseService, ExtendedPrismaClient } from '../database.service'
 import { createTenantFilterExtension } from '../extensions'
 import { PrismaClient } from '../generated/prisma/client'
+
+import type { DatabaseService, ExtendedPrismaClient } from '../database.service'
 
 // Find project root by looking for package.json with workspaces
 function findProjectRoot(): string {
