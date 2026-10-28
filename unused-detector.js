@@ -24,11 +24,9 @@ class UnusedDetector {
     // Merge built-in patterns with config patterns
     const builtInFilePatterns = [
       // Configuration files
-      '.prettierrc',
-      '.prettierrc.js',
-      '.prettierrc.json',
-      '.prettierrc.yml',
-      '.prettierrc.yaml',
+      '.oxfmtrc',
+      '.oxfmtrc.js',
+      '.oxfmtrc.json',
       'eslint.config.js',
       '.eslintrc.js',
       '.eslintrc.json',
@@ -215,7 +213,7 @@ class UnusedDetector {
           // Pattern with path (e.g., 'scripts/', 'prisma/schema.prisma')
           return relativePath.includes(pattern)
         } else {
-          // Pattern for filename only (e.g., '.prettierrc', 'eslint.config.js')
+          // Pattern for filename only (e.g., '.oxfmtrc', 'eslint.config.js')
           return fileName === pattern || relativePath.endsWith(pattern)
         }
       })

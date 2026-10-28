@@ -17,7 +17,7 @@ module.exports = {
       },
     },
     hooks: {
-      afterAllFilesWrite: 'yarn prettier --write',
+      afterAllFilesWrite: 'yarn oxfmt .',
     },
   },
 }

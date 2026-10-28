@@ -3,26 +3,26 @@
 @layer base {
   :root {
     /* Stepped surface tokens - dark theme base */
-    --surface-base: 217 30% 4%;      /* #05070C */
-    --surface-1: 217 28% 5%;         /* #0B0E14 */
-    --surface-2: 217 30% 7%;         /* #0F131C */
-    --surface-3: 217 26% 12%;        /* #161D2B */
-    --surface-4: 217 22% 16%;        /* #1E2636 */
+    --surface-base: 217 30% 4%; /* #05070C */
+    --surface-1: 217 28% 5%; /* #0B0E14 */
+    --surface-2: 217 30% 7%; /* #0F131C */
+    --surface-3: 217 26% 12%; /* #161D2B */
+    --surface-4: 217 22% 16%; /* #1E2636 */
 
     /* Text colors */
-    --text-primary: 210 20% 98%;     /* #F8FAFC */
-    --text-secondary: 215 16% 47%;   /* #64748B */
-    --text-muted: 215 20% 65%;       /* #94A3B8 */
+    --text-primary: 210 20% 98%; /* #F8FAFC */
+    --text-secondary: 215 16% 47%; /* #64748B */
+    --text-muted: 215 20% 65%; /* #94A3B8 */
 
     /* Accent colors */
-    --accent-cyan: 199 89% 61%;      /* #38BDF8 */
+    --accent-cyan: 199 89% 61%; /* #38BDF8 */
     --accent-cyan-hover: 199 89% 48%; /* #0EA5E9 */
-    --accent-orange: 25 95% 53%;     /* #F97316 */
+    --accent-orange: 25 95% 53%; /* #F97316 */
     --accent-orange-hover: 25 95% 43%; /* #EA580C */
 
     /* Border colors */
-    --border-subtle: 215 25% 27%;    /* #334155 */
-    --border-hairline: 217 22% 16%;  /* #1E2636 */
+    --border-subtle: 215 25% 27%; /* #334155 */
+    --border-hairline: 217 22% 16%; /* #1E2636 */
 
     /* Semantic colors */
     --destructive: 0 84% 60%;
@@ -74,7 +74,12 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     line-height: 1.2;
     letter-spacing: -0.02em;
   }

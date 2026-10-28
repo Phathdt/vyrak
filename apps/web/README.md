@@ -85,8 +85,8 @@ Components will be added to `src/components/ui/`.
 The project uses `@` as an alias for `src/`:
 
 ```typescript
-import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 ```
 
 ## React Query Setup
