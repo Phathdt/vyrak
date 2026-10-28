@@ -1,6 +1,7 @@
 import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, type S3Client } from '@aws-sdk/client-s3'
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 
-import type { IS3StorageProvider } from '../../domain'
+import type { IS3StorageProvider, PresignedUrlResult } from '../../domain'
 
 /**
  * S3 storage provider error
@@ -27,27 +28,48 @@ export class S3StorageProvider implements IS3StorageProvider {
   ) {}
 
   /**
-   * Upload content to S3
+   * Generate pre-signed URL for direct client upload
    */
-  async upload(
+  async generatePresignedUrl(
     key: string,
-    content: string,
-    contentType: string = 'text/plain'
-  ): Promise<{ bucket: string; key: string }> {
+    contentType: string = 'text/plain',
+    expiresIn: number = 3600
+  ): Promise<PresignedUrlResult> {
     try {
-      await this.s3Client.send(
-        new PutObjectCommand({
-          Bucket: this.bucket,
-          Key: key,
-          Body: content,
-          ContentType: contentType,
-        })
-      )
+      const command = new PutObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+        ContentType: contentType,
+      })
 
-      return { bucket: this.bucket, key }
+      const uploadUrl = await getSignedUrl(this.s3Client, command, { expiresIn })
+
+      return {
+        uploadUrl,
+        s3Key: key,
+        bucket: this.bucket,
+        expiresIn,
+      }
     } catch (error) {
-      throw new S3StorageError(`Failed to upload to S3: ${key}`, error instanceof Error ? error : undefined)
+      throw new S3StorageError(
+        `Failed to generate presigned URL for: ${key}`,
+        error instanceof Error ? error : undefined
+      )
     }
+  }
+
+  /**
+   * Upload content directly to S3 (server-side: worker)
+   */
+  async upload(key: string, content: string, contentType = 'text/plain'): Promise<void> {
+    const command = new PutObjectCommand({
+      Bucket: this.bucket,
+      Key: key,
+      Body: content,
+      ContentType: contentType,
+    })
+
+    await this.s3Client.send(command)
   }
 
   /**
@@ -93,5 +115,12 @@ export class S3StorageProvider implements IS3StorageProvider {
    */
   generateKey(organizationId: string, runId: string, filePath: string): string {
     return `${organizationId}/${runId}/${filePath}`
+  }
+
+  /**
+   * Get bucket name
+   */
+  getBucket(): string {
+    return this.bucket
   }
 }

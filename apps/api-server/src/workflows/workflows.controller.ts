@@ -30,11 +30,15 @@ import {
   ApprovalDecisionDto,
   ArtifactContentDto,
   ArtifactMetadataDto,
+  ConfirmUploadDto,
+  ConfirmUploadResponseDto,
   CreateWorkflowRunDto,
+  GenerateUploadUrlDto,
   ListEventsQueryDto,
   ListWorkflowRunsDto,
   PaginatedEventsResponseDto,
   PaginatedWorkflowRunsDto,
+  PresignedUploadUrlResponseDto,
   SkipStoryDto,
   StepRunResponseDto,
   StoryDto,
@@ -333,6 +337,67 @@ export class WorkflowsController {
       limit: query.limit,
       offset: query.offset,
     }
+  }
+
+  /**
+   * POST /api/organizations/:orgId/workflows/runs/:runId/artifacts/upload-url
+   * Generate pre-signed URL for direct S3 upload
+   */
+  @Post('workflows/runs/:runId/artifacts/upload-url')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Generate pre-signed upload URL',
+    description: 'Returns a pre-signed URL for direct client-to-S3 artifact upload',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Pre-signed URL generated successfully',
+    type: PresignedUploadUrlResponseDto,
+  })
+  @ApiResponse({ status: 400, description: 'Invalid input data' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - no access to this workflow' })
+  @ApiResponse({ status: 404, description: 'Workflow run not found' })
+  async generateUploadUrl(
+    @Param('orgId', ParseUUIDPipe) orgId: string,
+    @Param('runId', ParseUUIDPipe) runId: string,
+    @Body() dto: GenerateUploadUrlDto
+  ): Promise<PresignedUploadUrlResponseDto> {
+    const result = await this.workflowsService.generateUploadUrl(orgId, runId, dto)
+    return {
+      uploadUrl: result.uploadUrl,
+      s3Key: result.s3Key,
+      bucket: result.bucket,
+      expiresIn: result.expiresIn,
+    }
+  }
+
+  /**
+   * POST /api/organizations/:orgId/workflows/runs/:runId/artifacts/confirm
+   * Confirm artifact upload and save metadata
+   */
+  @Post('workflows/runs/:runId/artifacts/confirm')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Confirm artifact upload',
+    description: 'Confirms successful upload and saves artifact metadata to database',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Artifact confirmed successfully',
+    type: ConfirmUploadResponseDto,
+  })
+  @ApiResponse({ status: 400, description: 'Invalid input data' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - no access to this workflow' })
+  @ApiResponse({ status: 404, description: 'Workflow run not found' })
+  async confirmUpload(
+    @Param('orgId', ParseUUIDPipe) orgId: string,
+    @Param('runId', ParseUUIDPipe) runId: string,
+    @Body() dto: ConfirmUploadDto
+  ): Promise<ConfirmUploadResponseDto> {
+    const artifactId = await this.workflowsService.confirmUpload(orgId, runId, dto)
+    return { artifactId }
   }
 
   /**

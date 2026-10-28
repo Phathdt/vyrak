@@ -16,19 +16,12 @@ export interface ArtifactEntity {
 }
 
 /**
- * Parameters for creating artifact (public API - used by manager)
+ * Parameters for creating artifact metadata in database
  */
 export interface CreateArtifactParams {
   organizationId: string
   runId: string
   filePath: string
-  content: string
-}
-
-/**
- * Parameters for creating artifact with S3 metadata (internal - used by repository)
- */
-export interface CreateArtifactWithS3Params extends CreateArtifactParams {
   s3Bucket: string
   s3Key: string
   contentSize: number
@@ -42,7 +35,7 @@ export interface IArtifactRepository {
   /**
    * Create artifact metadata (S3 upload should happen before this)
    */
-  create(params: CreateArtifactWithS3Params): Promise<ArtifactEntity>
+  create(params: CreateArtifactParams): Promise<ArtifactEntity>
 
   /**
    * Find artifact by ID

@@ -1,10 +1,6 @@
 import type { DatabaseService } from '@vyrak/database'
 
-import type {
-  ArtifactEntity,
-  CreateArtifactWithS3Params,
-  IArtifactRepository,
-} from '../../domain'
+import type { ArtifactEntity, CreateArtifactParams, IArtifactRepository } from '../../domain'
 
 /**
  * Artifact repository error
@@ -32,7 +28,7 @@ export class ArtifactPrismaRepository implements IArtifactRepository {
    * Create artifact metadata
    * Note: Content should be uploaded to S3 before calling this
    */
-  async create(params: CreateArtifactWithS3Params): Promise<ArtifactEntity> {
+  async create(params: CreateArtifactParams): Promise<ArtifactEntity> {
     try {
       const artifact = await this.databaseService.client.artifact.create({
         data: {

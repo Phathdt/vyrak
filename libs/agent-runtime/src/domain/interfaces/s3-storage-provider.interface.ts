@@ -1,16 +1,34 @@
 /**
+ * Pre-signed URL response
+ */
+export interface PresignedUrlResult {
+  uploadUrl: string
+  s3Key: string
+  bucket: string
+  expiresIn: number
+}
+
+/**
  * S3 storage provider interface
  * Abstracts object storage operations
  */
 export interface IS3StorageProvider {
   /**
-   * Upload content to S3
+   * Generate pre-signed URL for direct client upload
+   * @param key - S3 object key
+   * @param contentType - MIME type (default: text/plain)
+   * @param expiresIn - URL expiration in seconds (default: 3600)
+   * @returns Pre-signed URL and metadata
+   */
+  generatePresignedUrl(key: string, contentType?: string, expiresIn?: number): Promise<PresignedUrlResult>
+
+  /**
+   * Upload content directly to S3 (server-side: worker)
    * @param key - S3 object key
    * @param content - Content to upload
    * @param contentType - MIME type (default: text/plain)
-   * @returns S3 bucket and key
    */
-  upload(key: string, content: string, contentType?: string): Promise<{ bucket: string; key: string }>
+  upload(key: string, content: string, contentType?: string): Promise<void>
 
   /**
    * Download content from S3
@@ -33,4 +51,10 @@ export interface IS3StorageProvider {
    * @returns S3 key
    */
   generateKey(organizationId: string, runId: string, filePath: string): string
+
+  /**
+   * Get bucket name
+   * @returns S3 bucket name
+   */
+  getBucket(): string
 }
