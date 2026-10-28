@@ -18,6 +18,8 @@ describe('ArtifactManager', () => {
     download: ReturnType<typeof vi.fn>
     delete: ReturnType<typeof vi.fn>
     generateKey: ReturnType<typeof vi.fn>
+    generatePresignedUrl: ReturnType<typeof vi.fn>
+    getBucket: ReturnType<typeof vi.fn>
   }
 
   beforeEach(() => {
@@ -34,6 +36,8 @@ describe('ArtifactManager', () => {
       download: vi.fn(),
       delete: vi.fn(),
       generateKey: vi.fn(),
+      generatePresignedUrl: vi.fn(),
+      getBucket: vi.fn().mockReturnValue('test-bucket'),
     }
 
     manager = new ArtifactManager(
@@ -53,7 +57,7 @@ describe('ArtifactManager', () => {
 
       const s3Key = 'org-123/run-456/test-plan.md'
       mockS3Provider.generateKey.mockReturnValue(s3Key)
-      mockS3Provider.upload.mockResolvedValue({ bucket: 'test-bucket', key: s3Key })
+      mockS3Provider.upload.mockResolvedValue(undefined)
 
       const mockArtifact: ArtifactEntity = {
         id: 'artifact-123',
@@ -105,7 +109,7 @@ describe('ArtifactManager', () => {
       }
 
       mockS3Provider.generateKey.mockReturnValue('org-123/run-456/large-plan.md')
-      mockS3Provider.upload.mockResolvedValue({ bucket: 'test-bucket', key: 'test-key' })
+      mockS3Provider.upload.mockResolvedValue(undefined)
       mockRepository.create.mockResolvedValue({
         id: 'artifact-123',
         organizationId: params.organizationId,
@@ -128,7 +132,7 @@ describe('ArtifactManager', () => {
   })
 
   describe('getArtifact', () => {
-    it('should return artifact with content from S3', async () => {
+    it('should return artifact metadata only', async () => {
       const mockMetadata: ArtifactEntity = {
         id: 'artifact-123',
         organizationId: 'org-123',
@@ -143,13 +147,13 @@ describe('ArtifactManager', () => {
       }
 
       mockRepository.findById.mockResolvedValue(mockMetadata)
-      mockS3Provider.download.mockResolvedValue('# Test Plan\n\nContent from S3')
 
       const artifact = await manager.getArtifact('artifact-123')
 
       expect(artifact).toBeDefined()
-      expect(artifact?.content).toBe('# Test Plan\n\nContent from S3')
-      expect(mockS3Provider.download).toHaveBeenCalledWith('org-123/run-456/test-plan.md')
+      expect(artifact?.id).toBe('artifact-123')
+      expect(artifact?.s3Key).toBe('org-123/run-456/test-plan.md')
+      expect(mockS3Provider.download).not.toHaveBeenCalled() // Metadata only, no content download
     })
 
     it('should return null if artifact not found', async () => {
@@ -233,28 +237,59 @@ describe('ArtifactManager', () => {
     })
   })
 
-  describe('listArtifactsByOrganization', () => {
-    it('should list artifacts by organization', async () => {
-      const mockArtifacts: ArtifactEntity[] = [
-        {
-          id: 'artifact-1',
-          organizationId: 'org-123',
-          runId: 'run-456',
-          filePath: 'test.md',
-          s3Bucket: 'test-bucket',
-          s3Key: 'org-123/run-456/test.md',
-          contentSize: 100,
-          contentType: 'text/plain',
-          content: '',
-          createdAt: new Date(),
-        },
-      ]
+  describe('generateUploadUrl', () => {
+    it('should generate pre-signed URL', async () => {
+      const params = {
+        organizationId: 'org-123',
+        runId: 'run-456',
+        filePath: 'test.md',
+        contentType: 'text/plain',
+      }
 
-      mockRepository.findByOrganization.mockResolvedValue(mockArtifacts)
+      const s3Key = 'org-123/run-456/test.md'
+      mockS3Provider.generateKey.mockReturnValue(s3Key)
+      mockS3Provider.generatePresignedUrl.mockResolvedValue({
+        uploadUrl: 'https://s3.amazonaws.com/presigned-url',
+        s3Key,
+        bucket: 'test-bucket',
+        expiresIn: 3600,
+      })
 
-      const artifacts = await manager.listArtifactsByOrganization('org-123')
+      const result = await manager.generateUploadUrl(params)
 
-      expect(artifacts).toEqual(mockArtifacts)
+      expect(result.uploadUrl).toBe('https://s3.amazonaws.com/presigned-url')
+      expect(result.s3Key).toBe(s3Key)
+      expect(result.bucket).toBe('test-bucket')
+      expect(mockS3Provider.generateKey).toHaveBeenCalledWith('org-123', 'run-456', 'test.md')
+      expect(mockS3Provider.generatePresignedUrl).toHaveBeenCalledWith(s3Key, 'text/plain', 3600)
+    })
+  })
+
+  describe('confirmUpload', () => {
+    it('should save artifact metadata after upload', async () => {
+      const params = {
+        organizationId: 'org-123',
+        runId: 'run-456',
+        filePath: 'test.md',
+        s3Key: 'org-123/run-456/test.md',
+        s3Bucket: 'test-bucket',
+        contentSize: 100,
+        contentType: 'text/plain',
+      }
+
+      const mockArtifact: ArtifactEntity = {
+        id: 'artifact-123',
+        ...params,
+        content: '',
+        createdAt: new Date(),
+      }
+
+      mockRepository.create.mockResolvedValue(mockArtifact)
+
+      const artifactId = await manager.confirmUpload(params)
+
+      expect(artifactId).toBe('artifact-123')
+      expect(mockRepository.create).toHaveBeenCalledWith(params)
     })
   })
 

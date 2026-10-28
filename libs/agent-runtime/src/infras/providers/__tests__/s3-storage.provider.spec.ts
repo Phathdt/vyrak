@@ -18,12 +18,7 @@ describe('S3StorageProvider', () => {
     it('should upload content to S3', async () => {
       s3Mock.on(PutObjectCommand).resolves({})
 
-      const result = await provider.upload('org-123/run-456/test.md', 'Test content')
-
-      expect(result).toEqual({
-        bucket: 'test-bucket',
-        key: 'org-123/run-456/test.md',
-      })
+      await provider.upload('org-123/run-456/test.md', 'Test content')
 
       expect(s3Mock.commandCalls(PutObjectCommand)).toHaveLength(1)
       const call = s3Mock.commandCalls(PutObjectCommand)[0]

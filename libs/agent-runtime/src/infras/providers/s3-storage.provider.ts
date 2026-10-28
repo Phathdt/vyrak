@@ -62,14 +62,18 @@ export class S3StorageProvider implements IS3StorageProvider {
    * Upload content directly to S3 (server-side: worker)
    */
   async upload(key: string, content: string, contentType = 'text/plain'): Promise<void> {
-    const command = new PutObjectCommand({
-      Bucket: this.bucket,
-      Key: key,
-      Body: content,
-      ContentType: contentType,
-    })
+    try {
+      const command = new PutObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+        Body: content,
+        ContentType: contentType,
+      })
 
-    await this.s3Client.send(command)
+      await this.s3Client.send(command)
+    } catch (error) {
+      throw new S3StorageError(`Failed to upload to S3: ${key}`, error instanceof Error ? error : undefined)
+    }
   }
 
   /**
