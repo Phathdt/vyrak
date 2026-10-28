@@ -4,7 +4,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { ProtectedRoute } from './components/auth'
 import { ErrorBoundary } from './components/error-boundary'
 import { PageLoading } from './components/page-loading'
-import { OrganizationProvider } from './contexts'
+import { OrganizationProvider, ToastProvider } from './contexts'
 import { DashboardLayout } from './layouts/DashboardLayout'
 import { LoginPage } from './pages/auth'
 import { DashboardPage } from './pages/dashboard'
@@ -15,34 +15,36 @@ import { WorkflowCreatePage, WorkflowDetailPage, WorkflowsPage } from './pages/w
 function App() {
   return (
     <ErrorBoundary>
-      <OrganizationProvider>
-        <Suspense fallback={<PageLoading />}>
-          <Routes>
-            <Route path='/login' element={<LoginPage />} />
+      <ToastProvider>
+        <OrganizationProvider>
+          <Suspense fallback={<PageLoading />}>
+            <Routes>
+              <Route path='/login' element={<LoginPage />} />
 
-            {/* Dashboard routes với layout */}
-            <Route
-              element={
-                <ProtectedRoute>
-                  <DashboardLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route path='/dashboard' element={<DashboardPage />} />
-              <Route path='/workflows' element={<WorkflowsPage />} />
-              <Route path='/workflows/create' element={<WorkflowCreatePage />} />
-              <Route path='/workflows/:runId' element={<WorkflowDetailPage />} />
-              <Route path='/projects' element={<ProjectsPage />} />
-              <Route path='/projects/:id' element={<ProjectDetailPage />} />
-              <Route path='/organizations' element={<OrganizationsPage />} />
-              <Route path='/organizations/:id/settings' element={<OrganizationSettingsPage />} />
-            </Route>
+              {/* Dashboard routes với layout */}
+              <Route
+                element={
+                  <ProtectedRoute>
+                    <DashboardLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route path='/dashboard' element={<DashboardPage />} />
+                <Route path='/workflows' element={<WorkflowsPage />} />
+                <Route path='/workflows/create' element={<WorkflowCreatePage />} />
+                <Route path='/workflows/:runId' element={<WorkflowDetailPage />} />
+                <Route path='/projects' element={<ProjectsPage />} />
+                <Route path='/projects/:id' element={<ProjectDetailPage />} />
+                <Route path='/organizations' element={<OrganizationsPage />} />
+                <Route path='/organizations/:id/settings' element={<OrganizationSettingsPage />} />
+              </Route>
 
-            <Route path='/' element={<Navigate to='/workflows' replace />} />
-            <Route path='*' element={<Navigate to='/workflows' replace />} />
-          </Routes>
-        </Suspense>
-      </OrganizationProvider>
+              <Route path='/' element={<Navigate to='/workflows' replace />} />
+              <Route path='*' element={<Navigate to='/workflows' replace />} />
+            </Routes>
+          </Suspense>
+        </OrganizationProvider>
+      </ToastProvider>
     </ErrorBoundary>
   )
 }

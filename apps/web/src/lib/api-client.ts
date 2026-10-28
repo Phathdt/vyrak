@@ -1,5 +1,7 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios'
 
+import { handleGlobalError } from './global-error-handler'
+
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
 
 const TOKEN_KEY = 'vyrak_access_token'
@@ -36,7 +38,7 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 )
 
-// Response interceptor: handle 401
+// Response interceptor: handle 401 and network errors
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -49,6 +51,9 @@ apiClient.interceptors.response.use(
       if (!window.location.pathname.includes('/login')) {
         window.location.href = '/login'
       }
+    } else {
+      // Handle all other errors (including timeouts) with global error handler
+      handleGlobalError(error)
     }
     return Promise.reject(error)
   }
