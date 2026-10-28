@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 
-import { useRejectWorkflow } from '../../../hooks/use-workflow-approval'
+import { useRejectWorkflow } from '../../../hooks'
 import {
   rejectWorkflowSchema,
   toRejectDecisionDto,

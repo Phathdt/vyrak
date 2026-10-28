@@ -6,9 +6,18 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ApproveButton } from '../approve-button'
 
-// Mock the useApproveWorkflow hook
-vi.mock('@/hooks/use-workflow-approval', () => ({
-  useApproveWorkflow: vi.fn(),
+// Mock the entire hooks module
+const mockApprove = vi.fn()
+const mockIsApproving = false
+
+vi.mock('../../../../hooks', () => ({
+  useApproveWorkflow: () => ({
+    approve: mockApprove,
+    isApproving: mockIsApproving,
+  }),
+  useRejectWorkflow: vi.fn(),
+  useApprovalCount: vi.fn(),
+  useBrowserNotification: vi.fn(),
 }))
 
 function createWrapper() {
@@ -21,20 +30,12 @@ function createWrapper() {
 }
 
 describe('ApproveButton', () => {
-  let useApproveWorkflowMock: any
-
   beforeEach(() => {
-    const { useApproveWorkflow } = require('@/hooks/use-workflow-approval')
-    useApproveWorkflowMock = useApproveWorkflow
     vi.clearAllMocks()
+    mockApprove.mockReset()
   })
 
   it('renders button when form is closed', () => {
-    useApproveWorkflowMock.mockReturnValue({
-      approve: vi.fn(),
-      isApproving: false,
-    })
-
     render(<ApproveButton orgId='org-123' runId='run-123' />, {
       wrapper: createWrapper(),
     })
@@ -44,10 +45,6 @@ describe('ApproveButton', () => {
 
   it('opens form when button clicked', async () => {
     const user = userEvent.setup()
-    useApproveWorkflowMock.mockReturnValue({
-      approve: vi.fn(),
-      isApproving: false,
-    })
 
     render(<ApproveButton orgId='org-123' runId='run-123' />, {
       wrapper: createWrapper(),
@@ -59,10 +56,6 @@ describe('ApproveButton', () => {
 
   it('closes form when cancel button clicked', async () => {
     const user = userEvent.setup()
-    useApproveWorkflowMock.mockReturnValue({
-      approve: vi.fn(),
-      isApproving: false,
-    })
 
     render(<ApproveButton orgId='org-123' runId='run-123' />, {
       wrapper: createWrapper(),
@@ -75,11 +68,7 @@ describe('ApproveButton', () => {
 
   it('calls approve mutation on form submit', async () => {
     const user = userEvent.setup()
-    const mockApprove = vi.fn().mockResolvedValue({ success: true })
-    useApproveWorkflowMock.mockReturnValue({
-      approve: mockApprove,
-      isApproving: false,
-    })
+    mockApprove.mockResolvedValue({ success: true })
 
     render(<ApproveButton orgId='org-123' runId='run-123' />, {
       wrapper: createWrapper(),
@@ -99,11 +88,7 @@ describe('ApproveButton', () => {
 
   it('shows CONFLICT error when already approved', async () => {
     const user = userEvent.setup()
-    const mockApprove = vi.fn().mockRejectedValue(new Error('CONFLICT'))
-    useApproveWorkflowMock.mockReturnValue({
-      approve: mockApprove,
-      isApproving: false,
-    })
+    mockApprove.mockRejectedValue(new Error('CONFLICT'))
 
     render(<ApproveButton orgId='org-123' runId='run-123' />, {
       wrapper: createWrapper(),
@@ -121,12 +106,8 @@ describe('ApproveButton', () => {
 
   it('calls onSuccess callback after successful submission', async () => {
     const user = userEvent.setup()
-    const mockApprove = vi.fn().mockResolvedValue({ success: true })
+    mockApprove.mockResolvedValue({ success: true })
     const mockOnSuccess = vi.fn()
-    useApproveWorkflowMock.mockReturnValue({
-      approve: mockApprove,
-      isApproving: false,
-    })
 
     render(<ApproveButton orgId='org-123' runId='run-123' onSuccess={mockOnSuccess} />, { wrapper: createWrapper() })
 

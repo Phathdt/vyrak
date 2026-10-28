@@ -6,9 +6,18 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { RejectButton } from '../reject-button'
 
-// Mock the useRejectWorkflow hook
-vi.mock('@/hooks/use-workflow-approval', () => ({
-  useRejectWorkflow: vi.fn(),
+// Mock the entire hooks module
+const mockReject = vi.fn()
+const mockIsRejecting = false
+
+vi.mock('../../../../hooks', () => ({
+  useRejectWorkflow: () => ({
+    reject: mockReject,
+    isRejecting: mockIsRejecting,
+  }),
+  useApproveWorkflow: vi.fn(),
+  useApprovalCount: vi.fn(),
+  useBrowserNotification: vi.fn(),
 }))
 
 function createWrapper() {
@@ -21,20 +30,12 @@ function createWrapper() {
 }
 
 describe('RejectButton', () => {
-  let useRejectWorkflowMock: any
-
   beforeEach(() => {
-    const { useRejectWorkflow } = require('@/hooks/use-workflow-approval')
-    useRejectWorkflowMock = useRejectWorkflow
     vi.clearAllMocks()
+    mockReject.mockReset()
   })
 
   it('renders button in closed state', () => {
-    useRejectWorkflowMock.mockReturnValue({
-      reject: vi.fn(),
-      isRejecting: false,
-    })
-
     render(<RejectButton orgId='org-123' runId='run-123' />, {
       wrapper: createWrapper(),
     })
@@ -45,10 +46,6 @@ describe('RejectButton', () => {
 
   it('opens modal when button clicked', async () => {
     const user = userEvent.setup()
-    useRejectWorkflowMock.mockReturnValue({
-      reject: vi.fn(),
-      isRejecting: false,
-    })
 
     render(<RejectButton orgId='org-123' runId='run-123' />, {
       wrapper: createWrapper(),
@@ -60,10 +57,6 @@ describe('RejectButton', () => {
 
   it('closes modal when cancel button clicked', async () => {
     const user = userEvent.setup()
-    useRejectWorkflowMock.mockReturnValue({
-      reject: vi.fn(),
-      isRejecting: false,
-    })
 
     render(<RejectButton orgId='org-123' runId='run-123' />, {
       wrapper: createWrapper(),
@@ -76,11 +69,7 @@ describe('RejectButton', () => {
 
   it('calls reject mutation on form submit', async () => {
     const user = userEvent.setup()
-    const mockReject = vi.fn().mockResolvedValue({ success: true })
-    useRejectWorkflowMock.mockReturnValue({
-      reject: mockReject,
-      isRejecting: false,
-    })
+    mockReject.mockResolvedValue({ success: true })
 
     render(<RejectButton orgId='org-123' runId='run-123' />, {
       wrapper: createWrapper(),
@@ -100,11 +89,7 @@ describe('RejectButton', () => {
 
   it('shows ALREADY_APPROVED error', async () => {
     const user = userEvent.setup()
-    const mockReject = vi.fn().mockRejectedValue(new Error('ALREADY_APPROVED'))
-    useRejectWorkflowMock.mockReturnValue({
-      reject: mockReject,
-      isRejecting: false,
-    })
+    mockReject.mockRejectedValue(new Error('ALREADY_APPROVED'))
 
     render(<RejectButton orgId='org-123' runId='run-123' />, {
       wrapper: createWrapper(),
@@ -124,12 +109,8 @@ describe('RejectButton', () => {
 
   it('calls onSuccess callback after successful rejection', async () => {
     const user = userEvent.setup()
-    const mockReject = vi.fn().mockResolvedValue({ success: true })
+    mockReject.mockResolvedValue({ success: true })
     const mockOnSuccess = vi.fn()
-    useRejectWorkflowMock.mockReturnValue({
-      reject: mockReject,
-      isRejecting: false,
-    })
 
     render(<RejectButton orgId='org-123' runId='run-123' onSuccess={mockOnSuccess} />, { wrapper: createWrapper() })
 

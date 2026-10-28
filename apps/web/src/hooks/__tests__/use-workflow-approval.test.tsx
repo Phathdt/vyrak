@@ -1,19 +1,17 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { useApproveWorkflow, useRejectWorkflow } from '../use-workflow-approval'
-import * as workflowsApi from '../../api/generated/workflows/workflows'
+import { renderHook, waitFor } from '@testing-library/react'
+
 import type { ReactNode } from 'react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
+import * as workflowsApi from '../../api/generated/workflows/workflows'
+import { useApproveWorkflow, useRejectWorkflow } from '../use-workflow-approval'
 
 // Mock the API
 vi.mock('../../api/generated/workflows/workflows', () => ({
   useWorkflowsControllerApproveWorkflow: vi.fn(),
   useWorkflowsControllerRejectWorkflow: vi.fn(),
-  getWorkflowsControllerGetWorkflowRunQueryKey: vi.fn((orgId, runId) => [
-    'workflows',
-    orgId,
-    runId,
-  ]),
+  getWorkflowsControllerGetWorkflowRunQueryKey: vi.fn((orgId, runId) => ['workflows', orgId, runId]),
 }))
 
 function createWrapper(queryClient: QueryClient) {
