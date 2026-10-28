@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto'
 import type { DatabaseService } from '@vyrak/database'
 import {
   createTestDatabaseService,
@@ -9,7 +10,6 @@ import {
   stopPostgres,
 } from '@vyrak/database/test-utils'
 
-import { randomUUID } from 'crypto'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
 import { ApprovalStatus } from '../../../domain/entities/workflow-approval.entity'

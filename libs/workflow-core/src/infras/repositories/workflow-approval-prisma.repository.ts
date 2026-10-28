@@ -17,6 +17,12 @@ export class WorkflowApprovalPrismaRepository implements IWorkflowApprovalReposi
   constructor(private readonly db: DatabaseService) {}
 
   async save(approval: WorkflowApproval): Promise<void> {
+    // Fetch organizationId from workflow run for tenant isolation
+    const run = await this.db.client.workflowRun.findUniqueOrThrow({
+      where: { id: approval.workflowRunId },
+      select: { organizationId: true },
+    })
+
     await this.db.client.workflowApproval.upsert({
       where: { id: approval.id },
       update: {
@@ -30,6 +36,7 @@ export class WorkflowApprovalPrismaRepository implements IWorkflowApprovalReposi
       },
       create: {
         id: approval.id,
+        organizationId: run.organizationId,
         workflowRunId: approval.workflowRunId,
         status: approval.status,
         planArtifactId: approval.planArtifactId,
