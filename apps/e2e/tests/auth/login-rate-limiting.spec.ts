@@ -41,10 +41,14 @@ test.describe('Login Rate Limiting', () => {
 
     await test.step('verify rate limiting behavior', async () => {
       // Check if submit button is disabled or error appears immediately
-      const submitDisabled = await loginPage.getPage().getByRole('button', { name: /sign in/i }).isDisabled()
+      const submitDisabled = await loginPage
+        .getPage()
+        .getByRole('button', { name: /sign in/i })
+        .isDisabled()
 
       // Or check if error message mentions rate limiting
-      const errorText = await loginPage.getPage()
+      const errorText = await loginPage
+        .getPage()
         .locator('[role="alert"]')
         .first()
         .textContent({ timeout: 2000 })
@@ -73,11 +77,15 @@ test.describe('Login Rate Limiting', () => {
     await loginPage.navigate()
 
     await test.step('verify recovery possibility', async () => {
-      const isDisabled = await loginPage.getPage().getByRole('button', { name: /sign in/i }).isDisabled()
+      const isDisabled = await loginPage
+        .getPage()
+        .getByRole('button', { name: /sign in/i })
+        .isDisabled()
 
       // If disabled, it should have a message indicating when it will be available
       if (isDisabled) {
-        const errorText = await loginPage.getPage()
+        const errorText = await loginPage
+          .getPage()
           .locator('[role="alert"]')
           .first()
           .textContent({ timeout: 2000 })
@@ -130,7 +138,8 @@ test.describe('Login Rate Limiting', () => {
     await loginPage.navigate()
 
     await test.step('verify no permanent account lockout', async () => {
-      const errorText = await loginPage.getPage()
+      const errorText = await loginPage
+        .getPage()
         .locator('[role="alert"]')
         .first()
         .textContent({ timeout: 2000 })
@@ -157,7 +166,8 @@ test.describe('Login Rate Limiting', () => {
 
       // Check for visual feedback
       const isDisabled = await submitButton.isDisabled().catch(() => false)
-      const hasErrorMessage = await loginPage.getPage()
+      const hasErrorMessage = await loginPage
+        .getPage()
         .locator('[role="alert"]')
         .first()
         .isVisible({ timeout: 2000 })

@@ -48,7 +48,10 @@ test.describe('Password Strength & Validation', () => {
 
       await test.step(`verify password format: ${password}`, async () => {
         // Should not show validation error (at form level)
-        const isDisabled = await loginPage.getPage().getByRole('button', { name: /sign in/i }).isDisabled()
+        const isDisabled = await loginPage
+          .getPage()
+          .getByRole('button', { name: /sign in/i })
+          .isDisabled()
 
         // Mixed case passwords should be allowed at form level
         // (may fail at auth level with wrong credentials)
@@ -62,7 +65,10 @@ test.describe('Password Strength & Validation', () => {
     await loginPage.fillPassword('Password1')
 
     await test.step('verify numeric password acceptance', async () => {
-      const isDisabled = await loginPage.getPage().getByRole('button', { name: /sign in/i }).isDisabled()
+      const isDisabled = await loginPage
+        .getPage()
+        .getByRole('button', { name: /sign in/i })
+        .isDisabled()
 
       // Should not be disabled for numeric content
       expect(isDisabled).toBe(false)
@@ -78,7 +84,10 @@ test.describe('Password Strength & Validation', () => {
       await loginPage.fillPassword(password)
 
       await test.step(`verify special char password: ${password}`, async () => {
-        const isDisabled = await loginPage.getPage().getByRole('button', { name: /sign in/i }).isDisabled()
+        const isDisabled = await loginPage
+          .getPage()
+          .getByRole('button', { name: /sign in/i })
+          .isDisabled()
 
         // Should allow special characters at form level
         expect(isDisabled).toBe(false)
@@ -148,7 +157,10 @@ test.describe('Password Strength & Validation', () => {
 
     await test.step('verify long password paste handling', async () => {
       // Should handle gracefully
-      const isDisabled = await loginPage.getPage().getByRole('button', { name: /sign in/i }).isDisabled()
+      const isDisabled = await loginPage
+        .getPage()
+        .getByRole('button', { name: /sign in/i })
+        .isDisabled()
 
       // Should either accept or show validation error
       expect([true, false]).toContain(isDisabled)
@@ -202,7 +214,10 @@ test.describe('Password Strength & Validation', () => {
 
       await test.step(`verify consecutive special chars: ${password}`, async () => {
         // Should not show validation error
-        const isDisabled = await loginPage.getPage().getByRole('button', { name: /sign in/i }).isDisabled()
+        const isDisabled = await loginPage
+          .getPage()
+          .getByRole('button', { name: /sign in/i })
+          .isDisabled()
 
         expect(isDisabled).toBe(false)
       })

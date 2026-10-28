@@ -24,7 +24,9 @@ export class WorkflowsPage extends BasePage {
 
   // Locators - Filters
   private get searchInput() {
-    return this.getPage().getByTestId('workflows-search').or(this.getPage().getByPlaceholder(/search|filter/i))
+    return this.getPage()
+      .getByTestId('workflows-search')
+      .or(this.getPage().getByPlaceholder(/search|filter/i))
   }
 
   private get statusFilterButton() {
@@ -49,11 +51,15 @@ export class WorkflowsPage extends BasePage {
   }
 
   private get previousPageButton() {
-    return this.getPage().getByTestId('workflows-pagination-prev').or(this.getPage().getByRole('button', { name: /previous/i }))
+    return this.getPage()
+      .getByTestId('workflows-pagination-prev')
+      .or(this.getPage().getByRole('button', { name: /previous/i }))
   }
 
   private get nextPageButton() {
-    return this.getPage().getByTestId('workflows-pagination-next').or(this.getPage().getByRole('button', { name: /next/i }))
+    return this.getPage()
+      .getByTestId('workflows-pagination-next')
+      .or(this.getPage().getByRole('button', { name: /next/i }))
   }
 
   private get paginationInfo() {

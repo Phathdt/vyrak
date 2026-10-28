@@ -21,7 +21,10 @@ test.describe('Workflow Creation - Form Validation', () => {
 
   test('should show submit button in correct state', async ({}) => {
     // Empty form should have disabled submit
-    const submitButton = createPage.getPage().getByRole('button', { name: /create|submit/i }).first()
+    const submitButton = createPage
+      .getPage()
+      .getByRole('button', { name: /create|submit/i })
+      .first()
     await submitButton.waitFor({ state: 'attached', timeout: TEST_TIMEOUTS.ACTION })
     const isDisabled = await submitButton.isDisabled()
 

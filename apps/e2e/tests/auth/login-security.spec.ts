@@ -118,7 +118,8 @@ test.describe('Login Security Scenarios', () => {
         await loginPage.expectOnLoginPage()
 
         // Error message should not contain SQL-related errors
-        const errorText = await loginPage.getPage()
+        const errorText = await loginPage
+          .getPage()
           .locator('[role="alert"]')
           .first()
           .textContent({ timeout: 2000 })

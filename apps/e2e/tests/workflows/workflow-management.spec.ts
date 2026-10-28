@@ -88,7 +88,10 @@ test.describe('Workflow Management E2E', () => {
       await createPage.expectPageLoaded()
 
       // Try to submit empty form
-      const submitButton = createPage.getPage().getByRole('button', { name: /create|submit/i }).first()
+      const submitButton = createPage
+        .getPage()
+        .getByRole('button', { name: /create|submit/i })
+        .first()
       const isSubmitDisabled = await submitButton.isDisabled()
 
       // Submit button should be disabled or form should show errors
@@ -331,7 +334,8 @@ test.describe('Workflow Management E2E', () => {
         const row = rows.nth(i)
         await row.click()
 
-        const canCancel = await detailPage.getPage()
+        const canCancel = await detailPage
+          .getPage()
           .getByRole('button', { name: /cancel workflow/i })
           .isVisible()
           .catch(() => false)
@@ -357,7 +361,8 @@ test.describe('Workflow Management E2E', () => {
         const row = rows.nth(i)
         await row.click()
 
-        const canCancel = await detailPage.getPage()
+        const canCancel = await detailPage
+          .getPage()
           .getByRole('button', { name: /cancel workflow/i })
           .isVisible()
           .catch(() => false)
@@ -385,7 +390,8 @@ test.describe('Workflow Management E2E', () => {
         const row = rows.nth(i)
         await row.click()
 
-        const canCancel = await detailPage.getPage()
+        const canCancel = await detailPage
+          .getPage()
           .getByRole('button', { name: /cancel workflow/i })
           .isVisible()
           .catch(() => false)
@@ -438,11 +444,13 @@ test.describe('Workflow Management E2E', () => {
       await detailPage.navigate('invalid-workflow-id-12345')
 
       // Should show error or not found message
-      const errorVisible = await detailPage.getPage()
+      const errorVisible = await detailPage
+        .getPage()
         .locator('[role="alert"]')
         .isVisible()
         .catch(() => false)
-      const notFoundVisible = await detailPage.getPage()
+      const notFoundVisible = await detailPage
+        .getPage()
         .locator('text=/not found|invalid/i')
         .isVisible()
         .catch(() => false)
