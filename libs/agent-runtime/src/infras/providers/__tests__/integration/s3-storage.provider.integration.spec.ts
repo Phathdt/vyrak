@@ -59,12 +59,10 @@ describe('S3StorageProvider Integration', () => {
       const key = 'org-test/run-test/test-file.md'
       const content = '# Test File\n\nThis is test content.'
 
-      // Upload
-      const result = await provider.upload(key, content)
-      expect(result.bucket).toBe(bucketName)
-      expect(result.key).toBe(key)
+      // Upload (returns void)
+      await provider.upload(key, content)
 
-      // Download
+      // Download and verify
       const downloaded = await provider.download(key)
       expect(downloaded).toBe(content)
     })
@@ -160,8 +158,7 @@ describe('S3StorageProvider Integration', () => {
         provider.upload(`org-test/run-test/concurrent-${i}.txt`, `Content ${i}`)
       )
 
-      const results = await Promise.all(uploads)
-      expect(results).toHaveLength(5)
+      await Promise.all(uploads)
 
       // Verify all uploads succeeded
       for (let i = 0; i < 5; i++) {
