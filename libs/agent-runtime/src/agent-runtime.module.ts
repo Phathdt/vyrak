@@ -4,15 +4,17 @@ import { CustomConfigModule, CustomConfigService } from '@vyrak/custom-config'
 import { DatabaseModule, DatabaseService } from '@vyrak/database'
 
 import { ArtifactManager, MainRepoManager, WorkspaceManager } from './application'
-import type { IArtifactRepository } from './domain'
+import type { IArtifactRepository, IS3StorageProvider } from './domain'
 import {
   AGENT_EXECUTOR,
   ARTIFACT_MANAGER,
   ARTIFACT_REPOSITORY,
-  ArtifactS3Repository,
+  ArtifactPrismaRepository,
   ClaudeCodeExecutor,
   FakeAgentExecutor,
   MAIN_REPO_MANAGER,
+  S3_STORAGE_PROVIDER,
+  S3StorageProvider,
   WORKSPACE_MANAGER,
 } from './infras'
 
@@ -42,20 +44,31 @@ import {
       inject: [CustomConfigService],
     },
 
-    // Artifact repository with S3
+    // S3 Storage Provider
     {
-      provide: ARTIFACT_REPOSITORY,
-      useFactory: (db: DatabaseService, s3Client: S3Client, config: CustomConfigService) => {
-        return new ArtifactS3Repository(db, s3Client, config.s3.bucket)
+      provide: S3_STORAGE_PROVIDER,
+      useFactory: (s3Client: S3Client, config: CustomConfigService) => {
+        return new S3StorageProvider(s3Client, config.s3.bucket)
       },
-      inject: [DatabaseService, S3Client, CustomConfigService],
+      inject: [S3Client, CustomConfigService],
     },
 
-    // Artifact manager
+    // Artifact repository (metadata only)
+    {
+      provide: ARTIFACT_REPOSITORY,
+      useFactory: (db: DatabaseService) => {
+        return new ArtifactPrismaRepository(db)
+      },
+      inject: [DatabaseService],
+    },
+
+    // Artifact manager (orchestrates S3 + repository)
     {
       provide: ARTIFACT_MANAGER,
-      useFactory: (artifactRepo: IArtifactRepository) => new ArtifactManager(artifactRepo),
-      inject: [ARTIFACT_REPOSITORY],
+      useFactory: (artifactRepo: IArtifactRepository, s3Provider: IS3StorageProvider) => {
+        return new ArtifactManager(artifactRepo, s3Provider)
+      },
+      inject: [ARTIFACT_REPOSITORY, S3_STORAGE_PROVIDER],
     },
 
     // Main repo manager
@@ -97,6 +110,6 @@ import {
       inject: [CustomConfigService],
     },
   ],
-  exports: [AGENT_EXECUTOR, WORKSPACE_MANAGER, ARTIFACT_MANAGER, ARTIFACT_REPOSITORY],
+  exports: [AGENT_EXECUTOR, WORKSPACE_MANAGER, ARTIFACT_MANAGER, ARTIFACT_REPOSITORY, S3_STORAGE_PROVIDER],
 })
 export class AgentRuntimeModule {}

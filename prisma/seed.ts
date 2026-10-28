@@ -1,9 +1,8 @@
 import * as path from 'node:path'
-
 import { PrismaPg } from '@prisma/adapter-pg'
-import { config } from 'dotenv'
 
 import * as argon2 from 'argon2'
+import { config } from 'dotenv'
 
 import { PrismaClient } from '../libs/database/src/generated/prisma/client'
 
