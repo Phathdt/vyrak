@@ -1,12 +1,13 @@
+import { formatDistanceToNow } from 'date-fns'
+import { CheckCircle2, Copy, Edit, ExternalLink, GitBranch, RefreshCw, Trash2, XCircle } from 'lucide-react'
+import { useState } from 'react'
+
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useRepositories } from '@/hooks/use-repositories'
 import { cn } from '@/lib/utils'
 import { formatRepoUrl, getProviderInfo, type GitProvider } from '@/lib/utils/git-provider'
-import { formatDistanceToNow } from 'date-fns'
-import { CheckCircle2, Copy, Edit, ExternalLink, GitBranch, RefreshCw, Trash2, XCircle } from 'lucide-react'
-import { useState } from 'react'
 
 interface Repository {
   id: string

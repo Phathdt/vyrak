@@ -8,7 +8,7 @@ pre-commit:
       glob: '*.{js,ts,tsx}'
       run: yarn ci:lint {staged_files}
     format:
-      glob: '*.{js,ts,tsx,json}'
+      glob: '*.{ts,tsx}'
       run: yarn ci:format {staged_files}
 
 commit-msg:

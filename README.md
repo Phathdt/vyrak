@@ -13,7 +13,7 @@ A comprehensive TypeScript monorepo boilerplate for building professional full-s
 - 🔐 **Authentication Ready** - Bearer token auth with axios interceptors
 - 📦 **Shared Libraries** - Custom config, logger, database, and utilities
 - 🐳 **Docker Support** - Docker Compose for PostgreSQL
-- ✅ **Modern Tooling** - Oxlint, Prettier, Lefthook, Commitizen
+- ✅ **Modern Tooling** - Oxlint, Oxfmt, Lefthook, Commitizen
 
 ## Architecture
 
@@ -56,7 +56,7 @@ vyrak/
 - **Turborepo** - Monorepo build system
 - **TypeScript 7.0** - Static type checking
 - **Oxlint** - Blazing fast linter
-- **Prettier** - Code formatter
+- **Oxfmt** - Fast code formatter with import sorting
 - **Vitest** - Fast unit test framework
 - **Docker** - Containerization
 - **MailCrab** - Email testing tool for development

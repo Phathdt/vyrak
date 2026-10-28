@@ -1,7 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { FakeAgentExecutor } from './fake-agent-executor'
-
 import {
   AgentCancelledError,
   AgentExecutionError,
@@ -10,6 +8,7 @@ import {
   AgentType,
   type AgentExecutionInput,
 } from '../../domain'
+import { FakeAgentExecutor } from './fake-agent-executor'
 
 describe('FakeAgentExecutor', () => {
   let executor: FakeAgentExecutor

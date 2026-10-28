@@ -6,9 +6,7 @@
 import { NestFactory } from '@nestjs/core'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { CustomConfigService } from '@vyrak/custom-config'
-
 import 'dotenv/config'
-
 import { LoggerErrorInterceptor, Logger as PinoLogger } from 'nestjs-pino'
 import { ZodValidationPipe } from 'nestjs-zod'
 

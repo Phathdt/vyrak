@@ -1,10 +1,10 @@
-import type { Story } from '@vyrak/database'
-
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
+import { WorkflowStoryExecutionService } from '../workflow-story-execution.service'
 
 import type { IEventRepository } from '../../../domain/interfaces/event.repository.interface'
 import type { IStoryRepository } from '../../../domain/interfaces/story.repository.interface'
-import { WorkflowStoryExecutionService } from '../workflow-story-execution.service'
+import type { Story } from '@vyrak/database'
 
 describe('WorkflowStoryExecutionService', () => {
   let service: WorkflowStoryExecutionService

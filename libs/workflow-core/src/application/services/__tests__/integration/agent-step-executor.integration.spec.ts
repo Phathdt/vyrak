@@ -1,12 +1,12 @@
 import { ArtifactManager, ArtifactPrismaRepository, FakeAgentExecutor } from '@vyrak/agent-runtime'
-import type { IWorkspaceManager } from '@vyrak/agent-runtime/domain/interfaces/workspace-manager.interface'
-import type { PrismaClient } from '@vyrak/database'
 import { getPrismaClient, startPostgres, stopPostgres } from '@vyrak/database/test-utils'
-
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
 import { StepStatus, StepType } from '../../../../domain/step-types'
 import { AgentStepExecutor } from '../../agent-step-executor.service'
+
+import type { IWorkspaceManager } from '@vyrak/agent-runtime/domain/interfaces/workspace-manager.interface'
+import type { PrismaClient } from '@vyrak/database'
 
 /**
  * Mock workspace manager for testing

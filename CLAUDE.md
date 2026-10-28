@@ -358,12 +358,14 @@ yarn workspace:health --org-id org-123 --project-id project-456
 
 ### Import Order
 
-Using `@ianvs/prettier-plugin-sort-imports`:
+Using Oxfmt with automatic import sorting:
 
-1. Node built-ins (`crypto`, `path`)
-2. External packages (`@nestjs/*`, `react`)
-3. Internal packages (`@vyrak/*`)
-4. Relative imports (`./`, `../`)
+1. External packages (Node built-ins + `@nestjs/*`, `react`, etc.)
+2. Internal packages (`@vyrak/*`, `@apps/*`, `@libs/*`, `@/`)
+3. Relative imports (`./`, `../`)
+4. Type imports (`import type`) at the end
+
+Oxfmt is configured in `.oxfmtrc.json` with `sortImports` enabled.
 
 ### TypeScript
 

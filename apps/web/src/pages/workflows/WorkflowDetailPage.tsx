@@ -1,7 +1,8 @@
-import { Button } from '@/components/ui/button'
 import { Loader2 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
+
+import { Button } from '@/components/ui/button'
 
 import { ToastContainer } from '../../components/ui/toast'
 import { ApprovalBanner, ApprovalSection, ApprovalStatusCard } from '../../components/workflow/approval'
@@ -15,7 +16,6 @@ import { useToast } from '../../hooks/use-toast'
 import { useWorkflowCancel } from '../../hooks/use-workflow-cancel'
 import { useWorkflowDetail } from '../../hooks/use-workflow-detail'
 import { useWorkflowSSE } from '../../hooks/use-workflow-sse'
-
 import '../../styles/workflow-approval.css'
 
 export function WorkflowDetailPage() {

@@ -1,7 +1,7 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common'
-import type { Story } from '@vyrak/database'
 
 import type { CreateStoryData, IStoryRepository, SubStepData } from '../../domain/interfaces/story.repository.interface'
+import type { Story } from '@vyrak/database'
 
 /**
  * Story count limits by workflow template type

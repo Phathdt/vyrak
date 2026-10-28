@@ -1,9 +1,11 @@
-import type { WorkflowRunSummaryDto } from '@/api/generated/models'
+import { useNavigate } from 'react-router-dom'
+
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useWorkflowList } from '@/hooks/use-workflow-list'
-import { useNavigate } from 'react-router-dom'
+
+import type { WorkflowRunSummaryDto } from '@/api/generated/models'
 
 interface RecentWorkflowsSectionProps {
   projectId: string

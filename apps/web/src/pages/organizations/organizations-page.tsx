@@ -1,4 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
 
 import {
   useOrganizationsControllerCreate,
@@ -16,9 +19,6 @@ import { Modal, ModalBody, ModalDescription, ModalFooter, ModalHeader, ModalTitl
 import { useToast } from '@/components/ui/toast'
 import { useAuth } from '@/contexts/auth-context'
 import { useOrganization } from '@/contexts/organization-context'
-import { useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { z } from 'zod'
 
 const createOrgSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100, 'Name too long'),

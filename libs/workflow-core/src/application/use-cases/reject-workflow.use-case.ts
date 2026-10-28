@@ -7,11 +7,12 @@ import {
   WorkflowApprovalNotFoundError,
   WorkflowRunNotFoundError,
 } from '../../domain/errors'
+import { WorkflowState } from '../../domain/workflow-state'
+
 import type { IAuthorizationService } from '../../domain/interfaces/authorization.interface'
 import type { IEventRepository } from '../../domain/interfaces/event.repository.interface'
 import type { IWorkflowApprovalRepository } from '../../domain/interfaces/workflow-approval.repository.interface'
 import type { IWorkflowRepository } from '../../domain/interfaces/workflow.repository.interface'
-import { WorkflowState } from '../../domain/workflow-state'
 
 /**
  * Logger interface for reject workflow use case

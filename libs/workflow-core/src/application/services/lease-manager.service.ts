@@ -1,8 +1,9 @@
-import { randomUUID } from 'crypto'
 import { Inject, Logger, OnModuleDestroy } from '@nestjs/common'
+import { randomUUID } from 'crypto'
+
+import { WORKFLOW_REPOSITORY } from '../../infras/di'
 
 import type { IWorkflowRepository } from '../../domain/interfaces'
-import { WORKFLOW_REPOSITORY } from '../../infras/di'
 
 /**
  * Lease Manager Service

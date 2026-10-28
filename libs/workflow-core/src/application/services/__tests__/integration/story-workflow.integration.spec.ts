@@ -1,4 +1,3 @@
-import type { DatabaseService } from '@vyrak/database'
 import {
   createTestDatabaseService,
   createTestOrgWithOwner,
@@ -6,7 +5,6 @@ import {
   startPostgres,
   stopPostgres,
 } from '@vyrak/database/test-utils'
-
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
 import { EventPrismaRepository } from '../../../../infras/repositories/event-prisma.repository'
@@ -15,6 +13,8 @@ import { WorkflowTemplatePrismaRepository } from '../../../../infras/repositorie
 import { StoryService } from '../../story.service'
 import { WorkflowStoryExecutionService } from '../../workflow-story-execution.service'
 import { WorkflowTemplateService } from '../../workflow-template.service'
+
+import type { DatabaseService } from '@vyrak/database'
 
 describe('Story-Based Workflow Integration Tests', () => {
   let databaseService: ReturnType<typeof createTestDatabaseService> | undefined

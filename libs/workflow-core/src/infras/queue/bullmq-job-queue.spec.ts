@@ -1,9 +1,9 @@
-import type { Queue } from 'bullmq'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { BullMQJobQueue, QueueException, ValidationException } from './bullmq-job-queue'
 
 import type { WorkflowJobData } from '../../domain'
+import type { Queue } from 'bullmq'
 
 describe('BullMQJobQueue', () => {
   let jobQueue: BullMQJobQueue

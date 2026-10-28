@@ -1,16 +1,15 @@
 import { Logger } from '@nestjs/common'
-
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-
-import { FakeStepExecutor } from './fake-step-executor'
-import type { LeaseManager } from './lease-manager.service'
-import type { RetryHandler } from './retry-handler.service'
-import { StepExecutorResult } from './step-executor.interface'
-import { WorkflowExecutorService } from './workflow-executor.service'
 
 import { IEventRepository, IStepRepository, IWorkflowRepository, StepStatus, WorkflowState } from '../../domain'
 import { StepRun, WorkflowRun } from '../../domain/entities'
+import { FakeStepExecutor } from './fake-step-executor'
+import { StepExecutorResult } from './step-executor.interface'
+import { WorkflowExecutorService } from './workflow-executor.service'
+
 import type { IJobQueue } from '../../domain/interfaces'
+import type { LeaseManager } from './lease-manager.service'
+import type { RetryHandler } from './retry-handler.service'
 
 describe('WorkflowExecutorService', () => {
   let service: WorkflowExecutorService

@@ -1,3 +1,6 @@
+import { useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+
 import { ProjectEditForm } from '@/components/project/project-edit-form'
 import { ProjectStats } from '@/components/project/project-stats'
 import { RecentWorkflowsSection } from '@/components/project/recent-workflows-section'
@@ -6,8 +9,6 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useOrganization } from '@/contexts/organization-context'
 import { useProjectDetail } from '@/hooks/use-project-detail'
-import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
 
 export function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>()

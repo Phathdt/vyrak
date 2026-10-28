@@ -1,4 +1,3 @@
-import type { DatabaseService } from '@vyrak/database'
 import {
   createTestDatabaseService,
   createTestUser,
@@ -7,10 +6,11 @@ import {
   startPostgres,
   stopPostgres,
 } from '@vyrak/database/test-utils'
-
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
 import { UserPrismaRepository } from '../user-prisma.repository'
+
+import type { DatabaseService } from '@vyrak/database'
 
 /**
  * Integration tests for UserPrismaRepository

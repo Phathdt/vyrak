@@ -1,6 +1,5 @@
-import type { DatabaseService } from '@vyrak/database'
-
 import type { IAuthRepository, UserEntity, UserWithOrganizations } from '../../domain'
+import type { DatabaseService } from '@vyrak/database'
 
 export class AuthPrismaRepository implements IAuthRepository {
   constructor(private readonly databaseService: DatabaseService) {}

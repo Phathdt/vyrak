@@ -1,6 +1,5 @@
 import { Logger } from '@nestjs/common'
 import { DatabaseService } from '@vyrak/database'
-
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { AppService } from './app.service'

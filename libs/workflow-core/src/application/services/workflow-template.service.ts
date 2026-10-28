@@ -1,7 +1,7 @@
 import { NotFoundException } from '@nestjs/common'
-import type { WorkflowTemplate } from '@vyrak/database'
 
 import type { IWorkflowTemplateRepository } from '../../domain/interfaces/workflow-template.repository.interface'
+import type { WorkflowTemplate } from '@vyrak/database'
 
 /**
  * Workflow Template Service Interface

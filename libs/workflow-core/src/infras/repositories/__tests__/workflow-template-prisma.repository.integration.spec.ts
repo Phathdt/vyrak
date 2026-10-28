@@ -1,4 +1,3 @@
-import type { DatabaseService } from '@vyrak/database'
 import {
   createTestDatabaseService,
   getPrismaClient,
@@ -6,10 +5,11 @@ import {
   startPostgres,
   stopPostgres,
 } from '@vyrak/database/test-utils'
-
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
 import { WorkflowTemplatePrismaRepository } from '../workflow-template-prisma.repository'
+
+import type { DatabaseService } from '@vyrak/database'
 
 /**
  * Integration tests for WorkflowTemplatePrismaRepository

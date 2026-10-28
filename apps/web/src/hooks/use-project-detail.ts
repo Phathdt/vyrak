@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { getProject, updateProject } from '../api/projects-api'
-import type { UpdateProjectDto } from '../api/types/projects'
 import { useOrganization } from '../contexts/organization-context'
+
+import type { UpdateProjectDto } from '../api/types/projects'
 
 export function useProjectDetail(projectId: string) {
   const { activeOrgId } = useOrganization()

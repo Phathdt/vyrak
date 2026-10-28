@@ -10,12 +10,13 @@ import {
   WorkflowRunNotFoundError,
 } from '../../domain/errors'
 import { InvalidWorkflowStateError } from '../../domain/errors/invalid-workflow-state.error'
+import { ApprovalValidatorService } from '../services/approval-validator.service'
+
 import type { IAuthorizationService } from '../../domain/interfaces/authorization.interface'
 import type { IEventRepository } from '../../domain/interfaces/event.repository.interface'
 import type { IJobQueue } from '../../domain/interfaces/job-queue.interface'
 import type { IWorkflowApprovalRepository } from '../../domain/interfaces/workflow-approval.repository.interface'
 import type { IWorkflowRepository } from '../../domain/interfaces/workflow.repository.interface'
-import { ApprovalValidatorService } from '../services/approval-validator.service'
 
 /**
  * Input data for approving a workflow

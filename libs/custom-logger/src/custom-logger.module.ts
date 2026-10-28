@@ -1,12 +1,9 @@
-import { IncomingMessage, ServerResponse } from 'http'
 import { Global, Module } from '@nestjs/common'
 import { CustomConfigModule, CustomConfigService } from '@vyrak/custom-config'
-
+import { IncomingMessage, ServerResponse } from 'http'
 import { ClsModule, ClsService } from 'nestjs-cls'
 import { LoggerModule, PinoLogger } from 'nestjs-pino'
-
 import 'pino-pretty' // Required for pino transport
-
 import { v7 as uuidv7 } from 'uuid'
 
 import { EnhancedLogger } from './enhanced-logger.service'

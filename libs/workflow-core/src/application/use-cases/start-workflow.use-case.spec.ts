@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { WorkflowState } from '../../domain/workflow-state'
 import { StartWorkflowUseCase } from './start-workflow.use-case'
 
 import type { WorkflowRun } from '../../domain/entities'
 import type { IEventRepository, IJobQueue, IWorkflowRepository } from '../../domain/interfaces'
-import { WorkflowState } from '../../domain/workflow-state'
 import type { StartWorkflowInput } from '../dtos/start-workflow.dto'
 
 describe('StartWorkflowUseCase', () => {

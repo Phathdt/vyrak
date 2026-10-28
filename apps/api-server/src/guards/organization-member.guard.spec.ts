@@ -1,9 +1,9 @@
 import { ForbiddenException } from '@nestjs/common'
-import type { DatabaseService } from '@vyrak/database'
-
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { OrganizationMemberGuard } from './organization-member.guard'
+
+import type { DatabaseService } from '@vyrak/database'
 
 describe('OrganizationMemberGuard', () => {
   let guard: OrganizationMemberGuard

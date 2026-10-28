@@ -1,6 +1,5 @@
-import type { DatabaseService } from '@vyrak/database'
-
 import type { ArtifactEntity, CreateArtifactParams, IArtifactRepository } from '../../domain'
+import type { DatabaseService } from '@vyrak/database'
 
 /**
  * Artifact repository error

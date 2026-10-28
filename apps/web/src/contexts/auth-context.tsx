@@ -1,12 +1,13 @@
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react'
 
 import { useAuthControllerGetCurrentUser } from '../api/generated/auth/auth'
+import { setAuthToken } from '../lib/api-client'
+
 import type {
   AuthResponseDtoUser,
   CurrentUserResponseDtoOrganizationsItem,
   CurrentUserResponseDtoUser,
 } from '../api/generated/models'
-import { setAuthToken } from '../lib/api-client'
 
 const TOKEN_KEY = 'vyrak_access_token'
 

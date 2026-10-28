@@ -1,4 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { AlertTriangle, ExternalLink, Eye, EyeOff, Loader2 } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { useForm } from 'react-hook-form'
 
 import { Button } from '@/components/ui/button'
 import { ErrorMessage, FormField, HelperText, Label } from '@/components/ui/form-field'
@@ -8,9 +11,6 @@ import { useToast } from '@/components/ui/toast'
 import { useRepositories } from '@/hooks/use-repositories'
 import { gitRepositorySchema, type GitRepositoryFormData } from '@/lib/schemas/repository-schema'
 import { detectProvider, getProviderInfo, type GitProvider } from '@/lib/utils/git-provider'
-import { AlertTriangle, ExternalLink, Eye, EyeOff, Loader2 } from 'lucide-react'
-import { useEffect, useState } from 'react'
-import { useForm } from 'react-hook-form'
 
 interface RepositoryFormProps {
   mode: 'create' | 'edit'

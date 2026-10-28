@@ -1,5 +1,4 @@
 import { UnauthorizedException } from '@nestjs/common'
-
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { AuthController } from './auth.controller'

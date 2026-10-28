@@ -1,6 +1,5 @@
 import { Test } from '@nestjs/testing'
 import { CustomConfigService } from '@vyrak/custom-config'
-
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { DatabaseModule } from './database.module'

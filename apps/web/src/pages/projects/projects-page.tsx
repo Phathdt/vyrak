@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 import { ProjectCard } from '@/components/project/project-card'
 import { ProjectCreateModal } from '@/components/project/project-create-modal'
 import { ProjectsEmptyState } from '@/components/project/projects-empty-state'
@@ -5,7 +7,6 @@ import { ProjectsFilters } from '@/components/project/projects-filters'
 import { Button } from '@/components/ui/button'
 import { useProjectList } from '@/hooks/use-project-list'
 import { useProjectsSearch } from '@/hooks/use-projects-search'
-import { useState } from 'react'
 
 export function ProjectsPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)

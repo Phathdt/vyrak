@@ -1,10 +1,11 @@
+import { AlertTriangle, Loader2 } from 'lucide-react'
+import { useState } from 'react'
+
 import { Button } from '@/components/ui/button'
 import { Modal, ModalBody, ModalFooter, ModalHeader, ModalTitle } from '@/components/ui/modal'
 import { useToast } from '@/components/ui/toast'
 import { useRepositories } from '@/hooks/use-repositories'
 import { cn } from '@/lib/utils'
-import { AlertTriangle, Loader2 } from 'lucide-react'
-import { useState } from 'react'
 
 interface StatusToggleProps {
   repositoryId: string

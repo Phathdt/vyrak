@@ -1,7 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
-import { createTenantFilterExtension } from './tenant-filter-extension'
-
 import { PrismaClient } from '../generated/prisma/client'
 import {
   createTestMember,
@@ -11,6 +9,7 @@ import {
   startPostgres,
   stopPostgres,
 } from '../test-utils'
+import { createTenantFilterExtension } from './tenant-filter-extension'
 
 describe('TenantFilterExtension (Integration)', () => {
   let prisma: PrismaClient | undefined

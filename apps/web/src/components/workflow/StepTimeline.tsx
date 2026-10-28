@@ -1,14 +1,15 @@
-import { Badge } from '@/components/ui/badge'
-import { cn } from '@/lib/utils'
 import { AlertCircle } from 'lucide-react'
 import { useState } from 'react'
 
+import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
+
+import { useDurationCounter } from '../../hooks/use-duration-counter'
+import { formatDuration, formatRelativeTime } from '../../lib/utils/duration-utils'
 import { StatusBadge } from './StatusBadge'
 import { StepDetailsPanel } from './StepDetailsPanel'
 
 import type { StepRunResponseDto } from '../../api/generated/models'
-import { useDurationCounter } from '../../hooks/use-duration-counter'
-import { formatDuration, formatRelativeTime } from '../../lib/utils/duration-utils'
 
 interface StepTimelineProps {
   steps: StepRunResponseDto[]

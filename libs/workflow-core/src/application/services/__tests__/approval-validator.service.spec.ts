@@ -7,13 +7,14 @@ import {
   type WorkflowApproval,
 } from '../../../domain/entities/workflow-approval.entity'
 import { ArtifactNotFoundError, WorkflowApprovalNotFoundError } from '../../../domain/errors'
+import { ApprovalValidatorService } from '../approval-validator.service'
+
 import type {
   IArtifact,
   IArtifactRepository,
   IEventRepository,
   IWorkflowApprovalRepository,
 } from '../../../domain/interfaces'
-import { ApprovalValidatorService } from '../approval-validator.service'
 
 // Test UUIDs (valid format)
 const TEST_IDS = {

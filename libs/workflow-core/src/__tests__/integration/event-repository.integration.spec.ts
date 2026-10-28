@@ -1,4 +1,3 @@
-import type { DatabaseService } from '@vyrak/database'
 import {
   createTestDatabaseService,
   createTestOrgWithOwner,
@@ -8,13 +7,14 @@ import {
   startPostgres,
   stopPostgres,
 } from '@vyrak/database/test-utils'
-
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+
+import { EventPrismaRepository } from '../../infras/repositories/event-prisma.repository'
+import { WorkflowPrismaRepository } from '../../infras/repositories/workflow-prisma.repository'
 
 import type { IEventRepository } from '../../domain/interfaces/event.repository.interface'
 import type { IWorkflowRepository } from '../../domain/interfaces/workflow.repository.interface'
-import { EventPrismaRepository } from '../../infras/repositories/event-prisma.repository'
-import { WorkflowPrismaRepository } from '../../infras/repositories/workflow-prisma.repository'
+import type { DatabaseService } from '@vyrak/database'
 
 /**
  * Integration tests for EventPrismaRepository

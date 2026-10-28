@@ -1,9 +1,8 @@
 import { PassportStrategy } from '@nestjs/passport'
-import type { CustomConfigService } from '@vyrak/custom-config'
-
 import { ExtractJwt, Strategy } from 'passport-jwt'
 
 import type { JwtPayload } from './jwt.provider'
+import type { CustomConfigService } from '@vyrak/custom-config'
 
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(config: CustomConfigService) {

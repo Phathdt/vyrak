@@ -1,11 +1,9 @@
 import * as fs from 'node:fs'
 import * as path from 'node:path'
-
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { WorkspaceManager } from './workspace-manager.service'
-
 import { WorkspaceCleanupError, WorkspaceCreationError } from '../../domain'
+import { WorkspaceManager } from './workspace-manager.service'
 
 describe('WorkspaceManager', () => {
   let manager: WorkspaceManager

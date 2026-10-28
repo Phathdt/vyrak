@@ -1,7 +1,7 @@
-import type { PrismaClient } from '@vyrak/database'
 import { getPrismaClient, startPostgres, stopPostgres } from '@vyrak/database/test-utils'
-
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+
+import type { PrismaClient } from '@vyrak/database'
 
 describe('Artifact Schema Migration - S3 Storage', () => {
   let prisma: PrismaClient

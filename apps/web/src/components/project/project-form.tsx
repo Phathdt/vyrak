@@ -1,12 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useEffect } from 'react'
+import { useForm } from 'react-hook-form'
 
 import { Button } from '@/components/ui/button'
 import { FormField } from '@/components/ui/form-field'
 import { Input } from '@/components/ui/input'
 import { createProjectSchema, generateSlug, type CreateProjectInput } from '@/lib/schemas/project-schema'
 import { cn } from '@/lib/utils'
-import { useEffect } from 'react'
-import { useForm } from 'react-hook-form'
 
 interface ProjectFormProps {
   defaultValues?: Partial<CreateProjectInput>

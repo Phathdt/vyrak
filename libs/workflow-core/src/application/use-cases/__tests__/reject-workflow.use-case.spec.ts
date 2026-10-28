@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ApprovalStatus, type WorkflowApproval } from '../../../domain/entities/workflow-approval.entity'
-import type { WorkflowRun } from '../../../domain/entities/workflow-run.entity'
 import {
   ApprovalAlreadyDecidedError,
   InvalidInputException,
@@ -10,16 +9,18 @@ import {
   WorkflowApprovalNotFoundError,
   WorkflowRunNotFoundError,
 } from '../../../domain/errors'
-import type { IAuthorizationService } from '../../../domain/interfaces/authorization.interface'
-import type { IEventRepository } from '../../../domain/interfaces/event.repository.interface'
-import type { IWorkflowApprovalRepository } from '../../../domain/interfaces/workflow-approval.repository.interface'
-import type { IWorkflowRepository } from '../../../domain/interfaces/workflow.repository.interface'
 import { WorkflowState } from '../../../domain/workflow-state'
 import {
   RejectWorkflowUseCase,
   type IRejectWorkflowLogger,
   type RejectWorkflowInput,
 } from '../reject-workflow.use-case'
+
+import type { WorkflowRun } from '../../../domain/entities/workflow-run.entity'
+import type { IAuthorizationService } from '../../../domain/interfaces/authorization.interface'
+import type { IEventRepository } from '../../../domain/interfaces/event.repository.interface'
+import type { IWorkflowApprovalRepository } from '../../../domain/interfaces/workflow-approval.repository.interface'
+import type { IWorkflowRepository } from '../../../domain/interfaces/workflow.repository.interface'
 
 describe('RejectWorkflowUseCase', () => {
   let useCase: RejectWorkflowUseCase

@@ -5,7 +5,6 @@ import { CustomConfigModule } from '@vyrak/custom-config'
 import { CustomLoggerModule } from '@vyrak/custom-logger'
 import { DatabaseModule } from '@vyrak/database'
 import { WorkflowCoreModule } from '@vyrak/workflow-core'
-
 import { ClsModule } from 'nestjs-cls'
 
 import { ExampleProcessor } from './processors'

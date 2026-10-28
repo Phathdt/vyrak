@@ -3,10 +3,9 @@
  * Ensures environment variables are available for integration tests
  */
 
+import { config } from 'dotenv'
 // Load environment variables from root .env files
 import { resolve } from 'path'
-
-import { config } from 'dotenv'
 
 // Load from apps/api-server/.env (where DATABASE__URL is defined)
 const envPath = resolve(__dirname, '../../../../apps/api-server/.env')

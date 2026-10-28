@@ -1,7 +1,8 @@
+import { Building2, Loader2 } from 'lucide-react'
+
 import { useOrganizationsControllerFindAll } from '@/api/generated/organizations/organizations'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useOrganization } from '@/contexts/organization-context'
-import { Building2, Loader2 } from 'lucide-react'
 
 export function OrganizationSelector() {
   const { data: orgs, isLoading, error } = useOrganizationsControllerFindAll()

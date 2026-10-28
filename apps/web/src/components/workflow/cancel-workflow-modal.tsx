@@ -1,8 +1,9 @@
+import { useState, type FormEvent } from 'react'
+
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { useState, type FormEvent } from 'react'
 
 interface CancelWorkflowModalProps {
   workflowId: string

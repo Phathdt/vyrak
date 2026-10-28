@@ -1,6 +1,5 @@
-import type { DatabaseService, WorkflowTemplate } from '@vyrak/database'
-
 import type { IWorkflowTemplateRepository } from '../../domain/interfaces/workflow-template.repository.interface'
+import type { DatabaseService, WorkflowTemplate } from '@vyrak/database'
 
 export class WorkflowTemplatePrismaRepository implements IWorkflowTemplateRepository {
   constructor(private readonly db: DatabaseService) {}

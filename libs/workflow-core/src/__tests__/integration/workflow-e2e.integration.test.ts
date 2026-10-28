@@ -1,11 +1,9 @@
 import { createTestOrgWithOwner, createTestProject, getPrismaClient, resetCounters } from '@vyrak/database/test-utils'
-
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-
-import { cleanupTestData, IntegrationTestSetup } from './test-utils'
 
 import { StepStatus } from '../../domain/entities/step-run.entity'
 import { WorkflowState } from '../../domain/workflow-state'
+import { cleanupTestData, IntegrationTestSetup } from './test-utils'
 
 describe('Workflow E2E Integration Tests', () => {
   let orgId: string
