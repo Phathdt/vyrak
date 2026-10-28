@@ -28,18 +28,14 @@ test.describe('Dashboard', () => {
   })
 
   test('should logout and redirect to login', async ({ authenticatedPage }) => {
-    // Verify authenticated first
     const tokenBefore = await StorageHelper.getAuthToken(authenticatedPage)
     expect(tokenBefore).toBeTruthy()
 
-    // Click logout
     await dashboardPage.clickLogout()
 
-    // Should redirect to login
     const loginPage = new LoginPage(authenticatedPage)
     await loginPage.expectOnLoginPage()
 
-    // Token should be cleared
     const tokenAfter = await StorageHelper.getAuthToken(authenticatedPage)
     expect(tokenAfter).toBeNull()
   })
@@ -47,13 +43,10 @@ test.describe('Dashboard', () => {
   test('should maintain session after page reload', async ({ authenticatedPage }) => {
     await dashboardPage.expectOnDashboard()
 
-    // Reload page
-    await authenticatedPage.reload()
+    await dashboardPage.reload()
 
-    // Should still be on dashboard
     await dashboardPage.expectOnDashboard()
 
-    // Token should still exist
     const token = await StorageHelper.getAuthToken(authenticatedPage)
     expect(token).toBeTruthy()
   })

@@ -6,11 +6,7 @@ interface SSEConnectionIndicatorProps {
   className?: string
 }
 
-export function SSEConnectionIndicator({
-  connectionState,
-  reconnecting,
-  className = '',
-}: SSEConnectionIndicatorProps) {
+export function SSEConnectionIndicator({ connectionState, reconnecting, className = '' }: SSEConnectionIndicatorProps) {
   const config = {
     connected: {
       icon: '🔴',

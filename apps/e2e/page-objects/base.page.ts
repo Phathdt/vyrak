@@ -9,7 +9,7 @@ export abstract class BasePage {
    */
   async goto(url: string): Promise<void> {
     await this.page.goto(url, {
-      waitUntil: 'domcontentloaded',
+      waitUntil: 'networkidle',
       timeout: TEST_TIMEOUTS.NAVIGATION,
     })
   }

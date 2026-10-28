@@ -7,12 +7,7 @@ interface JsonViewerProps {
   defaultCollapsed?: boolean
 }
 
-export function JsonViewer({
-  data,
-  title,
-  collapsible = true,
-  defaultCollapsed = false,
-}: JsonViewerProps) {
+export function JsonViewer({ data, title, collapsible = true, defaultCollapsed = false }: JsonViewerProps) {
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed)
   const [copied, setCopied] = useState(false)
 

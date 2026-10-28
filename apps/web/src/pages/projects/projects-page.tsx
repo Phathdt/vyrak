@@ -71,7 +71,7 @@ export function ProjectsPage() {
   const showEmptyState = projects.length === 0 && !hasSearchOrFilter
 
   return (
-    <div className='container mx-auto px-4 py-8'>
+    <div className='container mx-auto px-4 py-8' data-testid='projects-page'>
       {/* Header */}
       <div className='flex items-center justify-between mb-8'>
         <div>
@@ -81,7 +81,7 @@ export function ProjectsPage() {
             {state.search && ` • Searching for "${state.search}"`}
           </p>
         </div>
-        <Button onClick={() => setIsCreateModalOpen(true)} variant='default'>
+        <Button onClick={() => setIsCreateModalOpen(true)} variant='default' data-testid='create-project-button'>
           Create Project
         </Button>
       </div>
@@ -94,13 +94,17 @@ export function ProjectsPage() {
         onSortChange={setSort}
         onClearSearch={clearSearch}
         isSearching={isFetching}
+        data-testid='projects-filters'
       />
 
       {/* Content */}
       {showEmptyState ? (
         <ProjectsEmptyState onCreateClick={() => setIsCreateModalOpen(true)} />
       ) : projects.length === 0 ? (
-        <div className='flex flex-col items-center justify-center min-h-[300px] text-center'>
+        <div
+          className='flex flex-col items-center justify-center min-h-[300px] text-center'
+          data-testid='projects-no-results'
+        >
           <div className='w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4'>
             <svg className='w-8 h-8 text-muted-foreground' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
               <path
@@ -113,14 +117,14 @@ export function ProjectsPage() {
           </div>
           <h3 className='text-lg font-semibold mb-2'>No projects found</h3>
           <p className='text-sm text-muted-foreground mb-6'>Try adjusting your search or filters.</p>
-          <Button onClick={clearSearch} variant='outline'>
+          <Button onClick={clearSearch} variant='outline' data-testid='projects-clear-search'>
             Clear Search
           </Button>
         </div>
       ) : (
         <>
           {/* Projects Grid */}
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8'>
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8' data-testid='projects-list'>
             {projects.map((project) => (
               <ProjectCard
                 key={project.id}
@@ -133,20 +137,31 @@ export function ProjectsPage() {
                   repositoryCount: project.stats.repositoryCount,
                   workflowRunCount: project.stats.workflowRunCount,
                 }}
+                data-testid={`project-card-${project.id}`}
               />
             ))}
           </div>
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className='flex items-center justify-center gap-4'>
-              <Button disabled={state.page === 1} onClick={() => setPage(state.page - 1)} variant='outline'>
+            <div className='flex items-center justify-center gap-4' data-testid='projects-pagination'>
+              <Button
+                disabled={state.page === 1}
+                onClick={() => setPage(state.page - 1)}
+                variant='outline'
+                data-testid='projects-pagination-prev'
+              >
                 Previous
               </Button>
               <span className='text-sm text-muted-foreground'>
                 Page {state.page} of {totalPages}
               </span>
-              <Button disabled={state.page >= totalPages} onClick={() => setPage(state.page + 1)} variant='outline'>
+              <Button
+                disabled={state.page >= totalPages}
+                onClick={() => setPage(state.page + 1)}
+                variant='outline'
+                data-testid='projects-pagination-next'
+              >
                 Next
               </Button>
             </div>
@@ -159,6 +174,7 @@ export function ProjectsPage() {
         open={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onSuccess={() => setIsCreateModalOpen(false)}
+        data-testid='project-create-modal'
       />
     </div>
   )

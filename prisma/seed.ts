@@ -326,7 +326,8 @@ async function main() {
       initiatorId: '550e8400-e29b-41d4-a716-446655440001',
       workflowKey: 'feature',
       branch: 'main',
-      requirement: 'Build a comprehensive user authentication system with email verification, password reset, and OAuth integration (Google, GitHub)',
+      requirement:
+        'Build a comprehensive user authentication system with email verification, password reset, and OAuth integration (Google, GitHub)',
       status: 'running' as const,
       startedAt: oneHourAgo,
       idempotencyKey: 'idempotency-key-001',
@@ -339,7 +340,8 @@ async function main() {
       initiatorId: '550e8400-e29b-41d4-a716-446655440002',
       workflowKey: 'feature',
       branch: 'feature/payment-integration',
-      requirement: 'Integrate Stripe payment gateway with subscription management, invoice generation, and webhook handling for payment events',
+      requirement:
+        'Integrate Stripe payment gateway with subscription management, invoice generation, and webhook handling for payment events',
       status: 'completed' as const,
       startedAt: oneDayAgo,
       completedAt: new Date(oneDayAgo.getTime() + 45 * 60 * 1000),
@@ -384,7 +386,8 @@ async function main() {
       initiatorId: '550e8400-e29b-41d4-a716-446655440001',
       workflowKey: 'feature',
       branch: 'feature/dashboard-analytics',
-      requirement: 'Create analytics dashboard with charts, metrics, and export functionality for business intelligence',
+      requirement:
+        'Create analytics dashboard with charts, metrics, and export functionality for business intelligence',
       status: 'cancelled' as const,
       startedAt: new Date(now.getTime() - 3 * 60 * 60 * 1000),
       completedAt: new Date(now.getTime() - 2.5 * 60 * 60 * 1000),

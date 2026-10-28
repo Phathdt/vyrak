@@ -1,5 +1,4 @@
-import type { WorkflowDraft } from '../schemas/workflow-schemas'
-import { workflowDraftSchema } from '../schemas/workflow-schemas'
+import { workflowDraftSchema, type WorkflowDraft } from '../schemas/workflow-schemas'
 
 const WORKFLOW_DRAFT_KEY_PREFIX = 'workflow-draft'
 
@@ -14,11 +13,7 @@ export function getWorkflowDraftKey(userId: string, projectId: string): string {
 /**
  * Save workflow draft to localStorage
  */
-export function saveWorkflowDraft(
-  userId: string,
-  projectId: string,
-  draft: Omit<WorkflowDraft, 'savedAt'>
-): void {
+export function saveWorkflowDraft(userId: string, projectId: string, draft: Omit<WorkflowDraft, 'savedAt'>): void {
   try {
     const key = getWorkflowDraftKey(userId, projectId)
     const data: WorkflowDraft = {
@@ -77,9 +72,7 @@ export function clearWorkflowDraft(userId: string, projectId: string): void {
 /**
  * List all workflow drafts for a user (across all projects)
  */
-export function listWorkflowDrafts(
-  userId: string
-): Array<{
+export function listWorkflowDrafts(userId: string): Array<{
   projectId: string
   draft: WorkflowDraft
 }> {

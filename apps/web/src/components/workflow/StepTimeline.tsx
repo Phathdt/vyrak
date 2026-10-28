@@ -5,10 +5,10 @@ import { useState } from 'react'
 
 import { StatusBadge } from './StatusBadge'
 import { StepDetailsPanel } from './StepDetailsPanel'
-import { useDurationCounter } from '../../hooks/use-duration-counter'
-import { formatDuration, formatRelativeTime } from '../../lib/utils/duration-utils'
 
 import type { StepRunResponseDto } from '../../api/generated/models'
+import { useDurationCounter } from '../../hooks/use-duration-counter'
+import { formatDuration, formatRelativeTime } from '../../lib/utils/duration-utils'
 
 interface StepTimelineProps {
   steps: StepRunResponseDto[]
@@ -78,16 +78,7 @@ interface StepCardProps {
   onClick: () => void
 }
 
-function StepCard({
-  step,
-  isLast,
-  isActive,
-  isPastStep,
-  isFutureStep,
-  isFailed,
-  isSelected,
-  onClick,
-}: StepCardProps) {
+function StepCard({ step, isLast, isActive, isPastStep, isFutureStep, isFailed, isSelected, onClick }: StepCardProps) {
   const duration = useDurationCounter(step.startedAt, step.completedAt, isActive)
 
   const icons = {

@@ -61,12 +61,18 @@ export function ProjectCreateModal({ open, onClose, onSuccess }: ProjectCreateMo
   }
 
   return (
-    <Modal open={open} onClose={onClose} size='lg'>
+    <Modal open={open} onClose={onClose} size='lg' data-testid='project-create-modal'>
       <ModalHeader onClose={onClose}>
         <ModalTitle>Create New Project</ModalTitle>
       </ModalHeader>
       <ModalBody>
-        <ProjectForm mode='create' onSubmit={handleSubmit} onCancel={onClose} isSubmitting={createMutation.isPending} />
+        <ProjectForm
+          mode='create'
+          onSubmit={handleSubmit}
+          onCancel={onClose}
+          isSubmitting={createMutation.isPending}
+          data-testid='project-create-form'
+        />
       </ModalBody>
     </Modal>
   )
