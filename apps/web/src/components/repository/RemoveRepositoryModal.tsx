@@ -71,11 +71,17 @@ export function RemoveRepositoryModal({
         repoId: repositoryId,
       })
 
-      showToast('Repository removed successfully', 'success')
+      showToast({
+        title: 'Repository removed successfully',
+        type: 'success',
+      })
       onClose()
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to remove repository'
-      showToast(`Error: ${errorMessage}`, 'error')
+      showToast({
+        title: `Error: ${errorMessage}`,
+        type: 'error',
+      })
     }
   }
 

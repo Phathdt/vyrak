@@ -131,9 +131,15 @@ export function OrganizationSettingsPage() {
         },
       })
       await refetch()
-      showToast('Organization updated successfully', 'success')
+      showToast({
+        title: 'Organization updated successfully',
+        type: 'success',
+      })
     } catch (err) {
-      showToast('Failed to update organization', 'error')
+      showToast({
+        title: 'Failed to update organization',
+        type: 'error',
+      })
       console.error('Failed to update organization:', err)
     }
   }
@@ -147,9 +153,15 @@ export function OrganizationSettingsPage() {
       resetInvite()
       setShowInviteForm(false)
       await refetchMembers()
-      showToast('Invitation sent successfully', 'success')
+      showToast({
+        title: 'Invitation sent successfully',
+        type: 'success',
+      })
     } catch (err) {
-      showToast('Failed to send invitation', 'error')
+      showToast({
+        title: 'Failed to send invitation',
+        type: 'error',
+      })
       console.error('Failed to invite member:', err)
     }
   }
@@ -162,9 +174,15 @@ export function OrganizationSettingsPage() {
         data: { role: newRole },
       })
       await refetchMembers()
-      showToast('Member role updated', 'success')
+      showToast({
+        title: 'Member role updated',
+        type: 'success',
+      })
     } catch (err) {
-      showToast('Failed to update role', 'error')
+      showToast({
+        title: 'Failed to update role',
+        type: 'error',
+      })
       console.error('Failed to update role:', err)
     }
   }
@@ -178,10 +196,16 @@ export function OrganizationSettingsPage() {
         memberId: memberToRemove.id,
       })
       await refetchMembers()
-      showToast('Member removed successfully', 'success')
+      showToast({
+        title: 'Member removed successfully',
+        type: 'success',
+      })
       setMemberToRemove(null)
     } catch (err) {
-      showToast('Failed to remove member', 'error')
+      showToast({
+        title: 'Failed to remove member',
+        type: 'error',
+      })
       console.error('Failed to remove member:', err)
     }
   }

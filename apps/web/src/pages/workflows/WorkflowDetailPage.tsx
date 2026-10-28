@@ -1,18 +1,109 @@
-import { Badge } from '@/components/ui/badge'
+import { useEffect, useRef, useState } from 'react'
+
+import { Button } from '@/components/ui/button'
 import { Loader2 } from 'lucide-react'
 import { useParams } from 'react-router-dom'
 
+import { CancelWorkflowModal } from '../../components/workflow/cancel-workflow-modal'
+import { ProgressBar } from '../../components/workflow/progress-bar'
+import { SSEConnectionIndicator } from '../../components/workflow/sse-connection-indicator'
 import { StepTimeline } from '../../components/workflow/StepTimeline'
+import { StatusBadge } from '../../components/workflow/StatusBadge'
+import { ToastContainer } from '../../components/ui/toast'
 import { WorkflowOverview } from '../../components/workflow/WorkflowOverview'
+import { useToast } from '../../hooks/use-toast'
+import { useWorkflowCancel } from '../../hooks/use-workflow-cancel'
 import { useWorkflowDetail } from '../../hooks/use-workflow-detail'
 import { useWorkflowSSE } from '../../hooks/use-workflow-sse'
 
 export function WorkflowDetailPage() {
   const { runId } = useParams<{ runId: string }>()
+  const [showCancelModal, setShowCancelModal] = useState(false)
+  const [selectedStepId, setSelectedStepId] = useState<string | null>(null)
+  const { toasts, addToast, dismissToast } = useToast()
+  const previousStatusRef = useRef<string | null>(null)
 
   // Call hooks unconditionally
   const { data: workflow, isLoading, error } = useWorkflowDetail(runId || '')
-  const { connected } = useWorkflowSSE(runId || '')
+  const { connectionState, reconnecting } = useWorkflowSSE(runId || '')
+
+  const {
+    cancelWorkflow,
+    isLoading: isCancelling,
+    error: cancelError,
+    reset: resetCancelError,
+  } = useWorkflowCancel(runId || '', {
+    onSuccess: () => {
+      setShowCancelModal(false)
+      // Toast notification would go here if available
+    },
+    onError: () => {
+      // Error is displayed in modal
+    },
+  })
+
+  const handleCancelClick = () => {
+    setShowCancelModal(true)
+    resetCancelError()
+  }
+
+  const handleCancelConfirm = async (reason?: string) => {
+    await cancelWorkflow(reason)
+  }
+
+  const handleCancelModalClose = () => {
+    if (!isCancelling) {
+      setShowCancelModal(false)
+      resetCancelError()
+    }
+  }
+
+  // Show toast on status transitions
+  useEffect(() => {
+    if (!workflow) return
+
+    const currentStatus = workflow.status
+    const previousStatus = previousStatusRef.current
+
+    if (previousStatus && previousStatus !== currentStatus) {
+      const transitions = {
+        queued_to_running: {
+          type: 'info' as const,
+          title: 'Workflow started',
+          message: 'AI agents are now processing your requirements',
+        },
+        running_to_waiting_approval: {
+          type: 'warning' as const,
+          title: 'Approval required',
+          message: 'Review the proposed changes before proceeding',
+        },
+        running_to_succeeded: {
+          type: 'success' as const,
+          title: 'Workflow completed',
+          message: 'All steps executed successfully',
+        },
+        running_to_failed: {
+          type: 'error' as const,
+          title: 'Workflow failed',
+          message: 'Check step details for error information',
+        },
+        running_to_cancelled: {
+          type: 'info' as const,
+          title: 'Workflow cancelled',
+          message: 'Execution stopped by user request',
+        },
+      }
+
+      const transitionKey = `${previousStatus}_to_${currentStatus}` as keyof typeof transitions
+      const transition = transitions[transitionKey]
+
+      if (transition) {
+        addToast(transition)
+      }
+    }
+
+    previousStatusRef.current = currentStatus
+  }, [workflow?.status, addToast])
 
   if (!runId) {
     return (
@@ -53,29 +144,85 @@ export function WorkflowDetailPage() {
     )
   }
 
+  const canCancel = workflow.status === 'running' || workflow.status === 'queued'
+
+  const completedSteps = workflow.steps.filter(
+    (step) => step.status === 'succeeded' || step.status === 'failed' || step.status === 'skipped'
+  ).length
+
   return (
-    <div className='container py-8'>
-      <header className='mb-8 flex items-center justify-between'>
-        <div>
-          <h1 className='text-3xl font-bold tracking-tight'>{workflow.workflowKey}</h1>
-          <p className='mt-2 text-muted-foreground'>Run ID: {workflow.id}</p>
+    <>
+      <div className='container max-w-[1400px] py-8'>
+        <header className='mb-8'>
+          <div className='mb-4 flex items-center justify-between'>
+            <div className='flex items-center gap-3 text-sm text-muted-foreground'>
+              <span>Organizations</span>
+              <span>/</span>
+              <a href='/workflows' className='text-cyan-400 hover:underline'>
+                Workflows
+              </a>
+              <span>/</span>
+              <span>{runId?.slice(0, 8)}</span>
+            </div>
+            <SSEConnectionIndicator connectionState={connectionState} reconnecting={reconnecting} />
+          </div>
+
+          <div className='flex items-start justify-between'>
+            <div>
+              <div className='mb-2 inline-block rounded-full border border-border bg-surface-2 px-3 py-1 font-mono text-xs text-muted-foreground'>
+                {workflow.workflowKey}
+              </div>
+              <h1 className='text-3xl font-bold tracking-tight'>Workflow Run</h1>
+            </div>
+            <div className='flex items-center gap-3'>
+              <StatusBadge status={workflow.status} />
+              {canCancel && (
+                <Button variant='destructive' onClick={handleCancelClick}>
+                  Cancel Workflow
+                </Button>
+              )}
+            </div>
+          </div>
+        </header>
+
+        <div className='space-y-8'>
+          {/* Overview Section */}
+          <section>
+            <WorkflowOverview workflow={workflow} />
+          </section>
+
+          {/* Progress Section */}
+          <section>
+            <ProgressBar completed={completedSteps} total={workflow.steps.length} status={workflow.status} />
+          </section>
+
+          {/* Timeline Section */}
+          <section>
+            <h2 className='mb-4 text-xl font-semibold'>Step Timeline</h2>
+            {workflow.steps.length > 0 ? (
+              <StepTimeline steps={workflow.steps} selectedStepId={selectedStepId} onStepClick={setSelectedStepId} />
+            ) : (
+              <div className='rounded-xl border border-dashed border-border bg-surface-1 p-12 text-center'>
+                <p className='text-muted-foreground'>No steps yet. Workflow is initializing...</p>
+              </div>
+            )}
+          </section>
         </div>
-        {connected && (
-          <Badge variant='default' className='gap-1.5'>
-            <span className='h-2 w-2 animate-pulse rounded-full bg-red-500' />
-            Live
-          </Badge>
+
+        {showCancelModal && (
+          <CancelWorkflowModal
+            workflowId={workflow.id}
+            workflowName={workflow.workflowKey}
+            onConfirm={handleCancelConfirm}
+            onCancel={handleCancelModalClose}
+            isLoading={isCancelling}
+            error={cancelError?.message || null}
+          />
         )}
-      </header>
-
-      <div className='space-y-8'>
-        <WorkflowOverview workflow={workflow} />
-
-        <section>
-          <h2 className='mb-4 text-xl font-semibold'>Step Timeline</h2>
-          <StepTimeline steps={workflow.steps} />
-        </section>
       </div>
-    </div>
+
+      {/* Toast Notifications */}
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
+    </>
   )
 }

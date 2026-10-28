@@ -5,6 +5,9 @@ interface UseWorkflowListParams {
   projectId?: string
   status?: string
   search?: string
+  dateRange?: string
+  dateFrom?: string
+  dateTo?: string
   page?: number
   limit?: number
 }
@@ -12,6 +15,9 @@ interface UseWorkflowListParams {
 export function useWorkflowList(params: UseWorkflowListParams) {
   const { projectId, status, page = 1, limit = 20 } = params
   const { activeOrgId } = useOrganization()
+
+  // Note: search, dateFrom, dateTo not yet supported by backend API
+  // They are passed through filters but not sent to API
 
   return useWorkflowsControllerListWorkflowRuns(
     activeOrgId || '',

@@ -48,12 +48,18 @@ export function LoginPage() {
       // Update auth context (will handle localStorage automatically)
       setAuth(result.accessToken, result.user)
 
-      showToast('Welcome back!', 'success')
+      showToast({
+        title: 'Welcome back!',
+        type: 'success',
+      })
 
       // Redirect to dashboard
       navigate('/dashboard')
     } catch (_err) {
-      showToast('Invalid email or password', 'error')
+      showToast({
+        title: 'Invalid email or password',
+        type: 'error',
+      })
     }
   }
 

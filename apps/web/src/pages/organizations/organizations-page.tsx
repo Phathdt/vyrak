@@ -72,9 +72,15 @@ export function OrganizationsPage() {
       setIsCreating(false)
       setActiveOrgId(newOrg.id)
       await refetch()
-      showToast('Organization created successfully', 'success')
+      showToast({
+        title: 'Organization created successfully',
+        type: 'success',
+      })
     } catch (err) {
-      showToast('Failed to create organization', 'error')
+      showToast({
+        title: 'Failed to create organization',
+        type: 'error',
+      })
       console.error('Failed to create organization:', err)
     }
   }

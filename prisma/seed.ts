@@ -160,6 +160,44 @@ async function main() {
 
   console.log('🚀 Created projects')
 
+  // Create git repositories
+  await prisma.gitRepository.createMany({
+    data: [
+      {
+        id: 'a50e8400-e29b-41d4-a716-446655440001',
+        organizationId: '650e8400-e29b-41d4-a716-446655440001',
+        projectId: '950e8400-e29b-41d4-a716-446655440001',
+        name: 'vyrak-web',
+        provider: 'github',
+        providerUrl: 'https://github.com/acme/vyrak-web',
+        defaultBranch: 'main',
+        status: 'active',
+      },
+      {
+        id: 'a50e8400-e29b-41d4-a716-446655440002',
+        organizationId: '650e8400-e29b-41d4-a716-446655440001',
+        projectId: '950e8400-e29b-41d4-a716-446655440001',
+        name: 'vyrak-api',
+        provider: 'github',
+        providerUrl: 'https://github.com/acme/vyrak-api',
+        defaultBranch: 'develop',
+        status: 'active',
+      },
+      {
+        id: 'a50e8400-e29b-41d4-a716-446655440003',
+        organizationId: '650e8400-e29b-41d4-a716-446655440001',
+        projectId: '950e8400-e29b-41d4-a716-446655440002',
+        name: 'mobile-ios',
+        provider: 'github',
+        providerUrl: 'https://github.com/acme/mobile-ios',
+        defaultBranch: 'main',
+        status: 'active',
+      },
+    ],
+  })
+
+  console.log('📦 Created git repositories')
+
   // Create workflow templates
   const templates = [
     {
@@ -272,6 +310,260 @@ async function main() {
   }
 
   console.log('✅ Created workflow templates')
+
+  // Create workflow runs with different statuses
+  const now = new Date()
+  const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000)
+  const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000)
+  const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+
+  const workflowRuns = [
+    {
+      id: 'b50e8400-e29b-41d4-a716-446655440001',
+      organizationId: '650e8400-e29b-41d4-a716-446655440001',
+      projectId: '950e8400-e29b-41d4-a716-446655440001',
+      repositoryId: 'a50e8400-e29b-41d4-a716-446655440001',
+      initiatorId: '550e8400-e29b-41d4-a716-446655440001',
+      workflowKey: 'feature',
+      branch: 'main',
+      requirement: 'Build a comprehensive user authentication system with email verification, password reset, and OAuth integration (Google, GitHub)',
+      status: 'running' as const,
+      startedAt: oneHourAgo,
+      idempotencyKey: 'idempotency-key-001',
+    },
+    {
+      id: 'b50e8400-e29b-41d4-a716-446655440002',
+      organizationId: '650e8400-e29b-41d4-a716-446655440001',
+      projectId: '950e8400-e29b-41d4-a716-446655440001',
+      repositoryId: 'a50e8400-e29b-41d4-a716-446655440001',
+      initiatorId: '550e8400-e29b-41d4-a716-446655440002',
+      workflowKey: 'feature',
+      branch: 'feature/payment-integration',
+      requirement: 'Integrate Stripe payment gateway with subscription management, invoice generation, and webhook handling for payment events',
+      status: 'completed' as const,
+      startedAt: oneDayAgo,
+      completedAt: new Date(oneDayAgo.getTime() + 45 * 60 * 1000),
+      idempotencyKey: 'idempotency-key-002',
+    },
+    {
+      id: 'b50e8400-e29b-41d4-a716-446655440003',
+      organizationId: '650e8400-e29b-41d4-a716-446655440001',
+      projectId: '950e8400-e29b-41d4-a716-446655440001',
+      repositoryId: 'a50e8400-e29b-41d4-a716-446655440002',
+      initiatorId: '550e8400-e29b-41d4-a716-446655440001',
+      workflowKey: 'hotfix',
+      branch: 'hotfix/login-bug',
+      requirement: 'Fix critical bug: users cannot login after password reset due to session token mismatch',
+      status: 'failed' as const,
+      startedAt: twoHoursAgo,
+      completedAt: new Date(twoHoursAgo.getTime() + 15 * 60 * 1000),
+      error: JSON.stringify({
+        message: 'Test suite failed: 3 tests failing in auth.spec.ts',
+        code: 'TEST_FAILURE',
+      }),
+      idempotencyKey: 'idempotency-key-003',
+    },
+    {
+      id: 'b50e8400-e29b-41d4-a716-446655440004',
+      organizationId: '650e8400-e29b-41d4-a716-446655440001',
+      projectId: '950e8400-e29b-41d4-a716-446655440002',
+      repositoryId: 'a50e8400-e29b-41d4-a716-446655440003',
+      initiatorId: '550e8400-e29b-41d4-a716-446655440003',
+      workflowKey: 'feature',
+      branch: 'develop',
+      requirement: 'Implement real-time chat feature with WebSocket support, message history, and file attachments',
+      status: 'queued' as const,
+      startedAt: null,
+      idempotencyKey: 'idempotency-key-004',
+    },
+    {
+      id: 'b50e8400-e29b-41d4-a716-446655440005',
+      organizationId: '650e8400-e29b-41d4-a716-446655440001',
+      projectId: '950e8400-e29b-41d4-a716-446655440001',
+      repositoryId: 'a50e8400-e29b-41d4-a716-446655440001',
+      initiatorId: '550e8400-e29b-41d4-a716-446655440001',
+      workflowKey: 'feature',
+      branch: 'feature/dashboard-analytics',
+      requirement: 'Create analytics dashboard with charts, metrics, and export functionality for business intelligence',
+      status: 'cancelled' as const,
+      startedAt: new Date(now.getTime() - 3 * 60 * 60 * 1000),
+      completedAt: new Date(now.getTime() - 2.5 * 60 * 60 * 1000),
+      idempotencyKey: 'idempotency-key-005',
+    },
+  ]
+
+  for (const run of workflowRuns) {
+    await prisma.workflowRun.create({ data: run })
+  }
+
+  console.log(`🔄 Created ${workflowRuns.length} workflow runs`)
+
+  // Create workflow steps for the running workflow
+  const runningWorkflowId = 'b50e8400-e29b-41d4-a716-446655440001'
+
+  const steps = [
+    {
+      id: 'c50e8400-e29b-41d4-a716-446655440001',
+      workflowRunId: runningWorkflowId,
+      name: 'Planning',
+      description: 'Generate ARD and stories breakdown',
+      order: 1,
+      status: 'completed' as const,
+      startedAt: oneHourAgo,
+      completedAt: new Date(oneHourAgo.getTime() + 10 * 60 * 1000),
+      output: JSON.stringify({
+        ard: 'Architecture requirements document generated',
+        stories: ['Story 1: User registration', 'Story 2: Email verification', 'Story 3: OAuth integration'],
+      }),
+    },
+    {
+      id: 'c50e8400-e29b-41d4-a716-446655440002',
+      workflowRunId: runningWorkflowId,
+      name: 'Implementation',
+      description: 'Execute stories sequentially',
+      order: 2,
+      status: 'running' as const,
+      startedAt: new Date(oneHourAgo.getTime() + 10 * 60 * 1000),
+      output: JSON.stringify({
+        currentStory: 'Story 2: Email verification',
+        progress: '66%',
+      }),
+    },
+    {
+      id: 'c50e8400-e29b-41d4-a716-446655440003',
+      workflowRunId: runningWorkflowId,
+      name: 'Review',
+      description: 'Code review and security scan',
+      order: 3,
+      status: 'pending' as const,
+      startedAt: null,
+      completedAt: null,
+    },
+    {
+      id: 'c50e8400-e29b-41d4-a716-446655440004',
+      workflowRunId: runningWorkflowId,
+      name: 'QA',
+      description: 'Run tests and validation',
+      order: 4,
+      status: 'pending' as const,
+      startedAt: null,
+      completedAt: null,
+    },
+  ]
+
+  for (const step of steps) {
+    await prisma.workflowStepRun.create({ data: step })
+  }
+
+  console.log(`📊 Created ${steps.length} workflow steps`)
+
+  // Create workflow steps for the completed workflow
+  const completedWorkflowId = 'b50e8400-e29b-41d4-a716-446655440002'
+
+  const completedSteps = [
+    {
+      id: 'c50e8400-e29b-41d4-a716-446655440005',
+      workflowRunId: completedWorkflowId,
+      name: 'Planning',
+      description: 'Generate ARD and stories breakdown',
+      order: 1,
+      status: 'completed' as const,
+      startedAt: oneDayAgo,
+      completedAt: new Date(oneDayAgo.getTime() + 8 * 60 * 1000),
+      output: JSON.stringify({ ard: 'Payment system architecture', stories: 4 }),
+    },
+    {
+      id: 'c50e8400-e29b-41d4-a716-446655440006',
+      workflowRunId: completedWorkflowId,
+      name: 'Implementation',
+      description: 'Execute stories sequentially',
+      order: 2,
+      status: 'completed' as const,
+      startedAt: new Date(oneDayAgo.getTime() + 8 * 60 * 1000),
+      completedAt: new Date(oneDayAgo.getTime() + 30 * 60 * 1000),
+      output: JSON.stringify({ storiesCompleted: 4, filesModified: 12 }),
+    },
+    {
+      id: 'c50e8400-e29b-41d4-a716-446655440007',
+      workflowRunId: completedWorkflowId,
+      name: 'Review',
+      description: 'Code review and security scan',
+      order: 3,
+      status: 'completed' as const,
+      startedAt: new Date(oneDayAgo.getTime() + 30 * 60 * 1000),
+      completedAt: new Date(oneDayAgo.getTime() + 38 * 60 * 1000),
+      output: JSON.stringify({ findings: 0, approved: true }),
+    },
+    {
+      id: 'c50e8400-e29b-41d4-a716-446655440008',
+      workflowRunId: completedWorkflowId,
+      name: 'QA',
+      description: 'Run tests and validation',
+      order: 4,
+      status: 'completed' as const,
+      startedAt: new Date(oneDayAgo.getTime() + 38 * 60 * 1000),
+      completedAt: new Date(oneDayAgo.getTime() + 45 * 60 * 1000),
+      output: JSON.stringify({ testsPassed: 24, coverage: '95%' }),
+    },
+  ]
+
+  for (const step of completedSteps) {
+    await prisma.workflowStepRun.create({ data: step })
+  }
+
+  console.log(`📊 Created ${completedSteps.length} completed workflow steps`)
+
+  // Create workflow steps for the failed workflow
+  const failedWorkflowId = 'b50e8400-e29b-41d4-a716-446655440003'
+
+  const failedSteps = [
+    {
+      id: 'c50e8400-e29b-41d4-a716-446655440009',
+      workflowRunId: failedWorkflowId,
+      name: 'Bug Analysis',
+      description: 'Reproduce bug and identify root cause',
+      order: 1,
+      status: 'completed' as const,
+      startedAt: twoHoursAgo,
+      completedAt: new Date(twoHoursAgo.getTime() + 5 * 60 * 1000),
+      output: JSON.stringify({ rootCause: 'Session token format mismatch in auth middleware' }),
+    },
+    {
+      id: 'c50e8400-e29b-41d4-a716-446655440010',
+      workflowRunId: failedWorkflowId,
+      name: 'Implementation',
+      description: 'Fix code and add regression test',
+      order: 2,
+      status: 'completed' as const,
+      startedAt: new Date(twoHoursAgo.getTime() + 5 * 60 * 1000),
+      completedAt: new Date(twoHoursAgo.getTime() + 12 * 60 * 1000),
+      output: JSON.stringify({ filesModified: 2, testsAdded: 3 }),
+    },
+    {
+      id: 'c50e8400-e29b-41d4-a716-446655440011',
+      workflowRunId: failedWorkflowId,
+      name: 'Fast Review',
+      description: 'Quick security and correctness check',
+      order: 3,
+      status: 'failed' as const,
+      startedAt: new Date(twoHoursAgo.getTime() + 12 * 60 * 1000),
+      completedAt: new Date(twoHoursAgo.getTime() + 15 * 60 * 1000),
+      error: JSON.stringify({
+        message: 'Test suite failed: 3 tests failing in auth.spec.ts',
+        tests: [
+          'should login with valid credentials',
+          'should reset password successfully',
+          'should maintain session after password reset',
+        ],
+      }),
+    },
+  ]
+
+  for (const step of failedSteps) {
+    await prisma.workflowStepRun.create({ data: step })
+  }
+
+  console.log(`📊 Created ${failedSteps.length} failed workflow steps`)
 
   console.log('\n✅ Seed completed!')
   console.log('\n📝 Test credentials:')
