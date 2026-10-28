@@ -279,6 +279,13 @@ export class WorkflowPrismaRepository implements IWorkflowRepository {
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma internal type
   private mapToDomain(prismaRun: any): WorkflowRun {
+    // Parse input if it's a string, otherwise use as-is
+    let parsedInput: Record<string, unknown> | undefined
+    if (prismaRun.input) {
+      parsedInput =
+        typeof prismaRun.input === 'string' ? JSON.parse(prismaRun.input) : (prismaRun.input as Record<string, unknown>)
+    }
+
     const validated = WorkflowRunSchema.parse({
       id: prismaRun.id,
       organizationId: prismaRun.organizationId,
@@ -288,7 +295,7 @@ export class WorkflowPrismaRepository implements IWorkflowRepository {
       state: prismaRun.status as WorkflowState,
       initiatedByUserId: prismaRun.initiatedByUserId,
       idempotencyKey: prismaRun.idempotencyKey || crypto.randomUUID(),
-      input: prismaRun.input ? (prismaRun.input as Record<string, unknown>) : undefined,
+      input: parsedInput,
       currentStepKey: prismaRun.currentStepKey ?? undefined,
       errorCode: prismaRun.errorCode ?? undefined,
       errorMessage: prismaRun.errorMessage ?? undefined,

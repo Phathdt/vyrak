@@ -13,8 +13,8 @@ const apiURL = process.env.API_URL || 'http://localhost:3000'
 const isCI = !!process.env.CI
 
 export default defineConfig({
-  testDir: '../tests',
-  globalSetup: './global-setup.ts',
+  testDir: path.resolve(__dirname, '../tests'),
+  globalSetup: path.resolve(__dirname, './global-setup.ts'),
   fullyParallel: !isCI, // Sequential in CI to avoid conflicts
   forbidOnly: isCI,
   retries: isCI ? 2 : 0,
