@@ -4,9 +4,9 @@
  * Integration test script for S3 artifact storage
  * Tests: Store artifact → Fetch metadata → Fetch content
  */
-
-import { S3Client, ListObjectsV2Command } from '@aws-sdk/client-s3'
+import { ListObjectsV2Command, S3Client } from '@aws-sdk/client-s3'
 import { DatabaseService } from '@vyrak/database'
+
 import { ArtifactS3Repository } from '../libs/agent-runtime/src/infras/repositories/artifact-s3.repository'
 import { CustomConfigService } from '../libs/custom-config/src/custom-config.service'
 

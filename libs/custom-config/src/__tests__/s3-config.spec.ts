@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
-import { S3ConfigSchema, loadS3Config } from '../configs/s3.config'
+import { loadS3Config, S3ConfigSchema } from '../configs/s3.config'
 
 describe('S3Config', () => {
   let originalEnv: NodeJS.ProcessEnv

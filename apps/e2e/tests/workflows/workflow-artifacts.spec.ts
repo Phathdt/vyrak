@@ -1,13 +1,11 @@
 import { expect, test } from '@fixtures/auth.fixture'
-import { WorkflowDetailPage, WorkflowsPage } from '@page-objects/workflows'
+import { WorkflowsPage } from '@page-objects/workflows'
 
 test.describe('Workflow Artifacts E2E', () => {
   let workflowsPage: WorkflowsPage
-  let detailPage: WorkflowDetailPage
 
   test.beforeEach(async ({ authenticatedPage }) => {
     workflowsPage = new WorkflowsPage(authenticatedPage)
-    detailPage = new WorkflowDetailPage(authenticatedPage)
     await workflowsPage.navigate()
   })
 
@@ -229,7 +227,7 @@ test.describe('Workflow Artifacts E2E', () => {
         if (hasMarkdown) {
           // Should have rendered markdown elements (headings, etc.)
           const headings = markdownContent.locator('h1, h2, h3')
-          const hasHeadings = await headings.count().then(count => count > 0)
+          const hasHeadings = await headings.count().then((count) => count > 0)
           expect(hasHeadings).toBeTruthy()
         }
       }

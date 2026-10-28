@@ -1,7 +1,7 @@
-import { beforeAll, afterAll, describe, it, expect } from 'vitest'
-
 import type { PrismaClient } from '@vyrak/database'
 import { getPrismaClient, startPostgres, stopPostgres } from '@vyrak/database/test-utils'
+
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 describe('Artifact Schema Migration - S3 Storage', () => {
   let prisma: PrismaClient
@@ -116,7 +116,7 @@ describe('Artifact Schema Migration - S3 Storage', () => {
           filePath: 'test-required.txt',
           // Missing s3Bucket, s3Key, contentSize
         } as any,
-      }),
+      })
     ).rejects.toThrow()
   })
 
