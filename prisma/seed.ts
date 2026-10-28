@@ -568,6 +568,88 @@ async function main() {
 
   console.log(`📊 Created ${failedSteps.length} failed workflow steps`)
 
+  // Create artifacts with S3 storage (Epic 16)
+  const artifacts = [
+    {
+      id: 'd50e8400-e29b-41d4-a716-446655440001',
+      organizationId: '650e8400-e29b-41d4-a716-446655440001',
+      runId: runningWorkflowId,
+      stepKey: 'planning',
+      type: 'plan',
+      name: 'architecture-requirements.md',
+      s3Bucket: 'vyrak-artifacts',
+      s3Key: '650e8400-e29b-41d4-a716-446655440001/b50e8400-e29b-41d4-a716-446655440001/architecture-requirements.md',
+      contentSize: 2543,
+      contentType: 'text/markdown',
+    },
+    {
+      id: 'd50e8400-e29b-41d4-a716-446655440002',
+      organizationId: '650e8400-e29b-41d4-a716-446655440001',
+      runId: runningWorkflowId,
+      stepKey: 'planning',
+      type: 'code',
+      name: 'story-breakdown.json',
+      s3Bucket: 'vyrak-artifacts',
+      s3Key: '650e8400-e29b-41d4-a716-446655440001/b50e8400-e29b-41d4-a716-446655440001/story-breakdown.json',
+      contentSize: 1024,
+      contentType: 'application/json',
+    },
+    {
+      id: 'd50e8400-e29b-41d4-a716-446655440003',
+      organizationId: '650e8400-e29b-41d4-a716-446655440001',
+      runId: completedWorkflowId,
+      stepKey: 'planning',
+      type: 'plan',
+      name: 'payment-system-design.md',
+      s3Bucket: 'vyrak-artifacts',
+      s3Key: '650e8400-e29b-41d4-a716-446655440001/b50e8400-e29b-41d4-a716-446655440002/payment-system-design.md',
+      contentSize: 3891,
+      contentType: 'text/markdown',
+    },
+    {
+      id: 'd50e8400-e29b-41d4-a716-446655440004',
+      organizationId: '650e8400-e29b-41d4-a716-446655440001',
+      runId: completedWorkflowId,
+      stepKey: 'review',
+      type: 'report',
+      name: 'code-review-report.md',
+      s3Bucket: 'vyrak-artifacts',
+      s3Key: '650e8400-e29b-41d4-a716-446655440001/b50e8400-e29b-41d4-a716-446655440002/code-review-report.md',
+      contentSize: 1567,
+      contentType: 'text/markdown',
+    },
+    {
+      id: 'd50e8400-e29b-41d4-a716-446655440005',
+      organizationId: '650e8400-e29b-41d4-a716-446655440001',
+      runId: completedWorkflowId,
+      stepKey: 'qa',
+      type: 'report',
+      name: 'test-results.json',
+      s3Bucket: 'vyrak-artifacts',
+      s3Key: '650e8400-e29b-41d4-a716-446655440001/b50e8400-e29b-41d4-a716-446655440002/test-results.json',
+      contentSize: 892,
+      contentType: 'application/json',
+    },
+    {
+      id: 'd50e8400-e29b-41d4-a716-446655440006',
+      organizationId: '650e8400-e29b-41d4-a716-446655440001',
+      runId: failedWorkflowId,
+      stepKey: 'bug_analysis',
+      type: 'report',
+      name: 'bug-analysis.md',
+      s3Bucket: 'vyrak-artifacts',
+      s3Key: '650e8400-e29b-41d4-a716-446655440001/b50e8400-e29b-41d4-a716-446655440003/bug-analysis.md',
+      contentSize: 712,
+      contentType: 'text/markdown',
+    },
+  ]
+
+  for (const artifact of artifacts) {
+    await prisma.artifact.create({ data: artifact })
+  }
+
+  console.log(`📦 Created ${artifacts.length} artifacts with S3 storage`)
+
   console.log('\n✅ Seed completed!')
   console.log('\n📝 Test credentials:')
   console.log('   Email: admin@vyrak.dev')
