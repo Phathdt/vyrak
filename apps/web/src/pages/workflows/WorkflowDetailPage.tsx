@@ -10,7 +10,9 @@ import { CancelWorkflowModal } from '../../components/workflow/cancel-workflow-m
 import { ProgressBar } from '../../components/workflow/progress-bar'
 import { SSEConnectionIndicator } from '../../components/workflow/sse-connection-indicator'
 import { StatusBadge } from '../../components/workflow/StatusBadge'
+import { StepDetailsPanel } from '../../components/workflow/StepDetailsPanel'
 import { StepTimeline } from '../../components/workflow/StepTimeline'
+import { WorkflowDiagram } from '../../components/workflow/workflow-diagram'
 import { WorkflowOverview } from '../../components/workflow/WorkflowOverview'
 import { useToast } from '../../hooks/use-toast'
 import { useWorkflowCancel } from '../../hooks/use-workflow-cancel'
@@ -22,6 +24,7 @@ export function WorkflowDetailPage() {
   const { runId } = useParams<{ runId: string }>()
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [selectedStepId, setSelectedStepId] = useState<string | null>(null)
+  const [viewMode, setViewMode] = useState<'diagram' | 'timeline'>('diagram')
   const { toasts, addToast, dismissToast } = useToast()
   const previousStatusRef = useRef<string | null>(null)
 
@@ -207,11 +210,49 @@ export function WorkflowDetailPage() {
             <ProgressBar completed={completedSteps} total={workflow.steps.length} status={workflow.status} />
           </section>
 
-          {/* Timeline Section */}
+          {/* View Mode Toggle */}
+          <section className='flex items-center justify-between'>
+            <h2 className='text-xl font-semibold'>Workflow Execution</h2>
+            <div className='flex gap-2 rounded-lg border border-border bg-surface-2 p-1'>
+              <button
+                type='button'
+                onClick={() => setViewMode('diagram')}
+                className={`
+                  rounded-md px-4 py-2 text-sm font-medium transition-colors
+                  ${viewMode === 'diagram' ? 'bg-cyan-500/10 text-cyan-400' : 'text-muted-foreground hover:text-foreground'}
+                `}
+              >
+                Diagram
+              </button>
+              <button
+                type='button'
+                onClick={() => setViewMode('timeline')}
+                className={`
+                  rounded-md px-4 py-2 text-sm font-medium transition-colors
+                  ${viewMode === 'timeline' ? 'bg-cyan-500/10 text-cyan-400' : 'text-muted-foreground hover:text-foreground'}
+                `}
+              >
+                Timeline
+              </button>
+            </div>
+          </section>
+
+          {/* Diagram/Timeline Section */}
           <section>
-            <h2 className='mb-4 text-xl font-semibold'>Step Timeline</h2>
             {workflow.steps.length > 0 ? (
-              <StepTimeline steps={workflow.steps} selectedStepId={selectedStepId} onStepClick={setSelectedStepId} />
+              <>
+                {viewMode === 'diagram' ? (
+                  <div className='h-[600px] w-full overflow-hidden rounded-xl border border-border bg-surface-1'>
+                    <WorkflowDiagram steps={workflow.steps} onStepClick={setSelectedStepId} />
+                  </div>
+                ) : (
+                  <StepTimeline
+                    steps={workflow.steps}
+                    selectedStepId={selectedStepId}
+                    onStepClick={setSelectedStepId}
+                  />
+                )}
+              </>
             ) : (
               <div className='rounded-xl border border-dashed border-border bg-surface-1 p-12 text-center'>
                 <p className='text-muted-foreground'>No steps yet. Workflow is initializing...</p>
@@ -219,6 +260,15 @@ export function WorkflowDetailPage() {
             )}
           </section>
         </div>
+
+        {/* Step Details Panel */}
+        {selectedStepId && workflow.steps.find((s) => s.id === selectedStepId) && (
+          <StepDetailsPanel
+            key={selectedStepId}
+            step={workflow.steps.find((s) => s.id === selectedStepId)!}
+            onClose={() => setSelectedStepId(null)}
+          />
+        )}
 
         {showCancelModal && (
           <CancelWorkflowModal
