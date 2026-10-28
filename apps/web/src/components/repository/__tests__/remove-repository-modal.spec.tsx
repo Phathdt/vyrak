@@ -181,7 +181,10 @@ describe('RemoveRepositoryModal', () => {
       fireEvent.click(removeButton)
 
       await waitFor(() => {
-        expect(mockShowToast).toHaveBeenCalledWith('Repository removed successfully', 'success')
+        expect(mockShowToast).toHaveBeenCalledWith({
+          title: 'Repository removed successfully',
+          type: 'success',
+        })
         expect(mockOnClose).toHaveBeenCalled()
       })
     })
@@ -200,7 +203,12 @@ describe('RemoveRepositoryModal', () => {
       fireEvent.click(removeButton)
 
       await waitFor(() => {
-        expect(mockShowToast).toHaveBeenCalledWith(expect.stringContaining('Error'), 'error')
+        expect(mockShowToast).toHaveBeenCalledWith(
+          expect.objectContaining({
+            title: expect.stringContaining('Error'),
+            type: 'error',
+          })
+        )
       })
     })
 

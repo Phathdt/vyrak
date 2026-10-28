@@ -35,7 +35,7 @@ export function ProjectCreateModal({ open, onClose, onSuccess }: ProjectCreateMo
       toast({
         title: 'Project created',
         description: `${result.name} has been created successfully.`,
-        variant: 'default',
+        type: 'success',
       })
 
       // Close modal
@@ -51,7 +51,7 @@ export function ProjectCreateModal({ open, onClose, onSuccess }: ProjectCreateMo
       toast({
         title: 'Failed to create project',
         description: getErrorMessage(error),
-        variant: 'destructive',
+        type: 'error',
       })
     },
   })

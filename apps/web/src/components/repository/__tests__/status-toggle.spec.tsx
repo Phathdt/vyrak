@@ -196,7 +196,10 @@ describe('StatusToggle', () => {
           repoId: 'repo-1',
           data: { status: 'inactive' },
         })
-        expect(mockShowToast).toHaveBeenCalledWith('Repository deactivated successfully', 'success')
+        expect(mockShowToast).toHaveBeenCalledWith({
+          title: 'Repository deactivated successfully',
+          type: 'success',
+        })
       })
     })
 
@@ -285,7 +288,10 @@ describe('StatusToggle', () => {
           repoId: 'repo-1',
           data: { status: 'active' },
         })
-        expect(mockShowToast).toHaveBeenCalledWith('Repository activated successfully', 'success')
+        expect(mockShowToast).toHaveBeenCalledWith({
+          title: 'Repository activated successfully',
+          type: 'success',
+        })
       })
     })
   })
@@ -311,7 +317,12 @@ describe('StatusToggle', () => {
       fireEvent.click(confirmButton)
 
       await waitFor(() => {
-        expect(mockShowToast).toHaveBeenCalledWith(expect.stringContaining('Error'), 'error')
+        expect(mockShowToast).toHaveBeenCalledWith(
+          expect.objectContaining({
+            title: expect.stringContaining('Error'),
+            type: 'error',
+          })
+        )
       })
     })
 

@@ -1,28 +1,49 @@
-// Simple toast hook using the existing toast component
-// This is a minimal implementation for the project creation flow
+import { useCallback, useState } from 'react'
 
-import { useCallback } from 'react'
-
-interface ToastOptions {
-  title: string
-  description?: string
-  variant?: 'default' | 'destructive'
-}
+import type { Toast } from '../components/ui/toast'
 
 export function useToast() {
-  const toast = useCallback((options: ToastOptions) => {
-    // For now, we'll use console logging
-    // TODO: Integrate with actual toast component from ui/toast.tsx
-    if (options.variant === 'destructive') {
-      console.error(`[Toast Error] ${options.title}${options.description ? ': ' + options.description : ''}`)
-    } else {
-      console.log(`[Toast] ${options.title}${options.description ? ': ' + options.description : ''}`)
-    }
+  const [toasts, setToasts] = useState<Toast[]>([])
 
-    // You can also dispatch a custom event that the toast component listens to
-    const event = new CustomEvent('show-toast', { detail: options })
-    window.dispatchEvent(event)
+  const addToast = useCallback((toast: Omit<Toast, 'id'>) => {
+    const id = `toast-${Date.now()}-${Math.random()}`
+    setToasts((prev) => [...prev, { ...toast, id }])
+    return id
   }, [])
 
-  return { toast }
+  const dismissToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id))
+  }, [])
+
+  const dismissAll = useCallback(() => {
+    setToasts([])
+  }, [])
+
+  // Backward compatible helper method
+  const toast = useCallback(
+    (options: {
+      title: string
+      message?: string
+      description?: string // Alias for message
+      type?: 'success' | 'error' | 'warning' | 'info'
+      duration?: number
+    }) => {
+      return addToast({
+        type: options.type || 'info',
+        title: options.title,
+        message: options.message || options.description,
+        duration: options.duration,
+      })
+    },
+    [addToast]
+  )
+
+  return {
+    toasts,
+    addToast,
+    dismissToast,
+    dismissAll,
+    toast, // Backward compatible
+    showToast: toast, // Alias for backward compatibility
+  }
 }

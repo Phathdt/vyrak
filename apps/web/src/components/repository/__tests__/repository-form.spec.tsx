@@ -88,7 +88,10 @@ describe('RepositoryForm', () => {
       fireEvent.click(testButton)
 
       await waitFor(() => {
-        expect(mockShowToast).toHaveBeenCalledWith('Repository connection successful', 'success')
+        expect(mockShowToast).toHaveBeenCalledWith({
+          title: 'Repository connection successful',
+          type: 'success',
+        })
       })
     })
 
@@ -106,7 +109,12 @@ describe('RepositoryForm', () => {
       fireEvent.click(testButton)
 
       await waitFor(() => {
-        expect(mockShowToast).toHaveBeenCalledWith(expect.stringContaining('Connection failed'), 'error')
+        expect(mockShowToast).toHaveBeenCalledWith(
+          expect.objectContaining({
+            title: expect.stringContaining('Connection failed'),
+            type: 'error',
+          })
+        )
       })
     })
 
@@ -135,7 +143,10 @@ describe('RepositoryForm', () => {
       fireEvent.click(testButton)
 
       await waitFor(() => {
-        expect(mockShowToast).toHaveBeenCalledWith('Repository connection successful', 'success')
+        expect(mockShowToast).toHaveBeenCalledWith({
+          title: 'Repository connection successful',
+          type: 'success',
+        })
       })
 
       const submitButton = screen.getByRole('button', { name: /Add Repository/i })
@@ -143,7 +154,10 @@ describe('RepositoryForm', () => {
 
       await waitFor(() => {
         expect(mockCreate.mutateAsync).toHaveBeenCalled()
-        expect(mockShowToast).toHaveBeenCalledWith('Repository added successfully', 'success')
+        expect(mockShowToast).toHaveBeenCalledWith({
+          title: 'Repository added successfully',
+          type: 'success',
+        })
         expect(mockOnClose).toHaveBeenCalled()
       })
     })
@@ -322,7 +336,10 @@ describe('RepositoryForm', () => {
 
       await waitFor(() => {
         expect(mockUpdate.mutateAsync).toHaveBeenCalled()
-        expect(mockShowToast).toHaveBeenCalledWith('Repository updated successfully', 'success')
+        expect(mockShowToast).toHaveBeenCalledWith({
+          title: 'Repository updated successfully',
+          type: 'success',
+        })
         expect(mockOnClose).toHaveBeenCalled()
       })
     })

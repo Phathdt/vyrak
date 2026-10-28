@@ -83,7 +83,10 @@ export function RepositoryForm({ mode, organizationId, projectId, repositoryId, 
     const formValues = watch()
 
     if (!formValues.url || !formValues.branch) {
-      showToast('Please fill in URL and branch before testing', 'warning')
+      showToast({
+        title: 'Please fill in URL and branch before testing',
+        type: 'warning',
+      })
       return
     }
 
@@ -103,12 +106,18 @@ export function RepositoryForm({ mode, organizationId, projectId, repositoryId, 
       })
       setConnectionTested(true)
       setTestSuccess(true)
-      showToast('Repository connection successful', 'success')
+      showToast({
+        title: 'Repository connection successful',
+        type: 'success',
+      })
     } catch (error) {
       setConnectionTested(true)
       setTestSuccess(false)
       const errorMessage = error instanceof Error ? error.message : 'Connection failed'
-      showToast(`Connection failed: ${errorMessage}`, 'error')
+      showToast({
+        title: `Connection failed: ${errorMessage}`,
+        type: 'error',
+      })
     } finally {
       setIsTestingConnection(false)
     }
@@ -117,12 +126,18 @@ export function RepositoryForm({ mode, organizationId, projectId, repositoryId, 
   const onSubmit = async (data: GitRepositoryFormData) => {
     // Require successful test connection for create mode
     if (mode === 'create' && !connectionTested) {
-      showToast('Please test the connection before saving', 'warning')
+      showToast({
+        title: 'Please test the connection before saving',
+        type: 'warning',
+      })
       return
     }
 
     if (mode === 'create' && !testSuccess) {
-      showToast('Connection test must succeed before saving', 'error')
+      showToast({
+        title: 'Connection test must succeed before saving',
+        type: 'error',
+      })
       return
     }
 
@@ -133,7 +148,10 @@ export function RepositoryForm({ mode, organizationId, projectId, repositoryId, 
           projectId,
           data,
         })
-        showToast('Repository added successfully', 'success')
+        showToast({
+          title: 'Repository added successfully',
+          type: 'success',
+        })
       } else {
         // Edit mode - only send changed fields, omit empty token
         const updateData = {
@@ -148,12 +166,18 @@ export function RepositoryForm({ mode, organizationId, projectId, repositoryId, 
           repoId: repositoryId!,
           data: updateData,
         })
-        showToast('Repository updated successfully', 'success')
+        showToast({
+          title: 'Repository updated successfully',
+          type: 'success',
+        })
       }
       onClose()
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Operation failed'
-      showToast(`Failed to ${mode === 'create' ? 'add' : 'update'} repository: ${errorMessage}`, 'error')
+      showToast({
+        title: `Failed to ${mode === 'create' ? 'add' : 'update'} repository: ${errorMessage}`,
+        type: 'error',
+      })
     }
   }
 

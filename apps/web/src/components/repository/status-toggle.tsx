@@ -52,12 +52,18 @@ export function StatusToggle({
         },
       })
 
-      showToast(`Repository ${pendingStatus === 'active' ? 'activated' : 'deactivated'} successfully`, 'success')
+      showToast({
+        title: `Repository ${pendingStatus === 'active' ? 'activated' : 'deactivated'} successfully`,
+        type: 'success',
+      })
       setShowConfirmation(false)
       setPendingStatus(null)
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to update status'
-      showToast(`Error: ${errorMessage}`, 'error')
+      showToast({
+        title: `Error: ${errorMessage}`,
+        type: 'error',
+      })
     }
   }
 
