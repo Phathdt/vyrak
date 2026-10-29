@@ -133,8 +133,10 @@ jobs:
       - name: Clean auth cache
         run: rm -rf apps/e2e/test-results/.auth
 
-      - name: Run E2E tests
-        run: yarn test:e2e
+      # Run smoke tests only for PR validation (4 core test files, ~23 tests)
+      # Full test suite (850 tests) runs on schedule or via workflow_dispatch
+      - name: Run E2E tests (smoke tests only)
+        run: yarn workspace @vyrak/e2e playwright test --config=config/playwright.ci.config.ts
         env:
           CI: true
           DATABASE__URL: postgresql://postgres:postgres@localhost:5432/vyrak_e2e
