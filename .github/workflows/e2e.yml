@@ -70,12 +70,8 @@ jobs:
         env:
           DATABASE__URL: postgresql://postgres:postgres@localhost:5432/vyrak_e2e
 
-      - name: Seed E2E test data
-        run: yarn db:seed:test
-        env:
-          DATABASE__URL: postgresql://postgres:postgres@localhost:5432/vyrak_e2e
-          TEST_USER_EMAIL: admin@vyrak.dev
-          TEST_USER_PASSWORD: Password123!
+      # Seeding is handled by Playwright's global-setup.ts (runs db:seed:e2e)
+      # No need to seed here as it would be cleared and re-seeded anyway
 
       - name: Install Playwright browsers
         run: yarn workspace @vyrak/e2e install:browsers
