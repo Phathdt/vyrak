@@ -79,3 +79,18 @@ jobs:
           APP_ENV: development
           DATABASE__URL: postgresql://postgres:postgres@localhost:5432/vyrak_test
           REDIS__URL: redis://localhost:6379
+          JWT__SECRET: test-secret-key-for-ci-only-do-not-use-in-production
+          JWT__EXPIRY: 24h
+          FRONTEND__URL: http://localhost:5173
+          S3__ENDPOINT: http://localhost:4566
+          S3__REGION: us-east-1
+          S3__BUCKET: vyrak-artifacts
+          S3__ACCESS_KEY_ID: test
+          S3__SECRET_ACCESS_KEY: test
+          S3__FORCE_PATH_STYLE: true
+          WORKSPACE__MODE: worktree
+          WORKSPACE__MAIN_REPOS_PATH: /tmp/vyrak-repos
+          WORKSPACE__WORKSPACES_PATH: /tmp/vyrak-workspaces
+          WORKSPACE__CLEANUP_ON_SUCCESS: true
+          WORKSPACE__CLEANUP_ON_FAILURE: false
+          AGENT_RUNTIME__USE_FAKE_AGENT: true
