@@ -7,9 +7,25 @@ database:
 redis:
   url: replace_me
 
+jwt:
+  secret: replace_me
+  expiry: 24h
+
+s3:
+  endpoint: replace_me
+  region: us-east-1
+  bucket: vyrak-artifacts
+  access_key_id: replace_me
+  secret_access_key: replace_me
+  force_path_style: true
+
 log:
   level: info
   enable_json_format: false
+
+agent_runtime:
+  use_fake_agent: false
+  claude_cli_path: claude
 
 workspace:
   mode: worktree
@@ -22,3 +38,5 @@ workspace:
     branch_prefix: workflow/
     auto_fetch: true
     auto_cleanup_branch: true
+
+frontend_url: replace_me
