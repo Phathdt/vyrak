@@ -39,7 +39,8 @@ async function login(page: Page, email: string, password: string): Promise<strin
  * Extended test with authentication fixtures
  */
 export const test = base.extend<AuthFixtures>({
-  testUser: async (_context, use) => {
+  // eslint-disable-next-line no-empty-pattern -- Playwright fixtures require object destructuring
+  testUser: async ({}, use) => {
     // Use env vars or default test user credentials
     const user: AuthUser = {
       email: process.env.TEST_USER_EMAIL || 'admin@vyrak.dev',
