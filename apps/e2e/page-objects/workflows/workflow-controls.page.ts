@@ -1,6 +1,6 @@
 import { TEST_TIMEOUTS } from '@config/test.config'
 import { BasePage } from '@page-objects/base.page'
-import { expect, type Page } from '@playwright/test'
+import { expect, type Locator, type Page } from '@playwright/test'
 
 /**
  * Workflow Controls Page Object
