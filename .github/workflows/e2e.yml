@@ -135,7 +135,7 @@ jobs:
           yarn workspace @vyrak/database exec -- npx prisma db execute \
             --stdin < <(echo "SELECT email, name FROM \"User\" WHERE email = 'admin@vyrak.dev';")
         env:
-          DATABASE__URL: postgresql://postgres:postgres@localhost:5432/vyrak_e2e
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/vyrak_e2e
 
       # Run smoke tests only for PR validation (4 core test files, ~23 tests)
       # Full test suite (850 tests) runs on schedule or via workflow_dispatch
