@@ -128,6 +128,9 @@ jobs:
         run: |
           timeout 60 bash -c 'until curl -f http://localhost:5173; do sleep 2; done'
 
+      - name: Clean auth cache
+        run: rm -rf apps/e2e/test-results/.auth
+
       - name: Run E2E tests
         run: yarn test:e2e
         env:
