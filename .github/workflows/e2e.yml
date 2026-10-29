@@ -138,8 +138,8 @@ jobs:
           DATABASE__URL: postgresql://postgres:postgres@localhost:5432/vyrak_e2e
           BASE_URL: http://localhost:5173
           API_URL: http://localhost:3000
-          TEST_USER_EMAIL: test@example.com
-          TEST_USER_PASSWORD: Test123456!
+          TEST_USER_EMAIL: admin@vyrak.dev
+          TEST_USER_PASSWORD: Password123!
 
       - name: Upload test results
         if: failure()
