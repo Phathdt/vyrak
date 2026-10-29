@@ -129,14 +129,6 @@ jobs:
       - name: Clean auth cache
         run: rm -rf apps/e2e/test-results/.auth
 
-      - name: Verify test user exists
-        run: |
-          echo "Checking if test user exists in database..."
-          yarn workspace @vyrak/database exec -- npx prisma db execute \
-            --stdin < <(echo "SELECT email, name FROM \"User\" WHERE email = 'admin@vyrak.dev';")
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/vyrak_e2e
-
       # Run smoke tests only for PR validation (4 core test files, ~23 tests)
       # Full test suite (850 tests) runs on schedule or via workflow_dispatch
       - name: Run E2E tests (smoke tests only)
