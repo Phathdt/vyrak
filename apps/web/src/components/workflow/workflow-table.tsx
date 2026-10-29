@@ -117,11 +117,17 @@ function WorkflowRow({ workflow, navigate }: { workflow: WorkflowRunSummaryDto; 
   const duration = useDurationCounter(workflow.startedAt, workflow.completedAt, isActive)
 
   return (
-    <TableRow onClick={() => navigate(`/workflows/${workflow.id}`)} className='cursor-pointer hover:bg-accent/50'>
+    <TableRow
+      onClick={() => navigate(`/workflows/${workflow.id}`)}
+      className='cursor-pointer hover:bg-accent/50'
+      data-testid={`workflow-card-${workflow.id}`}
+    >
       <TableCell>
-        <StatusBadge status={workflow.status} size='sm' />
+        <StatusBadge status={workflow.status} size='sm' data-testid={`workflow-status-badge-${workflow.id}`} />
       </TableCell>
-      <TableCell className='font-medium'>{workflow.workflowKey}</TableCell>
+      <TableCell className='font-medium' data-testid={`workflow-key-${workflow.id}`}>
+        {workflow.workflowKey}
+      </TableCell>
       <TableCell className='font-mono text-sm'>{workflow.id.slice(0, 8)}</TableCell>
       <TableCell>
         {workflow.startedAt ? (
@@ -146,6 +152,7 @@ function WorkflowRow({ workflow, navigate }: { workflow: WorkflowRunSummaryDto; 
             e.stopPropagation()
             navigate(`/workflows/${workflow.id}`)
           }}
+          data-testid={`workflow-view-button-${workflow.id}`}
         >
           View
         </Button>

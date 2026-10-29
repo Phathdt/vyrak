@@ -39,6 +39,7 @@ export function CancelWorkflowModal({ workflowId, onConfirm, onCancel, isLoading
     <div
       className='fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm'
       onClick={handleBackdropClick}
+      data-testid='workflow-cancel-modal'
     >
       <div
         className='max-h-[90vh] w-full max-w-lg overflow-hidden rounded-xl border bg-card shadow-2xl'
@@ -57,6 +58,7 @@ export function CancelWorkflowModal({ workflowId, onConfirm, onCancel, isLoading
             className='rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed'
             aria-label='Close'
             disabled={isLoading}
+            data-testid='workflow-cancel-modal-close'
           >
             ✕
           </button>
@@ -76,7 +78,10 @@ export function CancelWorkflowModal({ workflowId, onConfirm, onCancel, isLoading
           </div>
 
           {error && (
-            <div className='rounded-md border border-destructive/50 bg-destructive/10 p-4'>
+            <div
+              className='rounded-md border border-destructive/50 bg-destructive/10 p-4'
+              data-testid='workflow-cancel-modal-error'
+            >
               <p className='text-sm text-destructive'>{error}</p>
             </div>
           )}
@@ -93,6 +98,7 @@ export function CancelWorkflowModal({ workflowId, onConfirm, onCancel, isLoading
               placeholder='Why are you cancelling this workflow?'
               disabled={isLoading}
               maxLength={500}
+              data-testid='workflow-cancel-reason'
             />
             <p className='text-xs text-muted-foreground'>{reason.length} / 500 characters</p>
           </div>
@@ -103,6 +109,7 @@ export function CancelWorkflowModal({ workflowId, onConfirm, onCancel, isLoading
               checked={acknowledged}
               onCheckedChange={(checked: boolean) => setAcknowledged(checked === true)}
               disabled={isLoading}
+              data-testid='workflow-cancel-acknowledge'
             />
             <Label htmlFor='acknowledge' className='cursor-pointer text-sm font-normal'>
               I understand this action cannot be undone
@@ -110,10 +117,21 @@ export function CancelWorkflowModal({ workflowId, onConfirm, onCancel, isLoading
           </div>
 
           <div className='flex justify-end gap-3 border-t pt-6'>
-            <Button type='button' variant='outline' onClick={onCancel} disabled={isLoading}>
+            <Button
+              type='button'
+              variant='outline'
+              onClick={onCancel}
+              disabled={isLoading}
+              data-testid='workflow-cancel-modal-cancel'
+            >
               Go Back
             </Button>
-            <Button type='submit' variant='destructive' disabled={!acknowledged || isLoading}>
+            <Button
+              type='submit'
+              variant='destructive'
+              disabled={!acknowledged || isLoading}
+              data-testid='workflow-cancel-modal-confirm'
+            >
               {isLoading ? 'Cancelling...' : 'Confirm Cancel'}
             </Button>
           </div>

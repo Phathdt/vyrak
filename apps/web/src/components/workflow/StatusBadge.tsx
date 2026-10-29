@@ -23,7 +23,7 @@ export function StatusBadge({ status, size = 'md' }: StatusBadgeProps) {
   const badgeConfig = config[status] || { variant: 'secondary' as const, label: status }
 
   return (
-    <Badge variant={badgeConfig.variant} size={size} className='gap-1.5'>
+    <Badge variant={badgeConfig.variant} size={size} className='gap-1.5' data-testid={`status-badge-${status}`}>
       <span className='h-1.5 w-1.5 rounded-full bg-current' />
       {badgeConfig.label}
     </Badge>

@@ -19,7 +19,7 @@ export function ProgressBar({ completed, total, status, className = '' }: Progre
   }[status]
 
   return (
-    <div className={`flex flex-col gap-2 ${className}`}>
+    <div className={`flex flex-col gap-2 ${className}`} data-testid='epic-progress-bar'>
       <div className='flex items-center justify-between'>
         <span className='text-sm text-muted-foreground'>
           {completed} of {total} steps completed
@@ -37,6 +37,7 @@ export function ProgressBar({ completed, total, status, className = '' }: Progre
           aria-valuenow={percentage}
           aria-valuemin={0}
           aria-valuemax={100}
+          data-testid={`epic-progress-fill-${status}`}
         >
           {isAnimated && (
             <div className='absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/30 to-transparent' />

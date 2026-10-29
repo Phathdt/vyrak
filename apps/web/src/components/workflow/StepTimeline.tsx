@@ -107,6 +107,7 @@ function StepCard({ step, isLast, isActive, isPastStep, isFutureStep, isFailed, 
           onClick()
         }
       }}
+      data-testid={`story-item-${step.id}`}
     >
       <div className='flex gap-4'>
         {/* Timeline connector */}
@@ -116,6 +117,7 @@ function StepCard({ step, isLast, isActive, isPastStep, isFutureStep, isFailed, 
               'flex h-8 w-8 items-center justify-center rounded-full bg-surface-2 text-lg',
               isActive && 'animate-pulse'
             )}
+            data-testid={`story-status-icon-${step.id}`}
           >
             {icons[step.status as keyof typeof icons] || '⏸️'}
           </div>

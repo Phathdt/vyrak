@@ -39,15 +39,15 @@ export function ApprovalSection({ workflow }: ApprovalSectionProps) {
 
   return (
     <>
-      <section className='approval-section'>
-        <header className='section-header'>
+      <section className='approval-section' data-testid='approval-section'>
+        <header className='section-header' data-testid='approval-section-header'>
           <h2>Plan Review & Approval</h2>
           <p className='section-description'>Review the AI-generated implementation plan before proceeding</p>
         </header>
 
         <PlanViewer orgId={workflow.organizationId} runId={workflow.id} />
 
-        <div className='approval-actions'>
+        <div className='approval-actions' data-testid='approval-actions'>
           <ApproveButton orgId={workflow.organizationId} runId={workflow.id} onSuccess={handleApprovalSuccess} />
           <RejectButton orgId={workflow.organizationId} runId={workflow.id} onSuccess={handleRejectionSuccess} />
         </div>

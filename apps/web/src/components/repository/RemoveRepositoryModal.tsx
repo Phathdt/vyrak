@@ -91,7 +91,7 @@ export function RemoveRepositoryModal({
   }
 
   return (
-    <Modal open onClose={onClose} size='md'>
+    <Modal open onClose={onClose} size='md' data-testid='repository-remove-modal'>
       <ModalHeader onClose={onClose}>
         <div className='flex items-center gap-3'>
           <div className='flex h-10 w-10 items-center justify-center rounded-full bg-destructive/10'>
@@ -103,7 +103,10 @@ export function RemoveRepositoryModal({
 
       <ModalBody className='space-y-5'>
         {/* Warning Message */}
-        <div className='rounded-lg border-2 border-destructive/50 bg-destructive/5 p-4 space-y-3'>
+        <div
+          className='rounded-lg border-2 border-destructive/50 bg-destructive/5 p-4 space-y-3'
+          data-testid='repository-remove-warning'
+        >
           <p className='text-sm font-medium'>
             Are you sure you want to remove <span className='font-semibold'>{repository.name}</span>?
           </p>
@@ -176,6 +179,7 @@ export function RemoveRepositoryModal({
             className='font-mono'
             autoComplete='off'
             autoFocus
+            data-testid='repository-delete-confirmation-input'
           />
         </div>
 
@@ -187,7 +191,13 @@ export function RemoveRepositoryModal({
       </ModalBody>
 
       <ModalFooter>
-        <Button type='button' variant='outline' onClick={onClose} disabled={remove.isPending}>
+        <Button
+          type='button'
+          variant='outline'
+          onClick={onClose}
+          disabled={remove.isPending}
+          data-testid='repository-remove-cancel-button'
+        >
           Cancel
         </Button>
         <Button
@@ -195,6 +205,7 @@ export function RemoveRepositoryModal({
           variant='destructive'
           onClick={handleRemove}
           disabled={!isConfirmValid || remove.isPending}
+          data-testid='repository-remove-confirm-button'
         >
           {remove.isPending && <Loader2 className='h-4 w-4 mr-2 animate-spin' />}
           <Trash2 className='h-4 w-4 mr-2' />

@@ -53,7 +53,7 @@ export function RepositoryList({ organizationId, projectId }: RepositoryListProp
   const repositoryCount = repositories.length
 
   return (
-    <section className='space-y-4'>
+    <section className='space-y-4' data-testid='repository-list'>
       {/* Header */}
       <div className='flex items-center justify-between'>
         <div className='flex items-center gap-3'>
@@ -64,7 +64,7 @@ export function RepositoryList({ organizationId, projectId }: RepositoryListProp
             </span>
           )}
         </div>
-        <Button onClick={() => setShowAddForm(true)}>
+        <Button onClick={() => setShowAddForm(true)} data-testid='add-repository-button'>
           <Plus className='h-4 w-4 mr-2' />
           Add Repository
         </Button>
@@ -72,7 +72,10 @@ export function RepositoryList({ organizationId, projectId }: RepositoryListProp
 
       {/* Empty State */}
       {repositoryCount === 0 && (
-        <div className='flex flex-col items-center justify-center py-16 px-4 rounded-lg border-2 border-dashed border-border bg-card/30'>
+        <div
+          className='flex flex-col items-center justify-center py-16 px-4 rounded-lg border-2 border-dashed border-border bg-card/30'
+          data-testid='repository-empty-state'
+        >
           <div className='flex h-20 w-20 items-center justify-center rounded-full bg-muted/30 mb-4'>
             <svg className='h-10 w-10 text-muted-foreground' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
               <path

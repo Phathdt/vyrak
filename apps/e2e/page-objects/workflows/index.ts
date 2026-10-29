@@ -1,3 +1,7 @@
 export { WorkflowsPage } from './workflows.page'
 export { WorkflowCreatePage } from './workflow-create.page'
 export { WorkflowDetailPage } from './workflow-detail.page'
+export { TemplateSelectorPage } from './template-selector.page'
+export { PhaseDiagramPage } from './phase-diagram.page'
+export { StoryPanelPage } from './story-panel.page'
+export { WorkflowControlsPage } from './workflow-controls.page'

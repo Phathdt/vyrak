@@ -105,7 +105,9 @@ export function WorkflowOverview({ workflow }: WorkflowOverviewProps) {
 
       {workflow.status === 'running' && (
         <div className='flex justify-end'>
-          <Button variant='destructive'>Cancel Workflow</Button>
+          <Button variant='destructive' data-testid='workflow-cancel-button'>
+            Cancel Workflow
+          </Button>
         </div>
       )}
     </div>

@@ -159,7 +159,7 @@ export function WorkflowForm({ initialProjectId, onCancel }: WorkflowFormProps) 
 
       {/* Project Selection */}
       <div className='space-y-2'>
-        <label htmlFor='projectId' className='text-sm font-medium' data-testid='workflow-projectId-label'>
+        <label htmlFor='projectId' className='text-sm font-medium' data-testid='project-select-label'>
           Project <span className='text-destructive'>*</span>
         </label>
         <select
@@ -167,7 +167,7 @@ export function WorkflowForm({ initialProjectId, onCancel }: WorkflowFormProps) 
           {...register('projectId')}
           disabled={isLoading || !!initialProjectId}
           className='w-full px-3 py-2 bg-background border border-input rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 disabled:cursor-not-allowed'
-          data-testid='workflow-projectId-input'
+          data-testid='project-select'
         >
           <option value=''>Select a project</option>
           {projects.map((project) => (
@@ -185,7 +185,7 @@ export function WorkflowForm({ initialProjectId, onCancel }: WorkflowFormProps) 
 
       {/* Repository Selection */}
       <div className='space-y-2'>
-        <label htmlFor='repositoryId' className='text-sm font-medium' data-testid='workflow-repositoryId-label'>
+        <label htmlFor='repositoryId' className='text-sm font-medium' data-testid='repository-select-label'>
           Repository <span className='text-destructive'>*</span>
         </label>
         <select
@@ -193,7 +193,7 @@ export function WorkflowForm({ initialProjectId, onCancel }: WorkflowFormProps) 
           {...register('repositoryId')}
           disabled={isLoading || !selectedProjectId || activeRepositories.length === 0}
           className='w-full px-3 py-2 bg-background border border-input rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 disabled:cursor-not-allowed'
-          data-testid='workflow-repositoryId-input'
+          data-testid='repository-select'
         >
           <option value=''>Select a repository</option>
           {activeRepositories.map((repo) => (
@@ -217,7 +217,7 @@ export function WorkflowForm({ initialProjectId, onCancel }: WorkflowFormProps) 
 
       {/* Branch Input */}
       <div className='space-y-2'>
-        <label htmlFor='branch' className='text-sm font-medium' data-testid='workflow-branch-label'>
+        <label htmlFor='branch' className='text-sm font-medium' data-testid='branch-input-label'>
           Branch <span className='text-destructive'>*</span>
         </label>
         <input
@@ -227,7 +227,7 @@ export function WorkflowForm({ initialProjectId, onCancel }: WorkflowFormProps) 
           {...register('branch')}
           disabled={isLoading}
           className='w-full px-3 py-2 bg-background border border-input rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50'
-          data-testid='workflow-branch-input'
+          data-testid='branch-input'
         />
         <p className='text-xs text-muted-foreground'>Auto-filled from repository default branch</p>
         {errors.branch && (
@@ -239,7 +239,7 @@ export function WorkflowForm({ initialProjectId, onCancel }: WorkflowFormProps) 
 
       {/* Requirement Textarea */}
       <div className='space-y-2'>
-        <label htmlFor='requirement' className='text-sm font-medium' data-testid='workflow-requirement-label'>
+        <label htmlFor='requirement' className='text-sm font-medium' data-testid='requirement-textarea-label'>
           Requirement <span className='text-destructive'>*</span>
         </label>
         <textarea
@@ -249,7 +249,7 @@ export function WorkflowForm({ initialProjectId, onCancel }: WorkflowFormProps) 
           {...register('requirement')}
           disabled={isLoading}
           className='w-full px-3 py-2 bg-background border border-input rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 resize-y min-h-[200px]'
-          data-testid='workflow-requirement-input'
+          data-testid='requirement-textarea'
         />
         <div className='flex justify-end'>
           <p className='text-xs text-muted-foreground'>
@@ -322,7 +322,7 @@ export function WorkflowForm({ initialProjectId, onCancel }: WorkflowFormProps) 
           type='submit'
           disabled={isLoading}
           className='px-6 py-2 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
-          data-testid='workflow-submit-button'
+          data-testid='create-workflow-button'
         >
           {isLoading ? 'Creating...' : 'Create Workflow'}
         </button>
