@@ -74,6 +74,8 @@ jobs:
         run: yarn db:seed:test
         env:
           DATABASE__URL: postgresql://postgres:postgres@localhost:5432/vyrak_e2e
+          TEST_USER_EMAIL: admin@vyrak.dev
+          TEST_USER_PASSWORD: Password123!
 
       - name: Install Playwright browsers
         run: yarn workspace @vyrak/e2e install:browsers
