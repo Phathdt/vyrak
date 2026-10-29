@@ -47,6 +47,12 @@ export default defineConfig({
     video: 'retain-on-failure',
     actionTimeout: 15000,
     navigationTimeout: 15000,
+    // Enable HAR recording to capture API calls
+    recordHar: {
+      mode: 'minimal',
+      path: 'test-results/network-logs.har',
+      omitContent: false,
+    },
   },
 
   projects: [
