@@ -46,16 +46,23 @@ export function PlanFullScreenModal({ isOpen, planContent, onClose }: PlanFullSc
       role='dialog'
       aria-modal='true'
       aria-labelledby='plan-modal-title'
+      data-testid='plan-fullscreen-modal'
     >
       <div className='plan-modal-content' onClick={(e) => e.stopPropagation()}>
-        <div className='plan-modal-header'>
+        <div className='plan-modal-header' data-testid='plan-modal-header'>
           <h2 id='plan-modal-title'>Implementation Plan</h2>
-          <button type='button' onClick={onClose} className='plan-modal-close' aria-label='Close full screen view'>
+          <button
+            type='button'
+            onClick={onClose}
+            className='plan-modal-close'
+            aria-label='Close full screen view'
+            data-testid='plan-modal-close-button'
+          >
             ✕
           </button>
         </div>
 
-        <div className='plan-modal-body'>
+        <div className='plan-modal-body' data-testid='plan-modal-body'>
           <MarkdownRenderer content={planContent} />
         </div>
       </div>

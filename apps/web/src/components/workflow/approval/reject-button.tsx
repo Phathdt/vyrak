@@ -90,7 +90,13 @@ export function RejectButton({ orgId, runId, onSuccess }: RejectButtonProps) {
 
   return (
     <>
-      <button type='button' onClick={handleOpenModal} className='reject-button' disabled={isRejecting}>
+      <button
+        type='button'
+        onClick={handleOpenModal}
+        className='reject-button'
+        disabled={isRejecting}
+        data-testid='reject-button'
+      >
         <span className='button-icon' aria-hidden='true'>
           ✕
         </span>
@@ -105,10 +111,11 @@ export function RejectButton({ orgId, runId, onSuccess }: RejectButtonProps) {
           aria-modal='true'
           aria-labelledby='reject-modal-title'
           onKeyDown={handleKeyDown}
+          data-testid='reject-modal'
         >
           <div className='reject-modal-content' onClick={(e) => e.stopPropagation()}>
-            <form onSubmit={handleSubmit(onSubmit)} onKeyDown={handleKeyDown}>
-              <div className='reject-modal-header'>
+            <form onSubmit={handleSubmit(onSubmit)} onKeyDown={handleKeyDown} data-testid='reject-form'>
+              <div className='reject-modal-header' data-testid='reject-modal-header'>
                 <h3 id='reject-modal-title' className='modal-title'>
                   Reject Workflow Plan
                 </h3>
@@ -118,13 +125,14 @@ export function RejectButton({ orgId, runId, onSuccess }: RejectButtonProps) {
                   className='modal-close-button'
                   aria-label='Close modal'
                   disabled={isRejecting}
+                  data-testid='reject-modal-close'
                 >
                   ✕
                 </button>
               </div>
 
-              <div className='reject-modal-body'>
-                <div className='reject-warning'>
+              <div className='reject-modal-body' data-testid='reject-modal-body'>
+                <div className='reject-warning' data-testid='reject-warning'>
                   <span className='warning-icon' aria-hidden='true'>
                     ⚠️
                   </span>
@@ -148,6 +156,7 @@ export function RejectButton({ orgId, runId, onSuccess }: RejectButtonProps) {
                     aria-required='true'
                     aria-invalid={!!errors.reason}
                     aria-describedby={errors.reason ? 'reject-reason-error' : undefined}
+                    data-testid='reject-reason-textarea'
                   />
                   {errors.reason && (
                     <p id='reject-reason-error' className='form-error' role='alert'>
@@ -165,6 +174,7 @@ export function RejectButton({ orgId, runId, onSuccess }: RejectButtonProps) {
                       className='form-checkbox'
                       disabled={isRejecting}
                       aria-required='true'
+                      data-testid='reject-confirmed-checkbox'
                     />
                     <span>I understand this will terminate the workflow</span>
                   </label>
@@ -176,22 +186,28 @@ export function RejectButton({ orgId, runId, onSuccess }: RejectButtonProps) {
                 </div>
 
                 {error && (
-                  <div className='form-error-alert' role='alert'>
+                  <div className='form-error-alert' role='alert' data-testid='reject-form-error'>
                     {error}
                   </div>
                 )}
               </div>
 
-              <div className='reject-modal-footer'>
+              <div className='reject-modal-footer' data-testid='reject-modal-footer'>
                 <button
                   type='button'
                   onClick={handleCloseModal}
                   className='form-button form-button-secondary'
                   disabled={isRejecting}
+                  data-testid='reject-cancel-button'
                 >
                   Cancel
                 </button>
-                <button type='submit' className='form-button form-button-reject' disabled={isRejecting || !isValid}>
+                <button
+                  type='submit'
+                  className='form-button form-button-reject'
+                  disabled={isRejecting || !isValid}
+                  data-testid='reject-submit-button'
+                >
                   {isRejecting ? (
                     <>
                       <span className='button-spinner' aria-hidden='true' />

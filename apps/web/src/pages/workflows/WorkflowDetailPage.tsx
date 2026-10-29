@@ -208,7 +208,7 @@ export function WorkflowDetailPage() {
           </section>
 
           {/* Timeline Section */}
-          <section>
+          <section data-testid='story-list'>
             <h2 className='mb-4 text-xl font-semibold'>Step Timeline</h2>
             {workflow.steps.length > 0 ? (
               <StepTimeline steps={workflow.steps} selectedStepId={selectedStepId} onStepClick={setSelectedStepId} />

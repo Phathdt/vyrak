@@ -76,7 +76,13 @@ export function ApproveButton({ orgId, runId, onSuccess }: ApproveButtonProps) {
 
   if (!isFormOpen) {
     return (
-      <button type='button' onClick={handleOpenForm} className='approve-button' disabled={isApproving}>
+      <button
+        type='button'
+        onClick={handleOpenForm}
+        className='approve-button'
+        disabled={isApproving}
+        data-testid='approve-button'
+      >
         <span className='button-icon' aria-hidden='true'>
           ✓
         </span>
@@ -86,8 +92,8 @@ export function ApproveButton({ orgId, runId, onSuccess }: ApproveButtonProps) {
   }
 
   return (
-    <div className='approve-form-container'>
-      <form onSubmit={handleSubmit(onSubmit)} className='approve-form'>
+    <div className='approve-form-container' data-testid='approve-form-container'>
+      <form onSubmit={handleSubmit(onSubmit)} className='approve-form' data-testid='approve-form'>
         <h3 className='form-title'>Approve Workflow Plan</h3>
 
         <div className='form-field'>
@@ -102,6 +108,7 @@ export function ApproveButton({ orgId, runId, onSuccess }: ApproveButtonProps) {
             rows={4}
             maxLength={500}
             disabled={isApproving}
+            data-testid='approve-comment-textarea'
           />
           {errors.comment && <p className='form-error'>{errors.comment.message}</p>}
           <p className='form-help'>{commentValue?.length || 0} / 500 characters</p>
@@ -109,28 +116,40 @@ export function ApproveButton({ orgId, runId, onSuccess }: ApproveButtonProps) {
 
         <div className='form-field'>
           <label className='form-checkbox-label'>
-            <input type='checkbox' {...register('confirmed')} className='form-checkbox' disabled={isApproving} />
+            <input
+              type='checkbox'
+              {...register('confirmed')}
+              className='form-checkbox'
+              disabled={isApproving}
+              data-testid='approve-confirmed-checkbox'
+            />
             <span>I have reviewed the plan and approve proceeding with implementation</span>
           </label>
           {errors.confirmed && <p className='form-error'>{errors.confirmed.message}</p>}
         </div>
 
         {error && (
-          <div className='form-error-alert' role='alert'>
+          <div className='form-error-alert' role='alert' data-testid='approve-form-error'>
             {error}
           </div>
         )}
 
-        <div className='form-actions'>
+        <div className='form-actions' data-testid='approve-form-actions'>
           <button
             type='button'
             onClick={handleCloseForm}
             className='form-button form-button-secondary'
             disabled={isApproving}
+            data-testid='approve-cancel-button'
           >
             Cancel
           </button>
-          <button type='submit' className='form-button form-button-approve' disabled={isApproving}>
+          <button
+            type='submit'
+            className='form-button form-button-approve'
+            disabled={isApproving}
+            data-testid='approve-submit-button'
+          >
             {isApproving ? (
               <>
                 <span className='button-spinner' aria-hidden='true' />

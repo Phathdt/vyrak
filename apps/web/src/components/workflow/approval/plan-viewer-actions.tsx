@@ -37,23 +37,36 @@ export function PlanViewerActions({ planContent, runId, onFullScreen }: PlanView
   }
 
   return (
-    <div className='plan-actions'>
+    <div className='plan-actions' data-testid='plan-actions'>
       <button
         type='button'
         onClick={handleDownload}
         className='plan-action-btn'
         aria-label='Download plan as markdown file'
+        data-testid='plan-download-button'
       >
         <span aria-hidden='true'>⬇️</span>
         <span>Download</span>
       </button>
 
-      <button type='button' onClick={handleCopy} className='plan-action-btn' aria-label='Copy plan to clipboard'>
+      <button
+        type='button'
+        onClick={handleCopy}
+        className='plan-action-btn'
+        aria-label='Copy plan to clipboard'
+        data-testid='plan-copy-button'
+      >
         <span aria-hidden='true'>{copyStatus === 'copied' ? '✓' : '📋'}</span>
         <span>{copyStatus === 'copied' ? 'Copied!' : copyStatus === 'error' ? 'Failed' : 'Copy'}</span>
       </button>
 
-      <button type='button' onClick={onFullScreen} className='plan-action-btn' aria-label='View plan in full screen'>
+      <button
+        type='button'
+        onClick={onFullScreen}
+        className='plan-action-btn'
+        aria-label='View plan in full screen'
+        data-testid='plan-fullscreen-button'
+      >
         <span aria-hidden='true'>⛶</span>
         <span>Full Screen</span>
       </button>

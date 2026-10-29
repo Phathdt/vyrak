@@ -47,7 +47,7 @@ export function PlanViewer({ orgId, runId }: PlanViewerProps) {
   // Loading state
   if (isLoadingArtifacts || isLoadingContent) {
     return (
-      <div className='plan-viewer-loading'>
+      <div className='plan-viewer-loading' data-testid='plan-viewer-loading'>
         <div className='loading-spinner' />
         <p>Loading plan...</p>
       </div>
@@ -57,7 +57,7 @@ export function PlanViewer({ orgId, runId }: PlanViewerProps) {
   // Error: No artifacts found
   if (artifactsError) {
     return (
-      <div className='plan-viewer-error'>
+      <div className='plan-viewer-error' data-testid='plan-viewer-error'>
         <p className='error-title'>Failed to load artifacts</p>
         <p className='error-message'>{artifactsError instanceof Error ? artifactsError.message : 'Unknown error'}</p>
       </div>
@@ -67,7 +67,7 @@ export function PlanViewer({ orgId, runId }: PlanViewerProps) {
   // Error: No plan artifact
   if (!planArtifact) {
     return (
-      <div className='plan-viewer-error'>
+      <div className='plan-viewer-error' data-testid='plan-viewer-no-artifact'>
         <p className='error-title'>No plan artifact found</p>
         <p className='error-message'>
           The workflow has not generated a plan yet. Please wait for the planning phase to complete.
@@ -79,10 +79,15 @@ export function PlanViewer({ orgId, runId }: PlanViewerProps) {
   // Error: Failed to load content
   if (contentError) {
     return (
-      <div className='plan-viewer-error'>
+      <div className='plan-viewer-error' data-testid='plan-viewer-content-error'>
         <p className='error-title'>Failed to load plan content</p>
         <p className='error-message'>{contentError instanceof Error ? contentError.message : 'Unknown error'}</p>
-        <button type='button' onClick={() => refetchContent()} className='retry-button'>
+        <button
+          type='button'
+          onClick={() => refetchContent()}
+          className='retry-button'
+          data-testid='plan-viewer-retry-button'
+        >
           Retry
         </button>
       </div>
@@ -109,8 +114,8 @@ export function PlanViewer({ orgId, runId }: PlanViewerProps) {
 
   return (
     <>
-      <div className='plan-viewer'>
-        <div className='plan-metadata'>
+      <div className='plan-viewer' data-testid='plan-viewer'>
+        <div className='plan-metadata' data-testid='plan-metadata'>
           <span className='plan-metadata-item'>Created: {formatDate(planArtifact.createdAt)}</span>
           <span className='plan-metadata-separator'>•</span>
           <span className='plan-metadata-item'>Size: {formatBytes(planArtifact.size)}</span>
@@ -118,7 +123,7 @@ export function PlanViewer({ orgId, runId }: PlanViewerProps) {
 
         <PlanViewerActions planContent={planContent} runId={runId} onFullScreen={() => setIsFullScreen(true)} />
 
-        <div className='plan-content-container'>
+        <div className='plan-content-container' data-testid='plan-content-container'>
           <MarkdownRenderer content={planContent} />
         </div>
       </div>

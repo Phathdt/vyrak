@@ -80,19 +80,27 @@ export function RepositoryCard({ repository, organizationId, projectId, onEdit, 
   }
 
   return (
-    <Card className={cn('group relative overflow-hidden transition-all hover:shadow-lg', !isActive && 'opacity-60')}>
-      <CardContent className='p-6 space-y-4'>
+    <Card
+      className={cn('group relative overflow-hidden transition-all hover:shadow-lg', !isActive && 'opacity-60')}
+      data-testid={`repository-card-${repository.id}`}
+    >
+      <CardContent className='p-6 space-y-4' data-testid='repository-card'>
         {/* Header with Provider Icon and Actions */}
         <div className='flex items-start justify-between gap-3'>
           <div className='flex items-start gap-3 min-w-0 flex-1'>
             {/* Provider Icon */}
-            <div className='flex-shrink-0 flex h-10 w-10 items-center justify-center rounded-full bg-primary/10'>
+            <div
+              className='flex-shrink-0 flex h-10 w-10 items-center justify-center rounded-full bg-primary/10'
+              data-testid='repository-provider-icon'
+            >
               {getProviderIcon()}
             </div>
 
             {/* Repository Name */}
             <div className='min-w-0 flex-1'>
-              <h3 className='font-semibold text-lg truncate'>{repository.name}</h3>
+              <h3 className='font-semibold text-lg truncate' data-testid='repository-name'>
+                {repository.name}
+              </h3>
               <p className='text-xs text-muted-foreground'>{providerInfo.name}</p>
             </div>
           </div>
@@ -103,6 +111,7 @@ export function RepositoryCard({ repository, organizationId, projectId, onEdit, 
             size='sm'
             onClick={onEdit}
             className='flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity'
+            data-testid='repository-edit-button'
           >
             <Edit className='h-4 w-4' />
           </Button>
@@ -110,7 +119,11 @@ export function RepositoryCard({ repository, organizationId, projectId, onEdit, 
 
         {/* Repository URL */}
         <div className='flex items-center gap-2 rounded-md bg-muted/30 px-3 py-2'>
-          <code className='text-xs text-muted-foreground truncate flex-1' title={repository.url}>
+          <code
+            className='text-xs text-muted-foreground truncate flex-1'
+            title={repository.url}
+            data-testid='repository-url'
+          >
             {formatRepoUrl(repository.url, 40)}
           </code>
           <button
@@ -133,7 +146,7 @@ export function RepositoryCard({ repository, organizationId, projectId, onEdit, 
 
         {/* Branch and Status */}
         <div className='flex items-center gap-2 flex-wrap'>
-          <Badge variant='secondary' className='text-xs'>
+          <Badge variant='secondary' className='text-xs' data-testid='repository-branch-badge'>
             {repository.branch}
           </Badge>
           <Badge
@@ -144,6 +157,7 @@ export function RepositoryCard({ repository, organizationId, projectId, onEdit, 
                 ? 'bg-green-500/10 text-green-400 border-green-500/20'
                 : 'bg-gray-500/10 text-gray-400 border-gray-500/20'
             )}
+            data-testid='repository-status-badge'
           >
             {isActive ? 'Active' : 'Inactive'}
           </Badge>
@@ -182,11 +196,18 @@ export function RepositoryCard({ repository, organizationId, projectId, onEdit, 
             onClick={handleTestConnection}
             disabled={isTestingConnection || !isActive}
             className='flex-1'
+            data-testid='repository-test-connection-button'
           >
             <RefreshCw className={cn('h-3.5 w-3.5 mr-2', isTestingConnection && 'animate-spin')} />
             {isTestingConnection ? 'Testing...' : 'Test Connection'}
           </Button>
-          <Button variant='ghost' size='sm' onClick={onRemove} className='text-destructive hover:text-destructive'>
+          <Button
+            variant='ghost'
+            size='sm'
+            onClick={onRemove}
+            className='text-destructive hover:text-destructive'
+            data-testid='repository-remove-button'
+          >
             <Trash2 className='h-3.5 w-3.5' />
           </Button>
         </div>

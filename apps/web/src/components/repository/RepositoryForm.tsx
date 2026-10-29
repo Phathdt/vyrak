@@ -185,7 +185,7 @@ export function RepositoryForm({ mode, organizationId, projectId, repositoryId, 
 
   return (
     <Modal open onClose={onClose} size='lg'>
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)} data-testid='repository-form'>
         <ModalHeader onClose={onClose}>
           <ModalTitle>{mode === 'create' ? 'Add Git Repository' : `Edit Repository: ${existingRepo?.name}`}</ModalTitle>
           <ModalDescription>
@@ -208,8 +208,13 @@ export function RepositoryForm({ mode, organizationId, projectId, repositoryId, 
               {...register('name')}
               aria-invalid={!!errors.name}
               aria-describedby={errors.name ? 'name-error' : undefined}
+              data-testid='repository-name-input'
             />
-            {errors.name && <ErrorMessage id='name-error'>{errors.name.message}</ErrorMessage>}
+            {errors.name && (
+              <ErrorMessage id='name-error' data-testid='repository-validation-error'>
+                {errors.name.message}
+              </ErrorMessage>
+            )}
             <HelperText>Alphanumeric characters, hyphens, and underscores only</HelperText>
           </FormField>
 
@@ -227,8 +232,13 @@ export function RepositoryForm({ mode, organizationId, projectId, repositoryId, 
               aria-invalid={!!errors.url}
               aria-describedby={errors.url ? 'url-error' : undefined}
               className={mode === 'edit' ? 'bg-muted/50 cursor-not-allowed' : ''}
+              data-testid='repository-url-input'
             />
-            {errors.url && <ErrorMessage id='url-error'>{errors.url.message}</ErrorMessage>}
+            {errors.url && (
+              <ErrorMessage id='url-error' data-testid='repository-validation-error'>
+                {errors.url.message}
+              </ErrorMessage>
+            )}
             {!errors.url && (
               <HelperText>
                 {mode === 'edit' ? 'URL cannot be changed after creation' : 'Must use HTTPS and end with .git'}
@@ -248,8 +258,13 @@ export function RepositoryForm({ mode, organizationId, projectId, repositoryId, 
               {...register('branch')}
               aria-invalid={!!errors.branch}
               aria-describedby={errors.branch ? 'branch-error' : undefined}
+              data-testid='repository-branch-input'
             />
-            {errors.branch && <ErrorMessage id='branch-error'>{errors.branch.message}</ErrorMessage>}
+            {errors.branch && (
+              <ErrorMessage id='branch-error' data-testid='repository-validation-error'>
+                {errors.branch.message}
+              </ErrorMessage>
+            )}
             <HelperText>The branch workflows will use by default</HelperText>
           </FormField>
 
@@ -266,6 +281,7 @@ export function RepositoryForm({ mode, organizationId, projectId, repositoryId, 
                 mode === 'edit' ? 'bg-muted/50' : ''
               }`}
               aria-invalid={!!errors.provider}
+              data-testid='repository-provider-select'
             >
               <option value='github'>GitHub</option>
               <option value='gitlab'>GitLab</option>
@@ -295,6 +311,7 @@ export function RepositoryForm({ mode, organizationId, projectId, repositoryId, 
                 {...register('accessToken')}
                 aria-invalid={!!errors.accessToken}
                 className='pr-10 border-yellow-500/50 focus-visible:ring-yellow-500/50'
+                data-testid='repository-token-input'
               />
               <button
                 type='button'
@@ -305,7 +322,9 @@ export function RepositoryForm({ mode, organizationId, projectId, repositoryId, 
                 {showToken ? <EyeOff className='h-4 w-4' /> : <Eye className='h-4 w-4' />}
               </button>
             </div>
-            {errors.accessToken && <ErrorMessage>{errors.accessToken.message}</ErrorMessage>}
+            {errors.accessToken && (
+              <ErrorMessage data-testid='repository-validation-error'>{errors.accessToken.message}</ErrorMessage>
+            )}
             {!errors.accessToken && (
               <HelperText>
                 {mode === 'edit' ? (
@@ -343,6 +362,7 @@ export function RepositoryForm({ mode, organizationId, projectId, repositoryId, 
                 size='sm'
                 onClick={handleTestConnection}
                 disabled={isTestingConnection || !watchedUrl || !watchedBranch}
+                data-testid='repository-test-connection'
               >
                 {isTestingConnection && <Loader2 className='h-4 w-4 mr-2 animate-spin' />}
                 {isTestingConnection ? 'Testing...' : 'Test Connection'}
@@ -387,10 +407,20 @@ export function RepositoryForm({ mode, organizationId, projectId, repositoryId, 
         </ModalBody>
 
         <ModalFooter>
-          <Button type='button' variant='outline' onClick={onClose} disabled={isSubmitting}>
+          <Button
+            type='button'
+            variant='outline'
+            onClick={onClose}
+            disabled={isSubmitting}
+            data-testid='repository-form-cancel'
+          >
             Cancel
           </Button>
-          <Button type='submit' disabled={isSubmitting || (mode === 'create' && (!connectionTested || !testSuccess))}>
+          <Button
+            type='submit'
+            disabled={isSubmitting || (mode === 'create' && (!connectionTested || !testSuccess))}
+            data-testid='repository-form-submit'
+          >
             {isSubmitting && <Loader2 className='h-4 w-4 mr-2 animate-spin' />}
             {mode === 'create' ? 'Add Repository' : 'Save Changes'}
           </Button>
