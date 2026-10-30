@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 
 import { Card } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useAuth } from '@/contexts/auth-context'
 import { useOrganization } from '@/contexts/organization-context'
 
@@ -117,19 +118,20 @@ export function DashboardPage() {
           <p className='mb-4 text-sm text-muted-foreground'>Select the organization you want to work with</p>
           <div className='space-y-2'>
             <Label htmlFor='org-select'>Organization</Label>
-            <select
-              id='org-select'
-              value={activeOrgId || ''}
-              onChange={(e) => setActiveOrgId(e.target.value || null)}
-              className='w-full rounded-md border border-input bg-background px-3 py-2 text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none'
-            >
-              <option value=''>Select an organization</option>
-              {organizations.map((org) => (
-                <option key={org.id} value={org.id}>
-                  {org.name} ({org.role})
-                </option>
-              ))}
-            </select>
+            <Select value={activeOrgId || undefined} onValueChange={(value) => value && setActiveOrgId(value)}>
+              <SelectTrigger>
+                <SelectValue placeholder='Select an organization' />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {organizations.map((org) => (
+                    <SelectItem key={org.id} value={org.id}>
+                      {org.name} ({org.role})
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
             {activeOrg && (
               <p className='text-sm text-muted-foreground'>
                 Slug: <span className='font-mono'>{activeOrg.slug}</span>
