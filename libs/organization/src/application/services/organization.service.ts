@@ -41,12 +41,6 @@ export class OrganizationService implements IOrganizationService {
     return this.repository.update(id, data)
   }
 
-  async delete(id: string, userId: string): Promise<void> {
-    await this.verifyMembership(id, userId, ['owner'])
-
-    await this.repository.delete(id)
-  }
-
   async verifyMembership(organizationId: string, userId: string, allowedRoles: string[]) {
     const organization = await this.repository.findOne(organizationId, userId)
 

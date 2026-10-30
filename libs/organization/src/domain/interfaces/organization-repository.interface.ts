@@ -5,6 +5,5 @@ export interface IOrganizationRepository {
   findAllForUser(userId: string): Promise<OrganizationWithRole[]>
   findOne(id: string, userId: string): Promise<OrganizationWithRole | null>
   update(id: string, data: Partial<UpdateOrganizationDto>): Promise<OrganizationWithRole>
-  delete(id: string): Promise<void>
   findBySlug(slug: string): Promise<{ id: string } | null>
 }

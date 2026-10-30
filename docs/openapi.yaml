@@ -139,20 +139,6 @@ paths:
       security: *ref_1
       summary: Update organization (admin/owner only)
       tags: *ref_2
-    delete:
-      operationId: OrganizationsController_delete
-      parameters:
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-      responses:
-        '204':
-          description: ''
-      security: *ref_1
-      summary: Delete organization (owner only)
-      tags: *ref_2
   /api/organizations/{id}/members:
     get:
       operationId: OrganizationsController_listMembers

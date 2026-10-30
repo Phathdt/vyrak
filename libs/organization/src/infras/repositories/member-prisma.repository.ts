@@ -8,25 +8,31 @@ export class MemberPrismaRepository implements IMemberRepository {
     return this.prisma.withSystemAccess(async () => {
       const members = await this.prisma.client.member.findMany({
         where: { organizationId },
-        include: {
-          user: {
+        orderBy: { createdAt: 'asc' },
+      })
+
+      const membersWithUsers = await Promise.all(
+        members.map(async (m) => {
+          const user = await this.prisma.client.user.findUnique({
+            where: { id: m.userId },
             select: {
               id: true,
               name: true,
               email: true,
               image: true,
             },
-          },
-        },
-        orderBy: { createdAt: 'asc' },
-      })
+          })
 
-      return members.map((m): MemberResponse => ({
-        id: m.id,
-        role: m.role,
-        createdAt: m.createdAt,
-        user: m.user,
-      }))
+          return {
+            id: m.id,
+            role: m.role,
+            createdAt: m.createdAt,
+            user: user || { id: m.userId, name: null, email: '', image: null },
+          }
+        })
+      )
+
+      return membersWithUsers
     })
   }
 
@@ -34,28 +40,28 @@ export class MemberPrismaRepository implements IMemberRepository {
     return this.prisma.withSystemAccess(async () => {
       const member = await this.prisma.client.member.findUnique({
         where: { id: memberId },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              image: true,
-            },
-          },
-        },
       })
 
       if (!member) {
         return null
       }
 
+      const user = await this.prisma.client.user.findUnique({
+        where: { id: member.userId },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          image: true,
+        },
+      })
+
       return {
         id: member.id,
         role: member.role,
         createdAt: member.createdAt,
         organizationId: member.organizationId,
-        user: member.user,
+        user: user || { id: member.userId, name: null, email: '', image: null },
       }
     })
   }
@@ -65,15 +71,15 @@ export class MemberPrismaRepository implements IMemberRepository {
       const updated = await this.prisma.client.member.update({
         where: { id: memberId },
         data: { role },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              image: true,
-            },
-          },
+      })
+
+      const user = await this.prisma.client.user.findUnique({
+        where: { id: updated.userId },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          image: true,
         },
       })
 
@@ -81,7 +87,12 @@ export class MemberPrismaRepository implements IMemberRepository {
         id: updated.id,
         role: updated.role,
         createdAt: updated.createdAt,
-        user: updated.user,
+        user: user || {
+          id: updated.userId,
+          name: null,
+          email: '',
+          image: null,
+        },
       }
     })
   }

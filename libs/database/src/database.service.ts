@@ -9,9 +9,13 @@ import { PrismaClient } from './generated/prisma/client'
 
 /**
  * Type of the extended Prisma client with tenant filter
- * Uses the base PrismaClient type which contains all model definitions
+ * This must match the actual return type of $extends()
  */
-export type ExtendedPrismaClient = PrismaClient
+export type ExtendedPrismaClient = ReturnType<typeof createExtendedClient>
+
+function createExtendedClient(prismaClient: PrismaClient, asyncLocalStorage: AsyncLocalStorage<TenantFilterContext>) {
+  return prismaClient.$extends(createTenantFilterExtension(() => asyncLocalStorage.getStore() ?? {}))
+}
 
 type QueryType = 'SELECT' | 'INSERT' | 'UPDATE' | 'DELETE'
 
@@ -74,10 +78,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     })
 
     // Extend with tenant filter using AsyncLocalStorage
-    // Cast to ExtendedPrismaClient to preserve model types
-    this.extendedClient = this.prismaClient.$extends(
-      createTenantFilterExtension(() => this.asyncLocalStorage.getStore() ?? {})
-    ) as ExtendedPrismaClient
+    this.extendedClient = createExtendedClient(this.prismaClient, this.asyncLocalStorage)
 
     this.pool = pool
     this.enableColors = !configService.log.enableJsonFormat

@@ -5,7 +5,6 @@ export interface IOrganizationService {
   findAllForUser(userId: string): Promise<OrganizationWithRole[]>
   findOne(id: string, userId: string): Promise<OrganizationWithRole>
   update(id: string, userId: string, data: UpdateOrganizationDto): Promise<OrganizationWithRole>
-  delete(id: string, userId: string): Promise<void>
   verifyMembership(
     organizationId: string,
     userId: string,

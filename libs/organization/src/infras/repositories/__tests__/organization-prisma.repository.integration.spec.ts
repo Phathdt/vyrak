@@ -75,12 +75,15 @@ describe('OrganizationPrismaRepository (Integration)', () => {
       // Verify in database
       const org = await prisma.organization.findUnique({
         where: { id: result.id },
-        include: { members: true },
       })
       expect(org).toBeDefined()
-      expect(org?.members).toHaveLength(1)
-      expect(org?.members[0].userId).toBe(user.id)
-      expect(org?.members[0].role).toBe('owner')
+
+      const members = await prisma.member.findMany({
+        where: { organizationId: result.id },
+      })
+      expect(members).toHaveLength(1)
+      expect(members[0].userId).toBe(user.id)
+      expect(members[0].role).toBe('owner')
     })
 
     it('should reject duplicate slug', async () => {
@@ -218,29 +221,6 @@ describe('OrganizationPrismaRepository (Integration)', () => {
       })
 
       expect(result.logo).toBe('https://example.com/logo.png')
-    })
-  })
-
-  describe('delete', () => {
-    it('should delete organization and cascade members', async () => {
-      if (!databaseService) return
-
-      const prisma = getPrismaClient()
-      const { organization } = await createTestOrgWithOwner(prisma)
-
-      await repository.delete(organization.id)
-
-      // Verify deleted
-      const org = await prisma.organization.findUnique({
-        where: { id: organization.id },
-      })
-      expect(org).toBeNull()
-
-      // Verify members also deleted
-      const members = await prisma.member.findMany({
-        where: { organizationId: organization.id },
-      })
-      expect(members).toHaveLength(0)
     })
   })
 

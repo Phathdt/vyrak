@@ -1,5 +1,5 @@
 import type { IInvitationRepository, InvitationResponse, InviteMemberDto } from '../../domain'
-import type { DatabaseService, Invitation } from '@vyrak/database'
+import type { DatabaseService } from '@vyrak/database'
 
 export class InvitationPrismaRepository implements IInvitationRepository {
   constructor(private readonly prisma: DatabaseService) {}
@@ -20,14 +20,14 @@ export class InvitationPrismaRepository implements IInvitationRepository {
           status: 'pending',
           expiresAt,
         },
-        include: {
-          organization: {
-            select: {
-              id: true,
-              name: true,
-              slug: true,
-            },
-          },
+      })
+
+      const organization = await this.prisma.client.organization.findUnique({
+        where: { id: organizationId },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
         },
       })
 
@@ -38,7 +38,7 @@ export class InvitationPrismaRepository implements IInvitationRepository {
         status: invitation.status,
         expiresAt: invitation.expiresAt,
         createdAt: invitation.createdAt,
-        organization: invitation.organization,
+        organization: organization || { id: organizationId, name: '', slug: '' },
       }
     })
   }
@@ -53,20 +53,20 @@ export class InvitationPrismaRepository implements IInvitationRepository {
     return this.prisma.withSystemAccess(async () => {
       const invitation = await this.prisma.client.invitation.findUnique({
         where: { id },
-        include: {
-          organization: {
-            select: {
-              id: true,
-              name: true,
-              slug: true,
-            },
-          },
-        },
       })
 
       if (!invitation) {
         return null
       }
+
+      const organization = await this.prisma.client.organization.findUnique({
+        where: { id: invitation.organizationId },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+        },
+      })
 
       return {
         id: invitation.id,
@@ -76,7 +76,7 @@ export class InvitationPrismaRepository implements IInvitationRepository {
         expiresAt: invitation.expiresAt,
         createdAt: invitation.createdAt,
         organizationId: invitation.organizationId,
-        organization: invitation.organization,
+        organization: organization || { id: invitation.organizationId, name: '', slug: '' },
       }
     })
   }
@@ -100,14 +100,23 @@ export class InvitationPrismaRepository implements IInvitationRepository {
         orderBy: { createdAt: 'desc' },
       })
 
-      return invitations.map((inv: Invitation): InvitationResponse => ({
-        id: inv.id,
-        email: inv.email,
-        role: inv.role,
-        status: inv.status,
-        expiresAt: inv.expiresAt,
-        createdAt: inv.createdAt,
-      }))
+      return invitations.map(
+        (inv: {
+          id: string
+          email: string
+          role: string
+          status: string
+          expiresAt: Date
+          createdAt: Date
+        }): InvitationResponse => ({
+          id: inv.id,
+          email: inv.email,
+          role: inv.role,
+          status: inv.status,
+          expiresAt: inv.expiresAt,
+          createdAt: inv.createdAt,
+        })
+      )
     })
   }
 
@@ -121,29 +130,43 @@ export class InvitationPrismaRepository implements IInvitationRepository {
             gt: new Date(),
           },
         },
-        include: {
-          organization: {
-            select: {
-              id: true,
-              name: true,
-              slug: true,
-            },
-          },
-        },
         orderBy: { createdAt: 'desc' },
       })
 
-      return invitations.map(
-        (inv: Invitation & { organization: { id: string; name: string; slug: string } }): InvitationResponse => ({
-          id: inv.id,
-          email: inv.email,
-          role: inv.role,
-          status: inv.status,
-          expiresAt: inv.expiresAt,
-          createdAt: inv.createdAt,
-          organization: inv.organization,
-        })
+      const invitationsWithOrg = await Promise.all(
+        invitations.map(
+          async (inv: {
+            id: string
+            email: string
+            role: string
+            status: string
+            expiresAt: Date
+            createdAt: Date
+            organizationId: string
+          }) => {
+            const organization = await this.prisma.client.organization.findUnique({
+              where: { id: inv.organizationId },
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+              },
+            })
+
+            return {
+              id: inv.id,
+              email: inv.email,
+              role: inv.role,
+              status: inv.status,
+              expiresAt: inv.expiresAt,
+              createdAt: inv.createdAt,
+              organization: organization || { id: inv.organizationId, name: '', slug: '' },
+            }
+          }
+        )
       )
+
+      return invitationsWithOrg
     })
   }
 
@@ -162,10 +185,21 @@ export class InvitationPrismaRepository implements IInvitationRepository {
 
   async findExistingMember(organizationId: string, email: string): Promise<{ id: string } | null> {
     return this.prisma.withSystemAccess(async () => {
+      // First find user by email
+      const user = await this.prisma.rawClient.user.findUnique({
+        where: { email },
+        select: { id: true },
+      })
+
+      if (!user) {
+        return null
+      }
+
+      // Then find member by userId and organizationId
       return this.prisma.client.member.findFirst({
         where: {
           organizationId,
-          user: { email },
+          userId: user.id,
         },
         select: { id: true },
       })

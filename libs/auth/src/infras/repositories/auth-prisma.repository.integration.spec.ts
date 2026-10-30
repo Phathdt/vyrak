@@ -155,13 +155,18 @@ describe('AuthPrismaRepository (Integration)', () => {
       // Verify in database
       const org = await prisma.organization.findUnique({
         where: { id: result!.id },
-        include: { members: true },
       })
 
       expect(org).toBeDefined()
-      expect(org?.members).toHaveLength(1)
-      expect(org?.members[0].userId).toBe(user.id)
-      expect(org?.members[0].role).toBe('owner')
+
+      // Verify member separately (no relation needed)
+      const members = await prisma.member.findMany({
+        where: { organizationId: result!.id },
+      })
+
+      expect(members).toHaveLength(1)
+      expect(members[0].userId).toBe(user.id)
+      expect(members[0].role).toBe('owner')
     })
 
     it('should create personal organization without user name', async () => {

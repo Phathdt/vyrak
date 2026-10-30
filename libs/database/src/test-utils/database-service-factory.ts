@@ -29,6 +29,12 @@ export function createTestDatabaseService(prismaClient: PrismaClient) {
      */
     rawClient: prismaClient,
 
+    /**
+     * Expose Prisma $transaction method for use in repositories and tests
+     * Mirrors DatabaseService.$transaction
+     */
+    $transaction: prismaClient.$transaction.bind(prismaClient),
+
     setTenantContext(organizationId: string): void {
       asyncLocalStorage.enterWith({
         organizationId,

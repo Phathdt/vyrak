@@ -6,17 +6,7 @@ import type {
   ProjectWithStats,
   UpdateProjectDto,
 } from '../../domain'
-import type { DatabaseService, Prisma } from '@vyrak/database'
-
-type ProjectWithCount = Prisma.ProjectGetPayload<{
-  include: {
-    _count: {
-      select: {
-        gitRepositories: true
-      }
-    }
-  }
-}>
+import type { DatabaseService, Project } from '@vyrak/database'
 
 export class ProjectPrismaRepository implements IProjectRepository {
   constructor(private readonly prisma: DatabaseService) {}
@@ -30,13 +20,10 @@ export class ProjectPrismaRepository implements IProjectRepository {
           slug: data.slug,
           description: data.description,
         },
-        include: {
-          _count: {
-            select: {
-              gitRepositories: true,
-            },
-          },
-        },
+      })
+
+      const repositoryCount = await this.prisma.client.gitRepository.count({
+        where: { projectId: project.id },
       })
 
       return {
@@ -46,7 +33,7 @@ export class ProjectPrismaRepository implements IProjectRepository {
         slug: project.slug,
         description: project.description,
         stats: {
-          repositoryCount: project._count.gitRepositories,
+          repositoryCount,
           workflowRunCount: 0,
         },
         createdAt: project.createdAt,
@@ -77,31 +64,34 @@ export class ProjectPrismaRepository implements IProjectRepository {
           skip: (page - 1) * limit,
           take: limit,
           orderBy: { [sort]: order },
-          include: {
-            _count: {
-              select: {
-                gitRepositories: true,
-              },
-            },
-          },
         }),
         this.prisma.client.project.count({ where }),
       ])
 
+      const itemsWithStats = await Promise.all(
+        items.map(async (project: Project): Promise<ProjectWithStats> => {
+          const repositoryCount = await this.prisma.client.gitRepository.count({
+            where: { projectId: project.id },
+          })
+
+          return {
+            id: project.id,
+            organizationId: project.organizationId,
+            name: project.name,
+            slug: project.slug,
+            description: project.description,
+            stats: {
+              repositoryCount,
+              workflowRunCount: 0,
+            },
+            createdAt: project.createdAt,
+            updatedAt: project.updatedAt,
+          }
+        })
+      )
+
       return {
-        items: items.map((project: ProjectWithCount): ProjectWithStats => ({
-          id: project.id,
-          organizationId: project.organizationId,
-          name: project.name,
-          slug: project.slug,
-          description: project.description,
-          stats: {
-            repositoryCount: project._count.gitRepositories,
-            workflowRunCount: 0,
-          },
-          createdAt: project.createdAt,
-          updatedAt: project.updatedAt,
-        })),
+        items: itemsWithStats,
         total,
         page,
         limit,
@@ -117,18 +107,15 @@ export class ProjectPrismaRepository implements IProjectRepository {
           id,
           organizationId,
         },
-        include: {
-          _count: {
-            select: {
-              gitRepositories: true,
-            },
-          },
-        },
       })
 
       if (!project) {
         return null
       }
+
+      const repositoryCount = await this.prisma.client.gitRepository.count({
+        where: { projectId: project.id },
+      })
 
       return {
         id: project.id,
@@ -137,7 +124,7 @@ export class ProjectPrismaRepository implements IProjectRepository {
         slug: project.slug,
         description: project.description,
         stats: {
-          repositoryCount: project._count.gitRepositories,
+          repositoryCount,
           workflowRunCount: 0,
         },
         createdAt: project.createdAt,
@@ -171,13 +158,10 @@ export class ProjectPrismaRepository implements IProjectRepository {
           ...(data.name !== undefined && { name: data.name }),
           ...(data.description !== undefined && { description: data.description }),
         },
-        include: {
-          _count: {
-            select: {
-              gitRepositories: true,
-            },
-          },
-        },
+      })
+
+      const repositoryCount = await this.prisma.client.gitRepository.count({
+        where: { projectId: project.id },
       })
 
       return {
@@ -187,7 +171,7 @@ export class ProjectPrismaRepository implements IProjectRepository {
         slug: project.slug,
         description: project.description,
         stats: {
-          repositoryCount: project._count.gitRepositories,
+          repositoryCount,
           workflowRunCount: 0,
         },
         createdAt: project.createdAt,

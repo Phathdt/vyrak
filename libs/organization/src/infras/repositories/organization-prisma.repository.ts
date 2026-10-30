@@ -4,7 +4,7 @@ import type {
   OrganizationWithRole,
   UpdateOrganizationDto,
 } from '../../domain'
-import type { DatabaseService, Member, Organization } from '@vyrak/database'
+import type { DatabaseService } from '@vyrak/database'
 
 export class OrganizationPrismaRepository implements IOrganizationRepository {
   constructor(private readonly prisma: DatabaseService) {}
@@ -16,18 +16,19 @@ export class OrganizationPrismaRepository implements IOrganizationRepository {
           name: data.name,
           slug: data.slug,
           logo: data.logo,
-          members: {
-            create: {
-              userId,
-              role: 'owner',
-            },
-          },
         },
-        include: {
-          _count: {
-            select: { members: true },
-          },
+      })
+
+      await this.prisma.client.member.create({
+        data: {
+          organizationId: organization.id,
+          userId,
+          role: 'owner',
         },
+      })
+
+      const memberCount = await this.prisma.client.member.count({
+        where: { organizationId: organization.id },
       })
 
       return {
@@ -36,7 +37,7 @@ export class OrganizationPrismaRepository implements IOrganizationRepository {
         slug: organization.slug,
         logo: organization.logo,
         role: 'owner',
-        memberCount: organization._count.members,
+        memberCount,
         createdAt: organization.createdAt,
         updatedAt: organization.updatedAt,
       }
@@ -47,32 +48,48 @@ export class OrganizationPrismaRepository implements IOrganizationRepository {
     return this.prisma.withSystemAccess(async () => {
       const memberships = await this.prisma.client.member.findMany({
         where: { userId },
-        include: {
-          organization: {
-            include: {
-              _count: {
-                select: { members: true },
-              },
-            },
-          },
-        },
         orderBy: {
           createdAt: 'asc',
         },
       })
 
-      return memberships.map(
-        (m: Member & { organization: Organization & { _count: { members: number } } }): OrganizationWithRole => ({
-          id: m.organization.id,
-          name: m.organization.name,
-          slug: m.organization.slug,
-          logo: m.organization.logo,
-          role: m.role,
-          memberCount: m.organization._count.members,
-          createdAt: m.organization.createdAt,
-          updatedAt: m.organization.updatedAt,
-        })
+      const organizations = await Promise.all(
+        memberships.map(
+          async (m: {
+            id: string
+            userId: string
+            organizationId: string
+            role: string
+            createdAt: Date
+            updatedAt: Date
+          }) => {
+            const organization = await this.prisma.client.organization.findUnique({
+              where: { id: m.organizationId },
+            })
+
+            if (!organization) {
+              return null
+            }
+
+            const memberCount = await this.prisma.client.member.count({
+              where: { organizationId: organization.id },
+            })
+
+            return {
+              id: organization.id,
+              name: organization.name,
+              slug: organization.slug,
+              logo: organization.logo,
+              role: m.role,
+              memberCount,
+              createdAt: organization.createdAt,
+              updatedAt: organization.updatedAt,
+            }
+          }
+        )
       )
+
+      return organizations.filter((org): org is OrganizationWithRole => org !== null)
     })
   }
 
@@ -85,30 +102,33 @@ export class OrganizationPrismaRepository implements IOrganizationRepository {
             userId,
           },
         },
-        include: {
-          organization: {
-            include: {
-              _count: {
-                select: { members: true },
-              },
-            },
-          },
-        },
       })
 
       if (!membership) {
         return null
       }
 
+      const organization = await this.prisma.client.organization.findUnique({
+        where: { id: membership.organizationId },
+      })
+
+      if (!organization) {
+        return null
+      }
+
+      const memberCount = await this.prisma.client.member.count({
+        where: { organizationId: organization.id },
+      })
+
       return {
-        id: membership.organization.id,
-        name: membership.organization.name,
-        slug: membership.organization.slug,
-        logo: membership.organization.logo,
+        id: organization.id,
+        name: organization.name,
+        slug: organization.slug,
+        logo: organization.logo,
         role: membership.role,
-        memberCount: membership.organization._count.members,
-        createdAt: membership.organization.createdAt,
-        updatedAt: membership.organization.updatedAt,
+        memberCount,
+        createdAt: organization.createdAt,
+        updatedAt: organization.updatedAt,
       }
     })
   }
@@ -118,15 +138,14 @@ export class OrganizationPrismaRepository implements IOrganizationRepository {
       const organization = await this.prisma.client.organization.update({
         where: { id },
         data,
-        include: {
-          _count: {
-            select: { members: true },
-          },
-          members: {
-            take: 1,
-            select: { role: true },
-          },
-        },
+      })
+
+      const member = await this.prisma.client.member.findFirst({
+        where: { organizationId: id },
+      })
+
+      const memberCount = await this.prisma.client.member.count({
+        where: { organizationId: id },
       })
 
       return {
@@ -134,19 +153,11 @@ export class OrganizationPrismaRepository implements IOrganizationRepository {
         name: organization.name,
         slug: organization.slug,
         logo: organization.logo,
-        role: organization.members[0]?.role || 'member',
-        memberCount: organization._count.members,
+        role: member?.role || 'member',
+        memberCount,
         createdAt: organization.createdAt,
         updatedAt: organization.updatedAt,
       }
-    })
-  }
-
-  async delete(id: string): Promise<void> {
-    return this.prisma.withSystemAccess(async () => {
-      await this.prisma.client.organization.delete({
-        where: { id },
-      })
     })
   }
 

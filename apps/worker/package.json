@@ -18,7 +18,6 @@
     "@vyrak/custom-logger": "*",
     "@vyrak/database": "*",
     "@vyrak/shared": "*",
-    "@vyrak/workflow-core": "*",
     "bullmq": "^6.4.0",
     "dotenv": "^18.0.9",
     "ioredis": "^6.0.0",

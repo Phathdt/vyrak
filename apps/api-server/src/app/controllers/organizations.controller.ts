@@ -60,13 +60,6 @@ export class OrganizationsController {
     return this.organizationsService.update(id, userId, dto)
   }
 
-  @Delete(':id')
-  @ApiOperation({ summary: 'Delete organization (owner only)' })
-  @ApiResponse({ status: 204 })
-  delete(@Param('id') id: string, @CurrentUser() userId: string) {
-    return this.organizationsService.delete(id, userId)
-  }
-
   // Member Management Endpoints
 
   @Get(':id/members')

@@ -35,16 +35,34 @@ export class AuthPrismaRepository implements IAuthRepository {
       // Use withSystemAccess to bypass tenant filter for cross-organization user lookup
       // This is needed because we're fetching user info across all their organizations
       return await this.databaseService.withSystemAccess(async () => {
-        return this.databaseService.client.user.findUnique({
+        const user = await this.databaseService.client.user.findUnique({
           where: { id: userId },
-          include: {
-            members: {
-              include: {
-                organization: true,
-              },
-            },
-          },
         })
+
+        if (!user) {
+          return null
+        }
+
+        // Manually fetch members and organizations
+        const members = await this.databaseService.client.member.findMany({
+          where: { userId },
+        })
+
+        const organizationIds = members.map((m) => m.organizationId)
+        const organizations = await this.databaseService.client.organization.findMany({
+          where: { id: { in: organizationIds } },
+        })
+
+        // Build the result with nested structure
+        const membersWithOrgs = members.map((member) => ({
+          ...member,
+          organization: organizations.find((org) => org.id === member.organizationId)!,
+        }))
+
+        return {
+          ...user,
+          members: membersWithOrgs,
+        }
       })
     } catch (error) {
       console.error('[AuthPrismaRepository] findUserById error:', error)
@@ -70,39 +88,46 @@ export class AuthPrismaRepository implements IAuthRepository {
 
   async createPersonalOrganization(userId: string): Promise<{ id: string; name: string; slug: string } | null> {
     try {
-      // Use withSystemAccess for system operation
+      // Use withSystemAccess to bypass tenant filter, then use transaction
       return await this.databaseService.withSystemAccess(async () => {
-        // Get user info
-        const user = await this.databaseService.client.user.findUnique({
-          where: { id: userId },
-        })
+        return await this.databaseService.$transaction(async (tx) => {
+          // Get user info
+          const user = await tx.user.findUnique({
+            where: { id: userId },
+          })
 
-        if (!user) {
-          throw new Error('User not found')
-        }
+          if (!user) {
+            throw new Error('User not found')
+          }
 
-        // Create personal organization
-        const organization = await this.databaseService.client.organization.create({
-          data: {
-            name: user.name ? `${user.name}'s Workspace` : 'Personal Workspace',
-            slug: `personal-${userId.slice(0, 8)}`,
-            members: {
-              create: {
-                userId: userId,
-                role: 'owner',
-              },
+          // Create personal organization
+          const organization = await tx.organization.create({
+            data: {
+              name: user.name ? `${user.name}'s Workspace` : 'Personal Workspace',
+              slug: `personal-${userId.slice(0, 8)}`,
             },
-          },
-        })
+          })
 
-        return {
-          id: organization.id,
-          name: organization.name,
-          slug: organization.slug,
-        }
+          // Create member separately
+          await tx.member.create({
+            data: {
+              organizationId: organization.id,
+              userId: userId,
+              role: 'owner',
+            },
+          })
+
+          return {
+            id: organization.id,
+            name: organization.name,
+            slug: organization.slug,
+          }
+        })
       })
     } catch (error) {
       console.error('[AuthPrismaRepository] createPersonalOrganization error:', error)
+      console.error('[AuthPrismaRepository] error stack:', error instanceof Error ? error.stack : 'no stack')
+      console.error('[AuthPrismaRepository] error message:', error instanceof Error ? error.message : String(error))
       return null
     }
   }
