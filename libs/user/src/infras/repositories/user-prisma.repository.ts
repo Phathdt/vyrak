@@ -1,6 +1,5 @@
 import type { IUserRepository, UserEntity } from '../../domain'
-import type { DatabaseService } from '@vyrak/database'
-import type { User as PrismaUser } from '@vyrak/database'
+import type { DatabaseService, User as PrismaUser } from '@vyrak/database'
 
 /**
  * User Prisma Repository
