@@ -9,7 +9,7 @@ import { CustomConfigModule } from '@vyrak/custom-config'
 import { CustomLoggerModule } from '@vyrak/custom-logger'
 import { DatabaseModule } from '@vyrak/database'
 import { OrganizationModule } from '@vyrak/organization'
-import { ProjectManagementModule } from '@vyrak/project-management'
+import { ProjectModule } from '@vyrak/project'
 
 import { ResponseInterceptor, TenantContextInterceptor, TraceIdInterceptor } from '../interceptors'
 import { AppController } from './app.controller'
@@ -41,7 +41,7 @@ import { AuthController, InvitationsController, OrganizationsController, Project
     }),
     AuthModule,
     OrganizationModule,
-    ProjectManagementModule,
+    ProjectModule,
   ],
   controllers: [AppController, AuthController, OrganizationsController, InvitationsController, ProjectsController],
   providers: [

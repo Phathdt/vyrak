@@ -7,7 +7,7 @@ import {
   PaginatedProjectsResponse,
   PROJECT_SERVICE,
   ProjectResponse,
-} from '@vyrak/project-management'
+} from '@vyrak/project'
 
 @ApiTags('Projects')
 @Controller('api/organizations/:orgId/projects')

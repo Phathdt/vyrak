@@ -20,4 +20,4 @@ import { PROJECT_REPOSITORY, PROJECT_SERVICE, ProjectPrismaRepository } from './
   ],
   exports: [PROJECT_SERVICE],
 })
-export class ProjectManagementModule {}
+export class ProjectModule {}

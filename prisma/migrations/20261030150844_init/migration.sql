@@ -100,6 +100,9 @@ CREATE UNIQUE INDEX "member_organization_id_user_id_key" ON "member"("organizati
 CREATE INDEX "invitation_email_idx" ON "invitation"("email");
 
 -- CreateIndex
+CREATE INDEX "invitation_organization_id_idx" ON "invitation"("organization_id");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "invitation_organization_id_email_key" ON "invitation"("organization_id", "email");
 
 -- CreateIndex
@@ -113,21 +116,3 @@ CREATE INDEX "git_repositories_project_id_idx" ON "git_repositories"("project_id
 
 -- CreateIndex
 CREATE INDEX "git_repositories_organization_id_idx" ON "git_repositories"("organization_id");
-
--- AddForeignKey
-ALTER TABLE "member" ADD CONSTRAINT "member_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "member" ADD CONSTRAINT "member_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "invitation" ADD CONSTRAINT "invitation_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "projects" ADD CONSTRAINT "projects_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "git_repositories" ADD CONSTRAINT "git_repositories_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "projects"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "git_repositories" ADD CONSTRAINT "git_repositories_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE CASCADE ON UPDATE CASCADE;

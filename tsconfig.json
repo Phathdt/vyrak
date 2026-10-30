@@ -3,6 +3,8 @@
   "compilerOptions": {
     "paths": {
       "@vyrak/auth": ["./dist/libs/auth/index"],
+      "@vyrak/project": ["./dist/libs/project/index"],
+      "@vyrak/organization": ["./dist/libs/ganization/index"],
       "@vyrak/custom-config": ["./dist/libs/custom-config/index"],
       "@vyrak/custom-logger": ["./dist/libs/custom-logger/index"],
       "@vyrak/database": ["./dist/libs/database/index"],

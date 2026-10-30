@@ -1,4 +1,4 @@
-export * from './project-management.module'
+export * from './project.module'
 
 export * from './application'
 export * from './domain'

@@ -10,48 +10,41 @@ generator client {
 
 // User Model - JWT Authentication
 model User {
-  id            String   @id @default(uuid())
+  id            String  @id @default(uuid())
   name          String?
-  email         String   @unique
-  emailVerified Boolean  @default(false) @map("email_verified")
+  email         String  @unique
+  emailVerified Boolean @default(false) @map("email_verified")
   image         String?
-  passwordHash  String?  @map("password_hash")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  passwordHash  String? @map("password_hash")
 
-  members Member[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("user")
 }
 
 // Organization Models
 model Organization {
-  id        String   @id @default(uuid())
-  name      String
-  slug      String   @unique
-  logo      String?
-  metadata  String?
+  id       String  @id @default(uuid())
+  name     String
+  slug     String  @unique
+  logo     String?
+  metadata String?
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
-
-  members         Member[]
-  invitations     Invitation[]
-  projects        Project[]
-  gitRepositories GitRepository[]
 
   @@map("organizations")
 }
 
 model Member {
-  id             String   @id @default(uuid())
-  organizationId String   @map("organization_id")
-  userId         String   @map("user_id")
+  id             String @id @default(uuid())
+  organizationId String @map("organization_id")
+  userId         String @map("user_id")
   role           String
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
 
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@unique([organizationId, userId])
   @@index([userId])
@@ -67,28 +60,26 @@ model Invitation {
   status         String   @default("pending")
   inviterId      String   @map("inviter_id")
   expiresAt      DateTime @map("expires_at")
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
 
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@unique([organizationId, email])
   @@index([email])
+  @@index([organizationId])
   @@map("invitation")
 }
 
 // Multi-Tenancy Business Models
 model Project {
-  id             String   @id @default(uuid())
-  organizationId String   @map("organization_id")
+  id             String  @id @default(uuid())
+  organizationId String  @map("organization_id")
   name           String
   slug           String
   description    String?
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
 
-  organization    Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  gitRepositories GitRepository[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@unique([organizationId, slug])
   @@index([organizationId])
@@ -96,19 +87,17 @@ model Project {
 }
 
 model GitRepository {
-  id             String   @id @default(uuid())
-  projectId      String   @map("project_id")
-  organizationId String   @map("organization_id")
+  id             String @id @default(uuid())
+  projectId      String @map("project_id")
+  organizationId String @map("organization_id")
   name           String
   url            String
-  branch         String   @default("main")
-  provider       String   @default("github") // github, gitlab, bitbucket
-  status         String   @default("active")
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  branch         String @default("main")
+  provider       String @default("github") // github, gitlab, bitbucket
+  status         String @default("active")
 
-  project      Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([projectId])
   @@index([organizationId])
