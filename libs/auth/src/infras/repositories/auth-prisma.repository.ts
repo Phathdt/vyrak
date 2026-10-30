@@ -1,34 +1,8 @@
-import type { IAuthRepository, UserEntity, UserWithOrganizations } from '../../domain'
+import type { IAuthRepository, UserWithOrganizations } from '../../domain'
 import type { DatabaseService } from '@vyrak/database'
 
 export class AuthPrismaRepository implements IAuthRepository {
   constructor(private readonly databaseService: DatabaseService) {}
-
-  async findByEmail(email: string): Promise<(UserEntity & { passwordHash: string | null }) | null> {
-    try {
-      const user = await this.databaseService.client.user.findUnique({
-        where: { email },
-      })
-
-      if (!user) {
-        return null
-      }
-
-      return {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        emailVerified: user.emailVerified,
-        image: user.image,
-        passwordHash: user.passwordHash,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-      }
-    } catch (error) {
-      console.error('[AuthPrismaRepository] findByEmail error:', error)
-      throw error
-    }
-  }
 
   async findUserById(userId: string): Promise<UserWithOrganizations | null> {
     try {

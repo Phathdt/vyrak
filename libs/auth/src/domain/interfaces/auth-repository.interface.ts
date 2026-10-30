@@ -1,9 +1,12 @@
-import type { UserEntity } from '../entities'
-
 /**
  * User entity with organization memberships
  */
-export interface UserWithOrganizations extends UserEntity {
+export interface UserWithOrganizations {
+  id: string
+  email: string
+  name: string | null
+  emailVerified: boolean
+  image: string | null
   members: Array<{
     id: string
     userId: string
@@ -25,11 +28,6 @@ export interface UserWithOrganizations extends UserEntity {
  * Defines all data access operations for authentication
  */
 export interface IAuthRepository {
-  /**
-   * Find user by email with password hash
-   */
-  findByEmail(email: string): Promise<(UserEntity & { passwordHash: string | null }) | null>
-
   /**
    * Find user by ID with organization memberships
    */

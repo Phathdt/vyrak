@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common'
 import { PassportModule } from '@nestjs/passport'
 import { CustomConfigModule, CustomConfigService } from '@vyrak/custom-config'
 import { DatabaseModule, DatabaseService } from '@vyrak/database'
+import { OrganizationModule, ORGANIZATION_SERVICE } from '@vyrak/organization'
+import { UserModule, USER_SERVICE } from '@vyrak/user'
 
 import { AuthService, PasswordService } from './application'
 import {
@@ -15,7 +17,13 @@ import {
 } from './infras'
 
 @Module({
-  imports: [DatabaseModule, CustomConfigModule, PassportModule.register({ defaultStrategy: 'jwt' })],
+  imports: [
+    DatabaseModule,
+    CustomConfigModule,
+    PassportModule.register({ defaultStrategy: 'jwt' }),
+    UserModule,
+    OrganizationModule,
+  ],
   providers: [
     // Password Service
     {
@@ -49,10 +57,10 @@ import {
     // Auth Service
     {
       provide: AUTH_SERVICE,
-      useFactory: (authRepository, jwtProvider, passwordService) => {
-        return new AuthService(authRepository, jwtProvider, passwordService)
+      useFactory: (authRepository, userService, organizationService, jwtProvider, passwordService) => {
+        return new AuthService(authRepository, userService, organizationService, jwtProvider, passwordService)
       },
-      inject: [AUTH_REPOSITORY, JWT_PROVIDER, PASSWORD_SERVICE],
+      inject: [AUTH_REPOSITORY, USER_SERVICE, ORGANIZATION_SERVICE, JWT_PROVIDER, PASSWORD_SERVICE],
     },
   ],
   exports: [AUTH_SERVICE, JWT_PROVIDER, JwtStrategy, PassportModule],

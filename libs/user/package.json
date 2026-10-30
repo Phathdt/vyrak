@@ -1,6 +1,6 @@
 {
-  "name": "@vyrak/user-onboarding",
-  "version": "0.0.0",
+  "name": "@vyrak/user",
+  "version": "1.0.0",
   "private": true,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -11,14 +11,12 @@
     }
   },
   "scripts": {
-    "build": "rolldown -c rolldown.config.mjs && tsc --emitDeclarationOnly",
-    "dev": "rolldown -c rolldown.config.mjs -w",
+    "build": "rolldown -c && tsc --emitDeclarationOnly",
+    "dev": "rolldown -c --watch",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@nestjs/common": "^12.2.0",
-    "@vyrak/auth": "*",
-    "@vyrak/organization": "*",
     "@vyrak/database": "*"
   },
   "devDependencies": {

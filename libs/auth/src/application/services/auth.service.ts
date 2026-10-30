@@ -1,4 +1,6 @@
 import type { IAuthRepository, IAuthService, UserWithOrganizations } from '../../domain'
+import type { IOrganizationService } from '@vyrak/organization'
+import type { IUserService } from '@vyrak/user'
 
 /**
  * Custom error for authentication failures
@@ -34,6 +36,8 @@ interface IPasswordService {
 export class AuthService implements IAuthService {
   constructor(
     private readonly authRepository: IAuthRepository,
+    private readonly userService: IUserService,
+    private readonly organizationService: IOrganizationService,
     private readonly jwtProvider: IJwtProvider,
     private readonly passwordService: IPasswordService
   ) {}
@@ -46,8 +50,8 @@ export class AuthService implements IAuthService {
     expiresIn: number
     user: { id: string; email: string; name: string | null }
   }> {
-    // Find user by email
-    const user = await this.authRepository.findByEmail(email)
+    // Find user by email using UserService
+    const user = await this.userService.findByEmail(email)
     if (!user || !user.passwordHash) {
       throw new UnauthorizedError('Invalid credentials')
     }
@@ -76,6 +80,29 @@ export class AuthService implements IAuthService {
   }
 
   async getCurrentUser(userId: string): Promise<UserWithOrganizations | null> {
+    // Handle user onboarding - ensure user has at least one organization
+    await this.handleUserOnboarding(userId)
+
     return this.authRepository.findUserById(userId)
+  }
+
+  /**
+   * Handle user onboarding
+   * Ensures every user has at least one organization (personal workspace)
+   *
+   * @private Internal method - called automatically during getCurrentUser
+   */
+  private async handleUserOnboarding(userId: string): Promise<void> {
+    const orgs = await this.organizationService.findAllForUser(userId)
+
+    if (orgs.length === 0) {
+      const user = await this.userService.findById(userId)
+      if (user) {
+        await this.organizationService.create(userId, {
+          name: user.name ? `${user.name}'s Workspace` : 'Personal Workspace',
+          slug: `personal-${userId.slice(0, 8)}`,
+        })
+      }
+    }
   }
 }

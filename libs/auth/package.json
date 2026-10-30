@@ -12,6 +12,8 @@
     "@nestjs/common": "^12.2.0",
     "@nestjs/passport": "^12.0.0",
     "@vyrak/database": "*",
+    "@vyrak/user": "*",
+    "@vyrak/organization": "*",
     "better-auth": "^1.5.2",
     "jose": "^6.2.13",
     "nestjs-zod": "^3.0.0",
