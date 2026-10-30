@@ -7,42 +7,24 @@ import type { IAuthRepository, UserWithOrganizations } from '../../domain'
 describe('AuthService', () => {
   let service: AuthService
   let mockRepository: IAuthRepository
+  let mockJwtProvider: any
+  let mockPasswordService: any
 
   beforeEach(() => {
     mockRepository = {
-      hasAnyOrganization: vi.fn(),
-      createPersonalOrganization: vi.fn(),
+      findByEmail: vi.fn(),
       findUserById: vi.fn(),
     }
 
-    service = new AuthService(mockRepository)
-  })
+    mockJwtProvider = {
+      sign: vi.fn(),
+    }
 
-  describe('handleUserOnboarding', () => {
-    it('should create personal organization for new user without organization', async () => {
-      vi.mocked(mockRepository.hasAnyOrganization).mockResolvedValue(false)
-      vi.mocked(mockRepository.createPersonalOrganization).mockResolvedValue(undefined)
+    mockPasswordService = {
+      verify: vi.fn(),
+    }
 
-      await service.handleUserOnboarding('user-123')
-
-      expect(mockRepository.hasAnyOrganization).toHaveBeenCalledWith('user-123')
-      expect(mockRepository.createPersonalOrganization).toHaveBeenCalledWith('user-123')
-    })
-
-    it('should not create organization if user already has one', async () => {
-      vi.mocked(mockRepository.hasAnyOrganization).mockResolvedValue(true)
-
-      await service.handleUserOnboarding('user-456')
-
-      expect(mockRepository.hasAnyOrganization).toHaveBeenCalledWith('user-456')
-      expect(mockRepository.createPersonalOrganization).not.toHaveBeenCalled()
-    })
-
-    it('should handle repository errors', async () => {
-      vi.mocked(mockRepository.hasAnyOrganization).mockRejectedValue(new Error('Database error'))
-
-      await expect(service.handleUserOnboarding('user-789')).rejects.toThrow('Database error')
-    })
+    service = new AuthService(mockRepository, mockJwtProvider, mockPasswordService)
   })
 
   describe('getCurrentUser', () => {

@@ -75,18 +75,6 @@ export class AuthService implements IAuthService {
     }
   }
 
-  async handleUserOnboarding(userId: string): Promise<void> {
-    // Check if user has organization
-    const hasOrganization = await this.authRepository.hasAnyOrganization(userId)
-
-    if (hasOrganization) {
-      return // User already has organization
-    }
-
-    // Create personal organization for user
-    await this.authRepository.createPersonalOrganization(userId)
-  }
-
   async getCurrentUser(userId: string): Promise<UserWithOrganizations | null> {
     return this.authRepository.findUserById(userId)
   }

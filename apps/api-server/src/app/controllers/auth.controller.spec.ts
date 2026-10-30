@@ -13,18 +13,32 @@ vi.mock('@vyrak/auth', async (importOriginal) => {
   }
 })
 
+// Mock @vyrak/user-onboarding module
+vi.mock('@vyrak/user-onboarding', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@vyrak/user-onboarding')>()
+  return {
+    ...actual,
+    USER_ONBOARDING_SERVICE: Symbol('USER_ONBOARDING_SERVICE'),
+    IUserOnboardingService: vi.fn(),
+  }
+})
+
 describe('AuthController', () => {
   let controller: AuthController
   let mockAuthService: any
+  let mockUserOnboardingService: any
 
   beforeEach(() => {
     mockAuthService = {
       login: vi.fn(),
       getCurrentUser: vi.fn(),
+    }
+
+    mockUserOnboardingService = {
       handleUserOnboarding: vi.fn(),
     }
 
-    controller = new AuthController(mockAuthService)
+    controller = new AuthController(mockAuthService, mockUserOnboardingService)
     vi.clearAllMocks()
   })
 
@@ -103,7 +117,7 @@ describe('AuthController', () => {
         ],
       }
 
-      mockAuthService.handleUserOnboarding.mockResolvedValue(undefined)
+      mockUserOnboardingService.handleUserOnboarding.mockResolvedValue(undefined)
       mockAuthService.getCurrentUser.mockResolvedValue(mockUserData)
 
       const result = await controller.getCurrentUser(mockRequest as any)
@@ -121,7 +135,7 @@ describe('AuthController', () => {
         slug: 'acme-corp',
         role: 'owner',
       })
-      expect(mockAuthService.handleUserOnboarding).toHaveBeenCalledWith('user-123')
+      expect(mockUserOnboardingService.handleUserOnboarding).toHaveBeenCalledWith('user-123')
       expect(mockAuthService.getCurrentUser).toHaveBeenCalledWith('user-123')
     })
 
@@ -141,7 +155,7 @@ describe('AuthController', () => {
         members: [],
       }
 
-      mockAuthService.handleUserOnboarding.mockResolvedValue(undefined)
+      mockUserOnboardingService.handleUserOnboarding.mockResolvedValue(undefined)
       mockAuthService.getCurrentUser.mockResolvedValue(mockUserData)
 
       const result = await controller.getCurrentUser(mockRequest as any)
@@ -163,7 +177,7 @@ describe('AuthController', () => {
         },
       }
 
-      mockAuthService.handleUserOnboarding.mockResolvedValue(undefined)
+      mockUserOnboardingService.handleUserOnboarding.mockResolvedValue(undefined)
       mockAuthService.getCurrentUser.mockResolvedValue({
         id: 'user-789',
         name: 'Test User',
@@ -173,8 +187,8 @@ describe('AuthController', () => {
 
       await controller.getCurrentUser(mockRequest as any)
 
-      expect(mockAuthService.handleUserOnboarding).toHaveBeenCalledWith('user-789')
-      expect(mockAuthService.handleUserOnboarding).toHaveBeenCalledBefore(mockAuthService.getCurrentUser)
+      expect(mockUserOnboardingService.handleUserOnboarding).toHaveBeenCalledWith('user-789')
+      expect(mockUserOnboardingService.handleUserOnboarding).toHaveBeenCalledBefore(mockAuthService.getCurrentUser)
     })
 
     it('should handle multiple organizations', async () => {
@@ -218,7 +232,7 @@ describe('AuthController', () => {
         ],
       }
 
-      mockAuthService.handleUserOnboarding.mockResolvedValue(undefined)
+      mockUserOnboardingService.handleUserOnboarding.mockResolvedValue(undefined)
       mockAuthService.getCurrentUser.mockResolvedValue(mockUserData)
 
       const result = await controller.getCurrentUser(mockRequest as any)

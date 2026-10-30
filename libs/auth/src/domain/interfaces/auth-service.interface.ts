@@ -19,11 +19,6 @@ export interface IAuthService {
   }>
 
   /**
-   * Handle onboarding for new user - create organization if not exists
-   */
-  handleUserOnboarding(userId: string): Promise<void>
-
-  /**
    * Get current user with organizations
    */
   getCurrentUser(userId: string): Promise<UserWithOrganizations | null>

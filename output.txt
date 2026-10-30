@@ -1,0 +1,197 @@
+yarn run v1.22.22
+$ vitest run --config vitest.integration.config.mjs
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.5 [39m[90m/home/phathdt/Data/Dev/vyrak[39m
+
+[90mstdout[2m | libs/project/src/infras/repositories/__tests__/project-prisma.repository.integration.spec.ts[2m > [22m[2mProjectPrismaRepository (Integration)
+[22m[39mStarting global PostgreSQL Testcontainer...
+
+[90mstdout[2m | libs/organization/src/infras/repositories/__tests__/invitation-prisma.repository.integration.spec.ts[2m > [22m[2mInvitationPrismaRepository (Integration)
+[22m[39mStarting global PostgreSQL Testcontainer...
+
+[90mstdout[2m | libs/organization/src/infras/repositories/__tests__/organization-prisma.repository.integration.spec.ts[2m > [22m[2mOrganizationPrismaRepository (Integration)
+[22m[39mStarting global PostgreSQL Testcontainer...
+
+[90mstdout[2m | libs/auth/src/infras/repositories/auth-prisma.repository.integration.spec.ts[2m > [22m[2mAuthPrismaRepository (Integration)
+[22m[39mStarting global PostgreSQL Testcontainer...
+
+[90mstdout[2m | libs/database/src/extensions/tenant-filter-extension.integration.spec.ts[2m > [22m[2mTenantFilterExtension (Integration)
+[22m[39mStarting global PostgreSQL Testcontainer...
+
+[90mstdout[2m | libs/organization/src/infras/repositories/__tests__/user-prisma.repository.integration.spec.ts[2m > [22m[2mUserPrismaRepository (Integration)
+[22m[39mStarting global PostgreSQL Testcontainer...
+
+[90mstdout[2m | apps/api-server/src/app/controllers/__tests__/organizations.controller.integration.spec.ts[2m > [22m[2mOrganizationsController (Integration)
+[22m[39mStarting global PostgreSQL Testcontainer...
+
+Datasource "db": PostgreSQL database "testdb", schema "public" at "localhost:32982"
+
+🚀  Your database is now in sync with your Prisma schema. Done in 160ms
+
+[90mstdout[2m | libs/auth/src/infras/repositories/auth-prisma.repository.integration.spec.ts[2m > [22m[2mAuthPrismaRepository (Integration)
+[22m[39mPostgreSQL container started: postgres://test:test@localhost:32982/testdb
+Running database migrations...
+Database schema synchronized successfully
+
+[90mstdout[2m | libs/auth/src/infras/repositories/auth-prisma.repository.integration.spec.ts[2m > [22m[2mAuthPrismaRepository (Integration)
+[22m[39mGlobal Prisma client connected
+
+[90mstdout[2m | libs/auth/src/infras/repositories/auth-prisma.repository.integration.spec.ts[2m > [22m[2mAuthPrismaRepository (Integration)
+[22m[39mStopping global PostgreSQL Testcontainer...
+
+Datasource "db": PostgreSQL database "testdb", schema "public" at "localhost:32984"
+
+🚀  Your database is now in sync with your Prisma schema. Done in 140ms
+
+[90mstdout[2m | apps/api-server/src/app/controllers/__tests__/organizations.controller.integration.spec.ts[2m > [22m[2mOrganizationsController (Integration)
+[22m[39mPostgreSQL container started: postgres://test:test@localhost:32984/testdb
+Running database migrations...
+Database schema synchronized successfully
+
+[90mstdout[2m | libs/auth/src/infras/repositories/auth-prisma.repository.integration.spec.ts[2m > [22m[2mAuthPrismaRepository (Integration)
+[22m[39mPostgreSQL container stopped
+
+ [31m❯[39m libs/auth/src/infras/repositories/auth-prisma.repository.integration.spec.ts [2m([22m[2m12 tests[22m[2m | [22m[31m8 failed[39m[2m)[22m[33m 3670[2mms[22m[39m
+   [31m❯[39m AuthPrismaRepository (Integration) [2m(12)[22m
+     [32m✓[39m findUserById [2m(4)[22m
+       [32m✓[39m should return user with organizations when user exists[32m 75[2mms[22m[39m
+       [32m✓[39m should return user without organizations when user has no memberships[32m 20[2mms[22m[39m
+       [32m✓[39m should return null when user does not exist[32m 5[2mms[22m[39m
+       [32m✓[39m should include multiple organizations for user with multiple memberships[32m 19[2mms[22m[39m
+     [31m❯[39m hasAnyOrganization [2m(3)[22m
+[31m       [31m×[31m should return true when user has organization[39m[32m 13[2mms[22m[39m
+[31m       [31m×[31m should return false when user has no organization[39m[32m 12[2mms[22m[39m
+[31m       [31m×[31m should return false when user does not exist[39m[32m 5[2mms[22m[39m
+     [31m❯[39m createPersonalOrganization [2m(5)[22m
+[31m       [31m×[31m should create personal organization with user name[39m[32m 5[2mms[22m[39m
+[31m       [31m×[31m should create personal organization without user name[39m[32m 6[2mms[22m[39m
+[31m       [31m×[31m should return null when user does not exist[39m[32m 5[2mms[22m[39m
+[31m       [31m×[31m should create unique slug for each personal organization[39m[32m 9[2mms[22m[39m
+[31m       [31m×[31m should allow creating personal org even if user already has organizations[39m[32m 13[2mms[22m[39m
+[90mstdout[2m | apps/api-server/src/app/controllers/__tests__/organizations.controller.integration.spec.ts[2m > [22m[2mOrganizationsController (Integration)
+[22m[39mGlobal Prisma client connected
+
+[90mstdout[2m | apps/api-server/src/app/controllers/__tests__/organizations.controller.integration.spec.ts[2m > [22m[2mOrganizationsController (Integration)
+[22m[39m[CustomConfig] Configuration loaded successfully from local.yaml (APP_ENV=local)
+[CustomConfig] Configuration validation passed
+
+[90mstdout[2m | apps/api-server/src/app/controllers/__tests__/organizations.controller.integration.spec.ts[2m > [22m[2mOrganizationsController (Integration)
+[22m[39mStopping global PostgreSQL Testcontainer...
+
+[90mstdout[2m | apps/api-server/src/app/controllers/__tests__/organizations.controller.integration.spec.ts[2m > [22m[2mOrganizationsController (Integration)
+[22m[39mPostgreSQL container stopped
+
+ [32m✓[39m apps/api-server/src/app/controllers/__tests__/organizations.controller.integration.spec.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 3612[2mms[22m[39m
+Datasource "db": PostgreSQL database "testdb", schema "public" at "localhost:32985"
+Datasource "db": PostgreSQL database "testdb", schema "public" at "localhost:32986"
+
+🚀  Your database is now in sync with your Prisma schema. Done in 135ms
+
+[90mstdout[2m | libs/organization/src/infras/repositories/__tests__/user-prisma.repository.integration.spec.ts[2m > [22m[2mUserPrismaRepository (Integration)
+[22m[39mPostgreSQL container started: postgres://test:test@localhost:32985/testdb
+Running database migrations...
+Database schema synchronized successfully
+
+[90mstdout[2m | libs/organization/src/infras/repositories/__tests__/user-prisma.repository.integration.spec.ts[2m > [22m[2mUserPrismaRepository (Integration)
+[22m[39mGlobal Prisma client connected
+
+
+🚀  Your database is now in sync with your Prisma schema. Done in 129ms
+
+[90mstdout[2m | libs/organization/src/infras/repositories/__tests__/user-prisma.repository.integration.spec.ts[2m > [22m[2mUserPrismaRepository (Integration)
+[22m[39mStopping global PostgreSQL Testcontainer...
+
+[90mstdout[2m | libs/project/src/infras/repositories/__tests__/project-prisma.repository.integration.spec.ts[2m > [22m[2mProjectPrismaRepository (Integration)
+[22m[39mPostgreSQL container started: postgres://test:test@localhost:32986/testdb
+Running database migrations...
+Database schema synchronized successfully
+
+[90mstdout[2m | libs/project/src/infras/repositories/__tests__/project-prisma.repository.integration.spec.ts[2m > [22m[2mProjectPrismaRepository (Integration)
+[22m[39mGlobal Prisma client connected
+
+Datasource "db": PostgreSQL database "testdb", schema "public" at "localhost:32987"
+[90mstdout[2m | libs/project/src/infras/repositories/__tests__/project-prisma.repository.integration.spec.ts[2m > [22m[2mProjectPrismaRepository (Integration)
+[22m[39mStopping global PostgreSQL Testcontainer...
+
+Datasource "db": PostgreSQL database "testdb", schema "public" at "localhost:32988"
+[90mstdout[2m | libs/organization/src/infras/repositories/__tests__/user-prisma.repository.integration.spec.ts[2m > [22m[2mUserPrismaRepository (Integration)
+[22m[39mPostgreSQL container stopped
+
+ [32m✓[39m libs/organization/src/infras/repositories/__tests__/user-prisma.repository.integration.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 4690[2mms[22m[39m
+Datasource "db": PostgreSQL database "testdb", schema "public" at "localhost:32989"
+
+🚀  Your database is now in sync with your Prisma schema. Done in 140ms
+
+[90mstdout[2m | libs/database/src/extensions/tenant-filter-extension.integration.spec.ts[2m > [22m[2mTenantFilterExtension (Integration)
+[22m[39mPostgreSQL container started: postgres://test:test@localhost:32987/testdb
+Running database migrations...
+Database schema synchronized successfully
+
+
+🚀  Your database is now in sync with your Prisma schema. Done in 132ms
+
+[90mstdout[2m | libs/database/src/extensions/tenant-filter-extension.integration.spec.ts[2m > [22m[2mTenantFilterExtension (Integration)
+[22m[39mGlobal Prisma client connected
+
+[90mstdout[2m | libs/database/src/extensions/tenant-filter-extension.integration.spec.ts[2m > [22m[2mTenantFilterExtension (Integration)
+[22m[39mStopping global PostgreSQL Testcontainer...
+
+[90mstdout[2m | libs/organization/src/infras/repositories/__tests__/organization-prisma.repository.integration.spec.ts[2m > [22m[2mOrganizationPrismaRepository (Integration)
+[22m[39mPostgreSQL container started: postgres://test:test@localhost:32988/testdb
+Running database migrations...
+Database schema synchronized successfully
+
+
+🚀  Your database is now in sync with your Prisma schema. Done in 130ms
+
+[90mstdout[2m | libs/project/src/infras/repositories/__tests__/project-prisma.repository.integration.spec.ts[2m > [22m[2mProjectPrismaRepository (Integration)
+[22m[39mPostgreSQL container stopped
+
+ [32m✓[39m libs/project/src/infras/repositories/__tests__/project-prisma.repository.integration.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 4909[2mms[22m[39m
+[90mstdout[2m | libs/organization/src/infras/repositories/__tests__/invitation-prisma.repository.integration.spec.ts[2m > [22m[2mInvitationPrismaRepository (Integration)
+[22m[39mPostgreSQL container started: postgres://test:test@localhost:32989/testdb
+Running database migrations...
+Database schema synchronized successfully
+
+[90mstdout[2m | libs/organization/src/infras/repositories/__tests__/organization-prisma.repository.integration.spec.ts[2m > [22m[2mOrganizationPrismaRepository (Integration)
+[22m[39mGlobal Prisma client connected
+
+[90mstdout[2m | libs/organization/src/infras/repositories/__tests__/invitation-prisma.repository.integration.spec.ts[2m > [22m[2mInvitationPrismaRepository (Integration)
+[22m[39mGlobal Prisma client connected
+
+[90mstdout[2m | libs/organization/src/infras/repositories/__tests__/organization-prisma.repository.integration.spec.ts[2m > [22m[2mOrganizationPrismaRepository (Integration)[2m > [22m[2mcreate[2m > [22m[2mshould reject duplicate slug
+[22m[39mprisma:error 
+Invalid `this.prisma.client.organization.create()` invocation in
+/home/phathdt/Data/Dev/vyrak/libs/organization/src/infras/repositories/organization-prisma.repository.ts:14:66
+
+  11 
+  12 async create(userId: string, data: CreateOrganizationDto): Promise<OrganizationWithRole> {
+  13   return this.prisma.withSystemAccess(async () => {
+→ 14     const organization = await this.prisma.client.organization.create(
+Unique constraint failed on the constraint: `organizations_slug_key`
+
+[90mstdout[2m | libs/database/src/extensions/tenant-filter-extension.integration.spec.ts[2m > [22m[2mTenantFilterExtension (Integration)
+[22m[39mPostgreSQL container stopped
+
+ [32m✓[39m libs/database/src/extensions/tenant-filter-extension.integration.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 5076[2mms[22m[39m
+[90mstdout[2m | libs/organization/src/infras/repositories/__tests__/invitation-prisma.repository.integration.spec.ts[2m > [22m[2mInvitationPrismaRepository (Integration)
+[22m[39mStopping global PostgreSQL Testcontainer...
+
+[90mstdout[2m | libs/organization/src/infras/repositories/__tests__/organization-prisma.repository.integration.spec.ts[2m > [22m[2mOrganizationPrismaRepository (Integration)
+[22m[39mStopping global PostgreSQL Testcontainer...
+
+[90mstdout[2m | libs/organization/src/infras/repositories/__tests__/invitation-prisma.repository.integration.spec.ts[2m > [22m[2mInvitationPrismaRepository (Integration)
+[22m[39mPostgreSQL container stopped
+
+ [32m✓[39m libs/organization/src/infras/repositories/__tests__/invitation-prisma.repository.integration.spec.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 5374[2mms[22m[39m
+[90mstdout[2m | libs/organization/src/infras/repositories/__tests__/organization-prisma.repository.integration.spec.ts[2m > [22m[2mOrganizationPrismaRepository (Integration)
+[22m[39mPostgreSQL container stopped
+
+ [32m✓[39m libs/organization/src/infras/repositories/__tests__/organization-prisma.repository.integration.spec.ts [2m([22m[2m12 tests[22m[2m)[22m[33m 5435[2mms[22m[39m
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m6 passed[39m[22m[90m (7)[39m
+[2m      Tests [22m [1m[31m8 failed[39m[22m[2m | [22m[1m[32m41 passed[39m[22m[90m (49)[39m
+[2m   Start at [22m 23:04:27
+[2m   Duration [22m 5.85s[2m (tests 93%, import 7%, transform 1%)[22m
+
+info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.

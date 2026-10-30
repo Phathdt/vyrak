@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Inject, Post, Req, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { AUTH_SERVICE, AuthResponseDto, CurrentUserResponseDto, IAuthService, LoginDto } from '@vyrak/auth'
+import { IUserOnboardingService, USER_ONBOARDING_SERVICE } from '@vyrak/user-onboarding'
 import { Request } from 'express'
 
 import { JwtAuthGuard } from '../../guards'
@@ -15,7 +16,10 @@ interface RequestWithUser extends Request {
 @ApiTags('auth')
 @Controller('api/auth')
 export class AuthController {
-  constructor(@Inject(AUTH_SERVICE) private readonly authService: IAuthService) {}
+  constructor(
+    @Inject(AUTH_SERVICE) private readonly authService: IAuthService,
+    @Inject(USER_ONBOARDING_SERVICE) private readonly userOnboardingService: IUserOnboardingService
+  ) {}
 
   @Post('login')
   @ApiOperation({ summary: 'Login with email and password' })
@@ -40,7 +44,7 @@ export class AuthController {
     const userId = req.user.userId
 
     // Handle onboarding if user doesn't have organization
-    await this.authService.handleUserOnboarding(userId)
+    await this.userOnboardingService.handleUserOnboarding(userId)
 
     // Get user with organizations
     const user = await this.authService.getCurrentUser(userId)
