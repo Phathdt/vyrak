@@ -158,15 +158,4 @@ export class OrganizationPrismaRepository implements IOrganizationRepository {
       })
     })
   }
-
-  async countActiveWorkflowRuns(organizationId: string): Promise<number> {
-    return this.prisma.withSystemAccess(async () => {
-      return this.prisma.client.workflowRun.count({
-        where: {
-          organizationId,
-          status: { in: ['pending', 'running'] },
-        },
-      })
-    })
-  }
 }

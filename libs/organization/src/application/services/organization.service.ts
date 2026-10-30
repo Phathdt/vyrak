@@ -44,12 +44,6 @@ export class OrganizationService implements IOrganizationService {
   async delete(id: string, userId: string): Promise<void> {
     await this.verifyMembership(id, userId, ['owner'])
 
-    const activeRuns = await this.repository.countActiveWorkflowRuns(id)
-
-    if (activeRuns > 0) {
-      throw new BadRequestException(`Cannot delete organization with ${activeRuns} active workflow run(s)`)
-    }
-
     await this.repository.delete(id)
   }
 

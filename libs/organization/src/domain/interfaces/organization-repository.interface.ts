@@ -7,5 +7,4 @@ export interface IOrganizationRepository {
   update(id: string, data: Partial<UpdateOrganizationDto>): Promise<OrganizationWithRole>
   delete(id: string): Promise<void>
   findBySlug(slug: string): Promise<{ id: string } | null>
-  countActiveWorkflowRuns(organizationId: string): Promise<number>
 }

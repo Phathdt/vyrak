@@ -54,12 +54,6 @@ export class ProjectService implements IProjectService {
       throw new NotFoundException('Project not found')
     }
 
-    const activeRuns = await this.repository.countActiveWorkflowRuns(id)
-
-    if (activeRuns > 0) {
-      throw new BadRequestException(`Cannot delete project with ${activeRuns} active workflow run(s)`)
-    }
-
     await this.repository.delete(organizationId, id)
   }
 }

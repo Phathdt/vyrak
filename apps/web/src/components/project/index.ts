@@ -7,5 +7,4 @@ export { ProjectForm } from './project-form'
 // Phase 3 exports
 export { ProjectStats } from './project-stats'
 export { RepositoriesSection } from './repositories-section'
-export { RecentWorkflowsSection } from './recent-workflows-section'
 export { ProjectEditForm } from './project-edit-form'

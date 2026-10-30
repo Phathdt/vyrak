@@ -12,7 +12,6 @@ import { OrganizationModule } from '@vyrak/organization'
 import { ProjectManagementModule } from '@vyrak/project-management'
 
 import { ResponseInterceptor, TenantContextInterceptor, TraceIdInterceptor } from '../interceptors'
-import { WorkflowsModule } from '../workflows/workflows.module'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
 import { AuthController, InvitationsController, OrganizationsController, ProjectsController } from './controllers'
@@ -43,7 +42,6 @@ import { AuthController, InvitationsController, OrganizationsController, Project
     AuthModule,
     OrganizationModule,
     ProjectManagementModule,
-    WorkflowsModule,
   ],
   controllers: [AppController, AuthController, OrganizationsController, InvitationsController, ProjectsController],
   providers: [

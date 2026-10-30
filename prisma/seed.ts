@@ -1,8 +1,7 @@
-import * as path from 'node:path'
 import { PrismaPg } from '@prisma/adapter-pg'
-
 import * as argon2 from 'argon2'
 import { config } from 'dotenv'
+import * as path from 'node:path'
 
 import { PrismaClient } from '../libs/database/src/generated/prisma/client'
 
@@ -332,7 +331,7 @@ async function main() {
       workflowVersion: '1.0.0',
       status: 'running',
       state: 'running',
-      idempotencyKey: 'idempotency-key-001',
+      idempotencyKey: 'a50e8400-e29b-41d4-a716-446655440001',
       startedAt: oneHourAgo,
       input: JSON.stringify({
         requirement:
@@ -349,9 +348,9 @@ async function main() {
       initiatedByUserId: '550e8400-e29b-41d4-a716-446655440002',
       workflowKey: 'feature',
       workflowVersion: '1.0.0',
-      status: 'completed',
-      state: 'completed',
-      idempotencyKey: 'idempotency-key-002',
+      status: 'succeeded',
+      state: 'succeeded',
+      idempotencyKey: 'a50e8400-e29b-41d4-a716-446655440002',
       startedAt: oneDayAgo,
       completedAt: new Date(oneDayAgo.getTime() + 45 * 60 * 1000),
       input: JSON.stringify({
@@ -371,7 +370,7 @@ async function main() {
       workflowVersion: '1.0.0',
       status: 'failed',
       state: 'failed',
-      idempotencyKey: 'idempotency-key-003',
+      idempotencyKey: 'a50e8400-e29b-41d4-a716-446655440003',
       startedAt: twoHoursAgo,
       completedAt: new Date(twoHoursAgo.getTime() + 15 * 60 * 1000),
       input: JSON.stringify({
@@ -391,8 +390,8 @@ async function main() {
       workflowKey: 'feature',
       workflowVersion: '1.0.0',
       status: 'queued',
-      state: 'pending',
-      idempotencyKey: 'idempotency-key-004',
+      state: 'queued',
+      idempotencyKey: 'a50e8400-e29b-41d4-a716-446655440004',
       input: JSON.stringify({
         requirement: 'Implement real-time chat feature with WebSocket support, message history, and file attachments',
       }),
@@ -409,7 +408,7 @@ async function main() {
       workflowVersion: '1.0.0',
       status: 'cancelled',
       state: 'cancelled',
-      idempotencyKey: 'idempotency-key-005',
+      idempotencyKey: 'a50e8400-e29b-41d4-a716-446655440005',
       startedAt: new Date(now.getTime() - 3 * 60 * 60 * 1000),
       completedAt: new Date(now.getTime() - 2.5 * 60 * 60 * 1000),
       input: JSON.stringify({
@@ -430,6 +429,206 @@ async function main() {
   }
 
   console.log(`🔄 Created ${workflowRuns.length} workflow runs`)
+
+  // Create workflow step runs
+  const stepRuns = [
+    // Steps for running workflow (b50e8400-e29b-41d4-a716-446655440001)
+    {
+      id: 'c50e8400-e29b-41d4-a716-446655440001',
+      runId: 'b50e8400-e29b-41d4-a716-446655440001',
+      organizationId: '650e8400-e29b-41d4-a716-446655440001',
+      stepKey: 'planning',
+      phaseKey: 'planning',
+      stepType: 'phase',
+      status: 'succeeded',
+      attempt: 1,
+      requiresApproval: true,
+      startedAt: oneHourAgo,
+      completedAt: new Date(oneHourAgo.getTime() + 8 * 60 * 1000),
+      input: JSON.stringify({ requirement: 'Build user authentication system' }),
+      output: JSON.stringify({ ardGenerated: true, storiesCount: 3 }),
+    },
+    {
+      id: 'c50e8400-e29b-41d4-a716-446655440002',
+      runId: 'b50e8400-e29b-41d4-a716-446655440001',
+      organizationId: '650e8400-e29b-41d4-a716-446655440001',
+      stepKey: 'implementation',
+      phaseKey: 'implementation',
+      stepType: 'phase',
+      status: 'running',
+      attempt: 1,
+      requiresApproval: false,
+      startedAt: new Date(oneHourAgo.getTime() + 10 * 60 * 1000),
+      completedStoryIds: JSON.stringify(['story-1', 'story-2']),
+      currentStoryId: 'story-3',
+      input: JSON.stringify({ stories: ['story-1', 'story-2', 'story-3'] }),
+    },
+    {
+      id: 'c50e8400-e29b-41d4-a716-446655440003',
+      runId: 'b50e8400-e29b-41d4-a716-446655440001',
+      organizationId: '650e8400-e29b-41d4-a716-446655440001',
+      stepKey: 'review',
+      phaseKey: 'review',
+      stepType: 'phase',
+      status: 'pending',
+      attempt: 1,
+      requiresApproval: true,
+    },
+    {
+      id: 'c50e8400-e29b-41d4-a716-446655440004',
+      runId: 'b50e8400-e29b-41d4-a716-446655440001',
+      organizationId: '650e8400-e29b-41d4-a716-446655440001',
+      stepKey: 'qa',
+      phaseKey: 'qa',
+      stepType: 'phase',
+      status: 'pending',
+      attempt: 1,
+      requiresApproval: true,
+    },
+    // Steps for succeeded workflow (b50e8400-e29b-41d4-a716-446655440002)
+    {
+      id: 'c50e8400-e29b-41d4-a716-446655440005',
+      runId: 'b50e8400-e29b-41d4-a716-446655440002',
+      organizationId: '650e8400-e29b-41d4-a716-446655440001',
+      stepKey: 'planning',
+      phaseKey: 'planning',
+      stepType: 'phase',
+      status: 'succeeded',
+      attempt: 1,
+      requiresApproval: true,
+      startedAt: oneDayAgo,
+      completedAt: new Date(oneDayAgo.getTime() + 7 * 60 * 1000),
+      input: JSON.stringify({ requirement: 'Stripe payment integration' }),
+      output: JSON.stringify({ ardGenerated: true, storiesCount: 4 }),
+    },
+    {
+      id: 'c50e8400-e29b-41d4-a716-446655440006',
+      runId: 'b50e8400-e29b-41d4-a716-446655440002',
+      organizationId: '650e8400-e29b-41d4-a716-446655440001',
+      stepKey: 'implementation',
+      phaseKey: 'implementation',
+      stepType: 'phase',
+      status: 'succeeded',
+      attempt: 1,
+      requiresApproval: false,
+      startedAt: new Date(oneDayAgo.getTime() + 10 * 60 * 1000),
+      completedAt: new Date(oneDayAgo.getTime() + 30 * 60 * 1000),
+      completedStoryIds: JSON.stringify(['story-1', 'story-2', 'story-3', 'story-4']),
+      input: JSON.stringify({ stories: ['story-1', 'story-2', 'story-3', 'story-4'] }),
+      output: JSON.stringify({ implementedStories: 4 }),
+    },
+    {
+      id: 'c50e8400-e29b-41d4-a716-446655440007',
+      runId: 'b50e8400-e29b-41d4-a716-446655440002',
+      organizationId: '650e8400-e29b-41d4-a716-446655440001',
+      stepKey: 'review',
+      phaseKey: 'review',
+      stepType: 'phase',
+      status: 'succeeded',
+      attempt: 1,
+      requiresApproval: true,
+      startedAt: new Date(oneDayAgo.getTime() + 32 * 60 * 1000),
+      completedAt: new Date(oneDayAgo.getTime() + 38 * 60 * 1000),
+      output: JSON.stringify({ issuesFound: 2, securityScore: 95 }),
+    },
+    {
+      id: 'c50e8400-e29b-41d4-a716-446655440008',
+      runId: 'b50e8400-e29b-41d4-a716-446655440002',
+      organizationId: '650e8400-e29b-41d4-a716-446655440001',
+      stepKey: 'qa',
+      phaseKey: 'qa',
+      stepType: 'phase',
+      status: 'succeeded',
+      attempt: 1,
+      requiresApproval: true,
+      startedAt: new Date(oneDayAgo.getTime() + 40 * 60 * 1000),
+      completedAt: new Date(oneDayAgo.getTime() + 45 * 60 * 1000),
+      output: JSON.stringify({ testsPassed: 47, testsFailed: 0, coverage: 92 }),
+    },
+    // Steps for failed workflow (b50e8400-e29b-41d4-a716-446655440003)
+    {
+      id: 'c50e8400-e29b-41d4-a716-446655440009',
+      runId: 'b50e8400-e29b-41d4-a716-446655440003',
+      organizationId: '650e8400-e29b-41d4-a716-446655440001',
+      stepKey: 'bug_analysis',
+      phaseKey: 'bug_analysis',
+      stepType: 'phase',
+      status: 'succeeded',
+      attempt: 1,
+      requiresApproval: false,
+      startedAt: twoHoursAgo,
+      completedAt: new Date(twoHoursAgo.getTime() + 4 * 60 * 1000),
+      input: JSON.stringify({ bugDescription: 'Login issue after password reset' }),
+      output: JSON.stringify({ rootCause: 'Session token mismatch' }),
+    },
+    {
+      id: 'c50e8400-e29b-41d4-a716-446655440010',
+      runId: 'b50e8400-e29b-41d4-a716-446655440003',
+      organizationId: '650e8400-e29b-41d4-a716-446655440001',
+      stepKey: 'implementation',
+      phaseKey: 'implementation',
+      stepType: 'phase',
+      status: 'succeeded',
+      attempt: 1,
+      requiresApproval: false,
+      startedAt: new Date(twoHoursAgo.getTime() + 5 * 60 * 1000),
+      completedAt: new Date(twoHoursAgo.getTime() + 10 * 60 * 1000),
+      output: JSON.stringify({ fileChanged: 'auth/session.ts' }),
+    },
+    {
+      id: 'c50e8400-e29b-41d4-a716-446655440011',
+      runId: 'b50e8400-e29b-41d4-a716-446655440003',
+      organizationId: '650e8400-e29b-41d4-a716-446655440001',
+      stepKey: 'fast_review',
+      phaseKey: 'fast_review',
+      stepType: 'phase',
+      status: 'failed',
+      attempt: 1,
+      requiresApproval: true,
+      startedAt: new Date(twoHoursAgo.getTime() + 12 * 60 * 1000),
+      completedAt: new Date(twoHoursAgo.getTime() + 15 * 60 * 1000),
+      errorCode: 'TEST_FAILURE',
+      errorMessage: 'Test suite failed: 3 tests failing in auth.spec.ts',
+      output: JSON.stringify({ testsPassed: 12, testsFailed: 3 }),
+    },
+    // Steps for cancelled workflow (b50e8400-e29b-41d4-a716-446655440005)
+    {
+      id: 'c50e8400-e29b-41d4-a716-446655440012',
+      runId: 'b50e8400-e29b-41d4-a716-446655440005',
+      organizationId: '650e8400-e29b-41d4-a716-446655440001',
+      stepKey: 'planning',
+      phaseKey: 'planning',
+      stepType: 'phase',
+      status: 'succeeded',
+      attempt: 1,
+      requiresApproval: true,
+      startedAt: new Date(now.getTime() - 3 * 60 * 60 * 1000),
+      completedAt: new Date(now.getTime() - 2.8 * 60 * 60 * 1000),
+      input: JSON.stringify({ requirement: 'Analytics dashboard' }),
+      output: JSON.stringify({ ardGenerated: true, storiesCount: 3 }),
+    },
+    {
+      id: 'c50e8400-e29b-41d4-a716-446655440013',
+      runId: 'b50e8400-e29b-41d4-a716-446655440005',
+      organizationId: '650e8400-e29b-41d4-a716-446655440001',
+      stepKey: 'implementation',
+      phaseKey: 'implementation',
+      stepType: 'phase',
+      status: 'cancelled',
+      attempt: 1,
+      requiresApproval: false,
+      startedAt: new Date(now.getTime() - 2.7 * 60 * 60 * 1000),
+      completedAt: new Date(now.getTime() - 2.5 * 60 * 60 * 1000),
+      completedStoryIds: JSON.stringify(['story-1']),
+      currentStoryId: 'story-2',
+    },
+  ]
+
+  for (const stepRun of stepRuns) {
+    await prisma.workflowStepRun.create({ data: stepRun })
+  }
+
+  console.log(`📊 Created ${stepRuns.length} workflow step runs`)
 
   // Create artifacts with S3 storage (Epic 16)
   const artifacts = [

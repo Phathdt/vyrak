@@ -13,5 +13,4 @@ export interface IProjectRepository {
   findBySlug(organizationId: string, slug: string): Promise<{ id: string } | null>
   update(organizationId: string, id: string, data: UpdateProjectDto): Promise<ProjectWithStats>
   delete(organizationId: string, id: string): Promise<void>
-  countActiveWorkflowRuns(projectId: string): Promise<number>
 }

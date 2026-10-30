@@ -13,7 +13,6 @@ type ProjectWithCount = Prisma.ProjectGetPayload<{
     _count: {
       select: {
         gitRepositories: true
-        workflowRuns: true
       }
     }
   }
@@ -35,7 +34,6 @@ export class ProjectPrismaRepository implements IProjectRepository {
           _count: {
             select: {
               gitRepositories: true,
-              workflowRuns: true,
             },
           },
         },
@@ -49,7 +47,7 @@ export class ProjectPrismaRepository implements IProjectRepository {
         description: project.description,
         stats: {
           repositoryCount: project._count.gitRepositories,
-          workflowRunCount: project._count.workflowRuns,
+          workflowRunCount: 0,
         },
         createdAt: project.createdAt,
         updatedAt: project.updatedAt,
@@ -83,7 +81,6 @@ export class ProjectPrismaRepository implements IProjectRepository {
             _count: {
               select: {
                 gitRepositories: true,
-                workflowRuns: true,
               },
             },
           },
@@ -100,7 +97,7 @@ export class ProjectPrismaRepository implements IProjectRepository {
           description: project.description,
           stats: {
             repositoryCount: project._count.gitRepositories,
-            workflowRunCount: project._count.workflowRuns,
+            workflowRunCount: 0,
           },
           createdAt: project.createdAt,
           updatedAt: project.updatedAt,
@@ -124,7 +121,6 @@ export class ProjectPrismaRepository implements IProjectRepository {
           _count: {
             select: {
               gitRepositories: true,
-              workflowRuns: true,
             },
           },
         },
@@ -142,7 +138,7 @@ export class ProjectPrismaRepository implements IProjectRepository {
         description: project.description,
         stats: {
           repositoryCount: project._count.gitRepositories,
-          workflowRunCount: project._count.workflowRuns,
+          workflowRunCount: 0,
         },
         createdAt: project.createdAt,
         updatedAt: project.updatedAt,
@@ -179,7 +175,6 @@ export class ProjectPrismaRepository implements IProjectRepository {
           _count: {
             select: {
               gitRepositories: true,
-              workflowRuns: true,
             },
           },
         },
@@ -193,7 +188,7 @@ export class ProjectPrismaRepository implements IProjectRepository {
         description: project.description,
         stats: {
           repositoryCount: project._count.gitRepositories,
-          workflowRunCount: project._count.workflowRuns,
+          workflowRunCount: 0,
         },
         createdAt: project.createdAt,
         updatedAt: project.updatedAt,
@@ -207,17 +202,6 @@ export class ProjectPrismaRepository implements IProjectRepository {
         where: {
           id,
           organizationId,
-        },
-      })
-    })
-  }
-
-  async countActiveWorkflowRuns(projectId: string): Promise<number> {
-    return this.prisma.withSystemAccess(async () => {
-      return this.prisma.client.workflowRun.count({
-        where: {
-          projectId,
-          status: { in: ['pending', 'running'] },
         },
       })
     })

@@ -3,7 +3,6 @@ import { useNavigate, useParams } from 'react-router-dom'
 
 import { ProjectEditForm } from '@/components/project/project-edit-form'
 import { ProjectStats } from '@/components/project/project-stats'
-import { RecentWorkflowsSection } from '@/components/project/recent-workflows-section'
 import { RepositoryList } from '@/components/repository/repository-list'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -138,9 +137,6 @@ export function ProjectDetailPage() {
 
       {/* Git Repositories */}
       {activeOrgId && <RepositoryList organizationId={activeOrgId} projectId={project.id} />}
-
-      {/* Recent Workflows */}
-      <RecentWorkflowsSection projectId={project.id} />
 
       {/* Edit Modal */}
       {isEditing && (

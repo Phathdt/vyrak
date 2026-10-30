@@ -4,7 +4,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config'
 import { CustomConfigModule } from '@vyrak/custom-config'
 import { CustomLoggerModule } from '@vyrak/custom-logger'
 import { DatabaseModule } from '@vyrak/database'
-import { WorkflowCoreModule } from '@vyrak/workflow-core'
 import { ClsModule } from 'nestjs-cls'
 
 import { ExampleProcessor } from './processors'
@@ -22,7 +21,6 @@ import { ExampleProcessor } from './processors'
     CustomConfigModule,
     CustomLoggerModule,
     DatabaseModule,
-    WorkflowCoreModule,
     ClsModule.forRoot({
       global: true,
       middleware: { mount: false },
@@ -53,6 +51,6 @@ import { ExampleProcessor } from './processors'
       },
     }),
   ],
-  providers: [ExampleProcessor /* WorkflowExecutionProcessor */],
+  providers: [ExampleProcessor],
 })
 export class AppModule {}
