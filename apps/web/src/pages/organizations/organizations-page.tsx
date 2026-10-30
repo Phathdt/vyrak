@@ -7,16 +7,19 @@ import {
   useOrganizationsControllerCreate,
   useOrganizationsControllerFindAll,
 } from '@/api/generated/organizations/organizations'
-import { LoadingSkeleton } from '@/components/loading-skeleton'
-import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { EmptyState } from '@/components/ui/empty-state'
-import { ErrorMessage, FormField, Label } from '@/components/ui/form-field'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { Modal, ModalBody, ModalDescription, ModalFooter, ModalHeader, ModalTitle } from '@/components/ui/modal'
-import { useToast } from '@/components/ui/toast'
+import { Label } from '@/components/ui/label'
 import { useAuth } from '@/contexts/auth-context'
 import { useOrganization } from '@/contexts/organization-context'
 
@@ -35,9 +38,7 @@ type CreateOrgFormData = z.infer<typeof createOrgSchema>
 export function OrganizationsPage() {
   const [isCreating, setIsCreating] = useState(false)
   const { user } = useAuth()
-  const { showToast } = useToast()
 
-  // Only fetch organizations after user is loaded
   const {
     data: orgs,
     isLoading,
@@ -72,102 +73,66 @@ export function OrganizationsPage() {
       setIsCreating(false)
       setActiveOrgId(newOrg.id)
       await refetch()
-      showToast({
-        title: 'Organization created successfully',
-        type: 'success',
-      })
     } catch (err) {
-      showToast({
-        title: 'Failed to create organization',
-        type: 'error',
-      })
       console.error('Failed to create organization:', err)
     }
   }
 
   if (isLoading) {
     return (
-      <div className='min-h-screen bg-background'>
-        <div className='max-w-7xl mx-auto p-4 md:p-6 lg:p-8'>
-          <div className='mb-8 flex items-center justify-between'>
-            <LoadingSkeleton variant='text' className='h-9 w-48' />
-            <LoadingSkeleton variant='rectangular' className='h-10 w-44' />
-          </div>
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-            {[...Array(3)].map((_, i) => (
-              <LoadingSkeleton key={i} variant='rectangular' className='h-48 rounded-lg' />
-            ))}
-          </div>
+      <div className='flex min-h-[400px] items-center justify-center'>
+        <div className='text-center'>
+          <div className='mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent'></div>
+          <p className='text-muted-foreground'>Loading organizations...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className='min-h-screen bg-background'>
-      <div className='max-w-7xl mx-auto p-4 md:p-6 lg:p-8'>
-        {/* Header */}
-        <header className='mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
+    <div className='space-y-6'>
+      {/* Header */}
+      <div className='flex items-center justify-between'>
+        <div>
           <h1 className='text-3xl font-bold tracking-tight'>Organizations</h1>
-          <Button onClick={() => setIsCreating(!isCreating)} disabled={isCreating}>
-            {isCreating ? 'Cancel' : 'Create Organization'}
-          </Button>
-        </header>
+          <p className='text-muted-foreground'>Manage your organizations and teams</p>
+        </div>
+        <Button onClick={() => setIsCreating(true)}>Create Organization</Button>
+      </div>
 
-        {/* Create Organization Modal */}
-        <Modal open={isCreating} onClose={() => setIsCreating(false)} size='md'>
-          <ModalHeader onClose={() => setIsCreating(false)}>
-            <ModalTitle>Create New Organization</ModalTitle>
-            <ModalDescription>Add a new organization to manage teams and projects</ModalDescription>
-          </ModalHeader>
+      {/* Create Organization Dialog */}
+      <Dialog open={isCreating} onOpenChange={setIsCreating}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New Organization</DialogTitle>
+            <DialogDescription>Add a new organization to manage teams and projects</DialogDescription>
+          </DialogHeader>
           <form onSubmit={handleSubmit(onSubmit)}>
-            <ModalBody>
-              <div className='space-y-4'>
-                <FormField>
-                  <Label htmlFor='name' required>
-                    Organization Name
-                  </Label>
-                  <Input
-                    id='name'
-                    {...register('name')}
-                    placeholder='Acme Inc'
-                    disabled={isPending}
-                    error={!!errors.name}
-                    aria-describedby={errors.name ? 'name-error' : undefined}
-                  />
-                  <ErrorMessage id='name-error'>{errors.name?.message}</ErrorMessage>
-                </FormField>
-
-                <FormField>
-                  <Label htmlFor='slug' required>
-                    Slug (URL-friendly)
-                  </Label>
-                  <Input
-                    id='slug'
-                    {...register('slug')}
-                    placeholder='acme-inc'
-                    disabled={isPending}
-                    error={!!errors.slug}
-                    aria-describedby={errors.slug ? 'slug-error' : undefined}
-                  />
-                  <ErrorMessage id='slug-error'>{errors.slug?.message}</ErrorMessage>
-                </FormField>
-
-                <FormField>
-                  <Label htmlFor='logo'>Logo URL (optional)</Label>
-                  <Input
-                    id='logo'
-                    {...register('logo')}
-                    placeholder='https://example.com/logo.png'
-                    disabled={isPending}
-                    error={!!errors.logo}
-                    aria-describedby={errors.logo ? 'logo-error' : undefined}
-                  />
-                  <ErrorMessage id='logo-error'>{errors.logo?.message}</ErrorMessage>
-                </FormField>
+            <div className='space-y-4 py-4'>
+              <div className='space-y-2'>
+                <Label htmlFor='name'>Organization Name</Label>
+                <Input id='name' {...register('name')} placeholder='Acme Inc' disabled={isPending} />
+                {errors.name && <p className='text-sm text-destructive'>{errors.name.message}</p>}
               </div>
-            </ModalBody>
-            <ModalFooter>
+
+              <div className='space-y-2'>
+                <Label htmlFor='slug'>Slug (URL-friendly)</Label>
+                <Input id='slug' {...register('slug')} placeholder='acme-inc' disabled={isPending} />
+                {errors.slug && <p className='text-sm text-destructive'>{errors.slug.message}</p>}
+              </div>
+
+              <div className='space-y-2'>
+                <Label htmlFor='logo'>Logo URL (optional)</Label>
+                <Input
+                  id='logo'
+                  {...register('logo')}
+                  placeholder='https://example.com/logo.png'
+                  disabled={isPending}
+                />
+                {errors.logo && <p className='text-sm text-destructive'>{errors.logo.message}</p>}
+              </div>
+            </div>
+            <DialogFooter>
               <Button
                 type='button'
                 variant='outline'
@@ -179,72 +144,74 @@ export function OrganizationsPage() {
               >
                 Cancel
               </Button>
-              <Button type='submit' loading={isPending}>
-                Create
+              <Button type='submit' disabled={isPending}>
+                {isPending ? 'Creating...' : 'Create'}
               </Button>
-            </ModalFooter>
+            </DialogFooter>
           </form>
-        </Modal>
+        </DialogContent>
+      </Dialog>
 
-        {/* Organizations Grid */}
-        <section>
-          <h2 className='text-xl font-semibold mb-4'>Your Organizations</h2>
-          {!orgs || orgs.length === 0 ? (
-            <EmptyState
-              variant='no-data'
-              icon={
-                <svg fill='none' viewBox='0 0 24 24' stroke='currentColor'>
-                  <path
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth={2}
-                    d='M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'
-                  />
-                </svg>
-              }
-              title='No organizations yet'
-              description='Create your first organization to start managing teams and projects'
-              action={<Button onClick={() => setIsCreating(true)}>Create Organization</Button>}
-            />
-          ) : (
-            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-              {orgs.map((org) => (
-                <Card
-                  key={org.id}
-                  variant='interactive'
-                  className={activeOrgId === org.id ? 'border-accent-cyan bg-surface-4' : ''}
-                  onClick={() => setActiveOrgId(org.id)}
-                >
-                  <CardContent className='p-6'>
-                    <div className='flex items-start gap-4 mb-4'>
-                      <Avatar
-                        src={org.logo || undefined}
-                        alt={org.name || 'Organization'}
-                        fallback={org.name?.substring(0, 2) || 'OR'}
-                        size='lg'
-                      />
-                      <div className='flex-1 min-w-0'>
-                        <h3 className='font-semibold truncate'>{org.name}</h3>
-                        <p className='text-sm text-muted-foreground font-mono truncate'>{org.slug}</p>
-                      </div>
-                    </div>
-                    <div className='flex items-center gap-2'>
-                      <Badge variant='default' size='sm'>
-                        {org.role}
-                      </Badge>
-                      {org.memberCount !== undefined && (
-                        <span className='text-sm text-muted-foreground'>
-                          {org.memberCount} {org.memberCount === 1 ? 'member' : 'members'}
-                        </span>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+      {/* Organizations Grid */}
+      {!orgs || orgs.length === 0 ? (
+        <Card className='p-12'>
+          <div className='text-center'>
+            <div className='mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted'>
+              <svg className='h-6 w-6 text-muted-foreground' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={2}
+                  d='M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'
+                />
+              </svg>
             </div>
-          )}
-        </section>
-      </div>
+            <h3 className='mb-2 text-lg font-semibold'>No organizations yet</h3>
+            <p className='mb-4 text-muted-foreground'>
+              Create your first organization to start managing teams and projects
+            </p>
+            <Button onClick={() => setIsCreating(true)}>Create Organization</Button>
+          </div>
+        </Card>
+      ) : (
+        <div className='grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3'>
+          {orgs.map((org) => (
+            <Card
+              key={org.id}
+              className={`cursor-pointer transition-colors hover:border-primary ${
+                activeOrgId === org.id ? 'border-primary bg-primary/5' : ''
+              }`}
+              onClick={() => setActiveOrgId(org.id)}
+            >
+              <CardContent className='p-6'>
+                <div className='mb-4 flex items-start gap-4'>
+                  {org.logo ? (
+                    <img src={org.logo} alt={org.name || ''} className='h-12 w-12 rounded-lg object-cover' />
+                  ) : (
+                    <div className='flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10'>
+                      <span className='text-lg font-semibold text-primary'>
+                        {org.name?.substring(0, 2).toUpperCase() || 'OR'}
+                      </span>
+                    </div>
+                  )}
+                  <div className='min-w-0 flex-1'>
+                    <h3 className='truncate font-semibold'>{org.name}</h3>
+                    <p className='truncate font-mono text-sm text-muted-foreground'>{org.slug}</p>
+                  </div>
+                </div>
+                <div className='flex items-center gap-2'>
+                  <Badge>{org.role}</Badge>
+                  {org.memberCount !== undefined && (
+                    <span className='text-sm text-muted-foreground'>
+                      {org.memberCount} {org.memberCount === 1 ? 'member' : 'members'}
+                    </span>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

@@ -1,189 +1,138 @@
-# Web App
+# Vyrak Web Application
 
-Modern React application built with Vite, React Router, TanStack Query, TailwindCSS, and shadcn/ui.
+Modern web application built with React 19, TypeScript, Vite, and shadcn/ui.
 
-## Tech Stack
+## Features
 
-- **Vite** - Fast build tool and dev server
-- **React 19** - UI library
-- **TypeScript** - Type safety
-- **React Router DOM** - Client-side routing (CSR)
-- **TanStack Query (React Query)** - Data fetching and caching
-- **TailwindCSS** - Utility-first CSS framework
-- **shadcn/ui** - Re-usable components built with Radix UI
+- ⚡️ **React 19** - Latest React with Suspense and Error Boundaries
+- 🎨 **shadcn/ui** - Beautiful, accessible UI components
+- 🔐 **Authentication** - Login with JWT token management
+- 🏢 **Multi-tenant** - Organization-based access control
+- 🔄 **React Query** - Powerful data fetching and caching
+- 📝 **React Hook Form + Zod** - Type-safe form validation
+- 🎯 **TypeScript** - Full type safety
+- 🚀 **Vite** - Lightning fast HMR
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js >= 22.0.0
+- API server running on http://localhost:3000
+
+### Installation
+
+```bash
+# Install dependencies
+npm install
+
+# Generate API hooks from OpenAPI spec
+npm run generate:api
+
+# Start development server
+npm run dev
+```
+
+The app will be available at http://localhost:5173
+
+### Environment Variables
+
+Create a `.env` file in the root directory:
+
+```env
+VITE_API_BASE_URL=http://localhost:3000
+```
+
+## Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm run lint` - Run ESLint
+- `npm run format` - Format code with Prettier
+- `npm run typecheck` - Run TypeScript type checking
+- `npm run generate:api` - Generate API hooks from OpenAPI spec
 
 ## Project Structure
 
 ```
-apps/web/
-├── src/
-│   ├── components/       # Reusable components
-│   │   └── ui/          # shadcn/ui components
-│   ├── pages/           # Page components
-│   ├── lib/             # Utility functions
-│   ├── hooks/           # Custom React hooks
-│   ├── types/           # TypeScript types
-│   ├── App.tsx          # Root component with routes
-│   ├── main.tsx         # Entry point
-│   └── index.css        # Global styles with Tailwind
-├── public/              # Static assets
-├── components.json      # shadcn/ui configuration
-├── tailwind.config.ts   # Tailwind configuration
-├── vite.config.ts       # Vite configuration
-└── tsconfig.json        # TypeScript configuration
+src/
+├── api/
+│   ├── client.ts           # Orval custom instance
+│   └── generated/          # Generated API hooks (auto-generated)
+├── components/
+│   ├── auth/              # Auth-related components
+│   ├── dashboard/         # Dashboard components
+│   └── ui/                # shadcn/ui components
+├── contexts/
+│   ├── auth-context.tsx   # Authentication state
+│   └── organization-context.tsx
+├── layouts/
+│   └── dashboard-layout.tsx
+├── lib/
+│   ├── api-client.ts      # Axios instance with interceptors
+│   └── utils.ts           # Utility functions
+├── pages/
+│   ├── auth/              # Login, register pages
+│   └── dashboard/         # Dashboard pages
+├── App.tsx                # Main app component
+└── main.tsx               # App entry point
 ```
 
-## Development
+## Key Concepts
 
-### Start dev server
+### Authentication Flow
+
+1. User logs in via `/login`
+2. JWT token stored in localStorage and memory
+3. Token attached to all API requests via Axios interceptor
+4. Auto-redirect to login on 401 responses
+
+### API Integration
+
+API hooks are auto-generated from OpenAPI spec using Orval:
+
+```tsx
+import { useAuthControllerLogin } from '@/api/generated/auth/auth'
+
+const loginMutation = useAuthControllerLogin()
+await loginMutation.mutateAsync({ data: { email, password } })
+```
+
+### Adding Components
+
+Add shadcn/ui components:
 
 ```bash
-yarn dev:web
+npx shadcn@latest add button card input
 ```
 
-Runs on: http://localhost:5173
+## Migration from old-web
 
-### Build for production
+This app was migrated from `apps/old-web` with the following changes:
 
-```bash
-yarn build
+- ✅ Same authentication flow and contexts
+- ✅ Same API integration with Orval
+- ✅ Reused shadcn/ui components instead of custom components
+- ✅ Same routing structure with React Router
+- ✅ Updated to latest dependencies
+
+### What was migrated:
+
+- Authentication context and protected routes
+- Organization context for multi-tenancy
+- API client with Axios interceptors
+- Login page with same credentials
+- Dashboard layout with sidebar and header
+- Dashboard page with organization selector
+
+## Test Credentials
+
+```
+Email: admin@vyrak.dev
+Password: Password123!
 ```
 
-### Preview production build
+## License
 
-```bash
-yarn preview
-```
-
-### Type checking
-
-```bash
-yarn typecheck
-```
-
-## Adding shadcn/ui Components
-
-Install shadcn/ui CLI globally (if not already):
-
-```bash
-npm install -g shadcn
-```
-
-Add components:
-
-```bash
-cd apps/web
-npx shadcn@latest add button
-npx shadcn@latest add card
-npx shadcn@latest add input
-```
-
-Components will be added to `src/components/ui/`.
-
-## Path Aliases
-
-The project uses `@` as an alias for `src/`:
-
-```typescript
-import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
-```
-
-## React Query Setup
-
-React Query is configured in `src/main.tsx` with default options:
-
-```typescript
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      retry: 1,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    },
-  },
-})
-```
-
-### Example usage
-
-```typescript
-import { useQuery } from '@tanstack/react-query'
-
-function UserProfile() {
-  const { data, isLoading } = useQuery({
-    queryKey: ['user'],
-    queryFn: async () => {
-      const res = await fetch('/api/user')
-      return res.json()
-    },
-  })
-
-  if (isLoading) return <div>Loading...</div>
-  return <div>{data.name}</div>
-}
-```
-
-## Routing
-
-Routes are defined in `src/App.tsx` using React Router DOM:
-
-```typescript
-<Routes>
-  <Route path="/" element={<HomePage />} />
-  <Route path="/about" element={<AboutPage />} />
-  <Route path="*" element={<NotFoundPage />} />
-</Routes>
-```
-
-## Styling
-
-### Tailwind Utilities
-
-```typescript
-<div className="flex items-center justify-center p-4 bg-primary text-primary-foreground">
-  Content
-</div>
-```
-
-### Using cn() helper
-
-Merge Tailwind classes with conditional logic:
-
-```typescript
-import { cn } from '@/lib/utils'
-
-<button className={cn(
-  'px-4 py-2 rounded',
-  isActive && 'bg-blue-500',
-  isDisabled && 'opacity-50'
-)}>
-  Click me
-</button>
-```
-
-## Dark Mode
-
-Dark mode is configured in `tailwind.config.ts` using class-based strategy. Toggle dark mode by adding/removing `dark` class on `<html>` element.
-
-## API Integration
-
-Configure API base URL in `.env`:
-
-```env
-VITE_API_URL=http://localhost:3000
-```
-
-Access in code:
-
-```typescript
-const apiUrl = import.meta.env.VITE_API_URL
-```
-
-## See Also
-
-- [Vite Documentation](https://vite.dev)
-- [React Router Documentation](https://reactrouter.com)
-- [TanStack Query Documentation](https://tanstack.com/query)
-- [shadcn/ui Documentation](https://ui.shadcn.com)
-- [Tailwind CSS Documentation](https://tailwindcss.com)
+MIT

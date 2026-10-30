@@ -4,12 +4,12 @@ import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import { z } from 'zod'
 
-import { useAuthControllerLogin } from '../../api/generated/auth/auth'
-import { Button } from '../../components/ui/button'
-import { ErrorMessage, FormField, Label } from '../../components/ui/form-field'
-import { Input } from '../../components/ui/input'
-import { useToast } from '../../components/ui/toast'
-import { useAuth } from '../../contexts/auth-context'
+import { useAuthControllerLogin } from '@/api/generated/auth/auth'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { useAuth } from '@/contexts/auth-context'
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -21,7 +21,6 @@ type LoginForm = z.infer<typeof loginSchema>
 export function LoginPage() {
   const navigate = useNavigate()
   const { setAuth, user } = useAuth()
-  const { showToast } = useToast()
 
   const {
     register,
@@ -43,50 +42,39 @@ export function LoginPage() {
   const onSubmit = async (data: LoginForm) => {
     try {
       const result = await loginMutation.mutateAsync({ data })
-
-      // Update auth context (will handle localStorage automatically)
       setAuth(result.accessToken, result.user)
-
-      showToast({
-        title: 'Welcome back!',
-        type: 'success',
-      })
-
-      // Redirect to dashboard
       navigate('/dashboard')
     } catch (_err) {
-      showToast({
-        title: 'Invalid email or password',
-        type: 'error',
-      })
+      // Error handling can be improved with toast notifications
+      console.error('Login failed')
     }
   }
 
   return (
-    <div className='min-h-screen flex'>
+    <div className='flex min-h-screen'>
       {/* Left side - Branding (hidden on mobile) */}
-      <div className='hidden lg:flex lg:w-2/5 bg-surface-1 p-12 flex-col justify-between border-r border-border'>
+      <div className='hidden flex-col justify-between border-r border-border bg-card p-12 lg:flex lg:w-2/5'>
         <div>
-          <h1 className='text-3xl font-bold tracking-tight mb-2'>Vyrak</h1>
+          <h1 className='mb-2 text-3xl font-bold tracking-tight'>Vyrak</h1>
           <p className='text-muted-foreground'>A modern full-stack boilerplate</p>
         </div>
 
         <div className='space-y-6'>
           <div className='flex items-start gap-3'>
-            <div className='flex-shrink-0 w-8 h-8 rounded-lg bg-accent-cyan/10 flex items-center justify-center'>
-              <svg className='w-5 h-5 text-accent-cyan' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
+            <div className='flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10'>
+              <svg className='h-5 w-5 text-primary' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
                 <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M13 10V3L4 14h7v7l9-11h-7z' />
               </svg>
             </div>
             <div>
-              <h3 className='font-medium mb-1'>Fast Development</h3>
+              <h3 className='mb-1 font-medium'>Fast Development</h3>
               <p className='text-sm text-muted-foreground'>TypeScript monorepo with hot reload</p>
             </div>
           </div>
 
           <div className='flex items-start gap-3'>
-            <div className='flex-shrink-0 w-8 h-8 rounded-lg bg-accent-cyan/10 flex items-center justify-center'>
-              <svg className='w-5 h-5 text-accent-cyan' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
+            <div className='flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10'>
+              <svg className='h-5 w-5 text-primary' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
                 <path
                   strokeLinecap='round'
                   strokeLinejoin='round'
@@ -96,14 +84,14 @@ export function LoginPage() {
               </svg>
             </div>
             <div>
-              <h3 className='font-medium mb-1'>Type-Safe</h3>
+              <h3 className='mb-1 font-medium'>Type-Safe</h3>
               <p className='text-sm text-muted-foreground'>End-to-end type safety with OpenAPI</p>
             </div>
           </div>
 
           <div className='flex items-start gap-3'>
-            <div className='flex-shrink-0 w-8 h-8 rounded-lg bg-accent-cyan/10 flex items-center justify-center'>
-              <svg className='w-5 h-5 text-accent-cyan' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
+            <div className='flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10'>
+              <svg className='h-5 w-5 text-primary' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
                 <path
                   strokeLinecap='round'
                   strokeLinejoin='round'
@@ -113,7 +101,7 @@ export function LoginPage() {
               </svg>
             </div>
             <div>
-              <h3 className='font-medium mb-1'>Multi-tenant</h3>
+              <h3 className='mb-1 font-medium'>Multi-tenant</h3>
               <p className='text-sm text-muted-foreground'>Organization-based access control</p>
             </div>
           </div>
@@ -123,66 +111,51 @@ export function LoginPage() {
       </div>
 
       {/* Right side - Login Form */}
-      <div className='flex-1 flex items-center justify-center p-6 md:p-12'>
+      <div className='flex flex-1 items-center justify-center p-6 md:p-12'>
         <div className='w-full max-w-md'>
           <div className='mb-8 lg:hidden'>
-            <h1 className='text-2xl font-bold tracking-tight mb-1'>Vyrak</h1>
+            <h1 className='mb-1 text-2xl font-bold tracking-tight'>Vyrak</h1>
             <p className='text-sm text-muted-foreground'>A modern full-stack boilerplate</p>
           </div>
 
-          <div className='bg-card border border-border rounded-lg p-6 md:p-8 shadow-lg'>
-            <h2 className='text-2xl font-bold tracking-tight mb-2'>Welcome back</h2>
-            <p className='text-muted-foreground mb-6'>Sign in to your account to continue</p>
+          <Card className='p-6 md:p-8'>
+            <h2 className='mb-2 text-2xl font-bold tracking-tight'>Welcome back</h2>
+            <p className='mb-6 text-muted-foreground'>Sign in to your account to continue</p>
 
             <form onSubmit={handleSubmit(onSubmit)} className='space-y-4'>
-              <FormField>
-                <Label htmlFor='email' required>
-                  Email
-                </Label>
+              <div className='space-y-2'>
+                <Label htmlFor='email'>Email</Label>
                 <Input
                   id='email'
                   type='email'
                   placeholder='you@example.com'
-                  error={!!errors.email}
-                  data-testid='login-email-input'
                   {...register('email')}
-                  aria-describedby={errors.email ? 'email-error' : undefined}
                   autoComplete='email'
                 />
-                <ErrorMessage id='email-error'>{errors.email?.message}</ErrorMessage>
-              </FormField>
+                {errors.email && <p className='text-sm text-destructive'>{errors.email.message}</p>}
+              </div>
 
-              <FormField>
-                <Label htmlFor='password' required>
-                  Password
-                </Label>
+              <div className='space-y-2'>
+                <Label htmlFor='password'>Password</Label>
                 <Input
                   id='password'
                   type='password'
                   placeholder='••••••••'
-                  error={!!errors.password}
-                  data-testid='login-password-input'
                   {...register('password')}
-                  aria-describedby={errors.password ? 'password-error' : undefined}
                   autoComplete='current-password'
                 />
-                <ErrorMessage id='password-error'>{errors.password?.message}</ErrorMessage>
-              </FormField>
+                {errors.password && <p className='text-sm text-destructive'>{errors.password.message}</p>}
+              </div>
 
-              <Button
-                type='submit'
-                className='w-full'
-                loading={loginMutation.isPending}
-                data-testid='login-submit-button'
-              >
+              <Button type='submit' className='w-full' disabled={loginMutation.isPending}>
                 {loginMutation.isPending ? 'Signing in...' : 'Sign in'}
               </Button>
             </form>
 
-            <div className='mt-6 pt-6 border-t border-border'>
-              <div className='bg-accent-cyan/5 border border-accent-cyan/20 rounded-md p-3'>
-                <p className='text-xs font-medium text-accent-cyan mb-2 flex items-center gap-1.5'>
-                  <svg className='w-3.5 h-3.5' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
+            <div className='mt-6 border-t border-border pt-6'>
+              <div className='rounded-md border border-primary/20 bg-primary/5 p-3'>
+                <p className='mb-2 flex items-center gap-1.5 text-xs font-medium text-primary'>
+                  <svg className='h-3.5 w-3.5' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
                     <path
                       strokeLinecap='round'
                       strokeLinejoin='round'
@@ -192,7 +165,7 @@ export function LoginPage() {
                   </svg>
                   Test Credentials
                 </p>
-                <div className='space-y-1 text-xs text-muted-foreground font-mono'>
+                <div className='space-y-1 font-mono text-xs text-muted-foreground'>
                   <div className='flex items-center gap-2'>
                     <span className='text-muted-foreground/70'>Email:</span>
                     <span>admin@vyrak.dev</span>
@@ -204,7 +177,7 @@ export function LoginPage() {
                 </div>
               </div>
             </div>
-          </div>
+          </Card>
         </div>
       </div>
     </div>

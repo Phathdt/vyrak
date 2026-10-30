@@ -1,6 +1,8 @@
-import { AxiosError, AxiosRequestConfig } from 'axios'
+import { AxiosError } from 'axios'
 
 import { apiClient } from '../lib/api-client'
+
+import type { AxiosRequestConfig } from 'axios'
 
 // Custom instance for orval - uses the shared apiClient with proper auth
 export const customInstance = <T>(config: AxiosRequestConfig, options?: AxiosRequestConfig): Promise<T> => {

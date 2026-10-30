@@ -1,33 +1,29 @@
-import { ReactNode } from 'react'
-import { Navigate, useLocation } from 'react-router-dom'
+import { Navigate } from 'react-router-dom'
 
-import { useAuth } from '../../contexts/auth-context'
-import { LoadingSpinner } from '../loading-spinner'
+import { useAuth } from '@/contexts/auth-context'
+
+import type { ReactNode } from 'react'
 
 interface ProtectedRouteProps {
   children: ReactNode
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { user, isLoading, accessToken } = useAuth()
-  const location = useLocation()
+  const { accessToken, isLoading } = useAuth()
 
   if (isLoading) {
     return (
-      <div className='min-h-screen grid place-items-center bg-background'>
-        <LoadingSpinner size='lg' />
+      <div className='flex min-h-screen items-center justify-center'>
+        <div className='text-center'>
+          <div className='mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent'></div>
+          <p className='text-muted-foreground'>Loading...</p>
+        </div>
       </div>
     )
   }
 
-  // If no token at all, definitely not authenticated
   if (!accessToken) {
-    return <Navigate to='/login' state={{ from: location }} replace />
-  }
-
-  // If we have token but no user, and not loading, something went wrong
-  if (!user && !isLoading) {
-    return <Navigate to='/login' state={{ from: location }} replace />
+    return <Navigate to='/login' replace />
   }
 
   return <>{children}</>

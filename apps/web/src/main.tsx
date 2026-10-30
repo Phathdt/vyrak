@@ -4,8 +4,9 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 
 import './index.css'
-import './styles/workflow-approval.css'
-import App from './App'
+import { ThemeProvider } from '@/components/theme-provider.tsx'
+
+import App from './App.tsx'
 import { AuthProvider } from './contexts/auth-context'
 
 const queryClient = new QueryClient({
@@ -23,7 +24,9 @@ createRoot(document.getElementById('root')!).render(
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <BrowserRouter>
-          <App />
+          <ThemeProvider>
+            <App />
+          </ThemeProvider>
         </BrowserRouter>
       </AuthProvider>
     </QueryClientProvider>

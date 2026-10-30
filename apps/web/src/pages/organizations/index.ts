@@ -1,2 +1,2 @@
-export * from './organizations-page'
-export * from './organization-settings-page'
+export { OrganizationsPage } from './organizations-page'
+export { OrganizationSettingsPage } from './organization-settings-page'

@@ -5,11 +5,11 @@ import { ProtectedRoute } from './components/auth'
 import { ErrorBoundary } from './components/error-boundary'
 import { PageLoading } from './components/page-loading'
 import { OrganizationProvider } from './contexts'
-import { DashboardLayout } from './layouts/DashboardLayout'
+import { DashboardLayout } from './layouts/dashboard-layout'
 import { LoginPage } from './pages/auth'
 import { DashboardPage } from './pages/dashboard'
-import { OrganizationSettingsPage, OrganizationsPage } from './pages/organizations'
-import { ProjectDetailPage, ProjectsPage } from './pages/projects'
+import { OrganizationsPage, OrganizationSettingsPage } from './pages/organizations'
+import { ProjectsPage } from './pages/projects'
 
 function App() {
   return (
@@ -19,7 +19,7 @@ function App() {
           <Routes>
             <Route path='/login' element={<LoginPage />} />
 
-            {/* Dashboard routes với layout */}
+            {/* Dashboard routes with layout */}
             <Route
               element={
                 <ProtectedRoute>
@@ -28,10 +28,9 @@ function App() {
               }
             >
               <Route path='/dashboard' element={<DashboardPage />} />
-              <Route path='/projects' element={<ProjectsPage />} />
-              <Route path='/projects/:id' element={<ProjectDetailPage />} />
               <Route path='/organizations' element={<OrganizationsPage />} />
               <Route path='/organizations/:id/settings' element={<OrganizationSettingsPage />} />
+              <Route path='/projects' element={<ProjectsPage />} />
             </Route>
 
             <Route path='/' element={<Navigate to='/dashboard' replace />} />
