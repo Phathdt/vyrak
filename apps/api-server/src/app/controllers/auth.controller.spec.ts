@@ -3,16 +3,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { AuthController } from './auth.controller'
 
-// Mock @vyrak/auth module - preserve all exports including DTOs
+// Mock @vyrak/auth module - preserve all exports including DTOs and interfaces
 vi.mock('@vyrak/auth', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@vyrak/auth')>()
   return {
     ...actual,
-    AuthService: vi.fn(() => ({
-      login: vi.fn(),
-      getCurrentUser: vi.fn(),
-      handleUserOnboarding: vi.fn(),
-    })),
+    AUTH_SERVICE: Symbol('AUTH_SERVICE'),
+    IAuthService: vi.fn(),
   }
 })
 

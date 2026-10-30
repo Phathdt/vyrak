@@ -1,8 +1,13 @@
-import { UserWithOrganizations } from './auth-repository.interface'
+import type { UserWithOrganizations } from './auth-repository.interface'
 
+/**
+ * Auth service interface
+ * Defines all business logic operations for authentication
+ */
 export interface IAuthService {
   /**
    * Login with email and password
+   * @throws UnauthorizedError if credentials are invalid
    */
   login(
     email: string,

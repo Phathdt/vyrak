@@ -1,6 +1,6 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common'
+import { Body, Controller, Get, Inject, Post, Req, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
-import { AuthResponseDto, AuthService, CurrentUserResponseDto, LoginDto } from '@vyrak/auth'
+import { AUTH_SERVICE, AuthResponseDto, CurrentUserResponseDto, IAuthService, LoginDto } from '@vyrak/auth'
 import { Request } from 'express'
 
 import { JwtAuthGuard } from '../../guards'
@@ -15,7 +15,7 @@ interface RequestWithUser extends Request {
 @ApiTags('auth')
 @Controller('api/auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(@Inject(AUTH_SERVICE) private readonly authService: IAuthService) {}
 
   @Post('login')
   @ApiOperation({ summary: 'Login with email and password' })

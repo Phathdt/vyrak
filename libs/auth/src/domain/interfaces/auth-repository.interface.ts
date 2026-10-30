@@ -1,5 +1,8 @@
 import type { UserEntity } from '../entities'
 
+/**
+ * User entity with organization memberships
+ */
 export interface UserWithOrganizations extends UserEntity {
   members: Array<{
     id: string
@@ -17,6 +20,10 @@ export interface UserWithOrganizations extends UserEntity {
   }>
 }
 
+/**
+ * Auth repository interface
+ * Defines all data access operations for authentication
+ */
 export interface IAuthRepository {
   /**
    * Find user by email with password hash

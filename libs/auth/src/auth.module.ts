@@ -4,19 +4,33 @@ import { CustomConfigModule, CustomConfigService } from '@vyrak/custom-config'
 import { DatabaseModule, DatabaseService } from '@vyrak/database'
 
 import { AuthService, PasswordService } from './application'
-import { AuthPrismaRepository, JwtProvider, JwtStrategy } from './infras'
+import {
+  AUTH_REPOSITORY,
+  AUTH_SERVICE,
+  AuthPrismaRepository,
+  JWT_PROVIDER,
+  JwtProvider,
+  JwtStrategy,
+  PASSWORD_SERVICE,
+} from './infras'
 
 @Module({
   imports: [DatabaseModule, CustomConfigModule, PassportModule.register({ defaultStrategy: 'jwt' })],
   providers: [
-    PasswordService,
+    // Password Service
     {
-      provide: JwtProvider,
+      provide: PASSWORD_SERVICE,
+      useFactory: () => new PasswordService(),
+    },
+    // JWT Provider
+    {
+      provide: JWT_PROVIDER,
       useFactory: (config: CustomConfigService) => {
         return new JwtProvider(config)
       },
       inject: [CustomConfigService],
     },
+    // JWT Strategy (for Passport)
     {
       provide: JwtStrategy,
       useFactory: (config: CustomConfigService) => {
@@ -24,18 +38,23 @@ import { AuthPrismaRepository, JwtProvider, JwtStrategy } from './infras'
       },
       inject: [CustomConfigService],
     },
+    // Auth Repository
     {
-      provide: AuthService,
-      useFactory: (databaseService: DatabaseService, jwtProvider: JwtProvider, passwordService: PasswordService) => {
-        // Instantiate repository with DatabaseService (for withSystemAccess)
-        const repository = new AuthPrismaRepository(databaseService)
-
-        // Instantiate service with repository, jwt provider, and password service
-        return new AuthService(repository, jwtProvider, passwordService)
+      provide: AUTH_REPOSITORY,
+      useFactory: (databaseService: DatabaseService) => {
+        return new AuthPrismaRepository(databaseService)
       },
-      inject: [DatabaseService, JwtProvider, PasswordService],
+      inject: [DatabaseService],
+    },
+    // Auth Service
+    {
+      provide: AUTH_SERVICE,
+      useFactory: (authRepository, jwtProvider, passwordService) => {
+        return new AuthService(authRepository, jwtProvider, passwordService)
+      },
+      inject: [AUTH_REPOSITORY, JWT_PROVIDER, PASSWORD_SERVICE],
     },
   ],
-  exports: [AuthService, JwtProvider, JwtStrategy, PassportModule],
+  exports: [AUTH_SERVICE, JWT_PROVIDER, JwtStrategy, PassportModule],
 })
 export class AuthModule {}

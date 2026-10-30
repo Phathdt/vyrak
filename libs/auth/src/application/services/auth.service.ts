@@ -1,8 +1,8 @@
-import { JwtProvider } from '../../infras'
-import { PasswordService } from './password.service'
-
 import type { IAuthRepository, IAuthService, UserWithOrganizations } from '../../domain'
 
+/**
+ * Custom error for authentication failures
+ */
 class UnauthorizedError extends Error {
   constructor(message: string) {
     super(message)
@@ -13,11 +13,29 @@ class UnauthorizedError extends Error {
   }
 }
 
+/**
+ * JWT Provider interface
+ */
+interface IJwtProvider {
+  sign(payload: { sub: string; email: string }): Promise<string>
+}
+
+/**
+ * Password Service interface
+ */
+interface IPasswordService {
+  verify(hash: string, password: string): Promise<boolean>
+}
+
+/**
+ * Auth Service implementation
+ * Plain TypeScript class - NO NestJS decorators
+ */
 export class AuthService implements IAuthService {
   constructor(
     private readonly authRepository: IAuthRepository,
-    private readonly jwtProvider: JwtProvider,
-    private readonly passwordService: PasswordService
+    private readonly jwtProvider: IJwtProvider,
+    private readonly passwordService: IPasswordService
   ) {}
 
   async login(
