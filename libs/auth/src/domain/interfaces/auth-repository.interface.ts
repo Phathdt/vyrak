@@ -1,26 +1,20 @@
+import type { MemberEntity, OrganizationEntity } from '@vyrak/organization'
+import type { UserEntity } from '@vyrak/user'
+
+/**
+ * Member with nested organization
+ * Extends MemberEntity with organization details
+ */
+export interface MemberWithOrganization extends MemberEntity {
+  organization: OrganizationEntity
+}
+
 /**
  * User entity with organization memberships
+ * Composed from UserEntity + MemberWithOrganization array
  */
-export interface UserWithOrganizations {
-  id: string
-  email: string
-  name: string | null
-  emailVerified: boolean
-  image: string | null
-  members: Array<{
-    id: string
-    userId: string
-    organizationId: string
-    role: string
-    createdAt: Date
-    organization: {
-      id: string
-      name: string
-      slug: string
-      createdAt: Date
-      updatedAt: Date
-    }
-  }>
+export interface UserWithOrganizations extends Omit<UserEntity, 'passwordHash' | 'createdAt' | 'updatedAt'> {
+  members: MemberWithOrganization[]
 }
 
 /**

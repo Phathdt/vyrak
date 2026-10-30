@@ -1,4 +1,4 @@
-import type { IAuthRepository, UserWithOrganizations } from '../../domain'
+import type { IAuthRepository, MemberWithOrganization, UserWithOrganizations } from '../../domain'
 import type { DatabaseService } from '@vyrak/database'
 
 export class AuthPrismaRepository implements IAuthRepository {
@@ -27,14 +27,29 @@ export class AuthPrismaRepository implements IAuthRepository {
           where: { id: { in: organizationIds } },
         })
 
-        // Build the result with nested structure
-        const membersWithOrgs = members.map((member) => ({
-          ...member,
-          organization: organizations.find((org) => org.id === member.organizationId)!,
+        // Build the result with nested structure, casting to proper types
+        const membersWithOrgs: MemberWithOrganization[] = members.map((member) => ({
+          id: member.id,
+          organizationId: member.organizationId,
+          userId: member.userId,
+          role: member.role as 'owner' | 'admin' | 'member',
+          createdAt: member.createdAt,
+          organization: {
+            id: member.organizationId,
+            name: organizations.find((org) => org.id === member.organizationId)!.name,
+            slug: organizations.find((org) => org.id === member.organizationId)!.slug,
+            logo: organizations.find((org) => org.id === member.organizationId)!.logo,
+            createdAt: organizations.find((org) => org.id === member.organizationId)!.createdAt,
+            updatedAt: organizations.find((org) => org.id === member.organizationId)!.updatedAt,
+          },
         }))
 
         return {
-          ...user,
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          emailVerified: user.emailVerified,
+          image: user.image,
           members: membersWithOrgs,
         }
       })

@@ -1,5 +1,6 @@
 import type { IUserRepository, UserEntity } from '../../domain'
 import type { DatabaseService } from '@vyrak/database'
+import type { User as PrismaUser } from '@vyrak/database'
 
 /**
  * User Prisma Repository
@@ -9,6 +10,23 @@ import type { DatabaseService } from '@vyrak/database'
  */
 export class UserPrismaRepository implements IUserRepository {
   constructor(private readonly databaseService: DatabaseService) {}
+
+  /**
+   * Map Prisma User model to UserEntity
+   * Centralized mapping to avoid duplication
+   */
+  private mapToEntity(user: PrismaUser): UserEntity {
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      emailVerified: user.emailVerified,
+      image: user.image,
+      passwordHash: user.passwordHash,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    }
+  }
 
   async findById(userId: string): Promise<UserEntity | null> {
     try {
@@ -20,16 +38,7 @@ export class UserPrismaRepository implements IUserRepository {
         return null
       }
 
-      return {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        emailVerified: user.emailVerified,
-        image: user.image,
-        passwordHash: user.passwordHash,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-      }
+      return this.mapToEntity(user)
     } catch (error) {
       console.error('[UserPrismaRepository] findById error:', error)
       throw error
@@ -46,16 +55,7 @@ export class UserPrismaRepository implements IUserRepository {
         return null
       }
 
-      return {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        emailVerified: user.emailVerified,
-        image: user.image,
-        passwordHash: user.passwordHash,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-      }
+      return this.mapToEntity(user)
     } catch (error) {
       console.error('[UserPrismaRepository] findByEmail error:', error)
       throw error
@@ -72,16 +72,7 @@ export class UserPrismaRepository implements IUserRepository {
         },
       })
 
-      return {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        emailVerified: user.emailVerified,
-        image: user.image,
-        passwordHash: user.passwordHash,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-      }
+      return this.mapToEntity(user)
     } catch (error) {
       console.error('[UserPrismaRepository] create error:', error)
       throw error
@@ -103,16 +94,7 @@ export class UserPrismaRepository implements IUserRepository {
         data,
       })
 
-      return {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        emailVerified: user.emailVerified,
-        image: user.image,
-        passwordHash: user.passwordHash,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-      }
+      return this.mapToEntity(user)
     } catch (error) {
       console.error('[UserPrismaRepository] update error:', error)
       throw error
