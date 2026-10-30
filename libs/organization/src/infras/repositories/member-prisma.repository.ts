@@ -1,8 +1,43 @@
 import type { IMemberRepository, MemberResponse, UpdateMemberRoleDto } from '../../domain'
-import type { DatabaseService } from '@vyrak/database'
+import type { DatabaseService, Member as PrismaMember } from '@vyrak/database'
 
 export class MemberPrismaRepository implements IMemberRepository {
   constructor(private readonly prisma: DatabaseService) {}
+
+  /**
+   * Map Prisma Member to MemberResponse
+   * Centralized mapping to avoid duplication
+   */
+  private async mapToEntity(
+    member: PrismaMember,
+    includeOrgId: boolean = false
+  ): Promise<MemberResponse | (MemberResponse & { organizationId: string })> {
+    const user = await this.prisma.client.user.findUnique({
+      where: { id: member.userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        image: true,
+      },
+    })
+
+    const base = {
+      id: member.id,
+      role: member.role as 'owner' | 'admin' | 'member',
+      createdAt: member.createdAt,
+      user: user || { id: member.userId, name: null, email: '', image: null },
+    }
+
+    if (includeOrgId) {
+      return {
+        ...base,
+        organizationId: member.organizationId,
+      }
+    }
+
+    return base
+  }
 
   async list(organizationId: string): Promise<MemberResponse[]> {
     return this.prisma.withSystemAccess(async () => {
@@ -11,28 +46,7 @@ export class MemberPrismaRepository implements IMemberRepository {
         orderBy: { createdAt: 'asc' },
       })
 
-      const membersWithUsers = await Promise.all(
-        members.map(async (m) => {
-          const user = await this.prisma.client.user.findUnique({
-            where: { id: m.userId },
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              image: true,
-            },
-          })
-
-          return {
-            id: m.id,
-            role: m.role,
-            createdAt: m.createdAt,
-            user: user || { id: m.userId, name: null, email: '', image: null },
-          }
-        })
-      )
-
-      return membersWithUsers
+      return Promise.all(members.map((m) => this.mapToEntity(m)))
     })
   }
 
@@ -46,23 +60,7 @@ export class MemberPrismaRepository implements IMemberRepository {
         return null
       }
 
-      const user = await this.prisma.client.user.findUnique({
-        where: { id: member.userId },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          image: true,
-        },
-      })
-
-      return {
-        id: member.id,
-        role: member.role,
-        createdAt: member.createdAt,
-        organizationId: member.organizationId,
-        user: user || { id: member.userId, name: null, email: '', image: null },
-      }
+      return this.mapToEntity(member, true) as Promise<MemberResponse & { organizationId: string }>
     })
   }
 
@@ -73,27 +71,7 @@ export class MemberPrismaRepository implements IMemberRepository {
         data: { role },
       })
 
-      const user = await this.prisma.client.user.findUnique({
-        where: { id: updated.userId },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          image: true,
-        },
-      })
-
-      return {
-        id: updated.id,
-        role: updated.role,
-        createdAt: updated.createdAt,
-        user: user || {
-          id: updated.userId,
-          name: null,
-          email: '',
-          image: null,
-        },
-      }
+      return this.mapToEntity(updated)
     })
   }
 

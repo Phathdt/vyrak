@@ -2,9 +2,11 @@ import { ApiProperty } from '@nestjs/swagger'
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
+import { MemberRoleSchema, type MemberRole } from './invitation.schemas'
+
 // Update Member Role
 export const UpdateMemberRoleSchema = z.object({
-  role: z.enum(['owner', 'admin', 'member']),
+  role: MemberRoleSchema,
 })
 
 export class UpdateMemberRoleDto extends createZodDto(UpdateMemberRoleSchema) {
@@ -13,7 +15,7 @@ export class UpdateMemberRoleDto extends createZodDto(UpdateMemberRoleSchema) {
     description: 'New role for the member',
     enum: ['owner', 'admin', 'member'],
   })
-  role: 'owner' | 'admin' | 'member'
+  role: MemberRole
 }
 
 // Member Response
@@ -48,7 +50,7 @@ export class MemberResponse {
   id: string
 
   @ApiProperty({ example: 'owner', description: 'Member role', enum: ['owner', 'admin', 'member'] })
-  role: string
+  role: MemberRole
 
   @ApiProperty({ example: '2024-10-24T10:00:00Z', description: 'Join timestamp' })
   createdAt: Date

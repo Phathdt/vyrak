@@ -6,10 +6,34 @@ import type {
   ProjectWithStats,
   UpdateProjectDto,
 } from '../../domain'
-import type { DatabaseService, Project } from '@vyrak/database'
+import type { DatabaseService, Project as PrismaProject } from '@vyrak/database'
 
 export class ProjectPrismaRepository implements IProjectRepository {
   constructor(private readonly prisma: DatabaseService) {}
+
+  /**
+   * Map Prisma Project to ProjectWithStats
+   * Centralized mapping to avoid duplication
+   */
+  private async mapToEntity(project: PrismaProject): Promise<ProjectWithStats> {
+    const repositoryCount = await this.prisma.client.gitRepository.count({
+      where: { projectId: project.id },
+    })
+
+    return {
+      id: project.id,
+      organizationId: project.organizationId,
+      name: project.name,
+      slug: project.slug,
+      description: project.description,
+      stats: {
+        repositoryCount,
+        workflowRunCount: 0,
+      },
+      createdAt: project.createdAt,
+      updatedAt: project.updatedAt,
+    }
+  }
 
   async create(organizationId: string, data: CreateProjectDto): Promise<ProjectWithStats> {
     return this.prisma.withSystemAccess(async () => {
@@ -22,87 +46,13 @@ export class ProjectPrismaRepository implements IProjectRepository {
         },
       })
 
-      const repositoryCount = await this.prisma.client.gitRepository.count({
-        where: { projectId: project.id },
-      })
-
-      return {
-        id: project.id,
-        organizationId: project.organizationId,
-        name: project.name,
-        slug: project.slug,
-        description: project.description,
-        stats: {
-          repositoryCount,
-          workflowRunCount: 0,
-        },
-        createdAt: project.createdAt,
-        updatedAt: project.updatedAt,
-      }
-    })
-  }
-
-  async findAll(organizationId: string, query: ListProjectsQueryDto): Promise<PaginatedProjects> {
-    return this.prisma.withSystemAccess(async () => {
-      const { page = 1, limit = 10, search, sort = 'createdAt', order = 'desc' } = query
-
-      const where = {
-        organizationId,
-        ...(search
-          ? {
-              OR: [
-                { name: { contains: search, mode: 'insensitive' as const } },
-                { slug: { contains: search, mode: 'insensitive' as const } },
-              ],
-            }
-          : {}),
-      }
-
-      const [items, total] = await Promise.all([
-        this.prisma.client.project.findMany({
-          where,
-          skip: (page - 1) * limit,
-          take: limit,
-          orderBy: { [sort]: order },
-        }),
-        this.prisma.client.project.count({ where }),
-      ])
-
-      const itemsWithStats = await Promise.all(
-        items.map(async (project: Project): Promise<ProjectWithStats> => {
-          const repositoryCount = await this.prisma.client.gitRepository.count({
-            where: { projectId: project.id },
-          })
-
-          return {
-            id: project.id,
-            organizationId: project.organizationId,
-            name: project.name,
-            slug: project.slug,
-            description: project.description,
-            stats: {
-              repositoryCount,
-              workflowRunCount: 0,
-            },
-            createdAt: project.createdAt,
-            updatedAt: project.updatedAt,
-          }
-        })
-      )
-
-      return {
-        items: itemsWithStats,
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      }
+      return this.mapToEntity(project)
     })
   }
 
   async findOne(organizationId: string, id: string): Promise<ProjectWithStats | null> {
     return this.prisma.withSystemAccess(async () => {
-      const project = await this.prisma.client.project.findUnique({
+      const project = await this.prisma.client.project.findFirst({
         where: {
           id,
           organizationId,
@@ -113,37 +63,56 @@ export class ProjectPrismaRepository implements IProjectRepository {
         return null
       }
 
-      const repositoryCount = await this.prisma.client.gitRepository.count({
-        where: { projectId: project.id },
-      })
-
-      return {
-        id: project.id,
-        organizationId: project.organizationId,
-        name: project.name,
-        slug: project.slug,
-        description: project.description,
-        stats: {
-          repositoryCount,
-          workflowRunCount: 0,
-        },
-        createdAt: project.createdAt,
-        updatedAt: project.updatedAt,
-      }
+      return this.mapToEntity(project)
     })
   }
 
   async findBySlug(organizationId: string, slug: string): Promise<{ id: string } | null> {
     return this.prisma.withSystemAccess(async () => {
-      return this.prisma.client.project.findUnique({
+      const project = await this.prisma.client.project.findFirst({
         where: {
-          organizationId_slug: {
-            organizationId,
-            slug,
-          },
+          slug,
+          organizationId,
         },
-        select: { id: true },
+        select: {
+          id: true,
+        },
       })
+
+      return project
+    })
+  }
+
+  async findAll(organizationId: string, query: ListProjectsQueryDto): Promise<PaginatedProjects> {
+    return this.prisma.withSystemAccess(async () => {
+      const { page = 1, limit = 10, search } = query
+
+      const where = {
+        organizationId,
+        ...(search && {
+          OR: [{ name: { contains: search, mode: 'insensitive' as const } }, { slug: { contains: search } }],
+        }),
+      }
+
+      const [projects, total] = await Promise.all([
+        this.prisma.client.project.findMany({
+          where,
+          skip: (page - 1) * limit,
+          take: limit,
+          orderBy: { createdAt: 'desc' },
+        }),
+        this.prisma.client.project.count({ where }),
+      ])
+
+      const projectsWithStats = await Promise.all(projects.map((project) => this.mapToEntity(project)))
+
+      return {
+        items: projectsWithStats,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      }
     })
   }
 
@@ -155,28 +124,12 @@ export class ProjectPrismaRepository implements IProjectRepository {
           organizationId,
         },
         data: {
-          ...(data.name !== undefined && { name: data.name }),
+          ...(data.name && { name: data.name }),
           ...(data.description !== undefined && { description: data.description }),
         },
       })
 
-      const repositoryCount = await this.prisma.client.gitRepository.count({
-        where: { projectId: project.id },
-      })
-
-      return {
-        id: project.id,
-        organizationId: project.organizationId,
-        name: project.name,
-        slug: project.slug,
-        description: project.description,
-        stats: {
-          repositoryCount,
-          workflowRunCount: 0,
-        },
-        createdAt: project.createdAt,
-        updatedAt: project.updatedAt,
-      }
+      return this.mapToEntity(project)
     })
   }
 

@@ -2,10 +2,20 @@ import { ApiProperty } from '@nestjs/swagger'
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
+// Zod Enums
+export const InvitationStatusSchema = z.enum(['pending', 'accepted', 'rejected', 'cancelled'])
+export type InvitationStatus = z.infer<typeof InvitationStatusSchema>
+
+export const MemberRoleSchema = z.enum(['owner', 'admin', 'member'])
+export type MemberRole = z.infer<typeof MemberRoleSchema>
+
+export const InviteRoleSchema = z.enum(['admin', 'member'])
+export type InviteRole = z.infer<typeof InviteRoleSchema>
+
 // Invite Member
 export const InviteMemberSchema = z.object({
   email: z.string().email(),
-  role: z.enum(['admin', 'member']),
+  role: InviteRoleSchema,
 })
 
 export class InviteMemberDto extends createZodDto(InviteMemberSchema) {
@@ -21,7 +31,7 @@ export class InviteMemberDto extends createZodDto(InviteMemberSchema) {
     description: 'Role to assign to the invited user',
     enum: ['admin', 'member'],
   })
-  role: 'admin' | 'member'
+  role: InviteRole
 }
 
 // Invitation Response
@@ -51,7 +61,7 @@ export class InvitationResponse {
     description: 'Invitation status',
     enum: ['pending', 'accepted', 'rejected', 'cancelled'],
   })
-  status: string
+  status: InvitationStatus
 
   @ApiProperty({ example: '2026-10-26T10:00:00Z', description: 'Expiration timestamp' })
   expiresAt: Date

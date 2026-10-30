@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
+import { MemberRoleSchema, type MemberRole } from '@vyrak/organization'
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
@@ -16,7 +17,7 @@ export const CurrentUserResponseSchema = z.object({
       id: z.string(),
       name: z.string(),
       slug: z.string(),
-      role: z.enum(['owner', 'admin', 'member']),
+      role: MemberRoleSchema,
     })
   ),
 })
@@ -55,6 +56,6 @@ export class CurrentUserResponseDto extends createZodDto(CurrentUserResponseSche
     id: string
     name: string
     slug: string
-    role: 'owner' | 'admin' | 'member'
+    role: MemberRole
   }>
 }

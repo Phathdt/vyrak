@@ -4,10 +4,37 @@ import type {
   OrganizationWithRole,
   UpdateOrganizationDto,
 } from '../../domain'
-import type { DatabaseService } from '@vyrak/database'
+import type { DatabaseService, Organization as PrismaOrganization } from '@vyrak/database'
 
 export class OrganizationPrismaRepository implements IOrganizationRepository {
   constructor(private readonly prisma: DatabaseService) {}
+
+  /**
+   * Map Prisma Organization to OrganizationWithRole
+   * Centralized mapping to avoid duplication
+   */
+  private async mapToEntity(
+    organization: PrismaOrganization,
+    role: string,
+    memberCount?: number
+  ): Promise<OrganizationWithRole> {
+    const count =
+      memberCount ??
+      (await this.prisma.client.member.count({
+        where: { organizationId: organization.id },
+      }))
+
+    return {
+      id: organization.id,
+      name: organization.name,
+      slug: organization.slug,
+      logo: organization.logo,
+      role: role as 'owner' | 'admin' | 'member',
+      memberCount: count,
+      createdAt: organization.createdAt,
+      updatedAt: organization.updatedAt,
+    }
+  }
 
   async create(userId: string, data: CreateOrganizationDto): Promise<OrganizationWithRole> {
     return this.prisma.withSystemAccess(async () => {
@@ -31,16 +58,7 @@ export class OrganizationPrismaRepository implements IOrganizationRepository {
         where: { organizationId: organization.id },
       })
 
-      return {
-        id: organization.id,
-        name: organization.name,
-        slug: organization.slug,
-        logo: organization.logo,
-        role: 'owner',
-        memberCount,
-        createdAt: organization.createdAt,
-        updatedAt: organization.updatedAt,
-      }
+      return this.mapToEntity(organization, 'owner', memberCount)
     })
   }
 
@@ -54,39 +72,21 @@ export class OrganizationPrismaRepository implements IOrganizationRepository {
       })
 
       const organizations = await Promise.all(
-        memberships.map(
-          async (m: {
-            id: string
-            userId: string
-            organizationId: string
-            role: string
-            createdAt: Date
-            updatedAt: Date
-          }) => {
-            const organization = await this.prisma.client.organization.findUnique({
-              where: { id: m.organizationId },
-            })
+        memberships.map(async (m) => {
+          const organization = await this.prisma.client.organization.findUnique({
+            where: { id: m.organizationId },
+          })
 
-            if (!organization) {
-              return null
-            }
-
-            const memberCount = await this.prisma.client.member.count({
-              where: { organizationId: organization.id },
-            })
-
-            return {
-              id: organization.id,
-              name: organization.name,
-              slug: organization.slug,
-              logo: organization.logo,
-              role: m.role,
-              memberCount,
-              createdAt: organization.createdAt,
-              updatedAt: organization.updatedAt,
-            }
+          if (!organization) {
+            return null
           }
-        )
+
+          const memberCount = await this.prisma.client.member.count({
+            where: { organizationId: organization.id },
+          })
+
+          return this.mapToEntity(organization, m.role, memberCount)
+        })
       )
 
       return organizations.filter((org): org is OrganizationWithRole => org !== null)
@@ -120,16 +120,7 @@ export class OrganizationPrismaRepository implements IOrganizationRepository {
         where: { organizationId: organization.id },
       })
 
-      return {
-        id: organization.id,
-        name: organization.name,
-        slug: organization.slug,
-        logo: organization.logo,
-        role: membership.role,
-        memberCount,
-        createdAt: organization.createdAt,
-        updatedAt: organization.updatedAt,
-      }
+      return this.mapToEntity(organization, membership.role, memberCount)
     })
   }
 
@@ -148,16 +139,7 @@ export class OrganizationPrismaRepository implements IOrganizationRepository {
         where: { organizationId: id },
       })
 
-      return {
-        id: organization.id,
-        name: organization.name,
-        slug: organization.slug,
-        logo: organization.logo,
-        role: member?.role || 'member',
-        memberCount,
-        createdAt: organization.createdAt,
-        updatedAt: organization.updatedAt,
-      }
+      return this.mapToEntity(organization, member?.role || 'member', memberCount)
     })
   }
 

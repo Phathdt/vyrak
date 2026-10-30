@@ -1,8 +1,48 @@
 import type { IInvitationRepository, InvitationResponse, InviteMemberDto } from '../../domain'
-import type { DatabaseService } from '@vyrak/database'
+import type { DatabaseService, Invitation as PrismaInvitation } from '@vyrak/database'
 
 export class InvitationPrismaRepository implements IInvitationRepository {
   constructor(private readonly prisma: DatabaseService) {}
+
+  /**
+   * Map Prisma Invitation to InvitationResponse
+   * Centralized mapping to avoid duplication
+   */
+  private async mapToEntity(
+    invitation: PrismaInvitation,
+    includeOrgDetails: boolean = false
+  ): Promise<
+    | InvitationResponse
+    | (InvitationResponse & { organizationId: string; organization: { id: string; name: string; slug: string } })
+  > {
+    const base: InvitationResponse = {
+      id: invitation.id,
+      email: invitation.email,
+      role: invitation.role,
+      status: invitation.status as 'pending' | 'accepted' | 'rejected' | 'cancelled',
+      expiresAt: invitation.expiresAt,
+      createdAt: invitation.createdAt,
+    }
+
+    if (includeOrgDetails) {
+      const organization = await this.prisma.client.organization.findUnique({
+        where: { id: invitation.organizationId },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+        },
+      })
+
+      return {
+        ...base,
+        organizationId: invitation.organizationId,
+        organization: organization || { id: invitation.organizationId, name: '', slug: '' },
+      }
+    }
+
+    return base
+  }
 
   async create(
     organizationId: string,
@@ -22,101 +62,47 @@ export class InvitationPrismaRepository implements IInvitationRepository {
         },
       })
 
-      const organization = await this.prisma.client.organization.findUnique({
-        where: { id: organizationId },
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-        },
-      })
-
-      return {
-        id: invitation.id,
-        email: invitation.email,
-        role: invitation.role,
-        status: invitation.status,
-        expiresAt: invitation.expiresAt,
-        createdAt: invitation.createdAt,
-        organization: organization || { id: organizationId, name: '', slug: '' },
-      }
-    })
-  }
-
-  async findOne(id: string): Promise<
-    | (InvitationResponse & {
-        organizationId: string
-        organization: { id: string; name: string; slug: string }
-      })
-    | null
-  > {
-    return this.prisma.withSystemAccess(async () => {
-      const invitation = await this.prisma.client.invitation.findUnique({
-        where: { id },
-      })
-
-      if (!invitation) {
-        return null
-      }
-
-      const organization = await this.prisma.client.organization.findUnique({
-        where: { id: invitation.organizationId },
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-        },
-      })
-
-      return {
-        id: invitation.id,
-        email: invitation.email,
-        role: invitation.role,
-        status: invitation.status,
-        expiresAt: invitation.expiresAt,
-        createdAt: invitation.createdAt,
-        organizationId: invitation.organizationId,
-        organization: organization || { id: invitation.organizationId, name: '', slug: '' },
-      }
-    })
-  }
-
-  async updateStatus(id: string, status: 'accepted' | 'rejected'): Promise<void> {
-    return this.prisma.withSystemAccess(async () => {
-      await this.prisma.client.invitation.update({
-        where: { id },
-        data: { status },
-      })
+      return this.mapToEntity(invitation)
     })
   }
 
   async listForOrganization(organizationId: string): Promise<InvitationResponse[]> {
     return this.prisma.withSystemAccess(async () => {
       const invitations = await this.prisma.client.invitation.findMany({
-        where: {
-          organizationId,
-          status: 'pending',
-        },
+        where: { organizationId },
         orderBy: { createdAt: 'desc' },
       })
 
-      return invitations.map(
-        (inv: {
-          id: string
-          email: string
-          role: string
-          status: string
-          expiresAt: Date
-          createdAt: Date
-        }): InvitationResponse => ({
-          id: inv.id,
-          email: inv.email,
-          role: inv.role,
-          status: inv.status,
-          expiresAt: inv.expiresAt,
-          createdAt: inv.createdAt,
-        })
-      )
+      return Promise.all(invitations.map((inv) => this.mapToEntity(inv)))
+    })
+  }
+
+  async findOne(
+    invitationId: string
+  ): Promise<
+    (InvitationResponse & { organizationId: string; organization: { id: string; name: string; slug: string } }) | null
+  > {
+    return this.prisma.withSystemAccess(async () => {
+      const invitation = await this.prisma.client.invitation.findUnique({
+        where: { id: invitationId },
+      })
+
+      if (!invitation) {
+        return null
+      }
+
+      return this.mapToEntity(invitation, true) as Promise<
+        InvitationResponse & { organizationId: string; organization: { id: string; name: string; slug: string } }
+      >
+    })
+  }
+
+  async updateStatus(invitationId: string, status: 'accepted' | 'rejected'): Promise<void> {
+    return this.prisma.withSystemAccess(async () => {
+      await this.prisma.client.invitation.update({
+        where: { id: invitationId },
+        data: { status },
+      })
     })
   }
 
@@ -133,40 +119,7 @@ export class InvitationPrismaRepository implements IInvitationRepository {
         orderBy: { createdAt: 'desc' },
       })
 
-      const invitationsWithOrg = await Promise.all(
-        invitations.map(
-          async (inv: {
-            id: string
-            email: string
-            role: string
-            status: string
-            expiresAt: Date
-            createdAt: Date
-            organizationId: string
-          }) => {
-            const organization = await this.prisma.client.organization.findUnique({
-              where: { id: inv.organizationId },
-              select: {
-                id: true,
-                name: true,
-                slug: true,
-              },
-            })
-
-            return {
-              id: inv.id,
-              email: inv.email,
-              role: inv.role,
-              status: inv.status,
-              expiresAt: inv.expiresAt,
-              createdAt: inv.createdAt,
-              organization: organization || { id: inv.organizationId, name: '', slug: '' },
-            }
-          }
-        )
-      )
-
-      return invitationsWithOrg
+      return Promise.all(invitations.map((inv) => this.mapToEntity(inv)))
     })
   }
 
@@ -178,7 +131,9 @@ export class InvitationPrismaRepository implements IInvitationRepository {
           email,
           status: 'pending',
         },
-        data: { status: 'cancelled' },
+        data: {
+          status: 'cancelled',
+        },
       })
     })
   }

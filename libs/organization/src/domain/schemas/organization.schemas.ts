@@ -2,6 +2,8 @@ import { ApiProperty } from '@nestjs/swagger'
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
+import { type MemberRole } from './invitation.schemas'
+
 // Create Organization
 export const CreateOrganizationSchema = z.object({
   name: z.string().min(1).max(100),
@@ -83,8 +85,12 @@ export class OrganizationResponse {
   })
   logo: string | null
 
-  @ApiProperty({ example: 'owner', description: 'Current user role in organization' })
-  role: string
+  @ApiProperty({
+    example: 'owner',
+    description: 'Current user role in organization',
+    enum: ['owner', 'admin', 'member'],
+  })
+  role: MemberRole
 
   @ApiProperty({ example: 5, description: 'Number of members' })
   memberCount: number
@@ -101,7 +107,7 @@ export interface OrganizationWithRole {
   name: string
   slug: string
   logo: string | null
-  role: string
+  role: MemberRole
   memberCount: number
   createdAt: Date
   updatedAt: Date
