@@ -15,21 +15,28 @@ import {
 } from '@nestjs/common'
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import {
+  AdvanceWorkflowPhaseResponseDto,
+  ApproveWorkflowPhaseDto,
   ConfirmClassificationDto,
   CreateWorkflowDto,
   IWorkflowPhaseService,
   IWorkflowService,
   ListWorkflowsQueryDto,
   PaginatedWorkflowsResponse,
+  SendBackPhaseDto,
   UpdateWorkflowDto,
   WORKFLOW_PHASE_SERVICE,
   WORKFLOW_SERVICE,
   WorkflowPhaseListResponseDto,
+  WorkflowPhaseOrchestratorService,
+  WorkflowPhaseResponseDto,
   WorkflowResponse,
 } from '@vyrak/workflow'
 
 import { AuthGuard } from '../../auth'
 import { OrganizationMemberGuard } from '../../guards'
+
+const AUTOMATED_PHASE_KEYS = new Set(['implementation', 'review', 'qc'])
 
 @ApiTags('Workflows')
 @Controller('api/organizations/:orgId/projects/:projectId/workflows')
@@ -37,7 +44,8 @@ import { OrganizationMemberGuard } from '../../guards'
 export class WorkflowsController {
   constructor(
     @Inject(WORKFLOW_SERVICE) private readonly workflowService: IWorkflowService,
-    @Inject(WORKFLOW_PHASE_SERVICE) private readonly workflowPhaseService: IWorkflowPhaseService
+    @Inject(WORKFLOW_PHASE_SERVICE) private readonly workflowPhaseService: IWorkflowPhaseService,
+    private readonly phaseOrchestrator: WorkflowPhaseOrchestratorService
   ) {}
 
   @Post()
@@ -119,6 +127,105 @@ export class WorkflowsController {
     }
   }
 
+  @Post(':id/phases/approve')
+  @ApiOperation({
+    summary: 'Approve the current phase (human gate)',
+    description: 'Confirms the phase is done, completes it, and starts the next phase (or completes the workflow).',
+  })
+  @ApiResponse({ status: 200, type: AdvanceWorkflowPhaseResponseDto })
+  async approvePhase(
+    @Param('orgId') orgId: string,
+    @Param('projectId') _projectId: string,
+    @Param('id') id: string,
+    @Body() body: ApproveWorkflowPhaseDto
+  ): Promise<AdvanceWorkflowPhaseResponseDto> {
+    const workflow = await this.workflowService.findById(orgId, id)
+
+    if (!workflow) {
+      throw new NotFoundException('Workflow not found')
+    }
+
+    const result = await this.workflowPhaseService.approveCurrentPhase(id, 'user-id-placeholder', body.note)
+
+    if (result.currentPhaseKey && AUTOMATED_PHASE_KEYS.has(result.currentPhaseKey)) {
+      await this.phaseOrchestrator.startAutomationForPhase(id, result.currentPhaseKey)
+      const refreshed = await this.workflowPhaseService.listByWorkflowId(id)
+      return {
+        previousPhaseKey: result.previousPhaseKey,
+        currentPhaseKey: result.currentPhaseKey,
+        workflowCompleted: result.workflowCompleted,
+        phases: this.mapPhaseEntities(refreshed),
+      }
+    }
+
+    return {
+      previousPhaseKey: result.previousPhaseKey,
+      currentPhaseKey: result.currentPhaseKey,
+      workflowCompleted: result.workflowCompleted,
+      phases: this.mapPhaseEntities(result.phases),
+    }
+  }
+
+  @Post(':id/phases/send-back')
+  @ApiOperation({
+    summary: 'Send workflow back to an earlier phase (Review/QC → Implementation)',
+  })
+  @ApiResponse({ status: 200, type: AdvanceWorkflowPhaseResponseDto })
+  async sendBackPhase(
+    @Param('orgId') orgId: string,
+    @Param('projectId') _projectId: string,
+    @Param('id') id: string,
+    @Body() body: SendBackPhaseDto
+  ): Promise<AdvanceWorkflowPhaseResponseDto> {
+    const workflow = await this.workflowService.findById(orgId, id)
+    if (!workflow) {
+      throw new NotFoundException('Workflow not found')
+    }
+
+    const result = await this.workflowPhaseService.sendBackToPhase(id, body.targetPhaseKey, body.reason)
+
+    if (AUTOMATED_PHASE_KEYS.has(body.targetPhaseKey)) {
+      await this.phaseOrchestrator.startAutomationForPhase(id, body.targetPhaseKey)
+      const refreshed = await this.workflowPhaseService.listByWorkflowId(id)
+      return {
+        previousPhaseKey: result.previousPhaseKey,
+        currentPhaseKey: result.currentPhaseKey,
+        workflowCompleted: false,
+        phases: this.mapPhaseEntities(refreshed),
+      }
+    }
+
+    return {
+      previousPhaseKey: result.previousPhaseKey,
+      currentPhaseKey: result.currentPhaseKey,
+      workflowCompleted: false,
+      phases: this.mapPhaseEntities(result.phases),
+    }
+  }
+
+  private mapPhaseEntities(
+    phases: Awaited<ReturnType<IWorkflowPhaseService['listByWorkflowId']>>
+  ): WorkflowPhaseResponseDto[] {
+    return phases.map((phase) => {
+      const output = (phase.output ?? {}) as Record<string, unknown>
+      const execution = (output.execution ?? null) as WorkflowPhaseResponseDto['execution']
+      const reviewSummary = typeof output.reviewSummary === 'string' ? output.reviewSummary : undefined
+
+      return {
+        id: phase.id,
+        workflowId: phase.workflowId,
+        key: phase.key,
+        name: phase.name,
+        sequence: phase.sequence,
+        status: phase.status,
+        startedAt: phase.startedAt?.toISOString() ?? null,
+        completedAt: phase.completedAt?.toISOString() ?? null,
+        execution,
+        reviewSummary,
+      }
+    })
+  }
+
   @Get(':id/phases')
   @ApiOperation({ summary: 'List workflow phases' })
   @ApiResponse({
@@ -141,16 +248,7 @@ export class WorkflowsController {
     const phases = await this.workflowPhaseService.listByWorkflowId(id)
 
     return {
-      items: phases.map((phase) => ({
-        id: phase.id,
-        workflowId: phase.workflowId,
-        key: phase.key,
-        name: phase.name,
-        sequence: phase.sequence,
-        status: phase.status,
-        startedAt: phase.startedAt?.toISOString() ?? null,
-        completedAt: phase.completedAt?.toISOString() ?? null,
-      })),
+      items: this.mapPhaseEntities(phases),
     }
   }
 

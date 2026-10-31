@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
 
-import { WorkflowStatus } from '../../domain'
+import { WorkflowStatus, WorkflowType } from '../../domain'
 
 import type {
   CreateWorkflowInput,
@@ -11,7 +11,6 @@ import type {
   ListWorkflowsQuery,
   PaginatedWorkflowsResult,
   UpdateWorkflowInput,
-  WorkflowType,
   WorkflowWithRelations,
 } from '../../domain'
 
@@ -150,7 +149,7 @@ export class WorkflowService implements IWorkflowService {
   async confirmClassification(
     _organizationId: string,
     id: string,
-    type: WorkflowType,
+    _type: WorkflowType,
     confirmedById: string
   ): Promise<void> {
     const workflow = await this.workflowRepository.findById(id)
@@ -163,8 +162,9 @@ export class WorkflowService implements IWorkflowService {
       throw new BadRequestException('Can only confirm classification from BRAINSTORMING or CLASSIFICATION_PENDING')
     }
 
-    await this.workflowRepository.updateType(id, type, confirmedById)
-    await this.workflowPhaseService.initializePhasesForWorkflow(id, type)
+    // MVP: all workflows use STORY + default 4-phase pipeline (planning → implementation → review → qc).
+    await this.workflowRepository.updateType(id, WorkflowType.STORY, confirmedById)
+    await this.workflowPhaseService.initializePhasesForWorkflow(id, WorkflowType.STORY)
     await this.workflowRepository.updateStatus(id, WorkflowStatus.ACTIVE)
   }
 }

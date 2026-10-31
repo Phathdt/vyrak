@@ -1,12 +1,13 @@
 import { BullModule } from '@nestjs/bullmq'
 import { Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
+import { ConversationModule } from '@vyrak/conversation'
 import { CustomConfigModule } from '@vyrak/custom-config'
 import { CustomLoggerModule } from '@vyrak/custom-logger'
 import { DatabaseModule } from '@vyrak/database'
 import { ClsModule } from 'nestjs-cls'
 
-import { ExampleProcessor } from './processors'
+import { ExampleProcessor, WorkflowPhaseRunProcessor } from './processors'
 
 // TODO: WorkflowExecutionProcessor temporarily disabled
 // Epic 3 only implements agent integration (AgentStepExecutor)
@@ -21,6 +22,7 @@ import { ExampleProcessor } from './processors'
     CustomConfigModule,
     CustomLoggerModule,
     DatabaseModule,
+    ConversationModule,
     ClsModule.forRoot({
       global: true,
       middleware: { mount: false },
@@ -51,6 +53,6 @@ import { ExampleProcessor } from './processors'
       },
     }),
   ],
-  providers: [ExampleProcessor],
+  providers: [ExampleProcessor, WorkflowPhaseRunProcessor],
 })
 export class AppModule {}

@@ -17,7 +17,6 @@ describe('WorkflowService', () => {
   let mockWorkflowRepository: any
   let mockWorkflowRepositoryRepository: any
   let mockWorkflowPhaseService: any
-
   const createMockWorkflow = (overrides?: Partial<WorkflowEntity>): WorkflowEntity => ({
     id: 'workflow-123',
     organizationId: 'org-123',
@@ -781,7 +780,7 @@ describe('WorkflowService', () => {
 
       await service.confirmClassification('org-123', 'workflow-123', WorkflowType.EPIC, 'user-456')
 
-      expect(mockWorkflowRepository.updateType).toHaveBeenCalledWith('workflow-123', WorkflowType.EPIC, 'user-456')
+      expect(mockWorkflowRepository.updateType).toHaveBeenCalledWith('workflow-123', WorkflowType.STORY, 'user-456')
     })
 
     it('should update type before status', async () => {
@@ -793,6 +792,10 @@ describe('WorkflowService', () => {
         callOrder.push('updateType')
         return Promise.resolve()
       })
+      mockWorkflowPhaseService.initializePhasesForWorkflow.mockImplementation(() => {
+        callOrder.push('initializePhasesForWorkflow')
+        return Promise.resolve([])
+      })
       mockWorkflowRepository.updateStatus.mockImplementation(() => {
         callOrder.push('updateStatus')
         return Promise.resolve()
@@ -800,7 +803,8 @@ describe('WorkflowService', () => {
 
       await service.confirmClassification('org-123', 'workflow-123', WorkflowType.HOTFIX, 'user-456')
 
-      expect(callOrder).toEqual(['updateType', 'updateStatus'])
+      expect(callOrder).toEqual(['updateType', 'initializePhasesForWorkflow', 'updateStatus'])
+      expect(mockWorkflowRepository.updateType).toHaveBeenCalledWith('workflow-123', WorkflowType.STORY, 'user-456')
     })
 
     it('should throw NotFoundException if workflow not found', async () => {
@@ -844,7 +848,7 @@ describe('WorkflowService', () => {
       ).rejects.toThrow('Can only confirm classification from BRAINSTORMING or CLASSIFICATION_PENDING')
     })
 
-    it('should accept all workflow types', async () => {
+    it('should always persist STORY on confirm regardless of request type (MVP)', async () => {
       const mockWorkflow = createMockWorkflow({ status: WorkflowStatus.BRAINSTORMING })
       mockWorkflowRepository.findById.mockResolvedValue(mockWorkflow)
       mockWorkflowRepository.updateType.mockResolvedValue(undefined)
@@ -853,7 +857,7 @@ describe('WorkflowService', () => {
       for (const type of [WorkflowType.HOTFIX, WorkflowType.STORY, WorkflowType.EPIC]) {
         await service.confirmClassification('org-123', 'workflow-123', type, 'user-456')
 
-        expect(mockWorkflowRepository.updateType).toHaveBeenCalledWith('workflow-123', type, 'user-456')
+        expect(mockWorkflowRepository.updateType).toHaveBeenCalledWith('workflow-123', WorkflowType.STORY, 'user-456')
       }
     })
 
@@ -896,6 +900,7 @@ describe('WorkflowService', () => {
     it('should propagate updateStatus errors', async () => {
       mockWorkflowRepository.findById.mockResolvedValue(createMockWorkflow({ status: WorkflowStatus.BRAINSTORMING }))
       mockWorkflowRepository.updateType.mockResolvedValue(undefined)
+      mockWorkflowPhaseService.initializePhasesForWorkflow.mockResolvedValue([])
       mockWorkflowRepository.updateStatus.mockRejectedValue(new Error('Status update failed'))
 
       await expect(
@@ -912,7 +917,7 @@ describe('WorkflowService', () => {
       const confirmedById = 'user-final-approver-789'
       await service.confirmClassification('org-123', 'workflow-123', WorkflowType.EPIC, confirmedById)
 
-      expect(mockWorkflowRepository.updateType).toHaveBeenCalledWith('workflow-123', WorkflowType.EPIC, confirmedById)
+      expect(mockWorkflowRepository.updateType).toHaveBeenCalledWith('workflow-123', WorkflowType.STORY, confirmedById)
     })
   })
 

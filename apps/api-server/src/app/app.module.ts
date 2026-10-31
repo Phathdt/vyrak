@@ -16,6 +16,11 @@ import { WorkflowModule } from '@vyrak/workflow'
 import { OrganizationMemberGuard } from '../guards'
 import { ResponseInterceptor, TenantContextInterceptor, TraceIdInterceptor } from '../interceptors'
 import { WorkflowBrainstormingController } from '../workflow/workflow-brainstorming.controller'
+import {
+  workflowPhaseAutomationImports,
+  workflowPhaseAutomationProviders,
+} from '../workflow/workflow-phase-automation.providers'
+import { WorkflowPlanningController } from '../workflow/workflow-planning.controller'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
 import {
@@ -50,6 +55,7 @@ import {
     BullModule.registerQueue({
       name: 'example',
     }),
+    ...workflowPhaseAutomationImports,
     AuthModule,
     UserModule,
     OrganizationModule,
@@ -65,9 +71,11 @@ import {
     RepositoriesController,
     WorkflowsController,
     WorkflowBrainstormingController,
+    WorkflowPlanningController,
   ],
   providers: [
     AppService,
+    ...workflowPhaseAutomationProviders,
     OrganizationMemberGuard,
     {
       provide: APP_INTERCEPTOR,

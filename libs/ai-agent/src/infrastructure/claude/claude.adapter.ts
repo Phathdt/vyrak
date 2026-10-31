@@ -45,13 +45,19 @@ export class ClaudeAdapter implements IAIAgentPort {
       messages: this.toClaudeMessages(request.messages),
     })
 
-    const content = response.content[0]
-    if (content.type !== 'text') {
-      throw new Error('Unexpected response type from Claude')
+    const text = response.content
+      .filter((block): block is Anthropic.TextBlock => block.type === 'text')
+      .map((block) => block.text)
+      .join('\n')
+      .trim()
+
+    if (!text) {
+      const kinds = response.content.map((block) => block.type).join(', ') || 'empty'
+      throw new Error(`Unexpected response type from Claude: ${kinds}`)
     }
 
     return {
-      content: content.text,
+      content: text,
       usage: {
         inputTokens: response.usage.input_tokens,
         outputTokens: response.usage.output_tokens,

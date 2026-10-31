@@ -626,6 +626,75 @@ paths:
                 $ref: '#/components/schemas/PaginatedWorkflowsResponse'
       summary: List workflows with pagination, search, and filtering
       tags: *ref_6
+  /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/phases/approve:
+    post:
+      description: Confirms the phase is done, completes it, and starts the next phase (or completes the workflow).
+      operationId: WorkflowsController_approvePhase
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: projectId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApproveWorkflowPhaseDto'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdvanceWorkflowPhaseResponseDto'
+      summary: Approve the current phase (human gate)
+      tags: *ref_6
+  /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/phases/send-back:
+    post:
+      operationId: WorkflowsController_sendBackPhase
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: projectId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendBackPhaseDto'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdvanceWorkflowPhaseResponseDto'
+      summary: Send workflow back to an earlier phase (Review/QC → Implementation)
+      tags: *ref_6
   /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/phases:
     get:
       operationId: WorkflowsController_listPhases
@@ -951,6 +1020,70 @@ paths:
           description: Session not found
       summary: Classify workflow based on brainstorming conversation
       tags: *ref_7
+  /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/planning/session:
+    get:
+      operationId: WorkflowPlanningController_getPlanningSession
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: projectId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlanningSessionResponseDto'
+      summary: Get technical planning conversation for the Planning phase
+      tags: &ref_8
+        - Workflows - Planning
+  /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/planning/chat:
+    post:
+      description: Architecture and implementation planning with optional repo file paths and pasted code snippets.
+      operationId: WorkflowPlanningController_planningChat
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: projectId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlanningChatRequestDto'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlanningChatResponseDto'
+      summary: Discuss technical plan with AI (Planning phase)
+      tags: *ref_8
 info:
   title: Vyrak API
   description: Vyrak API documentation
@@ -1631,6 +1764,13 @@ components:
         - page
         - limit
         - totalPages
+    ApproveWorkflowPhaseDto:
+      type: object
+      properties:
+        note:
+          type: string
+          maxLength: 4000
+          description: Optional note stored on the phase approval record
     WorkflowPhaseResponseDto:
       type: object
       properties:
@@ -1638,20 +1778,25 @@ components:
           type: string
           format: uuid
           pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          x-nestjs_zod-uses-3-point-1-syntax: true
         workflowId:
           type: string
           format: uuid
           pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          x-nestjs_zod-uses-3-point-1-syntax: true
         key:
           type: string
+          x-nestjs_zod-uses-3-point-1-syntax: true
           example: planning
         name:
           type: string
+          x-nestjs_zod-uses-3-point-1-syntax: true
           example: Planning
         sequence:
           type: integer
           minimum: -9007199254740991
           maximum: 9007199254740991
+          x-nestjs_zod-uses-3-point-1-syntax: true
           example: 1
         status:
           type: string
@@ -1662,14 +1807,44 @@ components:
             - COMPLETED
             - FAILED
             - SKIPPED
+          x-nestjs_zod-uses-3-point-1-syntax: true
         startedAt:
           type: string
+          x-nestjs_zod-uses-3-point-1-syntax: true
           x-nestjs_zod-empty-type: true
           nullable: true
         completedAt:
           type: string
+          x-nestjs_zod-uses-3-point-1-syntax: true
           x-nestjs_zod-empty-type: true
           nullable: true
+        execution:
+          x-nestjs_zod-uses-3-point-1-syntax: true
+          x-nestjs_zod-empty-type: true
+          nullable: true
+          type: object
+          properties:
+            status:
+              type: string
+            runType:
+              type: string
+            branch:
+              type: string
+            workspacePath:
+              type: string
+            pullRequestUrl:
+              type: string
+            pullRequestNumber:
+              type: number
+            lastError:
+              type: string
+            updatedAt:
+              type: string
+          required:
+            - status
+        reviewSummary:
+          type: string
+          x-nestjs_zod-uses-3-point-1-syntax: true
       required:
         - id
         - workflowId
@@ -1679,6 +1854,109 @@ components:
         - status
         - startedAt
         - completedAt
+    AdvanceWorkflowPhaseResponseDto:
+      type: object
+      properties:
+        previousPhaseKey:
+          type: string
+          x-nestjs_zod-uses-3-point-1-syntax: true
+          example: planning
+        currentPhaseKey:
+          type: string
+          x-nestjs_zod-uses-3-point-1-syntax: true
+          x-nestjs_zod-empty-type: true
+          nullable: true
+          example: implementation
+        workflowCompleted:
+          type: boolean
+          x-nestjs_zod-uses-3-point-1-syntax: true
+        phases:
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+                pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+              workflowId:
+                type: string
+                format: uuid
+                pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+              key:
+                type: string
+              name:
+                type: string
+              sequence:
+                type: integer
+                minimum: -9007199254740991
+                maximum: 9007199254740991
+              status:
+                type: string
+                enum:
+                  - PENDING
+                  - IN_PROGRESS
+                  - WAITING_APPROVAL
+                  - COMPLETED
+                  - FAILED
+                  - SKIPPED
+              startedAt:
+                type: string
+                nullable: true
+              completedAt:
+                type: string
+                nullable: true
+              execution:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  runType:
+                    type: string
+                  branch:
+                    type: string
+                  workspacePath:
+                    type: string
+                  pullRequestUrl:
+                    type: string
+                  pullRequestNumber:
+                    type: number
+                  lastError:
+                    type: string
+                  updatedAt:
+                    type: string
+                required:
+                  - status
+                nullable: true
+              reviewSummary:
+                type: string
+            required:
+              - id
+              - workflowId
+              - key
+              - name
+              - sequence
+              - status
+              - startedAt
+              - completedAt
+          x-nestjs_zod-uses-3-point-1-syntax: true
+          type: array
+      required:
+        - previousPhaseKey
+        - currentPhaseKey
+        - workflowCompleted
+        - phases
+    SendBackPhaseDto:
+      type: object
+      properties:
+        targetPhaseKey:
+          type: string
+          minLength: 1
+          example: implementation
+        reason:
+          type: string
+          maxLength: 4000
+      required:
+        - targetPhaseKey
     WorkflowPhaseListResponseDto:
       type: object
       properties:
@@ -1874,3 +2152,153 @@ components:
         - type
         - confidence
         - reasoning
+    PlanningMessageDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+        role:
+          type: string
+          enum:
+            - user
+            - assistant
+            - system
+        content:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - role
+        - content
+        - createdAt
+    PlanningSessionResponseDto:
+      type: object
+      properties:
+        sessionId:
+          x-nestjs_zod-uses-3-point-1-syntax: true
+          x-nestjs_zod-empty-type: true
+          nullable: true
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+        messages:
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+                pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+              role:
+                type: string
+                enum:
+                  - user
+                  - assistant
+                  - system
+              content:
+                type: string
+              createdAt:
+                type: string
+            required:
+              - id
+              - role
+              - content
+              - createdAt
+          x-nestjs_zod-uses-3-point-1-syntax: true
+          type: array
+        messageCount:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+          x-nestjs_zod-uses-3-point-1-syntax: true
+        repositories:
+          type: array
+          items:
+            type: object
+          x-nestjs_zod-uses-3-point-1-syntax: true
+      required:
+        - sessionId
+        - messages
+        - messageCount
+        - repositories
+    PlanningCodeSnippetDto:
+      type: object
+      properties:
+        path:
+          type: string
+          maxLength: 500
+          example: libs/product/src/product.service.ts
+        label:
+          type: string
+          maxLength: 200
+          example: Product module service
+        content:
+          type: string
+          minLength: 1
+          maxLength: 24000
+          description: File or snippet content for the AI to analyze
+      required:
+        - content
+    PlanningChatRequestDto:
+      type: object
+      properties:
+        userMessage:
+          type: string
+          minLength: 1
+          maxLength: 16000
+          example: How should we add inventory tables given our existing product module?
+        codeSnippets:
+          maxItems: 5
+          items:
+            type: object
+            properties:
+              path:
+                type: string
+                maxLength: 500
+              label:
+                type: string
+                maxLength: 200
+              content:
+                type: string
+                minLength: 1
+                maxLength: 24000
+            required:
+              - content
+          type: array
+        repoPaths:
+          maxItems: 8
+          items:
+            type: string
+            minLength: 1
+            maxLength: 500
+          description: Repo-relative paths to read from the local main repo checkout (when available)
+          example:
+            - libs/product/src/application/services/product.service.ts
+          type: array
+      required:
+        - userMessage
+    PlanningChatResponseDto:
+      type: object
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+        aiMessage:
+          type: string
+        messageCount:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        repoFilesLoaded:
+          type: array
+          items:
+            type: object
+      required:
+        - sessionId
+        - aiMessage
+        - messageCount
+        - repoFilesLoaded

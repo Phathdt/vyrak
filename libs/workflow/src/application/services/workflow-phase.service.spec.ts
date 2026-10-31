@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { WorkflowPhaseStatus, WorkflowType } from '../../domain'
+import { WorkflowPhaseStatus, WorkflowStatus, WorkflowType } from '../../domain'
 import { WorkflowPhaseService } from './workflow-phase.service'
 
 describe('WorkflowPhaseService', () => {
@@ -46,21 +46,56 @@ describe('WorkflowPhaseService', () => {
     )
   })
 
-  it('is idempotent when phases already exist', async () => {
-    const existing = [{ id: 'p1', key: 'planning', sequence: 1 }]
-    const workflowPhaseRepository = {
-      findByWorkflowId: vi.fn().mockResolvedValue(existing),
-      create: vi.fn(),
+  it('approves in-progress phase and advances to next', async () => {
+    const phases = [
+      {
+        id: 'p1',
+        key: 'planning',
+        sequence: 1,
+        status: WorkflowPhaseStatus.IN_PROGRESS,
+        workflowId: 'wf-1',
+        output: null,
+      },
+      {
+        id: 'p2',
+        key: 'implementation',
+        sequence: 2,
+        status: WorkflowPhaseStatus.PENDING,
+        workflowId: 'wf-1',
+        output: null,
+      },
+    ]
+
+    const workflowRepository = {
+      findById: vi.fn().mockResolvedValue({
+        id: 'wf-1',
+        status: WorkflowStatus.ACTIVE,
+        currentPhaseKey: 'planning',
+        definitionSnapshot: { phases: [] },
+        type: WorkflowType.STORY,
+      }),
+      updateDefinitionContext: vi.fn().mockResolvedValue(undefined),
+      updateStatus: vi.fn().mockResolvedValue(undefined),
     }
 
-    const service = new WorkflowPhaseService(
-      { updateDefinitionContext: vi.fn() } as never,
-      workflowPhaseRepository as never
-    )
+    const advancedPhases = [
+      { ...phases[0], status: WorkflowPhaseStatus.COMPLETED },
+      { ...phases[1], status: WorkflowPhaseStatus.IN_PROGRESS },
+    ]
 
-    const phases = await service.initializePhasesForWorkflow('wf-1', WorkflowType.STORY)
+    const workflowPhaseRepository = {
+      findByWorkflowId: vi.fn().mockResolvedValueOnce(phases).mockResolvedValueOnce(advancedPhases),
+      updateStatus: vi.fn().mockResolvedValue(undefined),
+      update: vi.fn().mockResolvedValue(undefined),
+    }
 
-    expect(phases).toBe(existing)
-    expect(workflowPhaseRepository.create).not.toHaveBeenCalled()
+    const service = new WorkflowPhaseService(workflowRepository as never, workflowPhaseRepository as never)
+
+    const result = await service.approveCurrentPhase('wf-1', 'user-1', 'LGTM')
+
+    expect(result.previousPhaseKey).toBe('planning')
+    expect(result.currentPhaseKey).toBe('implementation')
+    expect(workflowPhaseRepository.updateStatus).toHaveBeenCalledWith('p1', WorkflowPhaseStatus.COMPLETED)
+    expect(workflowPhaseRepository.updateStatus).toHaveBeenCalledWith('p2', WorkflowPhaseStatus.IN_PROGRESS)
   })
 })
