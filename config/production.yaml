@@ -22,3 +22,7 @@ workspace:
     branch_prefix: workflow/
     auto_fetch: true
     auto_cleanup_branch: true
+
+anthropic:
+  api_key: replace_me
+  model: replace_me

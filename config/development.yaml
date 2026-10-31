@@ -40,3 +40,7 @@ workspace:
     auto_cleanup_branch: true
 
 frontend_url: replace_me
+
+anthropic:
+  api_key: replace_me
+  model: replace_me

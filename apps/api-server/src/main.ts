@@ -3,11 +3,11 @@
  * This is only a minimal backend to get started.
  */
 
+import './load-env'
 import { NestFactory } from '@nestjs/core'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { CustomConfigService } from '@vyrak/custom-config'
 import { DatabaseService, TenantContextInterceptor } from '@vyrak/database'
-import 'dotenv/config'
 import { LoggerErrorInterceptor, Logger as PinoLogger } from 'nestjs-pino'
 import { ZodValidationPipe } from 'nestjs-zod'
 
@@ -22,8 +22,12 @@ async function bootstrap() {
   const configService = app.get(CustomConfigService)
   const databaseService = app.get(DatabaseService)
 
+  const corsOrigins = [configService.frontendUrl, 'http://localhost:5173', 'http://127.0.0.1:5173'].filter(
+    (origin, index, list) => origin && origin !== 'replace_me' && list.indexOf(origin) === index
+  )
+
   app.enableCors({
-    origin: configService.frontendUrl,
+    origin: corsOrigins.length === 1 ? corsOrigins[0] : corsOrigins,
     credentials: true,
   })
 

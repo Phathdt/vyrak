@@ -105,7 +105,9 @@ export class CustomConfigService {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error'
       BootstrapLogger.error(`Failed to load configuration: ${message}`)
-      throw new Error(`Failed to load configuration: ${message}`, { cause: error })
+      throw new Error(`Failed to load configuration: ${message}`, {
+        cause: error,
+      })
     }
   }
 
@@ -118,13 +120,27 @@ export class CustomConfigService {
       if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
         this.overrideWithEnv(value as Record<string, unknown>, envKey)
       } else {
-        const envValue = process.env[envKey]
+        const envValue = this.resolveEnvValue(envKey, prefix)
         if (envValue !== undefined) {
           const parsed = this.parseEnvValue(envValue, value)
           obj[key] = parsed
         }
       }
     }
+  }
+
+  /** Top-level YAML keys map to FRONTEND_URL; FRONTEND__URL is accepted as alias. */
+  private resolveEnvValue(envKey: string, prefix: string): string | undefined {
+    if (process.env[envKey] !== undefined) {
+      return process.env[envKey]
+    }
+    if (!prefix) {
+      const alias = envKey.replace(/_/g, '__')
+      if (alias !== envKey && process.env[alias] !== undefined) {
+        return process.env[alias]
+      }
+    }
+    return undefined
   }
 
   private parseEnvValue(envValue: string, originalValue: unknown): unknown {
@@ -170,6 +186,10 @@ export class CustomConfigService {
 
     if (isPlaceholder(this._config.redis?.url)) {
       errors.push('redis.url must be configured')
+    }
+
+    if (isPlaceholder(this._config.frontendUrl)) {
+      errors.push('frontendUrl must be configured (set FRONTEND_URL or FRONTEND__URL in apps/api-server/.env)')
     }
 
     // Validate workspace config

@@ -24,6 +24,7 @@ describe('CustomConfigService', () => {
       level: 'info',
       enableJsonFormat: false,
     },
+    frontend_url: 'http://localhost:5173',
   }
 
   const setupMocks = (config = mockConfigYaml) => {
@@ -135,6 +136,17 @@ describe('CustomConfigService', () => {
       service = new CustomConfigService()
       expect(service.host.port).toBe(5000)
       expect(typeof service.host.port).toBe('number')
+    })
+
+    it('should accept FRONTEND__URL alias for top-level frontendUrl', () => {
+      const config = {
+        ...mockConfigYaml,
+        frontend_url: 'replace_me',
+      }
+      setupMocks(config)
+      process.env.FRONTEND__URL = 'http://localhost:5173'
+      service = new CustomConfigService()
+      expect(service.frontendUrl).toBe('http://localhost:5173')
     })
   })
 
@@ -287,6 +299,7 @@ describe('CustomConfigService', () => {
         database: { url: 'postgresql://localhost/test' },
         redis: { url: 'redis://localhost:6379' },
         log: { level: 'info', enableJsonFormat: false },
+        frontend_url: 'http://localhost:5173',
       }
       setupMocks(snakeCaseConfig)
 
@@ -302,6 +315,7 @@ describe('CustomConfigService', () => {
         database: { url: 'postgresql://localhost/test' },
         redis: { url: 'redis://localhost:6379' },
         log: { level: 'info', enableJsonFormat: false },
+        frontend_url: 'http://localhost:5173',
       }
       setupMocks(config)
 

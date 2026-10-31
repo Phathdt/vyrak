@@ -20,21 +20,59 @@
  *
  * Usage: node --import @swc-node/register/esm-register src/generate-openapi.ts
  */
-import 'dotenv/config'
 import { NestFactory } from '@nestjs/core'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
+import { config as loadDotenv } from 'dotenv'
 import { dump as yamlDump } from 'js-yaml'
 import fs from 'node:fs'
 import path from 'node:path'
 
+import './load-env'
 import { AppModule } from './app'
 
-// IMPORTANT: Set environment flags BEFORE any imports
-// This prevents database connection attempts during module initialization
-process.env.SKIP_DB_CONNECTION = 'true'
-if (!process.env.DATABASE__URL) {
-  process.env.DATABASE__URL = 'postgresql://localhost:5432/placeholder'
+function findProjectRoot(): string {
+  let currentDir = process.cwd()
+  while (currentDir !== path.dirname(currentDir)) {
+    if (fs.existsSync(path.join(currentDir, 'config')) && fs.existsSync(path.join(currentDir, 'yarn.lock'))) {
+      return currentDir
+    }
+    currentDir = path.dirname(currentDir)
+  }
+  return process.cwd()
 }
+
+/** Load api-server .env when present; fill placeholders so CustomConfig passes without real infra. */
+function bootstrapEnvForOpenApiGeneration(): void {
+  const projectRoot = findProjectRoot()
+  const apiEnvPath = path.join(projectRoot, 'apps/api-server/.env')
+  if (fs.existsSync(apiEnvPath)) {
+    loadDotenv({ path: apiEnvPath })
+  }
+
+  process.env.SKIP_DB_CONNECTION = 'true'
+
+  const defaults: Record<string, string> = {
+    DATABASE__URL: 'postgresql://localhost:5432/placeholder',
+    REDIS__URL: 'redis://localhost:6379',
+    S3__ENDPOINT: 'http://localhost:4566',
+    S3__REGION: 'us-east-1',
+    S3__BUCKET: 'vyrak-artifacts',
+    S3__ACCESS_KEY_ID: 'test',
+    S3__SECRET_ACCESS_KEY: 'test',
+    S3__FORCE_PATH_STYLE: 'true',
+    WORKSPACE__MAIN_REPOS_PATH: '/tmp/vyrak-openapi',
+    WORKSPACE__WORKSPACES_PATH: '/tmp/vyrak-workspaces',
+    FRONTEND_URL: 'http://localhost:5173',
+  }
+
+  for (const [key, value] of Object.entries(defaults)) {
+    if (!process.env[key]) {
+      process.env[key] = value
+    }
+  }
+}
+
+bootstrapEnvForOpenApiGeneration()
 
 // Runs under CJS register (@swc-node/register), so __dirname is available.
 const currentDir = __dirname

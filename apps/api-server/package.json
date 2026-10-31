@@ -5,8 +5,8 @@
   "scripts": {
     "build": "rolldown -c",
     "build:prod": "yarn typecheck && yarn build",
-    "dev": "yarn build && node -r dotenv/config ../../dist/apps/api-server/main.js",
-    "start": "node -r dotenv/config ../../dist/apps/api-server/main.js",
+    "dev": "yarn build && node ../../dist/apps/api-server/main.js",
+    "start": "node ../../dist/apps/api-server/main.js",
     "start:prod": "node ../../dist/apps/api-server/main.js",
     "typecheck": "tsc --noEmit",
     "generate:openapi": "yarn build && node ../../dist/apps/api-server/generate-openapi.js"

@@ -8,7 +8,14 @@ export class ClaudeAdapter implements IAIAgentPort {
   private model: string
 
   constructor(private readonly configService: CustomConfigService) {
-    const { apiKey, apiUrl, model } = this.configService.anthropic
+    const anthropic = this.configService.anthropic
+    if (!anthropic?.apiKey || !anthropic.model) {
+      throw new Error(
+        'Anthropic config is missing. Set ANTHROPIC__API_KEY and ANTHROPIC__MODEL in apps/api-server/.env'
+      )
+    }
+
+    const { apiKey, apiUrl, model } = anthropic
 
     this.model = model
     this.client = new Anthropic({
