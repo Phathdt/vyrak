@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ConversationService } from './conversation.service'
 
