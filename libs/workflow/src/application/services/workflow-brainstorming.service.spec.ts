@@ -44,7 +44,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-123',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-        createdAt: new Date(),
+
         updatedAt: new Date(),
       }
 
@@ -71,7 +71,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-123',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-        createdAt: new Date(),
+
         updatedAt: new Date(),
       }
 
@@ -102,7 +102,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-123',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-        createdAt: new Date(),
+
         updatedAt: new Date(),
       }
 
@@ -112,14 +112,12 @@ describe('WorkflowBrainstormingService', () => {
           sessionId: 'session-123',
           role: 'user',
           content: 'First message',
-          createdAt: new Date(),
         },
         {
           id: 'msg-2',
           sessionId: 'session-123',
           role: 'assistant',
           content: 'Assistant response',
-          createdAt: new Date(),
         },
       ]
 
@@ -146,7 +144,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-123',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-        createdAt: new Date(),
+
         updatedAt: new Date(),
       }
 
@@ -156,7 +154,6 @@ describe('WorkflowBrainstormingService', () => {
           sessionId: 'session-123',
           role: 'user',
           content: 'User message',
-          createdAt: new Date(),
         },
       ]
 
@@ -191,7 +188,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-123',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-        createdAt: new Date(),
+
         updatedAt: new Date(),
       }
 
@@ -229,7 +226,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-123',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-        createdAt: new Date(),
+
         updatedAt: new Date(),
       }
 
@@ -260,7 +257,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-123',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-        createdAt: new Date(),
+
         updatedAt: new Date(),
       }
 
@@ -292,7 +289,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-123',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-        createdAt: new Date(),
+
         updatedAt: new Date(),
       }
 
@@ -320,7 +317,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-123',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-        createdAt: new Date(),
+
         updatedAt: new Date(),
       }
 
@@ -349,7 +346,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-456',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-        createdAt: new Date(),
+
         updatedAt: new Date(),
       }
 
@@ -377,7 +374,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-456',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-        createdAt: new Date(),
+
         updatedAt: new Date(),
       }
 
@@ -409,7 +406,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-456',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-        createdAt: new Date(),
+
         updatedAt: new Date(),
       }
 
@@ -443,7 +440,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-456',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-        createdAt: new Date(),
+
         updatedAt: new Date(),
       }
 
@@ -479,7 +476,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-456',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-        createdAt: new Date(),
+
         updatedAt: new Date(),
       }
 
@@ -519,7 +516,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-789',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-        createdAt: new Date(),
+
         updatedAt: new Date(),
         messages: [],
       }
@@ -550,7 +547,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'different-workflow',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-        createdAt: new Date(),
+
         updatedAt: new Date(),
         messages: [],
       }
@@ -568,7 +565,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-789',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-        createdAt: new Date(),
+
         updatedAt: new Date(),
         messages: [],
       }
@@ -587,7 +584,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-789',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-        createdAt: new Date(),
+
         updatedAt: new Date(),
         messages: [],
       }
@@ -613,14 +610,12 @@ describe('WorkflowBrainstormingService', () => {
           sessionId: 'session-789',
           role: 'user',
           content: 'User message',
-          createdAt: new Date(),
         },
         {
           id: 'msg-2',
           sessionId: 'session-789',
           role: 'assistant',
           content: 'Assistant response',
-          createdAt: new Date(),
         },
       ]
 
@@ -629,7 +624,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-789',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-        createdAt: new Date(),
+
         updatedAt: new Date(),
         messages: mockMessages,
       }
@@ -661,7 +656,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-789',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-        createdAt: new Date(),
+
         updatedAt: new Date(),
         messages: [],
       }
@@ -691,7 +686,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-789',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-        createdAt: new Date(),
+
         updatedAt: new Date(),
         messages: [],
       }
@@ -716,7 +711,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-789',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-        createdAt: new Date(),
+
         updatedAt: new Date(),
         messages: [],
       }
@@ -747,7 +742,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-existing',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-        createdAt: new Date(),
+
         updatedAt: new Date(),
       }
 
@@ -777,7 +772,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-new',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-        createdAt: new Date(),
+
         updatedAt: new Date(),
       }
 
@@ -807,7 +802,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-123',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-        createdAt: new Date(),
+
         updatedAt: new Date(),
       }
 
@@ -835,7 +830,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-123',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-        createdAt: new Date(),
+
         updatedAt: new Date(),
       }
 
@@ -872,7 +867,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-123',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-        createdAt: new Date(),
+
         updatedAt: new Date(),
       }
 
@@ -899,7 +894,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-123',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-        createdAt: new Date(),
+
         updatedAt: new Date(),
       }
 
@@ -926,7 +921,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-123',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-        createdAt: new Date(),
+
         updatedAt: new Date(),
       }
 
@@ -975,7 +970,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-123',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-        createdAt: new Date(),
+
         updatedAt: new Date(),
       }
 
@@ -998,7 +993,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-123',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-        createdAt: new Date(),
+
         updatedAt: new Date(),
       }
 
@@ -1033,14 +1028,12 @@ describe('WorkflowBrainstormingService', () => {
           sessionId: 'session-1',
           role: 'user',
           content: 'User message',
-          createdAt: new Date(),
         },
         {
           id: '2',
           sessionId: 'session-1',
           role: 'assistant',
           content: 'Assistant message',
-          createdAt: new Date(),
         },
       ]
 
@@ -1049,7 +1042,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-123',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-        createdAt: new Date(),
+
         updatedAt: new Date(),
       }
 
@@ -1085,7 +1078,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-123',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-        createdAt: new Date(),
+
         updatedAt: new Date(),
       }
 
@@ -1114,7 +1107,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-123',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-        createdAt: new Date(),
+
         updatedAt: new Date(),
       }
 
@@ -1143,7 +1136,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-123',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-        createdAt: new Date(),
+
         updatedAt: new Date(),
       }
 
