@@ -119,10 +119,9 @@ async function generateOpenApiSpec() {
   fixNullableTypes(document)
 
   // currentDir = apps/api-server/src → go up 3 levels to monorepo root
-  const outputPath = path.resolve(currentDir, '..', '..', '..', 'docs', 'openapi.yaml')
+  const outputPath = path.resolve(currentDir, '..', '..', '..', 'openapi.yaml')
   console.log('[OpenAPI] Output path:', outputPath)
 
-  fs.mkdirSync(path.dirname(outputPath), { recursive: true })
   fs.writeFileSync(outputPath, yamlDump(document, { lineWidth: 120 }), 'utf8')
 
   console.log(`✅ OpenAPI spec generated at: ${outputPath}`)

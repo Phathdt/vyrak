@@ -59,6 +59,7 @@ logs.txt
 .claude
 .opencode
 docs
+!openapi.yaml
 AGENTS.md
 release-manifest.json
 
