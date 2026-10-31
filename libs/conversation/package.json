@@ -3,10 +3,17 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   },
   "scripts": {
+    "build": "tsc && rolldown --config rolldown.config.mjs",
+    "dev": "tsc && rolldown --config rolldown.config.mjs --watch",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
