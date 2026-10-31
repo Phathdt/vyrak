@@ -33,6 +33,7 @@ describe('WorkflowBrainstormingService', () => {
     mockWorkflowRepository = {
       findById: vi.fn().mockResolvedValue({ id: 'workflow-123', status: 'BRAINSTORMING' }),
       updateStatus: vi.fn(),
+      updateClassification: vi.fn(),
     }
 
     mockConversationService.getWorkflowSessions = vi.fn().mockResolvedValue([])

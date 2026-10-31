@@ -626,6 +626,36 @@ paths:
                 $ref: '#/components/schemas/PaginatedWorkflowsResponse'
       summary: List workflows with pagination, search, and filtering
       tags: *ref_6
+  /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/phases:
+    get:
+      operationId: WorkflowsController_listPhases
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: projectId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Workflow phases retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowPhaseListResponseDto'
+        '404':
+          description: Workflow not found
+      summary: List workflow phases
+      tags: *ref_6
   /api/organizations/{orgId}/projects/{projectId}/workflows/{id}:
     get:
       operationId: WorkflowsController_findOne
@@ -720,106 +750,6 @@ paths:
           description: Workflow not found
       summary: Delete workflow
       tags: *ref_6
-  /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/brainstorm:
-    post:
-      description: |-
-        Start or continue a brainstorming conversation with the AI assistant to understand workflow requirements.
-
-        The AI will ask clarifying questions to understand:
-        - What needs to be built or fixed
-        - Scope and complexity
-        - Technical requirements
-        - Timeline urgency
-
-        After 4-5 exchanges (8+ messages), the conversation will have enough context for classification.
-      operationId: WorkflowBrainstormingController_brainstorm
-      parameters:
-        - name: orgId
-          required: true
-          in: path
-          description: Organization ID
-          schema:
-            type: string
-        - name: projectId
-          required: true
-          in: path
-          description: Project ID
-          schema:
-            type: string
-        - name: id
-          required: true
-          in: path
-          description: Workflow ID
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/BrainstormRequestDto'
-      responses:
-        '200':
-          description: AI response received
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BrainstormResponseDto'
-        '404':
-          description: Workflow not found
-      summary: Brainstorm workflow with AI assistant
-      tags: &ref_7
-        - Workflows - Brainstorming
-  /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/classify:
-    post:
-      description: |-
-        Analyze the brainstorming conversation and classify the workflow as HOTFIX, STORY, or EPIC.
-
-        Requires at least 8 messages in the conversation (4-5 exchanges) to have enough context.
-
-        **Classification Criteria:**
-        - **HOTFIX**: <2h, single component, urgent production fixes
-        - **STORY**: 1-3 days, 2-5 files, planned features
-        - **EPIC**: 1+ weeks, multi-system, requires architecture design
-      operationId: WorkflowBrainstormingController_classify
-      parameters:
-        - name: orgId
-          required: true
-          in: path
-          description: Organization ID
-          schema:
-            type: string
-        - name: projectId
-          required: true
-          in: path
-          description: Project ID
-          schema:
-            type: string
-        - name: id
-          required: true
-          in: path
-          description: Workflow ID
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ClassifyRequestDto'
-      responses:
-        '200':
-          description: Workflow classified successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ClassifyResponseDto'
-        '400':
-          description: Not enough messages for classification
-        '404':
-          description: Session not found
-      summary: Classify workflow based on brainstorming conversation
-      tags: *ref_7
   /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/confirm-classification:
     post:
       operationId: WorkflowsController_confirmClassification
@@ -884,6 +814,56 @@ paths:
               schema:
                 $ref: '#/components/schemas/BrainstormSessionResponseDto'
       summary: Get brainstorming conversation session and messages
+      tags: &ref_7
+        - Workflows - Brainstorming
+  /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/brainstorm:
+    post:
+      description: |-
+        Start or continue a brainstorming conversation with the AI assistant to understand workflow requirements.
+
+        The AI will ask clarifying questions to understand:
+        - What needs to be built or fixed
+        - Scope and complexity
+        - Technical requirements
+        - Timeline urgency
+
+        After 4-5 exchanges (8+ messages), the conversation will have enough context for classification.
+      operationId: WorkflowBrainstormingController_brainstorm
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema:
+            type: string
+        - name: projectId
+          required: true
+          in: path
+          description: Project ID
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          description: Workflow ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BrainstormRequestDto'
+      responses:
+        '200':
+          description: AI response received
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrainstormResponseDto'
+        '404':
+          description: Workflow not found
+      summary: Brainstorm workflow with AI assistant
       tags: *ref_7
   /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/brainstorm-stream:
     get:
@@ -920,6 +900,56 @@ paths:
         '200':
           description: Stream of AI response chunks
       summary: Brainstorm workflow with AI assistant (streaming)
+      tags: *ref_7
+  /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/classify:
+    post:
+      description: |-
+        Analyze the brainstorming conversation and classify the workflow as HOTFIX, STORY, or EPIC.
+
+        Requires at least 8 messages in the conversation (4-5 exchanges) to have enough context.
+
+        **Classification Criteria:**
+        - **HOTFIX**: <2h, single component, urgent production fixes
+        - **STORY**: 1-3 days, 2-5 files, planned features
+        - **EPIC**: 1+ weeks, multi-system, requires architecture design
+      operationId: WorkflowBrainstormingController_classify
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema:
+            type: string
+        - name: projectId
+          required: true
+          in: path
+          description: Project ID
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          description: Workflow ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClassifyRequestDto'
+      responses:
+        '200':
+          description: Workflow classified successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClassifyResponseDto'
+        '400':
+          description: Not enough messages for classification
+        '404':
+          description: Session not found
+      summary: Classify workflow based on brainstorming conversation
       tags: *ref_7
 info:
   title: Vyrak API
@@ -1601,6 +1631,63 @@ components:
         - page
         - limit
         - totalPages
+    WorkflowPhaseResponseDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+        workflowId:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+        key:
+          type: string
+          example: planning
+        name:
+          type: string
+          example: Planning
+        sequence:
+          type: integer
+          minimum: -9007199254740991
+          maximum: 9007199254740991
+          example: 1
+        status:
+          type: string
+          enum:
+            - PENDING
+            - IN_PROGRESS
+            - WAITING_APPROVAL
+            - COMPLETED
+            - FAILED
+            - SKIPPED
+        startedAt:
+          type: string
+          x-nestjs_zod-empty-type: true
+          nullable: true
+        completedAt:
+          type: string
+          x-nestjs_zod-empty-type: true
+          nullable: true
+      required:
+        - id
+        - workflowId
+        - key
+        - name
+        - sequence
+        - status
+        - startedAt
+        - completedAt
+    WorkflowPhaseListResponseDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkflowPhaseResponseDto'
+      required:
+        - items
     UpdateWorkflowDto:
       type: object
       properties:
@@ -1611,12 +1698,6 @@ components:
         description:
           type: string
           maxLength: 5000
-    ClassifyWorkflowDto:
-      type: object
-      properties:
-        force:
-          default: false
-          type: boolean
     ConfirmClassificationDto:
       type: object
       properties:

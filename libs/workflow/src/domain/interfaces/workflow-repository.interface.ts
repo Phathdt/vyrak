@@ -8,6 +8,11 @@ export interface IWorkflowRepository {
   update(id: string, data: UpdateWorkflowData): Promise<WorkflowEntity>
   updateStatus(id: string, status: WorkflowStatus): Promise<void>
   updateType(id: string, type: WorkflowType, confirmedById: string): Promise<void>
+  updateClassification(id: string, classification: Record<string, unknown>): Promise<void>
+  updateDefinitionContext(
+    id: string,
+    data: { currentPhaseKey: string | null; definitionSnapshot: Record<string, unknown> }
+  ): Promise<void>
   delete(id: string): Promise<void>
 }
 

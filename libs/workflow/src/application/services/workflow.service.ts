@@ -4,6 +4,7 @@ import { WorkflowStatus } from '../../domain'
 
 import type {
   CreateWorkflowInput,
+  IWorkflowPhaseService,
   IWorkflowRepository,
   IWorkflowRepositoryRepository,
   IWorkflowService,
@@ -18,7 +19,8 @@ import type {
 export class WorkflowService implements IWorkflowService {
   constructor(
     private readonly workflowRepository: IWorkflowRepository,
-    private readonly workflowRepositoryRepository: IWorkflowRepositoryRepository
+    private readonly workflowRepositoryRepository: IWorkflowRepositoryRepository,
+    private readonly workflowPhaseService: IWorkflowPhaseService
   ) {}
 
   async create(
@@ -162,6 +164,7 @@ export class WorkflowService implements IWorkflowService {
     }
 
     await this.workflowRepository.updateType(id, type, confirmedById)
+    await this.workflowPhaseService.initializePhasesForWorkflow(id, type)
     await this.workflowRepository.updateStatus(id, WorkflowStatus.ACTIVE)
   }
 }

@@ -148,11 +148,19 @@ export class WorkflowBrainstormingService implements IWorkflowBrainstormingServi
 
     await this.conversationService.completeSession(sessionId)
 
-    return {
+    const result = {
       type: classification.type as WorkflowType,
       confidence: classification.confidence,
       reasoning: classification.reasoning,
     }
+
+    await this.workflowRepository.updateClassification(workflowId, {
+      ...result,
+      proposedAt: new Date().toISOString(),
+    })
+    await this.workflowRepository.updateStatus(workflowId, WorkflowStatus.CLASSIFICATION_PENDING)
+
+    return result
   }
 
   private async ensureBrainstormingStatus(workflowId: string): Promise<void> {

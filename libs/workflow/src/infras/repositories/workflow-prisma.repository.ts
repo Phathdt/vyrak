@@ -192,6 +192,38 @@ export class WorkflowPrismaRepository extends BaseTenantRepository implements IW
     })
   }
 
+  async updateClassification(id: string, classification: Record<string, unknown>): Promise<void> {
+    await this.withTenantContext(async (organizationId) => {
+      await this.prisma.client.workflow.update({
+        where: {
+          id,
+          organizationId,
+        },
+        data: {
+          classification: classification as Prisma.InputJsonValue,
+        },
+      })
+    })
+  }
+
+  async updateDefinitionContext(
+    id: string,
+    data: { currentPhaseKey: string | null; definitionSnapshot: Record<string, unknown> }
+  ): Promise<void> {
+    await this.withTenantContext(async (organizationId) => {
+      await this.prisma.client.workflow.update({
+        where: {
+          id,
+          organizationId,
+        },
+        data: {
+          currentPhaseKey: data.currentPhaseKey,
+          definitionSnapshot: data.definitionSnapshot as Prisma.InputJsonValue,
+        },
+      })
+    })
+  }
+
   async delete(id: string): Promise<void> {
     await this.withTenantContext(async (organizationId) => {
       await this.prisma.client.workflow.delete({

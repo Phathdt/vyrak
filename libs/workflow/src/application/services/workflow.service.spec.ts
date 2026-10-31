@@ -16,6 +16,7 @@ describe('WorkflowService', () => {
   let service: WorkflowService
   let mockWorkflowRepository: any
   let mockWorkflowRepositoryRepository: any
+  let mockWorkflowPhaseService: any
 
   const createMockWorkflow = (overrides?: Partial<WorkflowEntity>): WorkflowEntity => ({
     id: 'workflow-123',
@@ -66,7 +67,12 @@ describe('WorkflowService', () => {
       deleteByWorkflowId: vi.fn(),
     }
 
-    service = new WorkflowService(mockWorkflowRepository, mockWorkflowRepositoryRepository)
+    mockWorkflowPhaseService = {
+      listByWorkflowId: vi.fn(),
+      initializePhasesForWorkflow: vi.fn().mockResolvedValue([]),
+    }
+
+    service = new WorkflowService(mockWorkflowRepository, mockWorkflowRepositoryRepository, mockWorkflowPhaseService)
   })
 
   afterEach(() => {
@@ -760,6 +766,10 @@ describe('WorkflowService', () => {
       await service.confirmClassification('org-123', 'workflow-123', WorkflowType.STORY, 'user-456')
 
       expect(mockWorkflowRepository.updateType).toHaveBeenCalledWith('workflow-123', WorkflowType.STORY, 'user-456')
+      expect(mockWorkflowPhaseService.initializePhasesForWorkflow).toHaveBeenCalledWith(
+        'workflow-123',
+        WorkflowType.STORY
+      )
       expect(mockWorkflowRepository.updateStatus).toHaveBeenCalledWith('workflow-123', WorkflowStatus.ACTIVE)
     })
 

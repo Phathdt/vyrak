@@ -1,8 +1,8 @@
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
-import { getErrorMessage } from '@/api/client'
+import { customInstance, getErrorMessage } from '@/api/client'
 import {
   getWorkflowBrainstormingControllerGetBrainstormSessionQueryKey,
   useWorkflowBrainstormingControllerBrainstorm,
@@ -33,7 +33,19 @@ import type { ClassifyResponseDto } from '@/api/generated/models'
 
 type WorkflowType = 'HOTFIX' | 'STORY' | 'EPIC'
 
+type WorkflowPhaseItem = {
+  id: string
+  key: string
+  name: string
+  sequence: number
+  status: string
+}
+
 const CHAT_ENABLED_STATUSES = new Set(['DRAFT', 'BRAINSTORMING', 'CLASSIFICATION_PENDING'])
+
+function workflowPhasesQueryKey(orgId: string, projectId: string, workflowId: string) {
+  return ['workflow-phases', orgId, projectId, workflowId] as const
+}
 
 export function WorkflowDetailPage() {
   const navigate = useNavigate()
@@ -97,6 +109,9 @@ export function WorkflowDetailPage() {
       }),
       queryClient.invalidateQueries({
         queryKey: getWorkflowBrainstormingControllerGetBrainstormSessionQueryKey(orgId, projectId, workflowId),
+      }),
+      queryClient.invalidateQueries({
+        queryKey: workflowPhasesQueryKey(orgId, projectId, workflowId),
       }),
     ])
   }
@@ -203,8 +218,22 @@ export function WorkflowDetailPage() {
 
   const chatEnabled = workflow ? CHAT_ENABLED_STATUSES.has(workflow.status) : false
   const isBrainstormPhase = chatEnabled
+
+  const { data: phasesData } = useQuery({
+    queryKey: workflowPhasesQueryKey(orgId!, projectId!, workflowId!),
+    enabled: enabled && !!workflow && !isBrainstormPhase,
+    queryFn: () =>
+      customInstance<{ items: WorkflowPhaseItem[] }>({
+        url: `/api/organizations/${orgId}/projects/${projectId}/workflows/${workflowId}/phases`,
+        method: 'GET',
+      }),
+  })
+
+  const phases = phasesData?.items ?? []
+  const currentPhase =
+    phases.find((p) => p.key === workflow?.currentPhaseKey) ?? phases.find((p) => p.status === 'IN_PROGRESS')
   const isBusy = isSending || isClassifying || isConfirming
-  const confirmedAtLabel = workflow.classificationConfirmedAt
+  const confirmedAtLabel = workflow?.classificationConfirmedAt
     ? new Date(workflow.classificationConfirmedAt).toLocaleString()
     : null
 
@@ -321,9 +350,9 @@ export function WorkflowDetailPage() {
             <>
               <Card className='border-primary/30 bg-primary/5'>
                 <CardHeader>
-                  <CardTitle>Workflow activated</CardTitle>
+                  <CardTitle>Planning &amp; phases</CardTitle>
                   <CardDescription>
-                    Brainstorming and classification are complete. This workflow is ready for the next execution steps.
+                    Classification is confirmed. Follow the phase timeline — Planning is the current focus (PRD §5.1).
                   </CardDescription>
                 </CardHeader>
                 <CardContent className='space-y-4'>
@@ -334,11 +363,40 @@ export function WorkflowDetailPage() {
                         {getTypeBadge(workflow.type).icon} {workflow.type}
                       </Badge>
                     )}
+                    {currentPhase && (
+                      <Badge variant='default' className='text-sm'>
+                        Current: {currentPhase.name}
+                      </Badge>
+                    )}
                   </div>
                   {confirmedAtLabel && <p className='text-sm text-muted-foreground'>Confirmed at {confirmedAtLabel}</p>}
-                  <p className='text-sm'>
-                    Workflow runs and agent execution are not wired in this UI yet — use the API or worker flows when
-                    available.
+                  {phases.length > 0 ? (
+                    <ol className='space-y-2'>
+                      {phases.map((phase) => (
+                        <li
+                          key={phase.id}
+                          className={`flex items-center justify-between rounded-lg border px-3 py-2 text-sm ${
+                            phase.status === 'IN_PROGRESS' ? 'border-primary bg-background' : 'bg-background/60'
+                          }`}
+                        >
+                          <span>
+                            <span className='font-medium'>
+                              {phase.sequence}. {phase.name}
+                            </span>
+                            <span className='ml-2 text-muted-foreground'>({phase.key})</span>
+                          </span>
+                          <Badge variant={phase.status === 'IN_PROGRESS' ? 'default' : 'outline'}>{phase.status}</Badge>
+                        </li>
+                      ))}
+                    </ol>
+                  ) : (
+                    <p className='text-sm text-muted-foreground'>
+                      No phases found for this workflow (created before phase generation). Create a new workflow or
+                      re-confirm after the API update to generate phases.
+                    </p>
+                  )}
+                  <p className='text-sm text-muted-foreground'>
+                    PRD Phase 3 next: Planning agent, PRD/ARD artifacts, and approval — not in this UI yet.
                   </p>
                   {orgId && projectId && (
                     <Button variant='outline' onClick={() => navigate(routes.projectWorkflows(orgId, projectId))}>

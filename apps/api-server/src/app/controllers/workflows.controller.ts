@@ -17,11 +17,14 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import {
   ConfirmClassificationDto,
   CreateWorkflowDto,
+  IWorkflowPhaseService,
   IWorkflowService,
   ListWorkflowsQueryDto,
   PaginatedWorkflowsResponse,
   UpdateWorkflowDto,
+  WORKFLOW_PHASE_SERVICE,
   WORKFLOW_SERVICE,
+  WorkflowPhaseListResponseDto,
   WorkflowResponse,
 } from '@vyrak/workflow'
 
@@ -32,7 +35,10 @@ import { OrganizationMemberGuard } from '../../guards'
 @Controller('api/organizations/:orgId/projects/:projectId/workflows')
 @UseGuards(AuthGuard, OrganizationMemberGuard)
 export class WorkflowsController {
-  constructor(@Inject(WORKFLOW_SERVICE) private readonly workflowService: IWorkflowService) {}
+  constructor(
+    @Inject(WORKFLOW_SERVICE) private readonly workflowService: IWorkflowService,
+    @Inject(WORKFLOW_PHASE_SERVICE) private readonly workflowPhaseService: IWorkflowPhaseService
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new workflow' })
@@ -110,6 +116,41 @@ export class WorkflowsController {
       page: result.page,
       limit: result.limit,
       totalPages: result.totalPages,
+    }
+  }
+
+  @Get(':id/phases')
+  @ApiOperation({ summary: 'List workflow phases' })
+  @ApiResponse({
+    status: 200,
+    description: 'Workflow phases retrieved successfully',
+    type: WorkflowPhaseListResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Workflow not found' })
+  async listPhases(
+    @Param('orgId') orgId: string,
+    @Param('projectId') _projectId: string,
+    @Param('id') id: string
+  ): Promise<WorkflowPhaseListResponseDto> {
+    const workflow = await this.workflowService.findById(orgId, id)
+
+    if (!workflow) {
+      throw new NotFoundException('Workflow not found')
+    }
+
+    const phases = await this.workflowPhaseService.listByWorkflowId(id)
+
+    return {
+      items: phases.map((phase) => ({
+        id: phase.id,
+        workflowId: phase.workflowId,
+        key: phase.key,
+        name: phase.name,
+        sequence: phase.sequence,
+        status: phase.status,
+        startedAt: phase.startedAt?.toISOString() ?? null,
+        completedAt: phase.completedAt?.toISOString() ?? null,
+      })),
     }
   }
 
