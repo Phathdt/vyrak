@@ -6,6 +6,7 @@
 import { NestFactory } from '@nestjs/core'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { CustomConfigService } from '@vyrak/custom-config'
+import { DatabaseService, TenantContextInterceptor } from '@vyrak/database'
 import 'dotenv/config'
 import { LoggerErrorInterceptor, Logger as PinoLogger } from 'nestjs-pino'
 import { ZodValidationPipe } from 'nestjs-zod'
@@ -19,6 +20,7 @@ async function bootstrap() {
   })
 
   const configService = app.get(CustomConfigService)
+  const databaseService = app.get(DatabaseService)
 
   app.enableCors({
     origin: configService.frontendUrl,
@@ -30,7 +32,12 @@ async function bootstrap() {
   app.useGlobalFilters(new ResponseExceptionFilter(), new ZodValidationExceptionFilter())
   // TraceIdInterceptor and ResponseInterceptor are registered via APP_INTERCEPTOR in app.module.ts
   // to enable proper dependency injection of ClsService
-  app.useGlobalInterceptors(new ResponseLoggerInterceptor(), new LoggerErrorInterceptor())
+  // TenantContextInterceptor must be first to set context before other interceptors
+  app.useGlobalInterceptors(
+    new TenantContextInterceptor(databaseService),
+    new ResponseLoggerInterceptor(),
+    new LoggerErrorInterceptor()
+  )
 
   app.useLogger(app.get(PinoLogger))
 

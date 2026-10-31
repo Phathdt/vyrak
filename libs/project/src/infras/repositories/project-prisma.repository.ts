@@ -1,3 +1,5 @@
+import { BaseTenantRepository } from '@vyrak/database'
+
 import type {
   CreateProjectDto,
   IProjectRepository,
@@ -6,11 +8,9 @@ import type {
   ProjectWithStats,
   UpdateProjectDto,
 } from '../../domain'
-import type { DatabaseService, Project as PrismaProject } from '@vyrak/database'
+import type { Project as PrismaProject } from '@vyrak/database'
 
-export class ProjectPrismaRepository implements IProjectRepository {
-  constructor(private readonly prisma: DatabaseService) {}
-
+export class ProjectPrismaRepository extends BaseTenantRepository implements IProjectRepository {
   /**
    * Map Prisma Project to ProjectWithStats
    * Centralized mapping to avoid duplication
@@ -35,8 +35,8 @@ export class ProjectPrismaRepository implements IProjectRepository {
     }
   }
 
-  async create(organizationId: string, data: CreateProjectDto): Promise<ProjectWithStats> {
-    return this.prisma.withSystemAccess(async () => {
+  async create(data: CreateProjectDto): Promise<ProjectWithStats> {
+    return this.withTenantContext(async (organizationId) => {
       const project = await this.prisma.client.project.create({
         data: {
           organizationId,
@@ -50,8 +50,8 @@ export class ProjectPrismaRepository implements IProjectRepository {
     })
   }
 
-  async findOne(organizationId: string, id: string): Promise<ProjectWithStats | null> {
-    return this.prisma.withSystemAccess(async () => {
+  async findOne(id: string): Promise<ProjectWithStats | null> {
+    return this.withTenantContext(async (organizationId) => {
       const project = await this.prisma.client.project.findFirst({
         where: {
           id,
@@ -67,8 +67,8 @@ export class ProjectPrismaRepository implements IProjectRepository {
     })
   }
 
-  async findBySlug(organizationId: string, slug: string): Promise<{ id: string } | null> {
-    return this.prisma.withSystemAccess(async () => {
+  async findBySlug(slug: string): Promise<{ id: string } | null> {
+    return this.withTenantContext(async (organizationId) => {
       const project = await this.prisma.client.project.findFirst({
         where: {
           slug,
@@ -83,8 +83,8 @@ export class ProjectPrismaRepository implements IProjectRepository {
     })
   }
 
-  async findAll(organizationId: string, query: ListProjectsQueryDto): Promise<PaginatedProjects> {
-    return this.prisma.withSystemAccess(async () => {
+  async findAll(query: ListProjectsQueryDto): Promise<PaginatedProjects> {
+    return this.withTenantContext(async (organizationId) => {
       const { page = 1, limit = 10, search } = query
 
       const where = {
@@ -116,8 +116,8 @@ export class ProjectPrismaRepository implements IProjectRepository {
     })
   }
 
-  async update(organizationId: string, id: string, data: UpdateProjectDto): Promise<ProjectWithStats> {
-    return this.prisma.withSystemAccess(async () => {
+  async update(id: string, data: UpdateProjectDto): Promise<ProjectWithStats> {
+    return this.withTenantContext(async (organizationId) => {
       const project = await this.prisma.client.project.update({
         where: {
           id,
@@ -125,7 +125,9 @@ export class ProjectPrismaRepository implements IProjectRepository {
         },
         data: {
           ...(data.name && { name: data.name }),
-          ...(data.description !== undefined && { description: data.description }),
+          ...(data.description !== undefined && {
+            description: data.description,
+          }),
         },
       })
 
@@ -133,8 +135,8 @@ export class ProjectPrismaRepository implements IProjectRepository {
     })
   }
 
-  async delete(organizationId: string, id: string): Promise<void> {
-    return this.prisma.withSystemAccess(async () => {
+  async delete(id: string): Promise<void> {
+    return this.withTenantContext(async (organizationId) => {
       await this.prisma.client.project.delete({
         where: {
           id,

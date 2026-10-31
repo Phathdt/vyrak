@@ -57,7 +57,7 @@ describe('ProjectPrismaRepository (Integration)', () => {
       const { organization } = await createTestOrgWithOwner(prisma)
 
       await databaseService.withOrganization(organization.id, async () => {
-        const result = await repository.create(organization.id, {
+        const result = await repository.create({
           name: 'Test Project',
           slug: 'test-project',
           description: 'Test description',
@@ -95,12 +95,12 @@ describe('ProjectPrismaRepository (Integration)', () => {
       const { organization } = await createTestOrgWithOwner(prisma)
 
       await databaseService.withOrganization(organization.id, async () => {
-        const created = await repository.create(organization.id, {
+        const created = await repository.create({
           name: 'Test Project',
           slug: 'test-project',
         })
 
-        const result = await repository.findOne(organization.id, created.id)
+        const result = await repository.findOne(created.id)
 
         expect(result).toMatchObject({
           id: created.id,
@@ -117,7 +117,7 @@ describe('ProjectPrismaRepository (Integration)', () => {
       const { organization } = await createTestOrgWithOwner(prisma)
 
       await databaseService.withOrganization(organization.id, async () => {
-        const result = await repository.findOne(organization.id, 'non-existent-id')
+        const result = await repository.findOne('non-existent-id')
 
         expect(result).toBeNull()
       })
@@ -133,16 +133,16 @@ describe('ProjectPrismaRepository (Integration)', () => {
 
       await databaseService.withOrganization(organization.id, async () => {
         // Create test projects
-        await repository.create(organization.id, {
+        await repository.create({
           name: 'Project 1',
           slug: 'project-1',
         })
-        await repository.create(organization.id, {
+        await repository.create({
           name: 'Project 2',
           slug: 'project-2',
         })
 
-        const result = await repository.findAll(organization.id, {
+        const result = await repository.findAll({
           page: 1,
           limit: 10,
           sort: 'createdAt',
