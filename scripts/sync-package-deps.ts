@@ -1,9 +1,9 @@
-#!/usr/bin/env npx ts-node
+#!/usr/bin/env tsx
 
 /**
  * Script to scan all imports in each lib/app module and sync dependencies in package.json
  *
- * Usage: npx ts-node scripts/sync-package-deps.ts [--dry-run] [--module <module-name>] [--strict] [--check-versions]
+ * Usage: tsx scripts/sync-package-deps.ts [--dry-run] [--module <module-name>] [--strict] [--check-versions]
  *
  * Options:
  *   --dry-run         Show what would be changed without modifying files
@@ -17,6 +17,9 @@ import * as path from 'path'
 const LIBS_DIR = path.join(__dirname, '..', 'libs')
 const APPS_DIR = path.join(__dirname, '..', 'apps')
 const ROOT_PACKAGE_JSON = path.join(__dirname, '..', 'package.json')
+
+// Modules to skip when scanning dependencies
+const SKIP_MODULES = new Set(['web'])
 
 // Known npm packages and their versions (from root package.json or common versions)
 const NPM_PACKAGE_VERSIONS: Record<string, string> = {}
@@ -566,6 +569,7 @@ function main() {
   // Combine and filter
   const modules = [...root, ...libs, ...apps]
     .filter((m) => !targetModule || m.name === targetModule)
+    .filter((m) => !SKIP_MODULES.has(m.name))
     .sort((a, b) => a.name.localeCompare(b.name))
 
   if (targetModule && modules.length === 0) {

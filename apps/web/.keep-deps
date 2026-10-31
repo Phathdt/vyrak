@@ -1,0 +1,8 @@
+# Dependencies to always keep in package.json
+# These will not be removed even in strict mode
+
+# Orval - used for API client generation via generate:api script
+orval
+
+# tw-animate-css - Tailwind CSS animation utilities
+tw-animate-css

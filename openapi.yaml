@@ -708,9 +708,22 @@ paths:
         After 4-5 exchanges (8+ messages), the conversation will have enough context for classification.
       operationId: WorkflowBrainstormingController_brainstorm
       parameters:
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema:
+            type: string
+        - name: projectId
+          required: true
+          in: path
+          description: Project ID
+          schema:
+            type: string
         - name: id
           required: true
           in: path
+          description: Workflow ID
           schema:
             type: string
       requestBody:
@@ -744,9 +757,22 @@ paths:
         - **EPIC**: 1+ weeks, multi-system, requires architecture design
       operationId: WorkflowBrainstormingController_classify
       parameters:
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema:
+            type: string
+        - name: projectId
+          required: true
+          in: path
+          description: Project ID
+          schema:
+            type: string
         - name: id
           required: true
           in: path
+          description: Workflow ID
           schema:
             type: string
       requestBody:
@@ -810,17 +836,29 @@ paths:
         Each chunk of the AI response will be sent as it's generated, providing a better user experience.
       operationId: WorkflowBrainstormingController_brainstormStream
       parameters:
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema:
+            type: string
+        - name: projectId
+          required: true
+          in: path
+          description: Project ID
+          schema:
+            type: string
         - name: id
           required: true
           in: path
+          description: Workflow ID
           schema:
             type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/BrainstormRequestDto'
+        - name: userMessage
+          required: true
+          in: query
+          schema:
+            type: string
       responses:
         '200':
           description: Stream of AI response chunks

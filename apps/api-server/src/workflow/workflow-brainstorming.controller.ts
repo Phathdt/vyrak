@@ -1,5 +1,5 @@
-import { Body, Controller, Param, Post, Sse } from '@nestjs/common'
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
+import { Body, Controller, Param, Post, Query, Sse } from '@nestjs/common'
+import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { WorkflowBrainstormingService } from '@vyrak/workflow'
 import { Observable } from 'rxjs'
 
@@ -16,6 +16,9 @@ export class WorkflowBrainstormingController {
   constructor(private readonly brainstormingService: WorkflowBrainstormingService) {}
 
   @Post('brainstorm')
+  @ApiParam({ name: 'orgId', description: 'Organization ID' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiParam({ name: 'id', description: 'Workflow ID' })
   @ApiOperation({
     summary: 'Brainstorm workflow with AI assistant',
     description: `Start or continue a brainstorming conversation with the AI assistant to understand workflow requirements.
@@ -38,6 +41,8 @@ After 4-5 exchanges (8+ messages), the conversation will have enough context for
     description: 'Workflow not found',
   })
   async brainstorm(
+    @Param('orgId') _orgId: string,
+    @Param('projectId') _projectId: string,
     @Param('id') workflowId: string,
     @Body() request: BrainstormRequestDto
   ): Promise<BrainstormResponseDto> {
@@ -48,6 +53,9 @@ After 4-5 exchanges (8+ messages), the conversation will have enough context for
   }
 
   @Sse('brainstorm-stream')
+  @ApiParam({ name: 'orgId', description: 'Organization ID' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiParam({ name: 'id', description: 'Workflow ID' })
   @ApiOperation({
     summary: 'Brainstorm workflow with AI assistant (streaming)',
     description: `Server-Sent Events endpoint for streaming AI responses in real-time.
@@ -59,15 +67,17 @@ Each chunk of the AI response will be sent as it's generated, providing a better
     description: 'Stream of AI response chunks',
   })
   async brainstormStream(
+    @Param('orgId') _orgId: string,
+    @Param('projectId') _projectId: string,
     @Param('id') workflowId: string,
-    @Body() request: BrainstormRequestDto
+    @Query('userMessage') userMessage: string
   ): Promise<Observable<MessageEvent>> {
     return new Observable((subscriber) => {
       ;(async () => {
         try {
           for await (const chunk of this.brainstormingService.brainstormStream({
             workflowId,
-            userMessage: request.userMessage,
+            userMessage,
           })) {
             subscriber.next({
               data: chunk,
@@ -82,6 +92,9 @@ Each chunk of the AI response will be sent as it's generated, providing a better
   }
 
   @Post('classify')
+  @ApiParam({ name: 'orgId', description: 'Organization ID' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiParam({ name: 'id', description: 'Workflow ID' })
   @ApiOperation({
     summary: 'Classify workflow based on brainstorming conversation',
     description: `Analyze the brainstorming conversation and classify the workflow as HOTFIX, STORY, or EPIC.
@@ -106,7 +119,12 @@ Requires at least 8 messages in the conversation (4-5 exchanges) to have enough 
     status: 404,
     description: 'Session not found',
   })
-  async classify(@Param('id') workflowId: string, @Body() body: ClassifyRequestDto): Promise<ClassifyResponseDto> {
+  async classify(
+    @Param('orgId') _orgId: string,
+    @Param('projectId') _projectId: string,
+    @Param('id') workflowId: string,
+    @Body() body: ClassifyRequestDto
+  ): Promise<ClassifyResponseDto> {
     return this.brainstormingService.classify(workflowId, body.sessionId)
   }
 }

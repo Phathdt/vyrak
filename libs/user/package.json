@@ -16,8 +16,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@vyrak/database": "*",
     "@nestjs/common": "^12.2.0",
-    "@vyrak/database": "*"
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
   },
   "devDependencies": {
     "@types/node": "~26.6.5",
