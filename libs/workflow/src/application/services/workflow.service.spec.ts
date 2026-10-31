@@ -426,7 +426,6 @@ describe('WorkflowService', () => {
         limit: 10,
       }
 
-      const startTime = Date.now()
       await service.findAll('org-123', 'project-123', query)
 
       // Just verify both calls were made (not testing timing)
