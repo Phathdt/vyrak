@@ -1,4 +1,17 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Inject, Param, Patch, Post, Query } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Inject,
+  NotFoundException,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common'
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import {
   ClassifyWorkflowDto,
@@ -103,7 +116,11 @@ export class WorkflowsController {
   })
   @ApiResponse({ status: 404, description: 'Workflow not found' })
   async findOne(@Param('orgId') orgId: string, @Param('id') id: string): Promise<WorkflowResponse> {
-    const workflow = await this.workflowService.findOne(orgId, id)
+    const workflow = await this.workflowService.findById(orgId, id)
+
+    if (!workflow) {
+      throw new NotFoundException('Workflow not found')
+    }
 
     return {
       id: workflow.id,
@@ -141,7 +158,13 @@ export class WorkflowsController {
     @Param('id') id: string,
     @Body() updateWorkflowDto: UpdateWorkflowDto
   ): Promise<WorkflowResponse> {
-    const workflow = await this.workflowService.update(orgId, id, updateWorkflowDto)
+    await this.workflowService.update(orgId, id, updateWorkflowDto)
+
+    const workflow = await this.workflowService.findById(orgId, id)
+
+    if (!workflow) {
+      throw new NotFoundException('Workflow not found')
+    }
 
     return {
       id: workflow.id,

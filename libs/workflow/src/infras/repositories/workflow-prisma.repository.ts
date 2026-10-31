@@ -1,16 +1,14 @@
-import { BaseTenantRepository, type Workflow, type Prisma } from '@vyrak/database'
+import { BaseTenantRepository, type Prisma, type Workflow } from '@vyrak/database'
 
 import { WorkflowStatus } from '../../domain/entities'
 
-import type {
-  CreateWorkflowDto,
-  IWorkflowRepository,
-  ListWorkflowsQueryDto,
-  PaginatedWorkflows,
-  UpdateWorkflowDto,
-  WorkflowWithRepositories,
-} from '../../domain'
 import type { WorkflowEntity, WorkflowType } from '../../domain/entities'
+import type {
+  CreateWorkflowData,
+  IWorkflowRepository,
+  UpdateWorkflowData,
+  WorkflowFilters,
+} from '../../domain/interfaces/workflow-repository.interface'
 
 export class WorkflowPrismaRepository extends BaseTenantRepository implements IWorkflowRepository {
   private mapToEntity(raw: Workflow): WorkflowEntity {
@@ -35,7 +33,91 @@ export class WorkflowPrismaRepository extends BaseTenantRepository implements IW
     }
   }
 
-  async create(projectId: string, createdById: string, data: CreateWorkflowDto): Promise<WorkflowWithRepositories> {
+  async findById(id: string): Promise<WorkflowEntity | null> {
+    return this.withTenantContext(async (organizationId) => {
+      const workflow = await this.prisma.client.workflow.findFirst({
+        where: {
+          id,
+          organizationId,
+        },
+      })
+
+      return workflow ? this.mapToEntity(workflow) : null
+    })
+  }
+
+  async findAll(projectId: string, filters: WorkflowFilters): Promise<WorkflowEntity[]> {
+    return this.withTenantContext(async (organizationId) => {
+      const where: Prisma.WorkflowWhereInput = {
+        organizationId,
+        projectId,
+      }
+
+      if (filters.search) {
+        where.OR = [
+          { title: { contains: filters.search, mode: 'insensitive' } },
+          { description: { contains: filters.search, mode: 'insensitive' } },
+        ]
+      }
+
+      if (filters.type) {
+        where.type = filters.type
+      }
+
+      if (filters.status) {
+        where.status = filters.status
+      }
+
+      if (filters.createdById) {
+        where.createdById = filters.createdById
+      }
+
+      const orderBy: Prisma.WorkflowOrderByWithRelationInput = filters.sort
+        ? { [filters.sort]: filters.order || 'desc' }
+        : { createdAt: 'desc' }
+
+      const workflows = await this.prisma.client.workflow.findMany({
+        where,
+        orderBy,
+        skip: filters.skip,
+        take: filters.take,
+      })
+
+      return workflows.map((w) => this.mapToEntity(w))
+    })
+  }
+
+  async count(projectId: string, filters: WorkflowFilters): Promise<number> {
+    return this.withTenantContext(async (organizationId) => {
+      const where: Prisma.WorkflowWhereInput = {
+        organizationId,
+        projectId,
+      }
+
+      if (filters.search) {
+        where.OR = [
+          { title: { contains: filters.search, mode: 'insensitive' } },
+          { description: { contains: filters.search, mode: 'insensitive' } },
+        ]
+      }
+
+      if (filters.type) {
+        where.type = filters.type
+      }
+
+      if (filters.status) {
+        where.status = filters.status
+      }
+
+      if (filters.createdById) {
+        where.createdById = filters.createdById
+      }
+
+      return this.prisma.client.workflow.count({ where })
+    })
+  }
+
+  async create(projectId: string, createdById: string, data: CreateWorkflowData): Promise<WorkflowEntity> {
     return this.withTenantContext(async (organizationId) => {
       const workflow = await this.prisma.client.workflow.create({
         data: {
@@ -48,143 +130,11 @@ export class WorkflowPrismaRepository extends BaseTenantRepository implements IW
         },
       })
 
-      await this.prisma.client.workflowRepository.createMany({
-        data: data.repositoryIds.map((repositoryId) => ({
-          organizationId,
-          workflowId: workflow.id,
-          repositoryId,
-        })),
-      })
-
-      const repositories = await this.prisma.client.workflowRepository.findMany({
-        where: {
-          workflowId: workflow.id,
-        },
-        select: {
-          id: true,
-          repositoryId: true,
-        },
-      })
-
-      return {
-        ...this.mapToEntity(workflow),
-        repositories,
-      }
+      return this.mapToEntity(workflow)
     })
   }
 
-  async findAll(projectId: string, query: ListWorkflowsQueryDto): Promise<PaginatedWorkflows> {
-    return this.withTenantContext(async (organizationId) => {
-      const where: Prisma.WorkflowWhereInput = {
-        organizationId,
-        projectId,
-      }
-
-      if (query.search) {
-        where.OR = [
-          { title: { contains: query.search, mode: 'insensitive' } },
-          { description: { contains: query.search, mode: 'insensitive' } },
-        ]
-      }
-
-      if (query.type) {
-        where.type = query.type
-      }
-
-      if (query.status) {
-        where.status = query.status
-      }
-
-      if (query.createdById) {
-        where.createdById = query.createdById
-      }
-
-      const [workflows, total] = await Promise.all([
-        this.prisma.client.workflow.findMany({
-          where,
-          orderBy: {
-            [query.sort]: query.order,
-          },
-          skip: (query.page - 1) * query.limit,
-          take: query.limit,
-        }),
-        this.prisma.client.workflow.count({ where }),
-      ])
-
-      // Fetch repositories for all workflows
-      const workflowIds = workflows.map((w) => w.id)
-      const repositories = await this.prisma.client.workflowRepository.findMany({
-        where: {
-          workflowId: { in: workflowIds },
-        },
-        select: {
-          id: true,
-          workflowId: true,
-          repositoryId: true,
-        },
-      })
-
-      // Group repositories by workflowId
-      const reposByWorkflow = repositories.reduce(
-        (acc, repo) => {
-          if (!acc[repo.workflowId]) {
-            acc[repo.workflowId] = []
-          }
-          acc[repo.workflowId].push({
-            id: repo.id,
-            repositoryId: repo.repositoryId,
-          })
-          return acc
-        },
-        {} as Record<string, Array<{ id: string; repositoryId: string }>>
-      )
-
-      const items = workflows.map((w) => ({
-        ...this.mapToEntity(w),
-        repositories: reposByWorkflow[w.id] || [],
-      }))
-
-      return {
-        items,
-        total,
-        page: query.page,
-        limit: query.limit,
-        totalPages: Math.ceil(total / query.limit),
-      }
-    })
-  }
-
-  async findOne(id: string): Promise<WorkflowWithRepositories | null> {
-    return this.withTenantContext(async (organizationId) => {
-      const workflow = await this.prisma.client.workflow.findFirst({
-        where: {
-          id,
-          organizationId,
-        },
-      })
-
-      if (!workflow) {
-        return null
-      }
-
-      const repositories = await this.prisma.client.workflowRepository.findMany({
-        where: {
-          workflowId: workflow.id,
-        },
-        select: {
-          id: true,
-          repositoryId: true,
-        },
-      })
-
-      return {
-        ...this.mapToEntity(workflow),
-        repositories,
-      }
-    })
-  }
-
-  async update(id: string, data: UpdateWorkflowDto): Promise<WorkflowWithRepositories> {
+  async update(id: string, data: UpdateWorkflowData): Promise<WorkflowEntity> {
     return this.withTenantContext(async (organizationId) => {
       const workflow = await this.prisma.client.workflow.update({
         where: {
@@ -197,60 +147,36 @@ export class WorkflowPrismaRepository extends BaseTenantRepository implements IW
         },
       })
 
-      const repositories = await this.prisma.client.workflowRepository.findMany({
-        where: {
-          workflowId: workflow.id,
-        },
-        select: {
-          id: true,
-          repositoryId: true,
-        },
-      })
-
-      return {
-        ...this.mapToEntity(workflow),
-        repositories,
-      }
-    })
-  }
-
-  async delete(id: string): Promise<void> {
-    return this.withTenantContext(async (organizationId) => {
-      await this.prisma.client.$transaction([
-        this.prisma.client.workflowRepository.deleteMany({
-          where: {
-            workflowId: id,
-          },
-        }),
-        this.prisma.client.workflow.delete({
-          where: {
-            id,
-            organizationId,
-          },
-        }),
-      ])
+      return this.mapToEntity(workflow)
     })
   }
 
   async updateStatus(id: string, status: WorkflowStatus): Promise<void> {
-    return this.withTenantContext(async (organizationId) => {
+    await this.withTenantContext(async (organizationId) => {
+      const updateData: Prisma.WorkflowUpdateInput = {
+        status,
+      }
+
+      if (status === WorkflowStatus.ACTIVE || status === WorkflowStatus.BRAINSTORMING) {
+        updateData.startedAt = new Date()
+      }
+
+      if (status === WorkflowStatus.COMPLETED) {
+        updateData.completedAt = new Date()
+      }
+
       await this.prisma.client.workflow.update({
         where: {
           id,
           organizationId,
         },
-        data: {
-          status,
-          startedAt:
-            status === WorkflowStatus.ACTIVE || status === WorkflowStatus.BRAINSTORMING ? new Date() : undefined,
-          completedAt: status === WorkflowStatus.COMPLETED ? new Date() : undefined,
-        },
+        data: updateData,
       })
     })
   }
 
-  async confirmClassification(id: string, type: WorkflowType, confirmedById: string): Promise<void> {
-    return this.withTenantContext(async (organizationId) => {
+  async updateType(id: string, type: WorkflowType, confirmedById: string): Promise<void> {
+    await this.withTenantContext(async (organizationId) => {
       await this.prisma.client.workflow.update({
         where: {
           id,
@@ -258,8 +184,19 @@ export class WorkflowPrismaRepository extends BaseTenantRepository implements IW
         },
         data: {
           type,
-          classificationConfirmedAt: new Date(),
           classificationConfirmedById: confirmedById,
+          classificationConfirmedAt: new Date(),
+        },
+      })
+    })
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.withTenantContext(async (organizationId) => {
+      await this.prisma.client.workflow.delete({
+        where: {
+          id,
+          organizationId,
         },
       })
     })
