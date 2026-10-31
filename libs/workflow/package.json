@@ -17,6 +17,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@vyrak/ai-agent": "*",
+    "@vyrak/conversation": "*",
     "@vyrak/database": "*",
     "nestjs-zod": "^5.5.0",
     "zod": "^4.6.7"
