@@ -696,46 +696,18 @@ paths:
       tags: *ref_6
   /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/brainstorm:
     post:
-      operationId: WorkflowsController_startBrainstorming
+      description: |-
+        Start or continue a brainstorming conversation with the AI assistant to understand workflow requirements.
+
+        The AI will ask clarifying questions to understand:
+        - What needs to be built or fixed
+        - Scope and complexity
+        - Technical requirements
+        - Timeline urgency
+
+        After 4-5 exchanges (8+ messages), the conversation will have enough context for classification.
+      operationId: WorkflowBrainstormingController_brainstorm
       parameters:
-        - name: orgId
-          required: true
-          in: path
-          schema:
-            type: string
-        - name: projectId
-          required: true
-          in: path
-          schema:
-            type: string
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Brainstorming started
-        '400':
-          description: Can only start brainstorming from DRAFT status
-        '404':
-          description: Workflow not found
-      summary: Start brainstorming phase
-      tags: *ref_6
-  /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/classify:
-    post:
-      operationId: WorkflowsController_classify
-      parameters:
-        - name: orgId
-          required: true
-          in: path
-          schema:
-            type: string
-        - name: projectId
-          required: true
-          in: path
-          schema:
-            type: string
         - name: id
           required: true
           in: path
@@ -746,14 +718,56 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ClassifyWorkflowDto'
+              $ref: '#/components/schemas/BrainstormRequestDto'
       responses:
         '200':
-          description: Classification started
+          description: AI response received
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrainstormResponseDto'
         '404':
           description: Workflow not found
-      summary: Classify workflow using AI
-      tags: *ref_6
+      summary: Brainstorm workflow with AI assistant
+      tags: &ref_7
+        - Workflows - Brainstorming
+  /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/classify:
+    post:
+      description: |-
+        Analyze the brainstorming conversation and classify the workflow as HOTFIX, STORY, or EPIC.
+
+        Requires at least 8 messages in the conversation (4-5 exchanges) to have enough context.
+
+        **Classification Criteria:**
+        - **HOTFIX**: <2h, single component, urgent production fixes
+        - **STORY**: 1-3 days, 2-5 files, planned features
+        - **EPIC**: 1+ weeks, multi-system, requires architecture design
+      operationId: WorkflowBrainstormingController_classify
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClassifyRequestDto'
+      responses:
+        '200':
+          description: Workflow classified successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClassifyResponseDto'
+        '400':
+          description: Not enough messages for classification
+        '404':
+          description: Session not found
+      summary: Classify workflow based on brainstorming conversation
+      tags: *ref_7
   /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/confirm-classification:
     post:
       operationId: WorkflowsController_confirmClassification
@@ -788,6 +802,30 @@ paths:
           description: Workflow not found
       summary: Confirm workflow classification
       tags: *ref_6
+  /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/brainstorm-stream:
+    get:
+      description: |-
+        Server-Sent Events endpoint for streaming AI responses in real-time.
+
+        Each chunk of the AI response will be sent as it's generated, providing a better user experience.
+      operationId: WorkflowBrainstormingController_brainstormStream
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BrainstormRequestDto'
+      responses:
+        '200':
+          description: Stream of AI response chunks
+      summary: Brainstorm workflow with AI assistant (streaming)
+      tags: *ref_7
 info:
   title: Vyrak API
   description: Vyrak API documentation
@@ -1411,13 +1449,9 @@ components:
           type: string
           minLength: 1
           maxLength: 500
-          x-nestjs_zod-uses-3-point-1-syntax: true
         description:
-          x-nestjs_zod-uses-3-point-1-syntax: true
-          x-nestjs_zod-empty-type: true
           type: string
           maxLength: 5000
-          nullable: true
     ClassifyWorkflowDto:
       type: object
       properties:
@@ -1435,3 +1469,85 @@ components:
             - EPIC
       required:
         - type
+    BrainstormRequestDto:
+      type: object
+      properties:
+        userMessage:
+          type: string
+          description: User message to continue the brainstorming conversation
+          example: I need to fix the login page, users are getting 500 errors
+      required:
+        - userMessage
+    BrainstormResponseDto:
+      type: object
+      properties:
+        sessionId:
+          type: string
+          description: Conversation session ID
+          example: 123e4567-e89b-12d3-a456-426614174000
+        aiMessage:
+          type: string
+          description: AI assistant response message
+          example: I understand you have a login issue. Can you tell me more about when this started happening?
+        canClassify:
+          type: boolean
+          description: Whether the conversation has enough context to classify the workflow
+          example: false
+        messageCount:
+          type: number
+          description: Total number of messages in the conversation
+          example: 4
+      required:
+        - sessionId
+        - aiMessage
+        - canClassify
+        - messageCount
+    ClassifyRequestDto:
+      type: object
+      properties:
+        sessionId:
+          type: string
+          description: Conversation session ID to classify
+          example: 123e4567-e89b-12d3-a456-426614174000
+      required:
+        - sessionId
+    ClassifyResponseDto:
+      type: object
+      properties:
+        type:
+          type: string
+          description: Classified workflow type
+          enum:
+            - HOTFIX
+            - STORY
+            - EPIC
+          example: HOTFIX
+        confidence:
+          type: number
+          description: Classification confidence score
+          example: 0.95
+          minimum: 0
+          maximum: 1
+        reasoning:
+          type: string
+          description: AI reasoning for the classification
+          example: This is a critical production bug affecting login functionality. Single component fix needed urgently.
+        estimatedHours:
+          type: number
+          description: Estimated effort in hours
+          example: 2
+        priority:
+          type: string
+          description: Suggested priority
+          enum:
+            - LOW
+            - MEDIUM
+            - HIGH
+            - CRITICAL
+          example: CRITICAL
+      required:
+        - type
+        - confidence
+        - reasoning
+        - estimatedHours
+        - priority
