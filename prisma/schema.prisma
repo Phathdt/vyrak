@@ -321,6 +321,42 @@ model AgentExecution {
 }
 
 // ============================================================
+// CONVERSATION SESSIONS
+// ============================================================
+
+model ConversationSession {
+  id             String  @id @default(uuid())
+  organizationId String  @map("organization_id")
+  workflowId     String  @map("workflow_id")
+  phase          String  // BRAINSTORMING | PLANNING | IMPLEMENTATION | REVIEW | TESTING
+  status         String  // ACTIVE | COMPLETED | ARCHIVED
+  metadata       Json?
+  startedAt      DateTime @default(now()) @map("started_at")
+  endedAt        DateTime? @map("ended_at")
+
+  messages ConversationMessage[]
+
+  @@index([organizationId, workflowId, phase])
+  @@index([organizationId, workflowId, status])
+  @@map("conversation_sessions")
+}
+
+model ConversationMessage {
+  id             String  @id @default(uuid())
+  organizationId String  @map("organization_id")
+  sessionId      String  @map("session_id")
+  role           String  // user | assistant | system
+  content        String  @db.Text
+  metadata       Json?
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  session ConversationSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, sessionId, createdAt])
+  @@map("conversation_messages")
+}
+
+// ============================================================
 // WORKFLOW MESSAGES
 // ============================================================
 
