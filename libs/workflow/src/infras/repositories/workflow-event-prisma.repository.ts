@@ -1,12 +1,8 @@
 import { BaseTenantRepository, type Prisma, type WorkflowEvent } from '@vyrak/database'
 
-import { WorkflowEventActorType } from '../../domain/entities'
+import { WorkflowEventActorType } from '../../domain'
 
-import type { WorkflowEventEntity } from '../../domain/entities'
-import type {
-  CreateWorkflowEventData,
-  IWorkflowEventRepository,
-} from '../../domain/interfaces/workflow-event-repository.interface'
+import type { WorkflowEventEntity, CreateWorkflowEventData, IWorkflowEventRepository } from '../../domain'
 
 export class WorkflowEventPrismaRepository extends BaseTenantRepository implements IWorkflowEventRepository {
   private mapToEntity(raw: WorkflowEvent): WorkflowEventEntity {

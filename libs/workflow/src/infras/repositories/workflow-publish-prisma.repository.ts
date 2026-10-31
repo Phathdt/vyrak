@@ -1,12 +1,8 @@
 import { BaseTenantRepository, type WorkflowPublish } from '@vyrak/database'
 
-import { WorkflowPublishStatus } from '../../domain/entities'
+import { WorkflowPublishStatus } from '../../domain'
 
-import type { WorkflowPublishEntity } from '../../domain/entities'
-import type {
-  CreateWorkflowPublishData,
-  IWorkflowPublishRepository,
-} from '../../domain/interfaces/workflow-publish-repository.interface'
+import type { WorkflowPublishEntity, CreateWorkflowPublishData, IWorkflowPublishRepository } from '../../domain'
 
 export class WorkflowPublishPrismaRepository extends BaseTenantRepository implements IWorkflowPublishRepository {
   private mapToEntity(raw: WorkflowPublish): WorkflowPublishEntity {

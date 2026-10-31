@@ -1,18 +1,18 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
 
-import { WorkflowStatus } from '../../domain/entities'
+import { WorkflowStatus } from '../../domain'
 
-import type { WorkflowType } from '../../domain/entities'
-import type { IWorkflowRepositoryRepository } from '../../domain/interfaces/workflow-repository-repository.interface'
-import type { IWorkflowRepository } from '../../domain/interfaces/workflow-repository.interface'
 import type {
   CreateWorkflowInput,
+  IWorkflowRepository,
+  IWorkflowRepositoryRepository,
   IWorkflowService,
   ListWorkflowsQuery,
   PaginatedWorkflowsResult,
   UpdateWorkflowInput,
+  WorkflowType,
   WorkflowWithRelations,
-} from '../../domain/interfaces/workflow-service.interface'
+} from '../../domain'
 
 @Injectable()
 export class WorkflowService implements IWorkflowService {

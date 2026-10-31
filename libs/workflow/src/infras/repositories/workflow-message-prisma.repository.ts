@@ -1,12 +1,8 @@
 import { BaseTenantRepository, type Prisma, type WorkflowMessage } from '@vyrak/database'
 
-import { WorkflowMessageRole } from '../../domain/entities'
+import { WorkflowMessageRole } from '../../domain'
 
-import type { WorkflowMessageEntity } from '../../domain/entities'
-import type {
-  CreateWorkflowMessageData,
-  IWorkflowMessageRepository,
-} from '../../domain/interfaces/workflow-message-repository.interface'
+import type { WorkflowMessageEntity, CreateWorkflowMessageData, IWorkflowMessageRepository } from '../../domain'
 
 export class WorkflowMessagePrismaRepository extends BaseTenantRepository implements IWorkflowMessageRepository {
   private mapToEntity(raw: WorkflowMessage): WorkflowMessageEntity {
