@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { DatabaseService } from '@vyrak/database'
+import { BaseTenantRepository, DatabaseService } from '@vyrak/database'
 
 import type {
   ConversationMessage,
@@ -14,25 +14,29 @@ import type {
 import type { IConversationRepository } from '../../domain/repositories/conversation.repository'
 
 @Injectable()
-export class PrismaConversationRepository implements IConversationRepository {
-  constructor(private readonly db: DatabaseService) {}
+export class PrismaConversationRepository extends BaseTenantRepository implements IConversationRepository {
+  constructor(db: DatabaseService) {
+    super(db)
+  }
 
   async createSession(input: CreateSessionInput): Promise<ConversationSession> {
-    const session = await this.db.client.conversationSession.create({
-      data: {
-        workflowId: input.workflowId,
-        organizationId: '', // Will be set by tenant filter
-        phase: input.phase,
-        status: 'ACTIVE',
-        metadata: (input.metadata ?? {}) as never,
-      },
-    })
+    return this.withTenantContext(async (organizationId) => {
+      const session = await this.prisma.client.conversationSession.create({
+        data: {
+          workflowId: input.workflowId,
+          organizationId,
+          phase: input.phase,
+          status: 'ACTIVE',
+          metadata: (input.metadata ?? {}) as never,
+        },
+      })
 
-    return this.toDomainSession(session)
+      return this.toDomainSession(session)
+    })
   }
 
   async findSessionById(sessionId: string): Promise<ConversationSession | null> {
-    const session = await this.db.client.conversationSession.findUnique({
+    const session = await this.prisma.client.conversationSession.findUnique({
       where: { id: sessionId },
     })
 
@@ -40,7 +44,7 @@ export class PrismaConversationRepository implements IConversationRepository {
   }
 
   async findActiveSessionByWorkflowAndPhase(workflowId: string, phase: string): Promise<ConversationSession | null> {
-    const session = await this.db.client.conversationSession.findFirst({
+    const session = await this.prisma.client.conversationSession.findFirst({
       where: {
         workflowId,
         phase,
@@ -53,7 +57,7 @@ export class PrismaConversationRepository implements IConversationRepository {
   }
 
   async findSessionsByWorkflow(workflowId: string): Promise<ConversationSession[]> {
-    const sessions = await this.db.client.conversationSession.findMany({
+    const sessions = await this.prisma.client.conversationSession.findMany({
       where: { workflowId },
       orderBy: { startedAt: 'desc' },
     })
@@ -62,7 +66,7 @@ export class PrismaConversationRepository implements IConversationRepository {
   }
 
   async updateSessionStatus(sessionId: string, status: string, endedAt?: Date): Promise<ConversationSession> {
-    const session = await this.db.client.conversationSession.update({
+    const session = await this.prisma.client.conversationSession.update({
       where: { id: sessionId },
       data: {
         status,
@@ -74,7 +78,7 @@ export class PrismaConversationRepository implements IConversationRepository {
   }
 
   async getSessionWithMessages(sessionId: string): Promise<SessionWithMessages | null> {
-    const session = await this.db.client.conversationSession.findUnique({
+    const session = await this.prisma.client.conversationSession.findUnique({
       where: { id: sessionId },
       include: {
         messages: {
@@ -92,21 +96,23 @@ export class PrismaConversationRepository implements IConversationRepository {
   }
 
   async createMessage(input: CreateMessageInput): Promise<ConversationMessage> {
-    const message = await this.db.client.conversationMessage.create({
-      data: {
-        sessionId: input.sessionId,
-        organizationId: '', // Will be set by tenant filter
-        role: input.role,
-        content: input.content,
-        metadata: (input.metadata ?? {}) as never,
-      },
-    })
+    return this.withTenantContext(async (organizationId) => {
+      const message = await this.prisma.client.conversationMessage.create({
+        data: {
+          sessionId: input.sessionId,
+          organizationId,
+          role: input.role,
+          content: input.content,
+          metadata: (input.metadata ?? {}) as never,
+        },
+      })
 
-    return this.toDomainMessage(message)
+      return this.toDomainMessage(message)
+    })
   }
 
   async findMessagesBySession(sessionId: string): Promise<ConversationMessage[]> {
-    const messages = await this.db.client.conversationMessage.findMany({
+    const messages = await this.prisma.client.conversationMessage.findMany({
       where: { sessionId },
       orderBy: { createdAt: 'asc' },
     })
@@ -115,7 +121,7 @@ export class PrismaConversationRepository implements IConversationRepository {
   }
 
   async countMessagesBySession(sessionId: string): Promise<number> {
-    return this.db.client.conversationMessage.count({
+    return this.prisma.client.conversationMessage.count({
       where: { sessionId },
     })
   }

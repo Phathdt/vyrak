@@ -19,6 +19,9 @@ export const TENANT_OWNED_MODELS = [
   'ExternalIssueMapping',
   'IntegrationConnection',
   'WorkflowEvent',
+  // Conversation models
+  'ConversationSession',
+  'ConversationMessage',
   // Legacy models (to be removed)
   'WorkflowRun',
   'WorkflowStepRun',

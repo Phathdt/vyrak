@@ -14,6 +14,7 @@ import { UserModule } from '@vyrak/user'
 import { WorkflowModule } from '@vyrak/workflow'
 
 import { ResponseInterceptor, TenantContextInterceptor, TraceIdInterceptor } from '../interceptors'
+import { WorkflowBrainstormingController } from '../workflow/workflow-brainstorming.controller'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
 import {
@@ -60,6 +61,7 @@ import {
     InvitationsController,
     ProjectsController,
     WorkflowsController,
+    WorkflowBrainstormingController,
   ],
   providers: [
     AppService,
