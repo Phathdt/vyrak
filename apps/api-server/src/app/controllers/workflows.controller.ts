@@ -11,6 +11,7 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common'
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import {
@@ -25,8 +26,12 @@ import {
   WorkflowResponse,
 } from '@vyrak/workflow'
 
+import { AuthGuard } from '../../auth'
+import { OrganizationMemberGuard } from '../../guards'
+
 @ApiTags('Workflows')
 @Controller('api/organizations/:orgId/projects/:projectId/workflows')
+@UseGuards(AuthGuard, OrganizationMemberGuard)
 export class WorkflowsController {
   constructor(@Inject(WORKFLOW_SERVICE) private readonly workflowService: IWorkflowService) {}
 

@@ -1,4 +1,17 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Inject, Param, Patch, Post, Query } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Inject,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common'
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import {
   CreateProjectDto,
@@ -9,8 +22,12 @@ import {
   ProjectResponse,
 } from '@vyrak/project'
 
+import { AuthGuard } from '../../auth'
+import { OrganizationMemberGuard } from '../../guards'
+
 @ApiTags('Projects')
 @Controller('api/organizations/:orgId/projects')
+@UseGuards(AuthGuard, OrganizationMemberGuard)
 export class ProjectsController {
   constructor(@Inject(PROJECT_SERVICE) private readonly projectService: IProjectService) {}
 

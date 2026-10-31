@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
+import { routes } from '@/lib/routes'
 
 // Mock data
 const MOCK_WORKFLOW = {
@@ -44,7 +45,7 @@ type Classification = {
 
 export function WorkflowDetailPage() {
   const navigate = useNavigate()
-  const { projectId } = useParams<{ projectId: string; workflowId: string }>()
+  const { orgId, projectId } = useParams<{ orgId: string; projectId: string; workflowId: string }>()
 
   const [workflow] = useState(MOCK_WORKFLOW)
   const [messages, setMessages] = useState<Message[]>([
@@ -139,7 +140,9 @@ export function WorkflowDetailPage() {
     console.log('Confirming classification:', finalType)
     // TODO: Call API to confirm classification
     setShowConfirmDialog(false)
-    navigate(`/projects/${projectId}/workflows`)
+    if (orgId && projectId) {
+      navigate(routes.projectWorkflows(orgId, projectId))
+    }
   }
 
   const getStatusBadgeVariant = (status: string) => {
@@ -171,7 +174,11 @@ export function WorkflowDetailPage() {
       {/* Header */}
       <div className='flex items-center justify-between'>
         <div className='flex items-center gap-4'>
-          <Button variant='ghost' size='sm' onClick={() => navigate(`/projects/${projectId}/workflows`)}>
+          <Button
+            variant='ghost'
+            size='sm'
+            onClick={() => orgId && projectId && navigate(routes.projectWorkflows(orgId, projectId))}
+          >
             <svg className='mr-2 h-4 w-4' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
               <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 19l-7-7 7-7' />
             </svg>

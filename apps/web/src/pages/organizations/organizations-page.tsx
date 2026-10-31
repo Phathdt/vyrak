@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { useNavigate } from 'react-router-dom'
 import { z } from 'zod'
 
 import {
@@ -22,6 +23,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAuth } from '@/contexts/auth-context'
 import { useOrganization } from '@/contexts/organization-context'
+import { routes } from '@/lib/routes'
 
 const createOrgSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100, 'Name too long'),
@@ -37,6 +39,7 @@ type CreateOrgFormData = z.infer<typeof createOrgSchema>
 
 export function OrganizationsPage() {
   const [isCreating, setIsCreating] = useState(false)
+  const navigate = useNavigate()
   const { user } = useAuth()
 
   const {
@@ -73,6 +76,7 @@ export function OrganizationsPage() {
       setIsCreating(false)
       setActiveOrgId(newOrg.id)
       await refetch()
+      navigate(routes.orgProjects(newOrg.id))
     } catch (err) {
       console.error('Failed to create organization:', err)
     }
@@ -181,7 +185,10 @@ export function OrganizationsPage() {
               className={`cursor-pointer transition-colors hover:border-primary ${
                 activeOrgId === org.id ? 'border-primary bg-primary/5' : ''
               }`}
-              onClick={() => setActiveOrgId(org.id)}
+              onClick={() => {
+                setActiveOrgId(org.id)
+                navigate(routes.orgProjects(org.id))
+              }}
             >
               <CardContent className='p-6'>
                 <div className='mb-4 flex items-start gap-4'>

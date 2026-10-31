@@ -3,9 +3,11 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 
 import { ProtectedRoute } from './components/auth'
 import { ErrorBoundary } from './components/error-boundary'
+import { OrganizationScopedLayout } from './components/organization/organization-scoped-layout'
 import { PageLoading } from './components/page-loading'
 import { OrganizationProvider } from './contexts'
 import { DashboardLayout } from './layouts/dashboard-layout'
+import { routes } from './lib/routes'
 import { LoginPage } from './pages/auth'
 import { DashboardPage } from './pages/dashboard'
 import { OrganizationsPage, OrganizationSettingsPage } from './pages/organizations'
@@ -21,7 +23,6 @@ function App() {
           <Routes>
             <Route path='/login' element={<LoginPage />} />
 
-            {/* Dashboard routes with layout */}
             <Route
               element={
                 <ProtectedRoute>
@@ -31,14 +32,17 @@ function App() {
             >
               <Route path='/dashboard' element={<DashboardPage />} />
               <Route path='/organizations' element={<OrganizationsPage />} />
-              <Route path='/organizations/:id/settings' element={<OrganizationSettingsPage />} />
-              <Route path='/projects' element={<ProjectsPage />} />
-              <Route path='/projects/:projectId/workflows' element={<WorkflowsPage />} />
-              <Route path='/projects/:projectId/workflows/:workflowId' element={<WorkflowDetailPage />} />
+
+              <Route path='/organizations/:orgId' element={<OrganizationScopedLayout />}>
+                <Route path='settings' element={<OrganizationSettingsPage />} />
+                <Route path='projects' element={<ProjectsPage />} />
+                <Route path='projects/:projectId/workflows' element={<WorkflowsPage />} />
+                <Route path='projects/:projectId/workflows/:workflowId' element={<WorkflowDetailPage />} />
+              </Route>
             </Route>
 
-            <Route path='/' element={<Navigate to='/dashboard' replace />} />
-            <Route path='*' element={<Navigate to='/dashboard' replace />} />
+            <Route path='/' element={<Navigate to={routes.dashboard()} replace />} />
+            <Route path='*' element={<Navigate to={routes.dashboard()} replace />} />
           </Routes>
         </Suspense>
       </OrganizationProvider>

@@ -1,12 +1,15 @@
 import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import { Card } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useAuth } from '@/contexts/auth-context'
 import { useOrganization } from '@/contexts/organization-context'
+import { routes } from '@/lib/routes'
 
 export function DashboardPage() {
+  const navigate = useNavigate()
   const { user, organizations } = useAuth()
   const { activeOrgId, setActiveOrgId } = useOrganization()
 
@@ -118,7 +121,14 @@ export function DashboardPage() {
           <p className='mb-4 text-sm text-muted-foreground'>Select the organization you want to work with</p>
           <div className='space-y-2'>
             <Label htmlFor='org-select'>Organization</Label>
-            <Select value={activeOrgId || undefined} onValueChange={(value) => value && setActiveOrgId(value)}>
+            <Select
+              value={activeOrgId || undefined}
+              onValueChange={(value) => {
+                if (!value) return
+                setActiveOrgId(value)
+                navigate(routes.orgProjects(value))
+              }}
+            >
               <SelectTrigger>
                 <SelectValue placeholder='Select an organization' />
               </SelectTrigger>

@@ -13,6 +13,7 @@ import { ProjectModule } from '@vyrak/project'
 import { UserModule } from '@vyrak/user'
 import { WorkflowModule } from '@vyrak/workflow'
 
+import { OrganizationMemberGuard } from '../guards'
 import { ResponseInterceptor, TenantContextInterceptor, TraceIdInterceptor } from '../interceptors'
 import { WorkflowBrainstormingController } from '../workflow/workflow-brainstorming.controller'
 import { AppController } from './app.controller'
@@ -65,6 +66,7 @@ import {
   ],
   providers: [
     AppService,
+    OrganizationMemberGuard,
     {
       provide: APP_INTERCEPTOR,
       useClass: TraceIdInterceptor,

@@ -19,7 +19,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { useOrganization } from '@/contexts/organization-context'
+import { routes } from '@/lib/routes'
 
 const createWorkflowSchema = z.object({
   title: z.string().min(1, 'Title is required').max(500, 'Title too long'),
@@ -31,8 +31,7 @@ type CreateWorkflowFormData = z.infer<typeof createWorkflowSchema>
 
 export function WorkflowsPage() {
   const [isCreating, setIsCreating] = useState(false)
-  const { activeOrgId } = useOrganization()
-  const { projectId } = useParams<{ projectId: string }>()
+  const { orgId, projectId } = useParams<{ orgId: string; projectId: string }>()
   const navigate = useNavigate()
 
   const {
@@ -40,7 +39,7 @@ export function WorkflowsPage() {
     isLoading,
     refetch,
   } = useWorkflowsControllerFindAll(
-    activeOrgId!,
+    orgId!,
     projectId!,
     {
       page: 1,
@@ -48,7 +47,7 @@ export function WorkflowsPage() {
     },
     {
       query: {
-        enabled: !!activeOrgId && !!projectId,
+        enabled: !!orgId && !!projectId,
       },
     }
   )
@@ -69,11 +68,11 @@ export function WorkflowsPage() {
   })
 
   const onSubmit = async (data: CreateWorkflowFormData) => {
-    if (!activeOrgId || !projectId) return
+    if (!orgId || !projectId) return
 
     try {
       await createWorkflow({
-        orgId: activeOrgId,
+        orgId,
         projectId,
         data: {
           title: data.title,
@@ -87,30 +86,6 @@ export function WorkflowsPage() {
     } catch (err) {
       console.error('Failed to create workflow:', err)
     }
-  }
-
-  if (!activeOrgId || !projectId) {
-    return (
-      <div className='flex min-h-[400px] items-center justify-center'>
-        <Card className='max-w-md'>
-          <CardContent className='p-8 text-center'>
-            <div className='mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted'>
-              <svg className='h-6 w-6 text-muted-foreground' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth={2}
-                  d='M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z'
-                />
-              </svg>
-            </div>
-            <h2 className='mb-2 text-xl font-semibold'>Project Required</h2>
-            <p className='mb-4 text-muted-foreground'>Please select a project first</p>
-            <Button onClick={() => (window.location.href = '/dashboard')}>Go to Dashboard</Button>
-          </CardContent>
-        </Card>
-      </div>
-    )
   }
 
   if (isLoading) {
@@ -165,6 +140,16 @@ export function WorkflowsPage() {
       {/* Header */}
       <div className='flex items-center justify-between'>
         <div>
+          {orgId && (
+            <Button
+              variant='ghost'
+              size='sm'
+              className='mb-2 -ml-2'
+              onClick={() => navigate(routes.orgProjects(orgId))}
+            >
+              ← Back to projects
+            </Button>
+          )}
           <h1 className='text-3xl font-bold tracking-tight'>Workflows</h1>
           <p className='text-muted-foreground'>Manage your AI-powered software development workflows</p>
         </div>
@@ -260,7 +245,7 @@ export function WorkflowsPage() {
             <Card
               key={workflow.id}
               className='cursor-pointer transition-colors hover:border-primary'
-              onClick={() => navigate(`/projects/${projectId}/workflows/${workflow.id}`)}
+              onClick={() => orgId && navigate(routes.workflowDetail(orgId, projectId!, workflow.id))}
             >
               <CardHeader className='pb-3'>
                 <div className='flex items-start justify-between gap-4'>

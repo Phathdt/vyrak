@@ -1,13 +1,28 @@
+import { useNavigate, useLocation } from 'react-router-dom'
+
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useAuth } from '@/contexts/auth-context'
 import { useOrganization } from '@/contexts/organization-context'
+import { replaceOrgInPath, routes } from '@/lib/routes'
 
 export function Header() {
   const { user, organizations, logout } = useAuth()
   const { activeOrgId, setActiveOrgId } = useOrganization()
+  const navigate = useNavigate()
+  const location = useLocation()
 
   const activeOrg = organizations.find((org) => org.id === activeOrgId)
+
+  const handleOrgChange = (newOrgId: string) => {
+    setActiveOrgId(newOrgId)
+    const nextPath = replaceOrgInPath(location.pathname, newOrgId)
+    if (nextPath) {
+      navigate(nextPath)
+    } else {
+      navigate(routes.orgProjects(newOrgId))
+    }
+  }
 
   return (
     <header className='border-b border-border bg-card px-6 py-4'>
@@ -21,7 +36,7 @@ export function Header() {
           {organizations.length > 0 && (
             <div className='flex items-center gap-2'>
               <span className='whitespace-nowrap text-sm text-muted-foreground'>Organization:</span>
-              <Select value={activeOrgId || undefined} onValueChange={(value) => value && setActiveOrgId(value)}>
+              <Select value={activeOrgId || undefined} onValueChange={(value) => value && handleOrgChange(value)}>
                 <SelectTrigger className='w-[200px]'>
                   <SelectValue>
                     {activeOrg ? `${activeOrg.name} (${activeOrg.role})` : 'Select organization'}

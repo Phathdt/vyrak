@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { useNavigate, useParams } from 'react-router-dom'
 import { z } from 'zod'
 
 import { useProjectsControllerCreate, useProjectsControllerFindAll } from '@/api/generated/projects/projects'
@@ -17,7 +18,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useOrganization } from '@/contexts/organization-context'
+import { routes } from '@/lib/routes'
 
 const createProjectSchema = z.object({
   name: z.string().min(1, 'Name is required').max(255, 'Name too long'),
@@ -33,15 +34,16 @@ type CreateProjectFormData = z.infer<typeof createProjectSchema>
 
 export function ProjectsPage() {
   const [isCreating, setIsCreating] = useState(false)
-  const { activeOrgId } = useOrganization()
+  const { orgId } = useParams<{ orgId: string }>()
+  const navigate = useNavigate()
 
   const {
     data: projectsData,
     isLoading,
     refetch,
-  } = useProjectsControllerFindAll(activeOrgId!, undefined, {
+  } = useProjectsControllerFindAll(orgId!, undefined, {
     query: {
-      enabled: !!activeOrgId,
+      enabled: !!orgId,
     },
   })
   const { mutateAsync: createProject, isPending } = useProjectsControllerCreate()
@@ -56,11 +58,11 @@ export function ProjectsPage() {
   })
 
   const onSubmit = async (data: CreateProjectFormData) => {
-    if (!activeOrgId) return
+    if (!orgId) return
 
     try {
       await createProject({
-        orgId: activeOrgId,
+        orgId,
         data: {
           name: data.name,
           slug: data.slug,
@@ -73,30 +75,6 @@ export function ProjectsPage() {
     } catch (err) {
       console.error('Failed to create project:', err)
     }
-  }
-
-  if (!activeOrgId) {
-    return (
-      <div className='flex min-h-[400px] items-center justify-center'>
-        <Card className='max-w-md'>
-          <CardContent className='p-8 text-center'>
-            <div className='mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted'>
-              <svg className='h-6 w-6 text-muted-foreground' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth={2}
-                  d='M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z'
-                />
-              </svg>
-            </div>
-            <h2 className='mb-2 text-xl font-semibold'>No Organization Selected</h2>
-            <p className='mb-4 text-muted-foreground'>Please select an organization from the dashboard first</p>
-            <Button onClick={() => (window.location.href = '/dashboard')}>Go to Dashboard</Button>
-          </CardContent>
-        </Card>
-      </div>
-    )
   }
 
   if (isLoading) {
@@ -197,7 +175,11 @@ export function ProjectsPage() {
       ) : (
         <div className='grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3'>
           {projects.map((project) => (
-            <Card key={project.id} className='cursor-pointer transition-colors hover:border-primary'>
+            <Card
+              key={project.id}
+              className='cursor-pointer transition-colors hover:border-primary'
+              onClick={() => orgId && navigate(routes.projectWorkflows(orgId, project.id))}
+            >
               <CardHeader className='pb-3'>
                 <div className='flex items-start justify-between'>
                   <div className='min-w-0 flex-1'>

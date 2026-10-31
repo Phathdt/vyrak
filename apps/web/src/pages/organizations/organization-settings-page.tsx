@@ -27,6 +27,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { routes } from '@/lib/routes'
 
 import type { UpdateMemberRoleDtoRole } from '@/api/generated/models'
 
@@ -44,7 +45,7 @@ type UpdateOrgFormData = z.infer<typeof updateOrgSchema>
 type InviteMemberFormData = z.infer<typeof inviteMemberSchema>
 
 export function OrganizationSettingsPage() {
-  const { id } = useParams<{ id: string }>()
+  const { orgId: id } = useParams<{ orgId: string }>()
   const navigate = useNavigate()
   const [showInviteDialog, setShowInviteDialog] = useState(false)
   const [memberToRemove, setMemberToRemove] = useState<{
@@ -97,7 +98,7 @@ export function OrganizationSettingsPage() {
   }, [org, resetUpdate])
 
   if (!id) {
-    navigate('/organizations')
+    navigate(routes.organizations())
     return null
   }
 
@@ -121,7 +122,7 @@ export function OrganizationSettingsPage() {
             <p className='mb-4 text-muted-foreground'>
               The organization you're looking for doesn't exist or you don't have access to it.
             </p>
-            <Button onClick={() => navigate('/organizations')}>Back to Organizations</Button>
+            <Button onClick={() => navigate(routes.organizations())}>Back to Organizations</Button>
           </CardContent>
         </Card>
       </div>
@@ -195,7 +196,7 @@ export function OrganizationSettingsPage() {
           <h1 className='text-3xl font-bold tracking-tight'>Organization Settings</h1>
           <p className='text-muted-foreground'>Manage {org.name}</p>
         </div>
-        <Button variant='outline' onClick={() => navigate('/organizations')}>
+        <Button variant='outline' onClick={() => navigate(routes.organizations())}>
           <svg className='mr-2 h-4 w-4' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
             <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M10 19l-7-7m0 0l7-7m-7 7h18' />
           </svg>

@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common'
 import { AIAgentModule } from '@vyrak/ai-agent'
 import { ConversationModule } from '@vyrak/conversation'
-import { DatabaseModule } from '@vyrak/database'
+import { DatabaseModule, DatabaseService } from '@vyrak/database'
 
 import { WorkflowBrainstormingService, WorkflowService } from './application'
 import {
@@ -18,11 +18,13 @@ import {
     WorkflowBrainstormingService,
     {
       provide: WORKFLOW_REPOSITORY,
-      useClass: WorkflowPrismaRepository,
+      useFactory: (prisma: DatabaseService) => new WorkflowPrismaRepository(prisma),
+      inject: [DatabaseService],
     },
     {
       provide: WORKFLOW_REPOSITORY_REPOSITORY,
-      useClass: WorkflowRepositoryPrismaRepository,
+      useFactory: (prisma: DatabaseService) => new WorkflowRepositoryPrismaRepository(prisma),
+      inject: [DatabaseService],
     },
     {
       provide: WORKFLOW_SERVICE,
