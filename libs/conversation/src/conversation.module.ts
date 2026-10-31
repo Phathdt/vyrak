@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common'
 import { DatabaseModule } from '@vyrak/database'
 
-import { ConversationService } from './application/conversation.service'
-import { CONVERSATION_REPOSITORY } from './domain/repositories/conversation.repository'
-import { PrismaConversationRepository } from './infrastructure/prisma/prisma-conversation.repository'
+import { ConversationService } from './application'
+import { CONVERSATION_REPOSITORY } from './domain'
+import { PrismaConversationRepository } from './infrastructure'
 
 @Module({
   imports: [DatabaseModule],

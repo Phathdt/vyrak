@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi, vi } from 'vitest'
 
 import { ConversationService } from './conversation.service'
 
@@ -8,8 +8,8 @@ import type {
   CreateMessageInput,
   CreateSessionInput,
   SessionWithMessages,
-} from '../domain/entities/conversation.entity'
-import type { IConversationRepository } from '../domain/repositories/conversation.repository'
+} from '../domain'
+import type { IConversationRepository } from '../domain'
 
 describe('ConversationService', () => {
   let service: ConversationService

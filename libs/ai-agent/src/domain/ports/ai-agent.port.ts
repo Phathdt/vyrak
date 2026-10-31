@@ -1,4 +1,4 @@
-import type { AgentRequest, AgentResponse, WorkflowClassification } from '../entities/agent.entity'
+import type { AgentRequest, AgentResponse, WorkflowClassification } from '../entities'
 
 /**
  * AI Agent Port - Interface for AI provider implementations

@@ -3,11 +3,14 @@ import { AIAgentModule } from '@vyrak/ai-agent'
 import { ConversationModule } from '@vyrak/conversation'
 import { DatabaseModule } from '@vyrak/database'
 
-import { WorkflowBrainstormingService } from './application/services/workflow-brainstorming.service'
-import { WorkflowService } from './application/services/workflow.service'
-import { WORKFLOW_REPOSITORY, WORKFLOW_REPOSITORY_REPOSITORY, WORKFLOW_SERVICE } from './infras/di/di'
-import { WorkflowPrismaRepository } from './infras/repositories/workflow-prisma.repository'
-import { WorkflowRepositoryPrismaRepository } from './infras/repositories/workflow-repository-prisma.repository'
+import { WorkflowBrainstormingService, WorkflowService } from './application'
+import {
+  WORKFLOW_REPOSITORY,
+  WORKFLOW_REPOSITORY_REPOSITORY,
+  WORKFLOW_SERVICE,
+  WorkflowPrismaRepository,
+  WorkflowRepositoryPrismaRepository,
+} from './infras'
 
 @Module({
   imports: [DatabaseModule, AIAgentModule, ConversationModule],

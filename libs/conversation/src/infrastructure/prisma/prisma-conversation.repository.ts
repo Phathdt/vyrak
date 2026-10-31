@@ -8,10 +8,10 @@ import type {
   ConversationStatus,
   CreateMessageInput,
   CreateSessionInput,
+  IConversationRepository,
   MessageRole,
   SessionWithMessages,
-} from '../../domain/entities/conversation.entity'
-import type { IConversationRepository } from '../../domain/repositories/conversation.repository'
+} from '../../domain'
 
 @Injectable()
 export class PrismaConversationRepository extends BaseTenantRepository implements IConversationRepository {

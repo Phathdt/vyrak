@@ -1,7 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
 
-import type { AgentRequest, AgentResponse, Message, WorkflowClassification } from '../../domain/entities/agent.entity'
-import type { IAIAgentPort } from '../../domain/ports/ai-agent.port'
+import type { AgentRequest, AgentResponse, IAIAgentPort, Message, WorkflowClassification } from '../../domain'
 
 export class ClaudeAdapter implements IAIAgentPort {
   private client: Anthropic

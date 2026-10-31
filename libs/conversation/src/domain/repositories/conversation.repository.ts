@@ -4,7 +4,7 @@ import type {
   CreateMessageInput,
   CreateSessionInput,
   SessionWithMessages,
-} from '../entities/conversation.entity'
+} from '../entities'
 
 export interface IConversationRepository {
   // Session operations

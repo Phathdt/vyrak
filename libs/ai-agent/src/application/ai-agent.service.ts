@@ -1,13 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common'
 
-import { AI_AGENT_PORT, type IAIAgentPort } from '../domain/ports/ai-agent.port'
+import { AI_AGENT_PORT } from '../domain'
 
-import type {
-  AgentRequest,
-  AgentResponse,
-  BrainstormingContext,
-  WorkflowClassification,
-} from '../domain/entities/agent.entity'
+import type { AgentRequest, AgentResponse, BrainstormingContext, IAIAgentPort, WorkflowClassification } from '../domain'
 
 @Injectable()
 export class AIAgentService {

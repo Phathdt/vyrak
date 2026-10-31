@@ -1,9 +1,8 @@
 import { BaseTenantRepository, type WorkflowApproval } from '@vyrak/database'
 
-import { WorkflowApprovalStatus } from '../../domain/entities'
+import { WorkflowApprovalStatus } from '../../domain'
 
-import type { WorkflowApprovalEntity } from '../../domain/entities'
-import type { IWorkflowApprovalRepository } from '../../domain/interfaces/workflow-approval-repository.interface'
+import type { IWorkflowApprovalRepository, WorkflowApprovalEntity } from '../../domain'
 
 export class WorkflowApprovalPrismaRepository extends BaseTenantRepository implements IWorkflowApprovalRepository {
   private mapToEntity(raw: WorkflowApproval): WorkflowApprovalEntity {

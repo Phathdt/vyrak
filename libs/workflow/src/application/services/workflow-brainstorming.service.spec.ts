@@ -2,8 +2,6 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 
 import { WorkflowBrainstormingService, type BrainstormRequest } from './workflow-brainstorming.service'
 
-import type { AIAgentService } from '@vyrak/ai-agent'
-import type { ConversationService } from '@vyrak/conversation'
 import type { ConversationMessage, ConversationSession, SessionWithMessages } from '@vyrak/conversation'
 
 describe('WorkflowBrainstormingService', () => {
@@ -44,8 +42,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-123',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-
-        updatedAt: new Date(),
+        startedAt: new Date(),
       }
 
       mockConversationService.getOrCreateSession.mockResolvedValue(mockSession)
@@ -71,8 +68,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-123',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-
-        updatedAt: new Date(),
+        startedAt: new Date(),
       }
 
       mockConversationService.getOrCreateSession.mockResolvedValue(mockSession)
@@ -102,8 +98,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-123',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-
-        updatedAt: new Date(),
+        startedAt: new Date(),
       }
 
       const mockMessages: ConversationMessage[] = [
@@ -112,12 +107,14 @@ describe('WorkflowBrainstormingService', () => {
           sessionId: 'session-123',
           role: 'user',
           content: 'First message',
+          createdAt: new Date(),
         },
         {
           id: 'msg-2',
           sessionId: 'session-123',
           role: 'assistant',
           content: 'Assistant response',
+          createdAt: new Date(),
         },
       ]
 
@@ -144,8 +141,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-123',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-
-        updatedAt: new Date(),
+        startedAt: new Date(),
       }
 
       const mockMessages: ConversationMessage[] = [
@@ -154,6 +150,7 @@ describe('WorkflowBrainstormingService', () => {
           sessionId: 'session-123',
           role: 'user',
           content: 'User message',
+          createdAt: new Date(),
         },
       ]
 
@@ -188,8 +185,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-123',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-
-        updatedAt: new Date(),
+        startedAt: new Date(),
       }
 
       mockConversationService.getOrCreateSession.mockResolvedValue(mockSession)
@@ -226,8 +222,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-123',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-
-        updatedAt: new Date(),
+        startedAt: new Date(),
       }
 
       mockConversationService.getOrCreateSession.mockResolvedValue(mockSession)
@@ -257,8 +252,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-123',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-
-        updatedAt: new Date(),
+        startedAt: new Date(),
       }
 
       mockConversationService.getOrCreateSession.mockResolvedValue(mockSession)
@@ -289,8 +283,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-123',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-
-        updatedAt: new Date(),
+        startedAt: new Date(),
       }
 
       mockConversationService.getOrCreateSession.mockResolvedValue(mockSession)
@@ -317,8 +310,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-123',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-
-        updatedAt: new Date(),
+        startedAt: new Date(),
       }
 
       mockConversationService.getOrCreateSession.mockResolvedValue(mockSession)
@@ -346,8 +338,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-456',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-
-        updatedAt: new Date(),
+        startedAt: new Date(),
       }
 
       mockConversationService.getOrCreateSession.mockResolvedValue(mockSession)
@@ -374,8 +365,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-456',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-
-        updatedAt: new Date(),
+        startedAt: new Date(),
       }
 
       mockConversationService.getOrCreateSession.mockResolvedValue(mockSession)
@@ -406,8 +396,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-456',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-
-        updatedAt: new Date(),
+        startedAt: new Date(),
       }
 
       mockConversationService.getOrCreateSession.mockResolvedValue(mockSession)
@@ -440,8 +429,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-456',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-
-        updatedAt: new Date(),
+        startedAt: new Date(),
       }
 
       mockConversationService.getOrCreateSession.mockResolvedValue(mockSession)
@@ -476,8 +464,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-456',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-
-        updatedAt: new Date(),
+        startedAt: new Date(),
       }
 
       mockConversationService.getOrCreateSession.mockResolvedValue(mockSession)
@@ -516,8 +503,8 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-789',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
+        startedAt: new Date(),
 
-        updatedAt: new Date(),
         messages: [],
       }
 
@@ -547,8 +534,8 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'different-workflow',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
+        startedAt: new Date(),
 
-        updatedAt: new Date(),
         messages: [],
       }
 
@@ -565,8 +552,8 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-789',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
+        startedAt: new Date(),
 
-        updatedAt: new Date(),
         messages: [],
       }
 
@@ -584,8 +571,8 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-789',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
+        startedAt: new Date(),
 
-        updatedAt: new Date(),
         messages: [],
       }
 
@@ -610,12 +597,14 @@ describe('WorkflowBrainstormingService', () => {
           sessionId: 'session-789',
           role: 'user',
           content: 'User message',
+          createdAt: new Date(),
         },
         {
           id: 'msg-2',
           sessionId: 'session-789',
           role: 'assistant',
           content: 'Assistant response',
+          createdAt: new Date(),
         },
       ]
 
@@ -624,8 +613,8 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-789',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
+        startedAt: new Date(),
 
-        updatedAt: new Date(),
         messages: mockMessages,
       }
 
@@ -656,8 +645,8 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-789',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
+        startedAt: new Date(),
 
-        updatedAt: new Date(),
         messages: [],
       }
 
@@ -686,8 +675,8 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-789',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
+        startedAt: new Date(),
 
-        updatedAt: new Date(),
         messages: [],
       }
 
@@ -711,8 +700,8 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-789',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
+        startedAt: new Date(),
 
-        updatedAt: new Date(),
         messages: [],
       }
 
@@ -742,8 +731,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-existing',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-
-        updatedAt: new Date(),
+        startedAt: new Date(),
       }
 
       mockConversationService.getOrCreateSession.mockResolvedValue(mockSession)
@@ -772,8 +760,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-new',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-
-        updatedAt: new Date(),
+        startedAt: new Date(),
       }
 
       mockConversationService.getOrCreateSession.mockResolvedValue(mockSession)
@@ -802,8 +789,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-123',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-
-        updatedAt: new Date(),
+        startedAt: new Date(),
       }
 
       mockConversationService.getOrCreateSession.mockResolvedValue(mockSession)
@@ -830,8 +816,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-123',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-
-        updatedAt: new Date(),
+        startedAt: new Date(),
       }
 
       mockConversationService.getOrCreateSession.mockResolvedValue(mockSession)
@@ -867,8 +852,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-123',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-
-        updatedAt: new Date(),
+        startedAt: new Date(),
       }
 
       mockConversationService.getOrCreateSession.mockResolvedValue(mockSession)
@@ -894,8 +878,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-123',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-
-        updatedAt: new Date(),
+        startedAt: new Date(),
       }
 
       mockConversationService.getOrCreateSession.mockResolvedValue(mockSession)
@@ -921,8 +904,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-123',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-
-        updatedAt: new Date(),
+        startedAt: new Date(),
       }
 
       mockConversationService.getOrCreateSession.mockResolvedValue(mockSession)
@@ -970,8 +952,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-123',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-
-        updatedAt: new Date(),
+        startedAt: new Date(),
       }
 
       mockConversationService.getOrCreateSession.mockResolvedValue(mockSession)
@@ -993,8 +974,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-123',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-
-        updatedAt: new Date(),
+        startedAt: new Date(),
       }
 
       mockConversationService.getOrCreateSession.mockResolvedValue(mockSession)
@@ -1028,12 +1008,14 @@ describe('WorkflowBrainstormingService', () => {
           sessionId: 'session-1',
           role: 'user',
           content: 'User message',
+          createdAt: new Date(),
         },
         {
           id: '2',
           sessionId: 'session-1',
           role: 'assistant',
           content: 'Assistant message',
+          createdAt: new Date(),
         },
       ]
 
@@ -1042,8 +1024,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-123',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-
-        updatedAt: new Date(),
+        startedAt: new Date(),
       }
 
       mockConversationService.getOrCreateSession.mockResolvedValue(mockSession)
@@ -1078,8 +1059,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-123',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-
-        updatedAt: new Date(),
+        startedAt: new Date(),
       }
 
       mockConversationService.getOrCreateSession.mockResolvedValue(mockSession)
@@ -1107,8 +1087,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-123',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-
-        updatedAt: new Date(),
+        startedAt: new Date(),
       }
 
       mockConversationService.getOrCreateSession.mockResolvedValue(mockSession)
@@ -1136,8 +1115,7 @@ describe('WorkflowBrainstormingService', () => {
         workflowId: 'workflow-123',
         phase: 'BRAINSTORMING',
         status: 'ACTIVE',
-
-        updatedAt: new Date(),
+        startedAt: new Date(),
       }
 
       mockConversationService.getOrCreateSession.mockResolvedValue(mockSession)

@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common'
 
-import { AIAgentService } from './application/ai-agent.service'
-import { AI_AGENT_PORT } from './domain/ports/ai-agent.port'
-import { ClaudeAdapter } from './infrastructure/claude/claude.adapter'
+import { AIAgentService } from './application'
+import { AI_AGENT_PORT } from './domain'
+import { ClaudeAdapter } from './infrastructure'
 
 @Module({
   providers: [

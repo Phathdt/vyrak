@@ -1,14 +1,15 @@
 import { BaseTenantRepository, type Prisma, type Workflow } from '@vyrak/database'
 
-import { WorkflowStatus } from '../../domain/entities'
+import { WorkflowStatus } from '../../domain'
 
-import type { WorkflowEntity, WorkflowType } from '../../domain/entities'
 import type {
   CreateWorkflowData,
   IWorkflowRepository,
   UpdateWorkflowData,
+  WorkflowEntity,
   WorkflowFilters,
-} from '../../domain/interfaces/workflow-repository.interface'
+  WorkflowType,
+} from '../../domain'
 
 export class WorkflowPrismaRepository extends BaseTenantRepository implements IWorkflowRepository {
   private mapToEntity(raw: Workflow): WorkflowEntity {
