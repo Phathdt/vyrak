@@ -16,11 +16,11 @@
     "@vyrak/organization": "*",
     "better-auth": "^1.5.2",
     "jose": "^6.2.13",
-    "nestjs-zod": "^3.0.0",
+    "nestjs-zod": "^5.5.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "reflect-metadata": "^0.2.2",
-    "zod": "^3.24.1"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/node": "~26.6.5",

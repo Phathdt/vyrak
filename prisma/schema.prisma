@@ -104,20 +104,436 @@ model GitRepository {
   @@map("git_repositories")
 }
 
-// model Artifact {
-//   id             String   @id @default(uuid())
-//   runId          String   @map("run_id")
-//   organizationId String   @map("organization_id")
-//   filePath       String   @map("file_path")
-//   s3Bucket       String   @map("s3_bucket")
-//   s3Key          String   @map("s3_key")
-//   contentSize    Int      @map("content_size")
-//   contentType    String   @default("text/plain") @map("content_type")
-//   createdAt      DateTime @default(now()) @map("created_at")
+// ============================================================
+// WORKFLOW
+// ============================================================
 
-//   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+model Workflow {
+  id             String @id @default(uuid())
+  organizationId String @map("organization_id")
+  projectId      String @map("project_id")
 
-//   @@index([runId])
-//   @@index([organizationId])
-//   @@map("artifacts")
-// }
+  // HOTFIX | STORY | EPIC
+  // Null until AI classification is confirmed.
+  type String?
+
+  // DRAFT | BRAINSTORMING | CLASSIFICATION_PENDING |
+  // ACTIVE | WAITING_APPROVAL | COMPLETED | FAILED | CANCELLED
+  status String @default("DRAFT")
+
+  title       String
+  description String? @db.Text
+
+  currentPhaseKey String? @map("current_phase_key")
+
+  // Snapshot of workflow configuration at creation/confirmation.
+  definitionSnapshot Json? @map("definition_snapshot")
+
+  // Latest AI classification proposal.
+  classification Json?
+
+  classificationConfirmedAt   DateTime? @map("classification_confirmed_at")
+  classificationConfirmedById String?   @map("classification_confirmed_by_id")
+
+  createdById String @map("created_by_id")
+
+  startedAt   DateTime? @map("started_at")
+  completedAt DateTime? @map("completed_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([id, organizationId])
+  @@index([organizationId, projectId, status])
+  @@index([organizationId, status])
+  @@index([organizationId, createdAt])
+  @@map("workflows")
+}
+
+// ============================================================
+// WORKFLOW REPOSITORIES
+// ============================================================
+
+model WorkflowRepository {
+  id             String @id @default(uuid())
+  organizationId String @map("organization_id")
+  workflowId     String @map("workflow_id")
+  repositoryId   String @map("repository_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([workflowId, repositoryId])
+  @@index([organizationId])
+  @@map("workflow_repositories")
+}
+
+// ============================================================
+// WORKFLOW PHASE
+// ============================================================
+
+model WorkflowPhase {
+  id             String @id @default(uuid())
+  organizationId String @map("organization_id")
+  workflowId     String @map("workflow_id")
+
+  key      String
+  name     String
+  sequence Int
+
+  // PENDING | IN_PROGRESS | WAITING_APPROVAL |
+  // COMPLETED | FAILED | SKIPPED
+  status String @default("PENDING")
+
+  // Phase-specific agent configuration.
+  config Json?
+
+  input  Json?
+  output Json?
+  error  Json?
+
+  startedAt   DateTime? @map("started_at")
+  completedAt DateTime? @map("completed_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([id, workflowId, organizationId])
+  @@unique([workflowId, key])
+  @@index([organizationId, status])
+  @@map("workflow_phases")
+}
+
+// ============================================================
+// WORK ITEMS
+// ============================================================
+
+model WorkflowWorkItem {
+  id             String @id @default(uuid())
+  organizationId String @map("organization_id")
+  workflowId     String @map("workflow_id")
+
+  key         String
+  type        String
+  title       String
+  description String? @db.Text
+
+  // Parent-child hierarchy:
+  // Epic -> Story -> Task
+  parentId String? @map("parent_id")
+
+  acceptanceCriteria Json? @map("acceptance_criteria")
+
+  // PROPOSED | APPROVED | READY | IN_PROGRESS |
+  // BLOCKED | DONE | CANCELLED
+  status String @default("PROPOSED")
+
+  priority String?
+  estimate Json?
+  sequence Int     @default(0)
+  metadata Json?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([id, workflowId, organizationId])
+  @@unique([workflowId, key])
+  @@index([organizationId, workflowId, status])
+  @@index([organizationId, parentId])
+  @@map("workflow_work_items")
+}
+
+// ============================================================
+// WORKFLOW DEPENDENCY
+// ============================================================
+
+model WorkflowDependency {
+  id             String @id @default(uuid())
+  organizationId String @map("organization_id")
+  workflowId     String @map("workflow_id")
+
+  dependentItemId String @map("dependent_item_id")
+  dependsOnItemId String @map("depends_on_item_id")
+
+  // BLOCKS
+  type String @default("BLOCKS")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([workflowId, dependentItemId, dependsOnItemId])
+  @@index([organizationId, workflowId])
+  @@index([organizationId, dependentItemId])
+  @@index([organizationId, dependsOnItemId])
+  @@map("workflow_dependencies")
+}
+
+// ============================================================
+// AGENT EXECUTION
+// ============================================================
+
+model AgentExecution {
+  id             String @id @default(uuid())
+  organizationId String @map("organization_id")
+  workflowId     String @map("workflow_id")
+
+  phaseId    String? @map("phase_id")
+  workItemId String? @map("work_item_id")
+
+  parentExecutionId String? @map("parent_execution_id")
+
+  // PLANNER | RESEARCHER | ARCHITECT | DEVELOPER |
+  // CODE_REVIEWER | QA | CUSTOM
+  role String
+
+  name String
+
+  // PENDING | RUNNING | SUCCEEDED | FAILED | CANCELLED
+  status String @default("PENDING")
+
+  provider String?
+  model    String?
+
+  input  Json?
+  output Json?
+  error  Json?
+
+  attempt Int @default(1)
+
+  inputTokens  Int @default(0) @map("input_tokens")
+  outputTokens Int @default(0) @map("output_tokens")
+
+  cost Decimal? @db.Decimal(12, 6)
+
+  heartbeatAt    DateTime? @map("heartbeat_at")
+  leaseExpiresAt DateTime? @map("lease_expires_at")
+
+  startedAt   DateTime? @map("started_at")
+  completedAt DateTime? @map("completed_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([id, workflowId, organizationId])
+  @@index([organizationId, workflowId, status])
+  @@index([organizationId, phaseId])
+  @@index([organizationId, workItemId])
+  @@index([organizationId, parentExecutionId])
+  @@map("agent_executions")
+}
+
+// ============================================================
+// WORKFLOW MESSAGES
+// ============================================================
+
+model WorkflowMessage {
+  id             String @id @default(uuid())
+  organizationId String @map("organization_id")
+  workflowId     String @map("workflow_id")
+
+  phaseId          String? @map("phase_id")
+  agentExecutionId String? @map("agent_execution_id")
+
+  // USER | ASSISTANT | SYSTEM | TOOL
+  role String
+
+  content  String @db.Text
+  metadata Json?
+
+  // Soft reference to User.
+  createdById String? @map("created_by_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([organizationId, workflowId, createdAt])
+  @@index([organizationId, phaseId, createdAt])
+  @@map("workflow_messages")
+}
+
+// ============================================================
+// ARTIFACTS
+// ============================================================
+
+model Artifact {
+  id             String @id @default(uuid())
+  organizationId String @map("organization_id")
+  workflowId     String @map("workflow_id")
+
+  phaseId          String? @map("phase_id")
+  agentExecutionId String? @map("agent_execution_id")
+
+  // Stable logical artifact identifier.
+  // Example: prd, ard, implementation-plan
+  key   String
+  type  String
+  title String
+
+  fileName String? @map("file_name")
+
+  // S3 storage
+  s3Bucket String @map("s3_bucket")
+  s3Key    String @unique @map("s3_key")
+
+  mimeType    String? @map("mime_type")
+  contentSize BigInt? @map("content_size")
+  checksum    String?
+
+  version Int @default(1)
+
+  metadata Json?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([id, workflowId, organizationId])
+  @@unique([workflowId, key, version])
+  @@index([organizationId, workflowId, type])
+  @@index([organizationId, phaseId])
+  @@map("artifacts")
+}
+
+// ============================================================
+// WORKFLOW APPROVAL
+// ============================================================
+
+model WorkflowApproval {
+  id             String @id @default(uuid())
+  organizationId String @map("organization_id")
+  workflowId     String @map("workflow_id")
+
+  proposalArtifactId String @map("proposal_artifact_id")
+
+  // PENDING | APPROVED | REJECTED
+  status String @default("PENDING")
+
+  // Soft references to User.
+  requestedById String  @map("requested_by_id")
+  decidedById   String? @map("decided_by_id")
+
+  decisionNote String? @map("decision_note") @db.Text
+
+  requestedAt DateTime  @default(now()) @map("requested_at")
+  decidedAt   DateTime? @map("decided_at")
+
+  @@unique([id, workflowId, organizationId])
+  @@unique([workflowId, proposalArtifactId])
+  @@index([organizationId, status])
+  @@map("workflow_approvals")
+}
+
+// ============================================================
+// WORKFLOW EVENTS
+// ============================================================
+
+model WorkflowEvent {
+  id             String @id @default(uuid())
+  organizationId String @map("organization_id")
+  workflowId     String @map("workflow_id")
+
+  phaseId String? @map("phase_id")
+
+  eventType String @map("event_type")
+
+  // SYSTEM | USER | AGENT
+  actorType String? @map("actor_type")
+  actorId   String? @map("actor_id")
+
+  payload Json?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([organizationId, workflowId, createdAt])
+  @@index([organizationId, eventType])
+  @@map("workflow_events")
+}
+
+// ============================================================
+// INTEGRATION CONNECTION
+// ============================================================
+
+model IntegrationConnection {
+  id             String @id @default(uuid())
+  organizationId String @map("organization_id")
+
+  // JIRA
+  provider String
+
+  name   String
+  status String @default("ACTIVE")
+
+  baseUrl          String? @map("base_url")
+  externalTenantId String? @map("external_tenant_id")
+
+  // Encrypted credentials only.
+  accessTokenEncrypted  String? @map("access_token_encrypted") @db.Text
+  refreshTokenEncrypted String? @map("refresh_token_encrypted") @db.Text
+
+  expiresAt DateTime? @map("expires_at")
+
+  scopes   String[] @default([])
+  metadata Json?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([id, organizationId])
+  @@unique([organizationId, provider, externalTenantId])
+  @@index([organizationId, provider, status])
+  @@map("integration_connections")
+}
+
+// ============================================================
+// WORKFLOW PUBLISH
+// ============================================================
+
+model WorkflowPublish {
+  id             String @id @default(uuid())
+  organizationId String @map("organization_id")
+  workflowId     String @map("workflow_id")
+  connectionId   String @map("connection_id")
+  approvalId     String @map("approval_id")
+
+  // PENDING | RUNNING | PARTIAL | SUCCEEDED | FAILED
+  status         String    @default("PENDING")
+  idempotencyKey String    @map("idempotency_key")
+  attempts       Int       @default(0)
+  lastError      String?   @map("last_error") @db.Text
+  startedAt      DateTime? @map("started_at")
+  completedAt    DateTime? @map("completed_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([organizationId, idempotencyKey])
+  @@index([organizationId, workflowId, status])
+  @@map("workflow_publishes")
+}
+
+// ============================================================
+// EXTERNAL ISSUE MAPPING
+// ============================================================
+
+model ExternalIssueMapping {
+  id             String @id @default(uuid())
+  organizationId String @map("organization_id")
+  workflowId     String @map("workflow_id")
+
+  workItemId   String @map("work_item_id")
+  connectionId String @map("connection_id")
+
+  provider    String
+  externalId  String  @map("external_id")
+  externalKey String? @map("external_key")
+  externalUrl String? @map("external_url")
+  issueType   String? @map("issue_type")
+
+  metadata Json?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([organizationId, provider, externalId])
+  @@unique([workItemId, connectionId])
+  @@index([organizationId, workflowId])
+  @@index([organizationId, externalKey])
+  @@map("external_issue_mappings")
+}

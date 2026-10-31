@@ -5,12 +5,24 @@ export const TENANT_OWNED_MODELS = [
   'Product',
   'Project',
   'GitRepository',
+  // Workflow models
+  'Workflow',
+  'WorkflowRepository',
+  'WorkflowPhase',
+  'WorkflowWorkItem',
+  'WorkflowDependency',
+  'AgentExecution',
+  'WorkflowMessage',
+  'Artifact',
+  'WorkflowApproval',
+  'WorkflowPublish',
+  'ExternalIssueMapping',
+  'IntegrationConnection',
+  'WorkflowEvent',
+  // Legacy models (to be removed)
   'WorkflowRun',
   'WorkflowStepRun',
-  'WorkflowEvent',
-  'WorkflowApproval',
   'AgentTask',
-  'Artifact',
 ] as const
 
 export type TenantOwnedModel = (typeof TENANT_OWNED_MODELS)[number]
