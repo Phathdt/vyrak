@@ -23,6 +23,7 @@ import {
   InvitationsController,
   OrganizationsController,
   ProjectsController,
+  RepositoriesController,
   WorkflowsController,
 } from './controllers'
 
@@ -61,6 +62,7 @@ import {
     OrganizationsController,
     InvitationsController,
     ProjectsController,
+    RepositoriesController,
     WorkflowsController,
     WorkflowBrainstormingController,
   ],

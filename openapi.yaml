@@ -477,6 +477,32 @@ paths:
           description: Project not found
       summary: Delete project
       tags: *ref_5
+  /api/organizations/{orgId}/projects/{projectId}/repositories:
+    get:
+      operationId: RepositoriesController_findAll
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: projectId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Repositories retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GitRepositoryListResponse'
+        '404':
+          description: Project not found
+      summary: List git repositories for a project
+      tags:
+        - Repositories
   /api/organizations/{orgId}/projects/{projectId}/workflows:
     post:
       operationId: WorkflowsController_create
@@ -828,6 +854,37 @@ paths:
           description: Workflow not found
       summary: Confirm workflow classification
       tags: *ref_6
+  /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/brainstorm/session:
+    get:
+      operationId: WorkflowBrainstormingController_getBrainstormSession
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema:
+            type: string
+        - name: projectId
+          required: true
+          in: path
+          description: Project ID
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          description: Workflow ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Brainstorming session state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrainstormSessionResponseDto'
+      summary: Get brainstorming conversation session and messages
+      tags: *ref_7
   /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/brainstorm-stream:
     get:
       description: |-
@@ -1312,6 +1369,70 @@ components:
         - page
         - limit
         - totalPages
+    GitRepositoryResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: uuid-here
+          description: Repository ID
+        projectId:
+          type: string
+          example: uuid-project
+          description: Project ID
+        organizationId:
+          type: string
+          example: uuid-org
+          description: Organization ID
+        name:
+          type: string
+          example: backend-api
+          description: Repository display name
+        url:
+          type: string
+          example: https://github.com/acme/backend-api
+          description: Clone URL
+        branch:
+          type: string
+          example: main
+          description: Default branch
+        provider:
+          type: string
+          example: github
+          description: Git provider
+        status:
+          type: string
+          example: active
+          description: Repository status
+        createdAt:
+          type: string
+          example: '2024-10-24T10:00:00Z'
+          description: Creation timestamp
+        updatedAt:
+          type: string
+          example: '2024-10-24T10:00:00Z'
+          description: Last update timestamp
+      required:
+        - id
+        - projectId
+        - organizationId
+        - name
+        - url
+        - branch
+        - provider
+        - status
+        - createdAt
+        - updatedAt
+    GitRepositoryListResponse:
+      type: object
+      properties:
+        items:
+          description: Repositories linked to the project
+          type: array
+          items:
+            $ref: '#/components/schemas/GitRepositoryResponse'
+      required:
+        - items
     CreateWorkflowDto:
       type: object
       properties:
@@ -1507,6 +1628,53 @@ components:
             - EPIC
       required:
         - type
+    BrainstormMessageDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Message ID
+        role:
+          type: string
+          enum:
+            - user
+            - assistant
+            - system
+          description: Message role
+        content:
+          type: string
+          description: Message content
+        createdAt:
+          type: string
+          description: Creation timestamp (ISO 8601)
+      required:
+        - id
+        - role
+        - content
+        - createdAt
+    BrainstormSessionResponseDto:
+      type: object
+      properties:
+        sessionId:
+          type: string
+          description: Active brainstorming session ID, or null if no session yet
+          nullable: true
+        messages:
+          description: Messages in chronological order
+          type: array
+          items:
+            $ref: '#/components/schemas/BrainstormMessageDto'
+        canClassify:
+          type: boolean
+          description: Whether the conversation has enough context to classify
+        messageCount:
+          type: number
+          description: Total message count in the session
+      required:
+        - sessionId
+        - messages
+        - canClassify
+        - messageCount
     BrainstormRequestDto:
       type: object
       properties:

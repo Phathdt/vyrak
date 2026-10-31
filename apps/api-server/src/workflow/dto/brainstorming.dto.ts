@@ -1,4 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
+import { MessageRole } from '@vyrak/conversation'
+
+import type { MessageRole as MessageRoleType } from '@vyrak/conversation'
 
 export class BrainstormRequestDto {
   @ApiProperty({
@@ -6,6 +9,38 @@ export class BrainstormRequestDto {
     example: 'I need to fix the login page, users are getting 500 errors',
   })
   userMessage!: string
+}
+
+export class BrainstormMessageDto {
+  @ApiProperty({ description: 'Message ID' })
+  id!: string
+
+  @ApiProperty({ enum: Object.values(MessageRole), description: 'Message role' })
+  role!: MessageRoleType
+
+  @ApiProperty({ description: 'Message content' })
+  content!: string
+
+  @ApiProperty({ description: 'Creation timestamp (ISO 8601)' })
+  createdAt!: string
+}
+
+export class BrainstormSessionResponseDto {
+  @ApiProperty({
+    description: 'Active brainstorming session ID, or null if no session yet',
+    nullable: true,
+    type: String,
+  })
+  sessionId!: string | null
+
+  @ApiProperty({ type: [BrainstormMessageDto], description: 'Messages in chronological order' })
+  messages!: BrainstormMessageDto[]
+
+  @ApiProperty({ description: 'Whether the conversation has enough context to classify' })
+  canClassify!: boolean
+
+  @ApiProperty({ description: 'Total message count in the session' })
+  messageCount!: number
 }
 
 export class BrainstormResponseDto {

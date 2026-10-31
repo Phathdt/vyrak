@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common'
 import { BaseTenantRepository, DatabaseService } from '@vyrak/database'
 
+import { ConversationStatus } from '../../domain'
+
 import type {
   ConversationMessage,
   ConversationPhase,
   ConversationSession,
-  ConversationStatus,
   CreateMessageInput,
   CreateSessionInput,
   IConversationRepository,
@@ -26,7 +27,7 @@ export class PrismaConversationRepository extends BaseTenantRepository implement
           workflowId: input.workflowId,
           organizationId,
           phase: input.phase,
-          status: 'ACTIVE',
+          status: ConversationStatus.ACTIVE,
           metadata: (input.metadata ?? {}) as never,
         },
       })
@@ -43,12 +44,15 @@ export class PrismaConversationRepository extends BaseTenantRepository implement
     return session ? this.toDomainSession(session) : null
   }
 
-  async findActiveSessionByWorkflowAndPhase(workflowId: string, phase: string): Promise<ConversationSession | null> {
+  async findActiveSessionByWorkflowAndPhase(
+    workflowId: string,
+    phase: ConversationPhase
+  ): Promise<ConversationSession | null> {
     const session = await this.prisma.client.conversationSession.findFirst({
       where: {
         workflowId,
         phase,
-        status: 'ACTIVE',
+        status: ConversationStatus.ACTIVE,
       },
       orderBy: { startedAt: 'desc' },
     })
@@ -65,7 +69,11 @@ export class PrismaConversationRepository extends BaseTenantRepository implement
     return sessions.map((s) => this.toDomainSession(s))
   }
 
-  async updateSessionStatus(sessionId: string, status: string, endedAt?: Date): Promise<ConversationSession> {
+  async updateSessionStatus(
+    sessionId: string,
+    status: ConversationStatus,
+    endedAt?: Date
+  ): Promise<ConversationSession> {
     const session = await this.prisma.client.conversationSession.update({
       where: { id: sessionId },
       data: {

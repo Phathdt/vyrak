@@ -8,6 +8,7 @@ describe('WorkflowBrainstormingService', () => {
   let service: WorkflowBrainstormingService
   let mockConversationService: any
   let mockAIAgentService: any
+  let mockWorkflowRepository: any
 
   beforeEach(() => {
     // Mock ConversationService
@@ -28,7 +29,14 @@ describe('WorkflowBrainstormingService', () => {
       classifyWorkflow: vi.fn(),
     }
 
-    service = new WorkflowBrainstormingService(mockConversationService, mockAIAgentService)
+    mockWorkflowRepository = {
+      findById: vi.fn().mockResolvedValue({ id: 'workflow-123', status: 'BRAINSTORMING' }),
+      updateStatus: vi.fn(),
+    }
+
+    mockConversationService.getWorkflowSessions = vi.fn().mockResolvedValue([])
+
+    service = new WorkflowBrainstormingService(mockConversationService, mockAIAgentService, mockWorkflowRepository)
   })
 
   afterEach(() => {

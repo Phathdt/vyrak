@@ -12,21 +12,11 @@ export class DisabledAiAgentAdapter implements IAIAgentPort {
     this.notConfigured()
   }
 
-  chatStream(_request: AgentRequest): AsyncGenerator<string, void, unknown> {
-    const error = new Error(NOT_CONFIGURED_MESSAGE)
-    const iterator: AsyncGenerator<string, void, unknown> = {
-      next: async () => {
-        throw error
-      },
-      return: async () => ({ done: true, value: undefined }),
-      throw: async () => {
-        throw error
-      },
-      [Symbol.asyncIterator]() {
-        return this
-      },
+  async *chatStream(_request: AgentRequest): AsyncGenerator<string, void, unknown> {
+    for (const _chunk of [] as string[]) {
+      yield _chunk
     }
-    return iterator
+    this.notConfigured()
   }
 
   async classifyWorkflow(_request: AgentRequest): Promise<WorkflowClassification> {

@@ -1,8 +1,15 @@
 import { Module } from '@nestjs/common'
 import { DatabaseModule, DatabaseService } from '@vyrak/database'
 
-import { ProjectService } from './application'
-import { PROJECT_REPOSITORY, PROJECT_SERVICE, ProjectPrismaRepository } from './infras'
+import { GitRepositoryService, ProjectService } from './application'
+import {
+  GIT_REPOSITORY_REPOSITORY,
+  GIT_REPOSITORY_SERVICE,
+  GitRepositoryPrismaRepository,
+  PROJECT_REPOSITORY,
+  PROJECT_SERVICE,
+  ProjectPrismaRepository,
+} from './infras'
 
 @Module({
   imports: [DatabaseModule],
@@ -17,7 +24,18 @@ import { PROJECT_REPOSITORY, PROJECT_SERVICE, ProjectPrismaRepository } from './
       useFactory: (repository) => new ProjectService(repository),
       inject: [PROJECT_REPOSITORY],
     },
+    {
+      provide: GIT_REPOSITORY_REPOSITORY,
+      useFactory: (prisma: DatabaseService) => new GitRepositoryPrismaRepository(prisma),
+      inject: [DatabaseService],
+    },
+    {
+      provide: GIT_REPOSITORY_SERVICE,
+      useFactory: (projectRepository, gitRepositoryRepository) =>
+        new GitRepositoryService(projectRepository, gitRepositoryRepository),
+      inject: [PROJECT_REPOSITORY, GIT_REPOSITORY_REPOSITORY],
+    },
   ],
-  exports: [PROJECT_SERVICE],
+  exports: [PROJECT_SERVICE, GIT_REPOSITORY_SERVICE],
 })
 export class ProjectModule {}

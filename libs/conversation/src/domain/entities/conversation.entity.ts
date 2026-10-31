@@ -1,8 +1,28 @@
-export type ConversationPhase = 'BRAINSTORMING' | 'PLANNING' | 'IMPLEMENTATION' | 'REVIEW' | 'TESTING'
+export const ConversationPhase = {
+  BRAINSTORMING: 'BRAINSTORMING',
+  PLANNING: 'PLANNING',
+  IMPLEMENTATION: 'IMPLEMENTATION',
+  REVIEW: 'REVIEW',
+  TESTING: 'TESTING',
+} as const
 
-export type ConversationStatus = 'ACTIVE' | 'COMPLETED' | 'ARCHIVED'
+export type ConversationPhase = (typeof ConversationPhase)[keyof typeof ConversationPhase]
 
-export type MessageRole = 'user' | 'assistant' | 'system'
+export const ConversationStatus = {
+  ACTIVE: 'ACTIVE',
+  COMPLETED: 'COMPLETED',
+  ARCHIVED: 'ARCHIVED',
+} as const
+
+export type ConversationStatus = (typeof ConversationStatus)[keyof typeof ConversationStatus]
+
+export const MessageRole = {
+  USER: 'user',
+  ASSISTANT: 'assistant',
+  SYSTEM: 'system',
+} as const
+
+export type MessageRole = (typeof MessageRole)[keyof typeof MessageRole]
 
 export interface ConversationSession {
   id: string

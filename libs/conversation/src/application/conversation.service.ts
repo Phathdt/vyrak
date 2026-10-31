@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common'
 
-import { CONVERSATION_REPOSITORY } from '../domain'
+import { CONVERSATION_REPOSITORY, ConversationStatus } from '../domain'
 
 import type {
   ConversationMessage,
@@ -36,7 +36,7 @@ export class ConversationService {
   /**
    * Get or create active session for workflow phase
    */
-  async getOrCreateSession(workflowId: string, phase: string): Promise<ConversationSession> {
+  async getOrCreateSession(workflowId: string, phase: ConversationPhase): Promise<ConversationSession> {
     const existing = await this.repository.findActiveSessionByWorkflowAndPhase(workflowId, phase)
 
     if (existing) {
@@ -45,7 +45,7 @@ export class ConversationService {
 
     return this.repository.createSession({
       workflowId,
-      phase: phase as ConversationPhase,
+      phase,
     })
   }
 
@@ -88,14 +88,14 @@ export class ConversationService {
    * Complete a conversation session
    */
   async completeSession(sessionId: string): Promise<ConversationSession> {
-    return this.repository.updateSessionStatus(sessionId, 'COMPLETED', new Date())
+    return this.repository.updateSessionStatus(sessionId, ConversationStatus.COMPLETED, new Date())
   }
 
   /**
    * Archive a conversation session
    */
   async archiveSession(sessionId: string): Promise<ConversationSession> {
-    return this.repository.updateSessionStatus(sessionId, 'ARCHIVED', new Date())
+    return this.repository.updateSessionStatus(sessionId, ConversationStatus.ARCHIVED, new Date())
   }
 
   /**

@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@vyrak/auth": "*",
+    "@vyrak/conversation": "*",
     "@vyrak/custom-config": "*",
     "@vyrak/custom-logger": "*",
     "@vyrak/database": "*",

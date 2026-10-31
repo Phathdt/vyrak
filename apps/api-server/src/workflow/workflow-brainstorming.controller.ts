@@ -1,19 +1,41 @@
-import { Body, Controller, Param, Post, Query, Sse } from '@nestjs/common'
+import { Body, Controller, Get, Param, Post, Query, Sse, UseGuards } from '@nestjs/common'
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { WorkflowBrainstormingService } from '@vyrak/workflow'
 import { Observable } from 'rxjs'
 
+import { AuthGuard } from '../auth'
+import { OrganizationMemberGuard } from '../guards'
 import {
   BrainstormRequestDto,
   BrainstormResponseDto,
+  BrainstormSessionResponseDto,
   ClassifyRequestDto,
   ClassifyResponseDto,
 } from './dto/brainstorming.dto'
 
 @ApiTags('Workflows - Brainstorming')
 @Controller('api/organizations/:orgId/projects/:projectId/workflows/:id')
+@UseGuards(AuthGuard, OrganizationMemberGuard)
 export class WorkflowBrainstormingController {
   constructor(private readonly brainstormingService: WorkflowBrainstormingService) {}
+
+  @Get('brainstorm/session')
+  @ApiParam({ name: 'orgId', description: 'Organization ID' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiParam({ name: 'id', description: 'Workflow ID' })
+  @ApiOperation({ summary: 'Get brainstorming conversation session and messages' })
+  @ApiResponse({
+    status: 200,
+    description: 'Brainstorming session state',
+    type: BrainstormSessionResponseDto,
+  })
+  async getBrainstormSession(
+    @Param('orgId') _orgId: string,
+    @Param('projectId') _projectId: string,
+    @Param('id') workflowId: string
+  ): Promise<BrainstormSessionResponseDto> {
+    return this.brainstormingService.getBrainstormSession(workflowId)
+  }
 
   @Post('brainstorm')
   @ApiParam({ name: 'orgId', description: 'Organization ID' })

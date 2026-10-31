@@ -1,9 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { useNavigate, useParams } from 'react-router-dom'
 import { z } from 'zod'
 
+import { useRepositoriesControllerFindAll } from '@/api/generated/repositories/repositories'
 import { useWorkflowsControllerCreate, useWorkflowsControllerFindAll } from '@/api/generated/workflows/workflows'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -60,12 +61,34 @@ export function WorkflowsPage() {
     formState: { errors },
     reset,
     setValue,
+    control,
   } = useForm<CreateWorkflowFormData>({
     resolver: zodResolver(createWorkflowSchema),
     defaultValues: {
       repositoryIds: [],
     },
   })
+
+  const selectedRepositoryIds = useWatch({ control, name: 'repositoryIds' }) ?? []
+
+  const { data: repositoriesData, isLoading: isLoadingRepositories } = useRepositoriesControllerFindAll(
+    orgId!,
+    projectId!,
+    {
+      query: {
+        enabled: isCreating && !!orgId && !!projectId,
+      },
+    }
+  )
+
+  const repositories = repositoriesData?.items ?? []
+
+  const toggleRepository = (repositoryId: string, checked: boolean) => {
+    const next = checked
+      ? [...selectedRepositoryIds, repositoryId]
+      : selectedRepositoryIds.filter((id) => id !== repositoryId)
+    setValue('repositoryIds', next, { shouldValidate: true })
+  }
 
   const onSubmit = async (data: CreateWorkflowFormData) => {
     if (!orgId || !projectId) return
@@ -189,14 +212,46 @@ export function WorkflowsPage() {
               </div>
 
               <div className='space-y-2'>
-                <Label htmlFor='repositoryIds'>Repository ID (temporary)</Label>
-                <Input
-                  id='repositoryIds'
-                  placeholder='repo-uuid-123'
-                  disabled={isPending}
-                  onChange={(e) => setValue('repositoryIds', e.target.value ? [e.target.value] : [])}
-                />
-                <p className='text-xs text-muted-foreground'>Enter a repository ID (repository selector coming soon)</p>
+                <Label>Repositories</Label>
+                <p className='text-xs text-muted-foreground'>Select one or more repositories for this workflow</p>
+                {isLoadingRepositories ? (
+                  <p className='text-sm text-muted-foreground'>Loading repositories...</p>
+                ) : repositories.length === 0 ? (
+                  <p className='text-sm text-muted-foreground'>
+                    No repositories linked to this project yet. Add repositories in project settings first.
+                  </p>
+                ) : (
+                  <div
+                    className='max-h-48 space-y-2 overflow-y-auto rounded-md border border-border p-3'
+                    data-testid='workflow-repositoryIds-input'
+                  >
+                    {repositories.map((repo) => {
+                      const isActive = repo.status === 'active'
+                      const checked = selectedRepositoryIds.includes(repo.id)
+                      return (
+                        <label
+                          key={repo.id}
+                          className={`flex cursor-pointer items-start gap-3 rounded-md p-2 hover:bg-muted/50 ${!isActive ? 'opacity-60' : ''}`}
+                        >
+                          <input
+                            type='checkbox'
+                            className='mt-1 h-4 w-4 rounded border-border'
+                            checked={checked}
+                            disabled={isPending || !isActive}
+                            onChange={(e) => toggleRepository(repo.id, e.target.checked)}
+                          />
+                          <span className='min-w-0 flex-1'>
+                            <span className='block font-medium'>{repo.name}</span>
+                            <span className='block truncate text-xs text-muted-foreground'>
+                              {repo.branch} · {repo.provider}
+                              {repo.status !== 'active' ? ` · ${repo.status}` : ''}
+                            </span>
+                          </span>
+                        </label>
+                      )
+                    })}
+                  </div>
+                )}
                 {errors.repositoryIds && <p className='text-sm text-destructive'>{errors.repositoryIds.message}</p>}
               </div>
             </div>

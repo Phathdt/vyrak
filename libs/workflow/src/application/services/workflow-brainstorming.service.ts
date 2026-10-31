@@ -1,7 +1,11 @@
-import { Injectable } from '@nestjs/common'
+import { Inject, Injectable } from '@nestjs/common'
 import { AIAgentService } from '@vyrak/ai-agent'
-import { ConversationService } from '@vyrak/conversation'
+import { ConversationPhase, ConversationService, ConversationStatus, MessageRole } from '@vyrak/conversation'
 
+import { WorkflowStatus } from '../../domain'
+import { WORKFLOW_REPOSITORY } from '../../infras'
+
+import type { IWorkflowRepository } from '../../domain'
 import type { Message } from '@vyrak/ai-agent'
 import type { ConversationMessage } from '@vyrak/conversation'
 
@@ -17,21 +21,75 @@ export interface BrainstormResponse {
   messageCount: number
 }
 
+export interface BrainstormSessionMessage {
+  id: string
+  role: MessageRole
+  content: string
+  createdAt: string
+}
+
+export interface BrainstormSessionState {
+  sessionId: string | null
+  messages: BrainstormSessionMessage[]
+  canClassify: boolean
+  messageCount: number
+}
+
 @Injectable()
 export class WorkflowBrainstormingService {
   constructor(
     private readonly conversationService: ConversationService,
-    private readonly aiAgentService: AIAgentService
+    private readonly aiAgentService: AIAgentService,
+    @Inject(WORKFLOW_REPOSITORY) private readonly workflowRepository: IWorkflowRepository
   ) {}
 
+  async getBrainstormSession(workflowId: string): Promise<BrainstormSessionState> {
+    const sessions = await this.conversationService.getWorkflowSessions(workflowId)
+    const session =
+      sessions.find((s) => s.phase === ConversationPhase.BRAINSTORMING && s.status === ConversationStatus.ACTIVE) ??
+      [...sessions]
+        .filter((s) => s.phase === ConversationPhase.BRAINSTORMING)
+        .sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime())[0]
+
+    if (!session) {
+      return {
+        sessionId: null,
+        messages: [],
+        canClassify: false,
+        messageCount: 0,
+      }
+    }
+
+    const messages = await this.conversationService.getMessages(session.id)
+    const messageCount = messages.length
+    const canClassify = await this.conversationService.canClassify(session.id)
+
+    return {
+      sessionId: session.id,
+      messages: messages.map((msg) => ({
+        id: msg.id,
+        role: msg.role,
+        content: msg.content,
+        createdAt: msg.createdAt.toISOString(),
+      })),
+      canClassify,
+      messageCount,
+    }
+  }
+
   async brainstorm(request: BrainstormRequest): Promise<BrainstormResponse> {
+    await this.ensureBrainstormingStatus(request.workflowId)
+
     // Get or create active brainstorming session
-    const session = await this.conversationService.getOrCreateSession(request.workflowId, 'BRAINSTORMING')
+    const session = await this.conversationService.getOrCreateSession(
+      request.workflowId,
+      ConversationPhase.BRAINSTORMING
+    )
 
     // Save user message
     await this.conversationService.addMessage({
       sessionId: session.id,
-      role: 'user',
+      role: MessageRole.USER,
       content: request.userMessage,
     })
 
@@ -50,7 +108,7 @@ export class WorkflowBrainstormingService {
     // Save AI response
     await this.conversationService.addMessage({
       sessionId: session.id,
-      role: 'assistant',
+      role: MessageRole.ASSISTANT,
       content: aiResponse.content,
     })
 
@@ -67,13 +125,18 @@ export class WorkflowBrainstormingService {
   }
 
   async *brainstormStream(request: BrainstormRequest): AsyncGenerator<string> {
+    await this.ensureBrainstormingStatus(request.workflowId)
+
     // Get or create active brainstorming session
-    const session = await this.conversationService.getOrCreateSession(request.workflowId, 'BRAINSTORMING')
+    const session = await this.conversationService.getOrCreateSession(
+      request.workflowId,
+      ConversationPhase.BRAINSTORMING
+    )
 
     // Save user message
     await this.conversationService.addMessage({
       sessionId: session.id,
-      role: 'user',
+      role: MessageRole.USER,
       content: request.userMessage,
     })
 
@@ -96,7 +159,7 @@ export class WorkflowBrainstormingService {
     // Save complete AI response
     await this.conversationService.addMessage({
       sessionId: session.id,
-      role: 'assistant',
+      role: MessageRole.ASSISTANT,
       content: fullResponse,
     })
   }
@@ -135,11 +198,21 @@ export class WorkflowBrainstormingService {
     return classification
   }
 
+  private async ensureBrainstormingStatus(workflowId: string): Promise<void> {
+    const workflow = await this.workflowRepository.findById(workflowId)
+
+    if (workflow?.status === WorkflowStatus.DRAFT) {
+      await this.workflowRepository.updateStatus(workflowId, WorkflowStatus.BRAINSTORMING)
+    }
+  }
+
   private toAIMessages(messages: ConversationMessage[]): Message[] {
-    return messages.map((msg) => ({
-      role: msg.role as 'user' | 'assistant',
-      content: msg.content,
-    }))
+    return messages
+      .filter((msg) => msg.role === MessageRole.USER || msg.role === MessageRole.ASSISTANT)
+      .map((msg) => ({
+        role: msg.role,
+        content: msg.content,
+      }))
   }
 
   private getBrainstormingSystemPrompt(): string {
