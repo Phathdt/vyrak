@@ -1,10 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk'
-import { Injectable } from '@nestjs/common'
 
 import type { AgentRequest, AgentResponse, Message, WorkflowClassification } from '../../domain/entities/agent.entity'
 import type { IAIAgentPort } from '../../domain/ports/ai-agent.port'
 
-@Injectable()
 export class ClaudeAdapter implements IAIAgentPort {
   private client: Anthropic
 

@@ -347,9 +347,10 @@ paths:
           description: Page number
           schema:
             minimum: 1
+            maximum: 9007199254740991
             default: 1
             example: 1
-            type: number
+            type: integer
         - name: limit
           required: false
           in: query
@@ -359,7 +360,7 @@ paths:
             maximum: 100
             default: 10
             example: 10
-            type: number
+            type: integer
         - name: search
           required: false
           in: query
@@ -476,6 +477,317 @@ paths:
           description: Project not found
       summary: Delete project
       tags: *ref_5
+  /api/organizations/{orgId}/projects/{projectId}/workflows:
+    post:
+      operationId: WorkflowsController_create
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: projectId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWorkflowDto'
+      responses:
+        '201':
+          description: Workflow created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowResponse'
+        '400':
+          description: Bad request - at least one repository required
+      summary: Create a new workflow
+      tags: &ref_6
+        - Workflows
+    get:
+      operationId: WorkflowsController_findAll
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: projectId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 9007199254740991
+            default: 1
+            type: integer
+        - name: limit
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 100
+            default: 10
+            type: integer
+        - name: search
+          required: false
+          in: query
+          schema:
+            type: string
+        - name: type
+          required: false
+          in: query
+          schema:
+            type: string
+            enum:
+              - HOTFIX
+              - STORY
+              - EPIC
+        - name: status
+          required: false
+          in: query
+          schema:
+            type: string
+            enum:
+              - DRAFT
+              - BRAINSTORMING
+              - CLASSIFICATION_PENDING
+              - ACTIVE
+              - WAITING_APPROVAL
+              - COMPLETED
+              - FAILED
+              - CANCELLED
+        - name: createdById
+          required: false
+          in: query
+          schema:
+            type: string
+        - name: sort
+          required: false
+          in: query
+          schema:
+            default: createdAt
+            type: string
+            enum:
+              - title
+              - createdAt
+              - updatedAt
+              - startedAt
+        - name: order
+          required: false
+          in: query
+          schema:
+            default: desc
+            type: string
+            enum:
+              - asc
+              - desc
+      responses:
+        '200':
+          description: Workflows retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedWorkflowsResponse'
+      summary: List workflows with pagination, search, and filtering
+      tags: *ref_6
+  /api/organizations/{orgId}/projects/{projectId}/workflows/{id}:
+    get:
+      operationId: WorkflowsController_findOne
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: projectId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Workflow retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowResponse'
+        '404':
+          description: Workflow not found
+      summary: Get workflow by ID
+      tags: *ref_6
+    patch:
+      operationId: WorkflowsController_update
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: projectId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateWorkflowDto'
+      responses:
+        '200':
+          description: Workflow updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowResponse'
+        '400':
+          description: Only DRAFT workflows can be updated
+        '404':
+          description: Workflow not found
+      summary: Update workflow
+      tags: *ref_6
+    delete:
+      operationId: WorkflowsController_remove
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: projectId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Workflow deleted successfully
+        '400':
+          description: Only DRAFT workflows can be deleted
+        '404':
+          description: Workflow not found
+      summary: Delete workflow
+      tags: *ref_6
+  /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/brainstorm:
+    post:
+      operationId: WorkflowsController_startBrainstorming
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: projectId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Brainstorming started
+        '400':
+          description: Can only start brainstorming from DRAFT status
+        '404':
+          description: Workflow not found
+      summary: Start brainstorming phase
+      tags: *ref_6
+  /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/classify:
+    post:
+      operationId: WorkflowsController_classify
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: projectId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClassifyWorkflowDto'
+      responses:
+        '200':
+          description: Classification started
+        '404':
+          description: Workflow not found
+      summary: Classify workflow using AI
+      tags: *ref_6
+  /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/confirm-classification:
+    post:
+      operationId: WorkflowsController_confirmClassification
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: projectId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmClassificationDto'
+      responses:
+        '200':
+          description: Classification confirmed and workflow activated
+        '400':
+          description: Can only confirm classification from BRAINSTORMING or CLASSIFICATION_PENDING
+        '404':
+          description: Workflow not found
+      summary: Confirm workflow classification
+      tags: *ref_6
 info:
   title: Vyrak API
   description: Vyrak API documentation
@@ -494,7 +806,17 @@ components:
   schemas:
     LoginDto:
       type: object
-      properties: {}
+      properties:
+        email:
+          type: string
+          format: email
+          pattern: ^(?:[A-Za-z0-9_'+\-]+\.)*[A-Za-z0-9_'+\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$
+        password:
+          type: string
+          minLength: 8
+      required:
+        - email
+        - password
     AuthResponseDto:
       type: object
       properties:
@@ -523,7 +845,8 @@ components:
       type: object
       properties:
         user:
-          type: object
+          x-nestjs_zod-uses-3-point-1-syntax: true
+          x-nestjs_zod-empty-type: true
           nullable: true
           properties:
             id:
@@ -533,9 +856,17 @@ components:
               nullable: true
             email:
               type: string
+              format: email
+              pattern: ^(?:[A-Za-z0-9_'+\-]+\.)*[A-Za-z0-9_'+\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$
             image:
               type: string
               nullable: true
+          type: object
+          required:
+            - id
+            - name
+            - email
+            - image
         organizations:
           type: array
           items:
@@ -553,6 +884,7 @@ components:
                   - owner
                   - admin
                   - member
+          x-nestjs_zod-uses-3-point-1-syntax: true
       required:
         - user
         - organizations
@@ -561,19 +893,20 @@ components:
       properties:
         name:
           type: string
-          example: Acme Inc
-          description: Organization name
           minLength: 1
           maxLength: 100
+          example: Acme Inc
+          description: Organization name
         slug:
           type: string
-          example: acme-inc
-          description: Unique organization slug (lowercase, alphanumeric, hyphens only)
-          pattern: ^[a-z0-9-]+$
           minLength: 3
           maxLength: 50
+          pattern: ^[a-z0-9-]+$
+          example: acme-inc
+          description: Unique organization slug (lowercase, alphanumeric, hyphens only)
         logo:
           type: string
+          format: uri
           example: https://example.com/logo.png
           description: Organization logo URL
       required:
@@ -603,6 +936,10 @@ components:
           type: string
           example: owner
           description: Current user role in organization
+          enum:
+            - owner
+            - admin
+            - member
         memberCount:
           type: number
           example: 5
@@ -630,12 +967,13 @@ components:
       properties:
         name:
           type: string
-          example: Acme Corporation
-          description: Organization name
           minLength: 1
           maxLength: 100
+          example: Acme Corporation
+          description: Organization name
         logo:
           type: string
+          format: uri
           example: https://example.com/logo.png
           description: Organization logo URL
     MemberUserResponse:
@@ -694,12 +1032,12 @@ components:
       properties:
         role:
           type: string
-          example: admin
-          description: New role for the member
           enum:
             - owner
             - admin
             - member
+          example: admin
+          description: New role for the member
       required:
         - role
     InviteMemberDto:
@@ -707,16 +1045,17 @@ components:
       properties:
         email:
           type: string
+          format: email
+          pattern: ^(?:[A-Za-z0-9_'+\-]+\.)*[A-Za-z0-9_'+\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$
           example: john@example.com
           description: Email address of the user to invite
-          format: email
         role:
           type: string
-          example: member
-          description: Role to assign to the invited user
           enum:
             - admin
             - member
+          example: member
+          description: Role to assign to the invited user
       required:
         - email
         - role
@@ -790,22 +1129,22 @@ components:
       properties:
         name:
           type: string
-          example: My Project
-          description: Project name
           minLength: 1
           maxLength: 255
+          example: My Project
+          description: Project name
         slug:
           type: string
-          example: my-project
-          description: Unique project slug within organization (lowercase, alphanumeric, hyphens only)
-          pattern: ^[a-z0-9-]+$
           minLength: 1
           maxLength: 100
+          pattern: ^[a-z0-9-]+$
+          example: my-project
+          description: Unique project slug within organization (lowercase, alphanumeric, hyphens only)
         description:
           type: string
+          maxLength: 500
           example: This is my project description
           description: Project description
-          maxLength: 500
       required:
         - name
         - slug
@@ -897,3 +1236,202 @@ components:
         - page
         - limit
         - totalPages
+    CreateWorkflowDto:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 500
+        description:
+          type: string
+          maxLength: 5000
+        repositoryIds:
+          minItems: 1
+          type: array
+          items:
+            type: string
+      required:
+        - title
+        - repositoryIds
+    WorkflowResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: uuid-here
+          description: Workflow ID
+        organizationId:
+          type: string
+          example: uuid-org
+          description: Organization ID
+        projectId:
+          type: string
+          example: uuid-project
+          description: Project ID
+        type:
+          type: string
+          example: STORY
+          description: Workflow type
+          enum:
+            - HOTFIX
+            - STORY
+            - EPIC
+          nullable: true
+        status:
+          type: string
+          example: ACTIVE
+          description: Workflow status
+          enum:
+            - DRAFT
+            - BRAINSTORMING
+            - CLASSIFICATION_PENDING
+            - ACTIVE
+            - WAITING_APPROVAL
+            - COMPLETED
+            - FAILED
+            - CANCELLED
+        title:
+          type: string
+          example: Implement user authentication
+          description: Workflow title
+        description:
+          type: string
+          example: Add JWT-based authentication
+          description: Workflow description
+          nullable: true
+        currentPhaseKey:
+          type: string
+          example: planning
+          description: Current phase key
+          nullable: true
+        definitionSnapshot:
+          type: object
+          example: null
+          description: Workflow definition snapshot
+          nullable: true
+        classification:
+          type: object
+          example: null
+          description: AI classification result
+          nullable: true
+        classificationConfirmedAt:
+          type: string
+          example: '2024-10-31T00:00:00Z'
+          description: Classification confirmation timestamp
+          nullable: true
+        classificationConfirmedById:
+          type: string
+          example: user-uuid
+          description: User who confirmed classification
+          nullable: true
+        createdById:
+          type: string
+          example: user-uuid
+          description: Creator user ID
+        startedAt:
+          type: string
+          example: '2024-10-31T00:00:00Z'
+          description: Workflow start timestamp
+          nullable: true
+        completedAt:
+          type: string
+          example: '2024-10-31T10:00:00Z'
+          description: Workflow completion timestamp
+          nullable: true
+        createdAt:
+          type: string
+          example: '2024-10-31T00:00:00Z'
+          description: Creation timestamp
+        updatedAt:
+          type: string
+          example: '2024-10-31T00:00:00Z'
+          description: Last update timestamp
+        repositories:
+          example:
+            - id: repo-link-uuid
+              repositoryId: repo-uuid
+          description: Associated repositories
+          type: array
+          items:
+            type: string
+      required:
+        - id
+        - organizationId
+        - projectId
+        - type
+        - status
+        - title
+        - description
+        - currentPhaseKey
+        - definitionSnapshot
+        - classification
+        - classificationConfirmedAt
+        - classificationConfirmedById
+        - createdById
+        - startedAt
+        - completedAt
+        - createdAt
+        - updatedAt
+        - repositories
+    PaginatedWorkflowsResponse:
+      type: object
+      properties:
+        items:
+          description: List of workflows
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkflowResponse'
+        total:
+          type: number
+          example: 100
+          description: Total number of workflows
+        page:
+          type: number
+          example: 1
+          description: Current page number
+        limit:
+          type: number
+          example: 10
+          description: Items per page
+        totalPages:
+          type: number
+          example: 10
+          description: Total number of pages
+      required:
+        - items
+        - total
+        - page
+        - limit
+        - totalPages
+    UpdateWorkflowDto:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 500
+          x-nestjs_zod-uses-3-point-1-syntax: true
+        description:
+          x-nestjs_zod-uses-3-point-1-syntax: true
+          x-nestjs_zod-empty-type: true
+          type: string
+          maxLength: 5000
+          nullable: true
+    ClassifyWorkflowDto:
+      type: object
+      properties:
+        force:
+          default: false
+          type: boolean
+    ConfirmClassificationDto:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - HOTFIX
+            - STORY
+            - EPIC
+      required:
+        - type
