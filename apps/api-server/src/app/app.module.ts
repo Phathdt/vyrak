@@ -11,11 +11,18 @@ import { DatabaseModule } from '@vyrak/database'
 import { OrganizationModule } from '@vyrak/organization'
 import { ProjectModule } from '@vyrak/project'
 import { UserModule } from '@vyrak/user'
+import { WorkflowModule } from '@vyrak/workflow'
 
 import { ResponseInterceptor, TenantContextInterceptor, TraceIdInterceptor } from '../interceptors'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
-import { AuthController, InvitationsController, OrganizationsController, ProjectsController } from './controllers'
+import {
+  AuthController,
+  InvitationsController,
+  OrganizationsController,
+  ProjectsController,
+  WorkflowsController,
+} from './controllers'
 
 @Module({
   imports: [
@@ -44,8 +51,16 @@ import { AuthController, InvitationsController, OrganizationsController, Project
     UserModule,
     OrganizationModule,
     ProjectModule,
+    WorkflowModule,
   ],
-  controllers: [AppController, AuthController, OrganizationsController, InvitationsController, ProjectsController],
+  controllers: [
+    AppController,
+    AuthController,
+    OrganizationsController,
+    InvitationsController,
+    ProjectsController,
+    WorkflowsController,
+  ],
   providers: [
     AppService,
     {

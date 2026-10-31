@@ -116,6 +116,38 @@ export class WorkflowResponse {
   })
   currentPhaseKey: string | null
 
+  @ApiProperty({
+    type: Object,
+    example: null,
+    description: 'Workflow definition snapshot',
+    nullable: true,
+  })
+  definitionSnapshot: Record<string, unknown> | null
+
+  @ApiProperty({
+    type: Object,
+    example: null,
+    description: 'AI classification result',
+    nullable: true,
+  })
+  classification: Record<string, unknown> | null
+
+  @ApiProperty({
+    type: String,
+    example: '2024-10-31T00:00:00Z',
+    description: 'Classification confirmation timestamp',
+    nullable: true,
+  })
+  classificationConfirmedAt: string | null
+
+  @ApiProperty({
+    type: String,
+    example: 'user-uuid',
+    description: 'User who confirmed classification',
+    nullable: true,
+  })
+  classificationConfirmedById: string | null
+
   @ApiProperty({ example: 'user-uuid', description: 'Creator user ID' })
   createdById: string
 
@@ -146,6 +178,16 @@ export class WorkflowResponse {
     description: 'Last update timestamp',
   })
   updatedAt: string
+
+  @ApiProperty({
+    type: Array,
+    example: [{ id: 'repo-link-uuid', repositoryId: 'repo-uuid' }],
+    description: 'Associated repositories',
+  })
+  repositories: Array<{
+    id: string
+    repositoryId: string
+  }>
 }
 
 // Paginated Workflows Response
@@ -169,20 +211,17 @@ export class PaginatedWorkflowsResponse {
 // Internal service types
 export interface WorkflowWithRepositories {
   id: string
+  organizationId: string
   projectId: string
-  type: 'HOTFIX' | 'STORY' | 'EPIC' | null
-  status:
-    | 'DRAFT'
-    | 'BRAINSTORMING'
-    | 'CLASSIFICATION_PENDING'
-    | 'ACTIVE'
-    | 'WAITING_APPROVAL'
-    | 'COMPLETED'
-    | 'FAILED'
-    | 'CANCELLED'
+  type: WorkflowType | null
+  status: WorkflowStatus
   title: string
   description: string | null
   currentPhaseKey: string | null
+  definitionSnapshot: Record<string, unknown> | null
+  classification: Record<string, unknown> | null
+  classificationConfirmedAt: Date | null
+  classificationConfirmedById: string | null
   createdById: string
   startedAt: Date | null
   completedAt: Date | null
