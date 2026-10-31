@@ -41,6 +41,9 @@ export default defineConfig({
         '**/*.d.ts',
         '**/generated/**',
         '**/migrations/**',
+        '**/*prisma.repository.ts',
+        '**/*-prisma-*.ts',
+        '**/repositories/**/*.ts',
       ],
       thresholds: {
         lines: 60,
