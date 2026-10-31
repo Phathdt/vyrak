@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { z } from 'zod'
 
 import { useWorkflowsControllerCreate, useWorkflowsControllerFindAll } from '@/api/generated/workflows/workflows'
@@ -33,6 +33,7 @@ export function WorkflowsPage() {
   const [isCreating, setIsCreating] = useState(false)
   const { activeOrgId } = useOrganization()
   const { projectId } = useParams<{ projectId: string }>()
+  const navigate = useNavigate()
 
   const {
     data: workflowsData,
@@ -256,7 +257,11 @@ export function WorkflowsPage() {
       ) : (
         <div className='space-y-4'>
           {workflows.map((workflow) => (
-            <Card key={workflow.id} className='cursor-pointer transition-colors hover:border-primary'>
+            <Card
+              key={workflow.id}
+              className='cursor-pointer transition-colors hover:border-primary'
+              onClick={() => navigate(`/projects/${projectId}/workflows/${workflow.id}`)}
+            >
               <CardHeader className='pb-3'>
                 <div className='flex items-start justify-between gap-4'>
                   <div className='min-w-0 flex-1'>

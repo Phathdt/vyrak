@@ -10,6 +10,7 @@ import { LoginPage } from './pages/auth'
 import { DashboardPage } from './pages/dashboard'
 import { OrganizationsPage, OrganizationSettingsPage } from './pages/organizations'
 import { ProjectsPage } from './pages/projects'
+import { WorkflowDetailPage } from './pages/workflows/workflow-detail-page'
 import { WorkflowsPage } from './pages/workflows/workflows-page'
 
 function App() {
@@ -33,6 +34,7 @@ function App() {
               <Route path='/organizations/:id/settings' element={<OrganizationSettingsPage />} />
               <Route path='/projects' element={<ProjectsPage />} />
               <Route path='/projects/:projectId/workflows' element={<WorkflowsPage />} />
+              <Route path='/projects/:projectId/workflows/:workflowId' element={<WorkflowDetailPage />} />
             </Route>
 
             <Route path='/' element={<Navigate to='/dashboard' replace />} />
