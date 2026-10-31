@@ -1,49 +1,27 @@
-import { Inject, Injectable } from '@nestjs/common'
 import { AIAgentService } from '@vyrak/ai-agent'
 import { ConversationPhase, ConversationService, ConversationStatus, MessageRole } from '@vyrak/conversation'
 
-import { WorkflowStatus } from '../../domain'
-import { WORKFLOW_REPOSITORY } from '../../infras'
+import { WorkflowStatus, WorkflowType } from '../../domain'
 
-import type { IWorkflowRepository } from '../../domain'
+import type {
+  BrainstormInput,
+  BrainstormResult,
+  BrainstormSessionView,
+  ClassifyBrainstormResult,
+  IWorkflowBrainstormingService,
+  IWorkflowRepository,
+} from '../../domain'
 import type { Message } from '@vyrak/ai-agent'
 import type { ConversationMessage } from '@vyrak/conversation'
 
-export interface BrainstormRequest {
-  workflowId: string
-  userMessage: string
-}
-
-export interface BrainstormResponse {
-  sessionId: string
-  aiMessage: string
-  canClassify: boolean
-  messageCount: number
-}
-
-export interface BrainstormSessionMessage {
-  id: string
-  role: MessageRole
-  content: string
-  createdAt: string
-}
-
-export interface BrainstormSessionState {
-  sessionId: string | null
-  messages: BrainstormSessionMessage[]
-  canClassify: boolean
-  messageCount: number
-}
-
-@Injectable()
-export class WorkflowBrainstormingService {
+export class WorkflowBrainstormingService implements IWorkflowBrainstormingService {
   constructor(
     private readonly conversationService: ConversationService,
     private readonly aiAgentService: AIAgentService,
-    @Inject(WORKFLOW_REPOSITORY) private readonly workflowRepository: IWorkflowRepository
+    private readonly workflowRepository: IWorkflowRepository
   ) {}
 
-  async getBrainstormSession(workflowId: string): Promise<BrainstormSessionState> {
+  async getBrainstormSession(workflowId: string): Promise<BrainstormSessionView> {
     const sessions = await this.conversationService.getWorkflowSessions(workflowId)
     const session =
       sessions.find((s) => s.phase === ConversationPhase.BRAINSTORMING && s.status === ConversationStatus.ACTIVE) ??
@@ -77,42 +55,31 @@ export class WorkflowBrainstormingService {
     }
   }
 
-  async brainstorm(request: BrainstormRequest): Promise<BrainstormResponse> {
-    await this.ensureBrainstormingStatus(request.workflowId)
+  async brainstorm(input: BrainstormInput): Promise<BrainstormResult> {
+    await this.ensureBrainstormingStatus(input.workflowId)
 
-    // Get or create active brainstorming session
-    const session = await this.conversationService.getOrCreateSession(
-      request.workflowId,
-      ConversationPhase.BRAINSTORMING
-    )
+    const session = await this.conversationService.getOrCreateSession(input.workflowId, ConversationPhase.BRAINSTORMING)
 
-    // Save user message
     await this.conversationService.addMessage({
       sessionId: session.id,
       role: MessageRole.USER,
-      content: request.userMessage,
+      content: input.userMessage,
     })
 
-    // Get all messages in session
     const messages = await this.conversationService.getMessages(session.id)
-
-    // Convert to AI Agent format
     const aiMessages = this.toAIMessages(messages)
 
-    // Get AI response
     const aiResponse = await this.aiAgentService.chat({
       messages: aiMessages,
       systemPrompt: this.getBrainstormingSystemPrompt(),
     })
 
-    // Save AI response
     await this.conversationService.addMessage({
       sessionId: session.id,
       role: MessageRole.ASSISTANT,
       content: aiResponse.content,
     })
 
-    // Check if we have enough messages for classification
     const messageCount = await this.conversationService.getMessageCount(session.id)
     const canClassify = await this.conversationService.canClassify(session.id)
 
@@ -124,29 +91,20 @@ export class WorkflowBrainstormingService {
     }
   }
 
-  async *brainstormStream(request: BrainstormRequest): AsyncGenerator<string> {
-    await this.ensureBrainstormingStatus(request.workflowId)
+  async *brainstormStream(input: BrainstormInput): AsyncGenerator<string> {
+    await this.ensureBrainstormingStatus(input.workflowId)
 
-    // Get or create active brainstorming session
-    const session = await this.conversationService.getOrCreateSession(
-      request.workflowId,
-      ConversationPhase.BRAINSTORMING
-    )
+    const session = await this.conversationService.getOrCreateSession(input.workflowId, ConversationPhase.BRAINSTORMING)
 
-    // Save user message
     await this.conversationService.addMessage({
       sessionId: session.id,
       role: MessageRole.USER,
-      content: request.userMessage,
+      content: input.userMessage,
     })
 
-    // Get all messages in session
     const messages = await this.conversationService.getMessages(session.id)
-
-    // Convert to AI Agent format
     const aiMessages = this.toAIMessages(messages)
 
-    // Stream AI response
     let fullResponse = ''
     for await (const chunk of this.aiAgentService.chatStream({
       messages: aiMessages,
@@ -156,7 +114,6 @@ export class WorkflowBrainstormingService {
       yield chunk
     }
 
-    // Save complete AI response
     await this.conversationService.addMessage({
       sessionId: session.id,
       role: MessageRole.ASSISTANT,
@@ -164,8 +121,7 @@ export class WorkflowBrainstormingService {
     })
   }
 
-  async classify(workflowId: string, sessionId: string) {
-    // Get session with all messages
+  async classify(workflowId: string, sessionId: string): Promise<ClassifyBrainstormResult> {
     const sessionWithMessages = await this.conversationService.getSessionWithMessages(sessionId)
 
     if (!sessionWithMessages) {
@@ -176,26 +132,26 @@ export class WorkflowBrainstormingService {
       throw new Error('Session does not belong to this workflow')
     }
 
-    // Check if can classify
     const canClassify = await this.conversationService.canClassify(sessionId)
     if (!canClassify) {
       throw new Error('Not enough messages for classification. Continue brainstorming.')
     }
 
-    // Convert to AI Agent format
     const aiMessages = this.toAIMessages(sessionWithMessages.messages)
 
-    // Classify workflow
     const classification = await this.aiAgentService.classifyWorkflow({
       workflowId,
       title: `Workflow ${workflowId}`,
       conversationHistory: aiMessages,
     })
 
-    // Complete brainstorming session
     await this.conversationService.completeSession(sessionId)
 
-    return classification
+    return {
+      type: classification.type as WorkflowType,
+      confidence: classification.confidence,
+      reasoning: classification.reasoning,
+    }
   }
 
   private async ensureBrainstormingStatus(workflowId: string): Promise<void> {

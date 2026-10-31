@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common'
-import { AIAgentModule } from '@vyrak/ai-agent'
-import { ConversationModule } from '@vyrak/conversation'
+import { AIAgentModule, AIAgentService } from '@vyrak/ai-agent'
+import { ConversationModule, ConversationService } from '@vyrak/conversation'
 import { DatabaseModule, DatabaseService } from '@vyrak/database'
 
 import { WorkflowBrainstormingService, WorkflowService } from './application'
 import {
+  WORKFLOW_BRAINSTORMING_SERVICE,
   WORKFLOW_REPOSITORY,
   WORKFLOW_REPOSITORY_REPOSITORY,
   WORKFLOW_SERVICE,
@@ -15,7 +16,15 @@ import {
 @Module({
   imports: [DatabaseModule, AIAgentModule, ConversationModule],
   providers: [
-    WorkflowBrainstormingService,
+    {
+      provide: WORKFLOW_BRAINSTORMING_SERVICE,
+      useFactory: (
+        conversationService: ConversationService,
+        aiAgentService: AIAgentService,
+        workflowRepository: WorkflowPrismaRepository
+      ) => new WorkflowBrainstormingService(conversationService, aiAgentService, workflowRepository),
+      inject: [ConversationService, AIAgentService, WORKFLOW_REPOSITORY],
+    },
     {
       provide: WORKFLOW_REPOSITORY,
       useFactory: (prisma: DatabaseService) => new WorkflowPrismaRepository(prisma),
@@ -34,6 +43,6 @@ import {
       inject: [WORKFLOW_REPOSITORY, WORKFLOW_REPOSITORY_REPOSITORY],
     },
   ],
-  exports: [WORKFLOW_SERVICE, WorkflowBrainstormingService],
+  exports: [WORKFLOW_SERVICE, WORKFLOW_BRAINSTORMING_SERVICE],
 })
 export class WorkflowModule {}

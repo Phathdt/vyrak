@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 
-import { WorkflowBrainstormingService, type BrainstormRequest } from './workflow-brainstorming.service'
+import { WorkflowBrainstormingService } from './workflow-brainstorming.service'
 
+import type { BrainstormInput } from '../../domain'
 import type { ConversationMessage, ConversationSession, SessionWithMessages } from '@vyrak/conversation'
 
 describe('WorkflowBrainstormingService', () => {
@@ -60,7 +61,7 @@ describe('WorkflowBrainstormingService', () => {
       mockConversationService.getMessageCount.mockResolvedValue(2)
       mockConversationService.canClassify.mockResolvedValue(false)
 
-      const request: BrainstormRequest = {
+      const request: BrainstormInput = {
         workflowId: 'workflow-123',
         userMessage: 'What should I build?',
       }
@@ -86,7 +87,7 @@ describe('WorkflowBrainstormingService', () => {
       mockConversationService.getMessageCount.mockResolvedValue(2)
       mockConversationService.canClassify.mockResolvedValue(false)
 
-      const request: BrainstormRequest = {
+      const request: BrainstormInput = {
         workflowId: 'workflow-123',
         userMessage: 'I want to add authentication',
       }
@@ -133,7 +134,7 @@ describe('WorkflowBrainstormingService', () => {
       mockConversationService.getMessageCount.mockResolvedValue(2)
       mockConversationService.canClassify.mockResolvedValue(false)
 
-      const request: BrainstormRequest = {
+      const request: BrainstormInput = {
         workflowId: 'workflow-123',
         userMessage: 'Next question',
       }
@@ -169,7 +170,7 @@ describe('WorkflowBrainstormingService', () => {
       mockConversationService.getMessageCount.mockResolvedValue(2)
       mockConversationService.canClassify.mockResolvedValue(false)
 
-      const request: BrainstormRequest = {
+      const request: BrainstormInput = {
         workflowId: 'workflow-123',
         userMessage: 'Test message',
       }
@@ -203,7 +204,7 @@ describe('WorkflowBrainstormingService', () => {
       mockConversationService.getMessageCount.mockResolvedValue(2)
       mockConversationService.canClassify.mockResolvedValue(false)
 
-      const request: BrainstormRequest = {
+      const request: BrainstormInput = {
         workflowId: 'workflow-123',
         userMessage: 'Tell me more',
       }
@@ -240,7 +241,7 @@ describe('WorkflowBrainstormingService', () => {
       mockConversationService.getMessageCount.mockResolvedValue(2)
       mockConversationService.canClassify.mockResolvedValue(false)
 
-      const request: BrainstormRequest = {
+      const request: BrainstormInput = {
         workflowId: 'workflow-123',
         userMessage: 'What do you think?',
       }
@@ -270,7 +271,7 @@ describe('WorkflowBrainstormingService', () => {
       mockConversationService.getMessageCount.mockResolvedValue(8)
       mockConversationService.canClassify.mockResolvedValue(true)
 
-      const request: BrainstormRequest = {
+      const request: BrainstormInput = {
         workflowId: 'workflow-123',
         userMessage: 'Test',
       }
@@ -301,7 +302,7 @@ describe('WorkflowBrainstormingService', () => {
       mockConversationService.getMessageCount.mockResolvedValue(10)
       mockConversationService.canClassify.mockResolvedValue(true)
 
-      const request: BrainstormRequest = {
+      const request: BrainstormInput = {
         workflowId: 'workflow-123',
         userMessage: 'Test',
       }
@@ -328,7 +329,7 @@ describe('WorkflowBrainstormingService', () => {
       mockConversationService.getMessageCount.mockResolvedValue(2)
       mockConversationService.canClassify.mockResolvedValue(false)
 
-      const request: BrainstormRequest = {
+      const request: BrainstormInput = {
         workflowId: 'workflow-123',
         userMessage: 'Test',
       }
@@ -356,7 +357,7 @@ describe('WorkflowBrainstormingService', () => {
         yield 'chunk1'
       })
 
-      const request: BrainstormRequest = {
+      const request: BrainstormInput = {
         workflowId: 'workflow-456',
         userMessage: 'Stream test',
       }
@@ -383,7 +384,7 @@ describe('WorkflowBrainstormingService', () => {
         yield 'response'
       })
 
-      const request: BrainstormRequest = {
+      const request: BrainstormInput = {
         workflowId: 'workflow-456',
         userMessage: 'Stream this message',
       }
@@ -416,7 +417,7 @@ describe('WorkflowBrainstormingService', () => {
         yield 'stream'
       })
 
-      const request: BrainstormRequest = {
+      const request: BrainstormInput = {
         workflowId: 'workflow-456',
         userMessage: 'Test',
       }
@@ -449,7 +450,7 @@ describe('WorkflowBrainstormingService', () => {
         yield 'Part3'
       })
 
-      const request: BrainstormRequest = {
+      const request: BrainstormInput = {
         workflowId: 'workflow-456',
         userMessage: 'Test',
       }
@@ -486,7 +487,7 @@ describe('WorkflowBrainstormingService', () => {
         }
       })
 
-      const request: BrainstormRequest = {
+      const request: BrainstormInput = {
         workflowId: 'workflow-456',
         userMessage: 'Test',
       }
@@ -713,22 +714,27 @@ describe('WorkflowBrainstormingService', () => {
         messages: [],
       }
 
-      const expectedClassification = {
+      const aiClassification = {
         type: 'EPIC',
-        title: 'Build Microservices',
-        description: 'Migrate to microservices architecture',
-        estimatedDuration: '2-3 weeks',
-        complexity: 'HIGH',
+        confidence: 0.91,
+        reasoning: 'Migrate to microservices architecture',
+        scope: 'Multiple services',
+        assumptions: [],
+        risks: [],
       }
 
       mockConversationService.getSessionWithMessages.mockResolvedValue(mockSessionWithMessages)
       mockConversationService.canClassify.mockResolvedValue(true)
-      mockAIAgentService.classifyWorkflow.mockResolvedValue(expectedClassification)
+      mockAIAgentService.classifyWorkflow.mockResolvedValue(aiClassification)
       mockConversationService.completeSession.mockResolvedValue({} as any)
 
       const result = await service.classify('workflow-789', 'session-789')
 
-      expect(result).toEqual(expectedClassification)
+      expect(result).toEqual({
+        type: 'EPIC',
+        confidence: 0.91,
+        reasoning: 'Migrate to microservices architecture',
+      })
     })
   })
 
@@ -749,7 +755,7 @@ describe('WorkflowBrainstormingService', () => {
       mockConversationService.getMessageCount.mockResolvedValue(2)
       mockConversationService.canClassify.mockResolvedValue(false)
 
-      const request: BrainstormRequest = {
+      const request: BrainstormInput = {
         workflowId: 'workflow-existing',
         userMessage: 'Continue conversation',
       }
@@ -778,7 +784,7 @@ describe('WorkflowBrainstormingService', () => {
       mockConversationService.getMessageCount.mockResolvedValue(2)
       mockConversationService.canClassify.mockResolvedValue(false)
 
-      const request: BrainstormRequest = {
+      const request: BrainstormInput = {
         workflowId: 'workflow-new',
         userMessage: 'Start new brainstorm',
       }
@@ -807,7 +813,7 @@ describe('WorkflowBrainstormingService', () => {
       mockConversationService.getMessageCount.mockResolvedValue(10)
       mockConversationService.canClassify.mockResolvedValue(true)
 
-      const request: BrainstormRequest = {
+      const request: BrainstormInput = {
         workflowId: 'workflow-123',
         userMessage: 'Test',
       }
@@ -836,7 +842,7 @@ describe('WorkflowBrainstormingService', () => {
       mockConversationService.getMessageCount.mockResolvedValueOnce(2)
       mockConversationService.canClassify.mockResolvedValueOnce(false)
 
-      const request: BrainstormRequest = {
+      const request: BrainstormInput = {
         workflowId: 'workflow-123',
         userMessage: 'First exchange',
       }
@@ -870,7 +876,7 @@ describe('WorkflowBrainstormingService', () => {
       mockConversationService.getMessageCount.mockResolvedValue(8)
       mockConversationService.canClassify.mockResolvedValue(true)
 
-      const request: BrainstormRequest = {
+      const request: BrainstormInput = {
         workflowId: 'workflow-123',
         userMessage: 'Test',
       }
@@ -896,7 +902,7 @@ describe('WorkflowBrainstormingService', () => {
       mockConversationService.getMessageCount.mockResolvedValue(3)
       mockConversationService.canClassify.mockResolvedValue(false)
 
-      const request: BrainstormRequest = {
+      const request: BrainstormInput = {
         workflowId: 'workflow-123',
         userMessage: 'Test',
       }
@@ -924,7 +930,7 @@ describe('WorkflowBrainstormingService', () => {
       // First call: not ready
       mockConversationService.canClassify.mockResolvedValueOnce(false)
 
-      const request: BrainstormRequest = {
+      const request: BrainstormInput = {
         workflowId: 'workflow-123',
         userMessage: 'Test',
       }
@@ -946,7 +952,7 @@ describe('WorkflowBrainstormingService', () => {
     it('should propagate ConversationService errors', async () => {
       mockConversationService.getOrCreateSession.mockRejectedValue(new Error('Database error'))
 
-      const request: BrainstormRequest = {
+      const request: BrainstormInput = {
         workflowId: 'workflow-123',
         userMessage: 'Test',
       }
@@ -968,7 +974,7 @@ describe('WorkflowBrainstormingService', () => {
       mockConversationService.getMessages.mockResolvedValue([])
       mockAIAgentService.chat.mockRejectedValue(new Error('AI service error'))
 
-      const request: BrainstormRequest = {
+      const request: BrainstormInput = {
         workflowId: 'workflow-123',
         userMessage: 'Test',
       }
@@ -992,7 +998,7 @@ describe('WorkflowBrainstormingService', () => {
       mockConversationService.getMessageCount.mockResolvedValue(2)
       mockConversationService.canClassify.mockResolvedValue(false)
 
-      const request: BrainstormRequest = {
+      const request: BrainstormInput = {
         workflowId: 'workflow-123',
         userMessage: '',
       }
@@ -1042,7 +1048,7 @@ describe('WorkflowBrainstormingService', () => {
       mockConversationService.getMessageCount.mockResolvedValue(2)
       mockConversationService.canClassify.mockResolvedValue(false)
 
-      const request: BrainstormRequest = {
+      const request: BrainstormInput = {
         workflowId: 'workflow-123',
         userMessage: 'Test',
       }
@@ -1077,7 +1083,7 @@ describe('WorkflowBrainstormingService', () => {
       mockConversationService.getMessageCount.mockResolvedValue(2)
       mockConversationService.canClassify.mockResolvedValue(false)
 
-      const request: BrainstormRequest = {
+      const request: BrainstormInput = {
         workflowId: 'workflow-123',
         userMessage: 'Test',
       }
@@ -1105,7 +1111,7 @@ describe('WorkflowBrainstormingService', () => {
       mockConversationService.getMessageCount.mockResolvedValue(2)
       mockConversationService.canClassify.mockResolvedValue(false)
 
-      const request: BrainstormRequest = {
+      const request: BrainstormInput = {
         workflowId: 'workflow-123',
         userMessage: 'Test',
       }
@@ -1133,7 +1139,7 @@ describe('WorkflowBrainstormingService', () => {
       mockConversationService.getMessageCount.mockResolvedValue(2)
       mockConversationService.canClassify.mockResolvedValue(false)
 
-      const request: BrainstormRequest = {
+      const request: BrainstormInput = {
         workflowId: 'workflow-123',
         userMessage: 'Test',
       }

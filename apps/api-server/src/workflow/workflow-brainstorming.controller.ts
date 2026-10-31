@@ -1,23 +1,27 @@
-import { Body, Controller, Get, Param, Post, Query, Sse, UseGuards } from '@nestjs/common'
+import { Body, Controller, Get, Inject, Param, Post, Query, Sse, UseGuards } from '@nestjs/common'
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger'
-import { WorkflowBrainstormingService } from '@vyrak/workflow'
-import { Observable } from 'rxjs'
-
-import { AuthGuard } from '../auth'
-import { OrganizationMemberGuard } from '../guards'
 import {
   BrainstormRequestDto,
   BrainstormResponseDto,
   BrainstormSessionResponseDto,
   ClassifyRequestDto,
   ClassifyResponseDto,
-} from './dto/brainstorming.dto'
+  IWorkflowBrainstormingService,
+  WORKFLOW_BRAINSTORMING_SERVICE,
+} from '@vyrak/workflow'
+import { Observable } from 'rxjs'
+
+import { AuthGuard } from '../auth'
+import { OrganizationMemberGuard } from '../guards'
 
 @ApiTags('Workflows - Brainstorming')
 @Controller('api/organizations/:orgId/projects/:projectId/workflows/:id')
 @UseGuards(AuthGuard, OrganizationMemberGuard)
 export class WorkflowBrainstormingController {
-  constructor(private readonly brainstormingService: WorkflowBrainstormingService) {}
+  constructor(
+    @Inject(WORKFLOW_BRAINSTORMING_SERVICE)
+    private readonly brainstormingService: IWorkflowBrainstormingService
+  ) {}
 
   @Get('brainstorm/session')
   @ApiParam({ name: 'orgId', description: 'Organization ID' })

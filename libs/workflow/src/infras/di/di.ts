@@ -1,5 +1,6 @@
 // Service tokens
 export const WORKFLOW_SERVICE = Symbol('WORKFLOW_SERVICE')
+export const WORKFLOW_BRAINSTORMING_SERVICE = Symbol('WORKFLOW_BRAINSTORMING_SERVICE')
 export const WORKFLOW_PHASE_SERVICE = Symbol('WORKFLOW_PHASE_SERVICE')
 
 // Repository tokens

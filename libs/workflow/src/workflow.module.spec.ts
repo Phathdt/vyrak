@@ -8,6 +8,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
 import { WorkflowBrainstormingService, WorkflowService } from './application'
 import {
+  WORKFLOW_BRAINSTORMING_SERVICE,
   WORKFLOW_REPOSITORY,
   WORKFLOW_REPOSITORY_REPOSITORY,
   WORKFLOW_SERVICE,
@@ -112,8 +113,8 @@ describe('WorkflowModule', () => {
         .compile()
     })
 
-    it('should register WorkflowBrainstormingService', () => {
-      const service = module.get(WorkflowBrainstormingService)
+    it('should register WORKFLOW_BRAINSTORMING_SERVICE token', () => {
+      const service = module.get(WORKFLOW_BRAINSTORMING_SERVICE)
       expect(service).toBeDefined()
       expect(service).toBeInstanceOf(WorkflowBrainstormingService)
     })
@@ -198,8 +199,8 @@ describe('WorkflowModule', () => {
       expect(service).toBeDefined()
     })
 
-    it('should export WorkflowBrainstormingService', () => {
-      const service = module.get(WorkflowBrainstormingService)
+    it('should export WORKFLOW_BRAINSTORMING_SERVICE token', () => {
+      const service = module.get(WORKFLOW_BRAINSTORMING_SERVICE)
       expect(service).toBeDefined()
     })
   })
@@ -308,7 +309,7 @@ describe('WorkflowModule', () => {
       expect(testModule).toBeDefined()
 
       const service = testModule.get(WORKFLOW_SERVICE)
-      const brainstorming = testModule.get(WorkflowBrainstormingService)
+      const brainstorming = testModule.get(WORKFLOW_BRAINSTORMING_SERVICE)
 
       expect(service).toBeDefined()
       expect(brainstorming).toBeDefined()
@@ -379,7 +380,7 @@ describe('WorkflowModule', () => {
         .compile()
 
       const providers = [
-        WorkflowBrainstormingService,
+        WORKFLOW_BRAINSTORMING_SERVICE,
         WORKFLOW_REPOSITORY,
         WORKFLOW_REPOSITORY_REPOSITORY,
         WORKFLOW_SERVICE,
