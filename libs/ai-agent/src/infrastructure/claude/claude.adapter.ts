@@ -1,13 +1,19 @@
 import Anthropic from '@anthropic-ai/sdk'
+import { CustomConfigService } from '@vyrak/custom-config'
 
 import type { AgentRequest, AgentResponse, IAIAgentPort, Message, WorkflowClassification } from '../../domain'
 
 export class ClaudeAdapter implements IAIAgentPort {
   private client: Anthropic
+  private model: string
 
-  constructor() {
+  constructor(private readonly configService: CustomConfigService) {
+    const { apiKey, apiUrl, model } = this.configService.anthropic
+
+    this.model = model
     this.client = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY,
+      apiKey,
+      baseURL: apiUrl ? `${apiUrl}/v1` : undefined,
     })
   }
 
@@ -28,7 +34,7 @@ export class ClaudeAdapter implements IAIAgentPort {
    */
   async chat(request: AgentRequest): Promise<AgentResponse> {
     const response = await this.client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: this.model,
       max_tokens: request.maxTokens || 4096,
       temperature: request.temperature || 0.7,
       system: request.systemPrompt,
@@ -55,7 +61,7 @@ export class ClaudeAdapter implements IAIAgentPort {
    */
   async *chatStream(request: AgentRequest): AsyncGenerator<string, void, unknown> {
     const stream = await this.client.messages.stream({
-      model: 'claude-sonnet-4-20250514',
+      model: this.model,
       max_tokens: request.maxTokens || 4096,
       temperature: request.temperature || 0.7,
       system: request.systemPrompt,

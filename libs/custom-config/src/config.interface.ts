@@ -28,6 +28,12 @@ export interface JwtConfig {
   expiry: string
 }
 
+export interface AnthropicConfig {
+  apiKey: string
+  apiUrl?: string
+  model: string
+}
+
 export interface AppConfig {
   host: HostConfig
   database: DatabaseConfig
@@ -37,6 +43,7 @@ export interface AppConfig {
   agentRuntime: AgentRuntimeConfig
   jwt: JwtConfig
   s3: S3Config
+  anthropic: AnthropicConfig
   frontendUrl: string
   [key: string]: unknown
 }

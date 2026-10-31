@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing'
+import { CustomConfigService } from '@vyrak/custom-config'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ConversationService } from './application'
@@ -9,8 +10,8 @@ import { PrismaConversationRepository } from './infrastructure'
 describe('ConversationModule', () => {
   let module: TestingModule
 
-  beforeEach(async () => {
-    // Mock DatabaseService to avoid requiring actual database
+  // Helper function to create testing module with mocks
+  const createTestModule = async () => {
     const mockDatabaseService = {
       client: {
         $connect: vi.fn().mockResolvedValue(undefined),
@@ -18,12 +19,26 @@ describe('ConversationModule', () => {
       },
     }
 
-    module = await Test.createTestingModule({
+    const mockCustomConfigService = {
+      anthropic: {
+        apiKey: 'test-api-key',
+        apiUrl: undefined,
+        model: 'claude-sonnet-4-20250514',
+      },
+    }
+
+    return await Test.createTestingModule({
       imports: [ConversationModule],
     })
       .overrideProvider('DatabaseService')
       .useValue(mockDatabaseService)
+      .overrideProvider(CustomConfigService)
+      .useValue(mockCustomConfigService)
       .compile()
+  }
+
+  beforeEach(async () => {
+    module = await createTestModule()
   })
 
   describe('module compilation', () => {
@@ -89,17 +104,7 @@ describe('ConversationModule', () => {
   describe('module exports', () => {
     it('should export ConversationService', async () => {
       // Create a test module that imports ConversationModule
-      const testModule = await Test.createTestingModule({
-        imports: [ConversationModule],
-      })
-        .overrideProvider('DatabaseService')
-        .useValue({
-          client: {
-            $connect: vi.fn().mockResolvedValue(undefined),
-            $disconnect: vi.fn().mockResolvedValue(undefined),
-          },
-        })
-        .compile()
+      const testModule = await createTestModule()
 
       const service = testModule.get<ConversationService>(ConversationService)
       expect(service).toBeDefined()
@@ -186,17 +191,7 @@ describe('ConversationModule', () => {
 
   describe('integration', () => {
     it('should allow creating test modules that import ConversationModule', async () => {
-      const testModule = await Test.createTestingModule({
-        imports: [ConversationModule],
-      })
-        .overrideProvider('DatabaseService')
-        .useValue({
-          client: {
-            $connect: vi.fn().mockResolvedValue(undefined),
-            $disconnect: vi.fn().mockResolvedValue(undefined),
-          },
-        })
-        .compile()
+      const testModule = await createTestModule()
 
       const service = testModule.get<ConversationService>(ConversationService)
       const repository = testModule.get(CONVERSATION_REPOSITORY)
@@ -209,17 +204,7 @@ describe('ConversationModule', () => {
 
     it('should work as imported module in composite applications', async () => {
       // Simulate importing ConversationModule in another module
-      const compositeModule = await Test.createTestingModule({
-        imports: [ConversationModule],
-      })
-        .overrideProvider('DatabaseService')
-        .useValue({
-          client: {
-            $connect: vi.fn().mockResolvedValue(undefined),
-            $disconnect: vi.fn().mockResolvedValue(undefined),
-          },
-        })
-        .compile()
+      const compositeModule = await createTestModule()
 
       // Both service and repository should be available
       const service = compositeModule.get<ConversationService>(ConversationService)

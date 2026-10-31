@@ -25,23 +25,34 @@ vi.mock('@anthropic-ai/sdk', () => {
   }
 })
 
+// Mock CustomConfigService
+vi.mock('@vyrak/custom-config', () => ({
+  CustomConfigService: class MockCustomConfigService {
+    anthropic = {
+      apiKey: 'test-api-key',
+      apiUrl: undefined,
+      model: 'claude-sonnet-4-20250514',
+    }
+  },
+}))
+
 describe('ClaudeAdapter', () => {
   let adapter: any
+  let mockConfigService: any
 
   beforeEach(async () => {
     vi.clearAllMocks()
 
-    // Set environment variable for API key
-    process.env.ANTHROPIC_API_KEY = 'test-api-key'
-
     // Import after setting up mocks
+    const { CustomConfigService } = await import('@vyrak/custom-config')
     const { ClaudeAdapter } = await import('./claude.adapter')
-    adapter = new ClaudeAdapter()
+
+    mockConfigService = new CustomConfigService()
+    adapter = new ClaudeAdapter(mockConfigService)
   })
 
   afterEach(() => {
     vi.clearAllMocks()
-    delete process.env.ANTHROPIC_API_KEY
   })
 
   describe('chat()', () => {

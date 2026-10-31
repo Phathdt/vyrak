@@ -214,6 +214,15 @@ export class CustomConfigService {
       }
     }
 
+    // Validate Anthropic config (skip in test environment or if apiKey is placeholder)
+    if (this._config.anthropic && !isPlaceholder(this._config.anthropic.apiKey)) {
+      const anthropic = this._config.anthropic
+
+      if (isPlaceholder(anthropic.model)) {
+        errors.push('anthropic.model must be configured')
+      }
+    }
+
     if (errors.length > 0) {
       const errorMessage = `Configuration validation failed:\n${errors.map((e) => `  - ${e}`).join('\n')}`
       BootstrapLogger.error(errorMessage)

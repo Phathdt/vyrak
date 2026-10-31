@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing'
+import { CustomConfigService } from '@vyrak/custom-config'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 import { AIAgentModule } from './ai-agent.module'
@@ -7,6 +8,15 @@ import { AI_AGENT_PORT } from './domain'
 import { ClaudeAdapter } from './infrastructure'
 
 import type { IAIAgentPort } from './domain'
+
+// Mock CustomConfigService
+const mockCustomConfigService = {
+  anthropic: {
+    apiKey: 'test-api-key',
+    apiUrl: undefined,
+    model: 'claude-sonnet-4-20250514',
+  },
+}
 
 describe('AIAgentModule', () => {
   let module: TestingModule
@@ -23,6 +33,8 @@ describe('AIAgentModule', () => {
     module = await Test.createTestingModule({
       imports: [AIAgentModule],
     })
+      .overrideProvider(CustomConfigService)
+      .useValue(mockCustomConfigService)
       .overrideProvider(AI_AGENT_PORT)
       .useValue(mockAIAgentPort)
       .compile()
@@ -75,6 +87,10 @@ describe('AIAgentModule', () => {
       const testModule = await Test.createTestingModule({
         imports: [AIAgentModule],
       })
+        .overrideProvider(CustomConfigService)
+        .useValue(mockCustomConfigService)
+        .overrideProvider(CustomConfigService)
+        .useValue(mockCustomConfigService)
         .overrideProvider(AI_AGENT_PORT)
         .useValue(mockAIAgentPort)
         .compile()
@@ -88,6 +104,10 @@ describe('AIAgentModule', () => {
       const testModule = await Test.createTestingModule({
         imports: [AIAgentModule],
       })
+        .overrideProvider(CustomConfigService)
+        .useValue(mockCustomConfigService)
+        .overrideProvider(CustomConfigService)
+        .useValue(mockCustomConfigService)
         .overrideProvider(AI_AGENT_PORT)
         .useValue(mockAIAgentPort)
         .compile()
@@ -157,6 +177,10 @@ describe('AIAgentModule', () => {
       const module1 = await Test.createTestingModule({
         imports: [AIAgentModule],
       })
+        .overrideProvider(CustomConfigService)
+        .useValue(mockCustomConfigService)
+        .overrideProvider(CustomConfigService)
+        .useValue(mockCustomConfigService)
         .overrideProvider(AI_AGENT_PORT)
         .useValue(mockAIAgentPort)
         .compile()
@@ -164,6 +188,10 @@ describe('AIAgentModule', () => {
       const module2 = await Test.createTestingModule({
         imports: [AIAgentModule],
       })
+        .overrideProvider(CustomConfigService)
+        .useValue(mockCustomConfigService)
+        .overrideProvider(CustomConfigService)
+        .useValue(mockCustomConfigService)
         .overrideProvider(AI_AGENT_PORT)
         .useValue(mockAIAgentPort)
         .compile()
@@ -182,6 +210,10 @@ describe('AIAgentModule', () => {
       const testModule = await Test.createTestingModule({
         imports: [AIAgentModule],
       })
+        .overrideProvider(CustomConfigService)
+        .useValue(mockCustomConfigService)
+        .overrideProvider(CustomConfigService)
+        .useValue(mockCustomConfigService)
         .overrideProvider(AI_AGENT_PORT)
         .useValue(mockAIAgentPort)
         .compile()
@@ -273,6 +305,8 @@ describe('AIAgentModule', () => {
       const testModule = await Test.createTestingModule({
         imports: [AIAgentModule],
       })
+        .overrideProvider(CustomConfigService)
+        .useValue(mockCustomConfigService)
         .overrideProvider(AI_AGENT_PORT)
         .useValue(mockAIAgentPort)
         .compile()
@@ -288,6 +322,8 @@ describe('AIAgentModule', () => {
       const testModule = await Test.createTestingModule({
         imports: [AIAgentModule, AIAgentModule], // Can import same module multiple times
       })
+        .overrideProvider(CustomConfigService)
+        .useValue(mockCustomConfigService)
         .overrideProvider(AI_AGENT_PORT)
         .useValue(mockAIAgentPort)
         .compile()
@@ -415,6 +451,8 @@ describe('AIAgentModule', () => {
       const testModule = await Test.createTestingModule({
         imports: [AIAgentModule],
       })
+        .overrideProvider(CustomConfigService)
+        .useValue(mockCustomConfigService)
         .overrideProvider(AI_AGENT_PORT)
         .useValue(mockAIAgentPort)
         .compile()
@@ -433,6 +471,8 @@ describe('AIAgentModule', () => {
       const module1 = await Test.createTestingModule({
         imports: [AIAgentModule],
       })
+        .overrideProvider(CustomConfigService)
+        .useValue(mockCustomConfigService)
         .overrideProvider(AI_AGENT_PORT)
         .useValue(mockAIAgentPort)
         .compile()
@@ -440,6 +480,8 @@ describe('AIAgentModule', () => {
       const module2 = await Test.createTestingModule({
         imports: [AIAgentModule],
       })
+        .overrideProvider(CustomConfigService)
+        .useValue(mockCustomConfigService)
         .overrideProvider(AI_AGENT_PORT)
         .useValue(mockAIAgentPort)
         .compile()
@@ -479,6 +521,8 @@ describe('AIAgentModule', () => {
       const parentModule = await Test.createTestingModule({
         imports: [AIAgentModule],
       })
+        .overrideProvider(CustomConfigService)
+        .useValue(mockCustomConfigService)
         .overrideProvider(AI_AGENT_PORT)
         .useValue(mockAIAgentPort)
         .compile()
@@ -494,6 +538,8 @@ describe('AIAgentModule', () => {
       const consumingModule = await Test.createTestingModule({
         imports: [AIAgentModule],
       })
+        .overrideProvider(CustomConfigService)
+        .useValue(mockCustomConfigService)
         .overrideProvider(AI_AGENT_PORT)
         .useValue(mockAIAgentPort)
         .compile()

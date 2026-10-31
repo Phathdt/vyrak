@@ -3,6 +3,7 @@
  */
 
 import { Test, TestingModule } from '@nestjs/testing'
+import { CustomConfigService } from '@vyrak/custom-config'
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
 import { WorkflowBrainstormingService, WorkflowService } from './application'
@@ -51,6 +52,13 @@ describe('WorkflowModule', () => {
       classifyWorkflow: vi.fn(),
     },
     ClaudeAdapter: vi.fn(),
+    CustomConfigService: {
+      anthropic: {
+        apiKey: 'test-api-key',
+        apiUrl: undefined,
+        model: 'claude-sonnet-4-20250514',
+      },
+    },
   })
 
   afterEach(async () => {
@@ -73,6 +81,8 @@ describe('WorkflowModule', () => {
         .useValue(mocks.AIAgentService)
         .overrideProvider('ClaudeAdapter')
         .useValue(mocks.ClaudeAdapter)
+        .overrideProvider(CustomConfigService)
+        .useValue(mocks.CustomConfigService)
         .compile()
 
       expect(module).toBeDefined()
@@ -97,6 +107,8 @@ describe('WorkflowModule', () => {
         .useValue(mocks.AIAgentService)
         .overrideProvider('ClaudeAdapter')
         .useValue(mocks.ClaudeAdapter)
+        .overrideProvider(CustomConfigService)
+        .useValue(mocks.CustomConfigService)
         .compile()
     })
 
@@ -139,6 +151,8 @@ describe('WorkflowModule', () => {
         .useValue(mocks.AIAgentService)
         .overrideProvider('ClaudeAdapter')
         .useValue(mocks.ClaudeAdapter)
+        .overrideProvider(CustomConfigService)
+        .useValue(mocks.CustomConfigService)
         .compile()
     })
 
@@ -174,6 +188,8 @@ describe('WorkflowModule', () => {
         .useValue(mocks.AIAgentService)
         .overrideProvider('ClaudeAdapter')
         .useValue(mocks.ClaudeAdapter)
+        .overrideProvider(CustomConfigService)
+        .useValue(mocks.CustomConfigService)
         .compile()
     })
 
@@ -202,6 +218,8 @@ describe('WorkflowModule', () => {
         .useValue(mocks.AIAgentService)
         .overrideProvider('ClaudeAdapter')
         .useValue(mocks.ClaudeAdapter)
+        .overrideProvider(CustomConfigService)
+        .useValue(mocks.CustomConfigService)
         .compile()
     })
 
@@ -248,6 +266,8 @@ describe('WorkflowModule', () => {
         .useValue(mocks.AIAgentService)
         .overrideProvider('ClaudeAdapter')
         .useValue(mocks.ClaudeAdapter)
+        .overrideProvider(CustomConfigService)
+        .useValue(mocks.CustomConfigService)
         .compile()
     })
 
@@ -281,6 +301,8 @@ describe('WorkflowModule', () => {
         .useValue(mocks.AIAgentService)
         .overrideProvider('ClaudeAdapter')
         .useValue(mocks.ClaudeAdapter)
+        .overrideProvider(CustomConfigService)
+        .useValue(mocks.CustomConfigService)
         .compile()
 
       expect(testModule).toBeDefined()
@@ -309,6 +331,8 @@ describe('WorkflowModule', () => {
         .useValue(mocks1.AIAgentService)
         .overrideProvider('ClaudeAdapter')
         .useValue(mocks1.ClaudeAdapter)
+        .overrideProvider(CustomConfigService)
+        .useValue(mocks1.CustomConfigService)
         .compile()
 
       const mod2 = await Test.createTestingModule({
@@ -322,6 +346,8 @@ describe('WorkflowModule', () => {
         .useValue(mocks2.AIAgentService)
         .overrideProvider('ClaudeAdapter')
         .useValue(mocks2.ClaudeAdapter)
+        .overrideProvider(CustomConfigService)
+        .useValue(mocks1.CustomConfigService)
         .compile()
 
       const svc1 = mod1.get(WORKFLOW_SERVICE)
@@ -348,6 +374,8 @@ describe('WorkflowModule', () => {
         .useValue(mocks.AIAgentService)
         .overrideProvider('ClaudeAdapter')
         .useValue(mocks.ClaudeAdapter)
+        .overrideProvider(CustomConfigService)
+        .useValue(mocks.CustomConfigService)
         .compile()
 
       const providers = [
@@ -376,6 +404,8 @@ describe('WorkflowModule', () => {
         .useValue(mocks.AIAgentService)
         .overrideProvider('ClaudeAdapter')
         .useValue(mocks.ClaudeAdapter)
+        .overrideProvider(CustomConfigService)
+        .useValue(mocks.CustomConfigService)
         .compile()
 
       expect(testModule).toBeDefined()
