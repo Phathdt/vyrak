@@ -16,7 +16,7 @@ export class CreateWorkflowDto extends createZodDto(CreateWorkflowSchema) {}
 // Update Workflow
 export const UpdateWorkflowSchema = z.object({
   title: z.string().min(1).max(500).optional(),
-  description: z.string().max(5000).optional().nullable(),
+  description: z.string().max(5000).optional(),
 })
 
 export class UpdateWorkflowDto extends createZodDto(UpdateWorkflowSchema) {}

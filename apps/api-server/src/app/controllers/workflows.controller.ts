@@ -19,6 +19,7 @@ import {
   CreateWorkflowDto,
   IWorkflowService,
   ListWorkflowsQueryDto,
+  PaginatedWorkflowsResponse,
   UpdateWorkflowDto,
   WORKFLOW_SERVICE,
   WorkflowResponse,
@@ -71,12 +72,13 @@ export class WorkflowsController {
   @ApiResponse({
     status: 200,
     description: 'Workflows retrieved successfully',
+    type: PaginatedWorkflowsResponse,
   })
   async findAll(
     @Param('orgId') orgId: string,
     @Param('projectId') projectId: string,
     @Query() query: ListWorkflowsQueryDto
-  ) {
+  ): Promise<PaginatedWorkflowsResponse> {
     const result = await this.workflowService.findAll(orgId, projectId, query)
 
     return {
@@ -115,7 +117,11 @@ export class WorkflowsController {
     type: WorkflowResponse,
   })
   @ApiResponse({ status: 404, description: 'Workflow not found' })
-  async findOne(@Param('orgId') orgId: string, @Param('id') id: string): Promise<WorkflowResponse> {
+  async findOne(
+    @Param('orgId') orgId: string,
+    @Param('projectId') _projectId: string,
+    @Param('id') id: string
+  ): Promise<WorkflowResponse> {
     const workflow = await this.workflowService.findById(orgId, id)
 
     if (!workflow) {
@@ -155,6 +161,7 @@ export class WorkflowsController {
   @ApiResponse({ status: 400, description: 'Only DRAFT workflows can be updated' })
   async update(
     @Param('orgId') orgId: string,
+    @Param('projectId') _projectId: string,
     @Param('id') id: string,
     @Body() updateWorkflowDto: UpdateWorkflowDto
   ): Promise<WorkflowResponse> {
@@ -194,7 +201,11 @@ export class WorkflowsController {
   @ApiResponse({ status: 204, description: 'Workflow deleted successfully' })
   @ApiResponse({ status: 404, description: 'Workflow not found' })
   @ApiResponse({ status: 400, description: 'Only DRAFT workflows can be deleted' })
-  async remove(@Param('orgId') orgId: string, @Param('id') id: string): Promise<void> {
+  async remove(
+    @Param('orgId') orgId: string,
+    @Param('projectId') _projectId: string,
+    @Param('id') id: string
+  ): Promise<void> {
     await this.workflowService.delete(orgId, id)
   }
 
@@ -203,7 +214,11 @@ export class WorkflowsController {
   @ApiResponse({ status: 200, description: 'Brainstorming started' })
   @ApiResponse({ status: 404, description: 'Workflow not found' })
   @ApiResponse({ status: 400, description: 'Can only start brainstorming from DRAFT status' })
-  async startBrainstorming(@Param('orgId') orgId: string, @Param('id') id: string) {
+  async startBrainstorming(
+    @Param('orgId') orgId: string,
+    @Param('projectId') _projectId: string,
+    @Param('id') id: string
+  ) {
     await this.workflowService.startBrainstorming(orgId, id)
 
     return { message: 'Brainstorming started successfully' }
@@ -213,7 +228,12 @@ export class WorkflowsController {
   @ApiOperation({ summary: 'Classify workflow using AI' })
   @ApiResponse({ status: 200, description: 'Classification started' })
   @ApiResponse({ status: 404, description: 'Workflow not found' })
-  async classify(@Param('orgId') _orgId: string, @Param('id') _id: string, @Body() _body: ClassifyWorkflowDto) {
+  async classify(
+    @Param('orgId') _orgId: string,
+    @Param('projectId') _projectId: string,
+    @Param('id') _id: string,
+    @Body() _body: ClassifyWorkflowDto
+  ) {
     // TODO: Implement AI classification logic
     return { message: 'Classification started' }
   }
@@ -228,6 +248,7 @@ export class WorkflowsController {
   })
   async confirmClassification(
     @Param('orgId') orgId: string,
+    @Param('projectId') _projectId: string,
     @Param('id') id: string,
     @Body() body: ConfirmClassificationDto
   ) {
