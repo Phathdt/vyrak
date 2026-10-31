@@ -26,8 +26,12 @@ export type ErrorType<Error> = AxiosError<Error>
 // Export helper for handling API errors
 export function getErrorMessage(error: unknown): string {
   if (error instanceof AxiosError) {
-    if (error.response?.data?.message) {
-      return error.response.data.message
+    const data = error.response?.data as { message?: string; error?: string } | undefined
+    if (data?.error && data.error !== data.message) {
+      return data.error
+    }
+    if (data?.message) {
+      return data.message
     }
     if (error.message) {
       return error.message

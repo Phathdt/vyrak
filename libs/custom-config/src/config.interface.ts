@@ -28,10 +28,19 @@ export interface JwtConfig {
   expiry: string
 }
 
+export const AnthropicAuthScheme = {
+  X_API_KEY: 'x-api-key',
+  BEARER: 'bearer',
+} as const
+
+export type AnthropicAuthScheme = (typeof AnthropicAuthScheme)[keyof typeof AnthropicAuthScheme]
+
 export interface AnthropicConfig {
   apiKey: string
   apiUrl?: string
   model: string
+  /** How ANTHROPIC__API_KEY is sent. Default: x-api-key (Anthropic SDK). Use bearer for OpenAI-style proxies. */
+  authScheme?: AnthropicAuthScheme
 }
 
 export interface AppConfig {

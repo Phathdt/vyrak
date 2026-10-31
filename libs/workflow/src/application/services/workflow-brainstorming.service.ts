@@ -1,3 +1,4 @@
+import { BadRequestException, NotFoundException } from '@nestjs/common'
 import { AIAgentService } from '@vyrak/ai-agent'
 import { ConversationPhase, ConversationService, ConversationStatus, MessageRole } from '@vyrak/conversation'
 
@@ -157,7 +158,22 @@ export class WorkflowBrainstormingService implements IWorkflowBrainstormingServi
   private async ensureBrainstormingStatus(workflowId: string): Promise<void> {
     const workflow = await this.workflowRepository.findById(workflowId)
 
-    if (workflow?.status === WorkflowStatus.DRAFT) {
+    if (!workflow) {
+      throw new NotFoundException('Workflow not found')
+    }
+
+    const allowedStatuses: WorkflowStatus[] = [
+      WorkflowStatus.DRAFT,
+      WorkflowStatus.BRAINSTORMING,
+      WorkflowStatus.CLASSIFICATION_PENDING,
+    ]
+    const canBrainstorm = allowedStatuses.includes(workflow.status)
+
+    if (!canBrainstorm) {
+      throw new BadRequestException('This workflow is no longer in the brainstorming phase')
+    }
+
+    if (workflow.status === WorkflowStatus.DRAFT) {
       await this.workflowRepository.updateStatus(workflowId, WorkflowStatus.BRAINSTORMING)
     }
   }

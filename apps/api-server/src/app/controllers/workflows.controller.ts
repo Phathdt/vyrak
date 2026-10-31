@@ -15,7 +15,6 @@ import {
 } from '@nestjs/common'
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import {
-  ClassifyWorkflowDto,
   ConfirmClassificationDto,
   CreateWorkflowDto,
   IWorkflowService,
@@ -212,35 +211,6 @@ export class WorkflowsController {
     @Param('id') id: string
   ): Promise<void> {
     await this.workflowService.delete(orgId, id)
-  }
-
-  @Post(':id/brainstorm')
-  @ApiOperation({ summary: 'Start brainstorming phase' })
-  @ApiResponse({ status: 200, description: 'Brainstorming started' })
-  @ApiResponse({ status: 404, description: 'Workflow not found' })
-  @ApiResponse({ status: 400, description: 'Can only start brainstorming from DRAFT status' })
-  async startBrainstorming(
-    @Param('orgId') orgId: string,
-    @Param('projectId') _projectId: string,
-    @Param('id') id: string
-  ) {
-    await this.workflowService.startBrainstorming(orgId, id)
-
-    return { message: 'Brainstorming started successfully' }
-  }
-
-  @Post(':id/classify')
-  @ApiOperation({ summary: 'Classify workflow using AI' })
-  @ApiResponse({ status: 200, description: 'Classification started' })
-  @ApiResponse({ status: 404, description: 'Workflow not found' })
-  async classify(
-    @Param('orgId') _orgId: string,
-    @Param('projectId') _projectId: string,
-    @Param('id') _id: string,
-    @Body() _body: ClassifyWorkflowDto
-  ) {
-    // TODO: Implement AI classification logic
-    return { message: 'Classification started' }
   }
 
   @Post(':id/confirm-classification')

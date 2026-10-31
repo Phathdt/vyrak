@@ -1,6 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { CustomConfigService } from '@vyrak/custom-config'
 
+import { buildAnthropicClientOptions } from './build-anthropic-client-options'
+
 import type { AgentRequest, AgentResponse, IAIAgentPort, Message, WorkflowClassification } from '../../domain'
 
 export class ClaudeAdapter implements IAIAgentPort {
@@ -15,13 +17,8 @@ export class ClaudeAdapter implements IAIAgentPort {
       )
     }
 
-    const { apiKey, apiUrl, model } = anthropic
-
-    this.model = model
-    this.client = new Anthropic({
-      apiKey,
-      baseURL: apiUrl ? `${apiUrl}/v1` : undefined,
-    })
+    this.model = anthropic.model
+    this.client = new Anthropic(buildAnthropicClientOptions(anthropic))
   }
 
   /**

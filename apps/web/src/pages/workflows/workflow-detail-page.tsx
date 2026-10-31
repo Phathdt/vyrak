@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
+import { getErrorMessage } from '@/api/client'
 import {
   getWorkflowBrainstormingControllerGetBrainstormSessionQueryKey,
   useWorkflowBrainstormingControllerBrainstorm,
@@ -13,6 +14,7 @@ import {
   useWorkflowsControllerConfirmClassification,
   useWorkflowsControllerFindOne,
 } from '@/api/generated/workflows/workflows'
+import { ChatMarkdown } from '@/components/chat-markdown'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -120,7 +122,7 @@ export function WorkflowDetailPage() {
       await refetchWorkflow()
     } catch (err) {
       setInputMessage(userMessage)
-      setActionError(err instanceof Error ? err.message : 'Failed to send message')
+      setActionError(getErrorMessage(err) || 'Failed to send message')
     }
   }
 
@@ -141,7 +143,7 @@ export function WorkflowDetailPage() {
       setShowConfirmDialog(true)
       await refetchSession()
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : 'Classification failed')
+      setActionError(getErrorMessage(err) || 'Classification failed')
     }
   }
 
@@ -161,11 +163,12 @@ export function WorkflowDetailPage() {
         data: { type: finalType },
       })
       setShowConfirmDialog(false)
+      setClassification(null)
+      setCanClassify(false)
       await invalidateWorkflowQueries()
       await refetchWorkflow()
-      navigate(routes.projectWorkflows(orgId, projectId))
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : 'Failed to confirm classification')
+      setActionError(getErrorMessage(err) || 'Failed to confirm classification')
     }
   }
 
@@ -199,7 +202,11 @@ export function WorkflowDetailPage() {
   }
 
   const chatEnabled = workflow ? CHAT_ENABLED_STATUSES.has(workflow.status) : false
+  const isBrainstormPhase = chatEnabled
   const isBusy = isSending || isClassifying || isConfirming
+  const confirmedAtLabel = workflow.classificationConfirmedAt
+    ? new Date(workflow.classificationConfirmedAt).toLocaleString()
+    : null
 
   if (isLoadingWorkflow || isLoadingSession) {
     return (
@@ -261,68 +268,32 @@ export function WorkflowDetailPage() {
       )}
 
       <div className='grid gap-6 lg:grid-cols-3'>
-        <div className='lg:col-span-2'>
-          <Card className='flex h-[600px] flex-col'>
-            <CardHeader>
-              <div className='flex items-start justify-between gap-4'>
-                <div>
-                  <CardTitle>Brainstorming</CardTitle>
-                  <CardDescription>Discuss with AI to refine requirements and classify the workflow</CardDescription>
-                </div>
-                {chatEnabled && effectiveCanClassify && (
-                  <Button variant='secondary' size='sm' onClick={handleClassify} disabled={isBusy}>
-                    {isClassifying ? 'Classifying...' : 'Run AI classification'}
-                  </Button>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent className='flex flex-1 flex-col gap-4'>
-              <div className='flex-1 space-y-4 overflow-y-auto rounded-lg border bg-muted/50 p-4'>
-                {messages.length === 0 ? (
-                  <p className='text-sm text-muted-foreground'>
-                    {chatEnabled
-                      ? 'No messages yet. Describe what you want to build or fix to start the conversation.'
-                      : 'This workflow is no longer in the brainstorming phase.'}
-                  </p>
-                ) : (
-                  messages.map((message) => (
-                    <div
-                      key={message.id}
-                      className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                    >
-                      <div
-                        className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                          message.role === 'user'
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-background border shadow-sm'
-                        }`}
-                      >
-                        <p className='whitespace-pre-wrap text-sm'>{message.content}</p>
-                        <p className='mt-1 text-xs opacity-70'>
-                          {message.timestamp.toLocaleTimeString([], {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                        </p>
-                      </div>
-                    </div>
-                  ))
-                )}
-                {isSending && (
-                  <div className='flex justify-start'>
-                    <div className='max-w-[80%] rounded-lg border bg-background px-4 py-2 shadow-sm'>
-                      <div className='flex items-center gap-1'>
-                        <div className='h-2 w-2 animate-bounce rounded-full bg-muted-foreground [animation-delay:-0.3s]'></div>
-                        <div className='h-2 w-2 animate-bounce rounded-full bg-muted-foreground [animation-delay:-0.15s]'></div>
-                        <div className='h-2 w-2 animate-bounce rounded-full bg-muted-foreground'></div>
-                      </div>
-                    </div>
+        <div className='space-y-6 lg:col-span-2'>
+          {isBrainstormPhase ? (
+            <Card className='flex h-[min(600px,calc(100dvh-12rem))] min-h-0 flex-col'>
+              <CardHeader className='shrink-0'>
+                <div className='flex items-start justify-between gap-4'>
+                  <div>
+                    <CardTitle>Brainstorming</CardTitle>
+                    <CardDescription>Discuss with AI to refine requirements and classify the workflow</CardDescription>
                   </div>
+                  {effectiveCanClassify && (
+                    <Button variant='secondary' size='sm' onClick={handleClassify} disabled={isBusy}>
+                      {isClassifying ? 'Classifying...' : 'Run AI classification'}
+                    </Button>
+                  )}
+                </div>
+                {effectiveCanClassify && (
+                  <p className='mt-2 text-sm text-muted-foreground'>
+                    Enough context collected — run classification when you are ready, or keep chatting to refine scope.
+                  </p>
                 )}
-              </div>
-
-              {chatEnabled ? (
-                <div className='flex gap-2'>
+              </CardHeader>
+              <CardContent className='flex min-h-0 flex-1 flex-col gap-4 pb-(--card-spacing)'>
+                <div className='min-h-0 flex-1 overflow-hidden rounded-lg border bg-muted/50 p-4'>
+                  <BrainstormMessageList messages={messages} isSending={isSending} />
+                </div>
+                <div className='flex shrink-0 gap-2'>
                   <Textarea
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
@@ -344,13 +315,54 @@ export function WorkflowDetailPage() {
                     {isSending ? 'Sending...' : 'Send'}
                   </Button>
                 </div>
-              ) : (
-                <p className='text-sm text-muted-foreground'>
-                  Chat is closed for status <span className='font-medium'>{workflow.status}</span>.
-                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              <Card className='border-primary/30 bg-primary/5'>
+                <CardHeader>
+                  <CardTitle>Workflow activated</CardTitle>
+                  <CardDescription>
+                    Brainstorming and classification are complete. This workflow is ready for the next execution steps.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className='space-y-4'>
+                  <div className='flex flex-wrap items-center gap-2'>
+                    <Badge variant={getStatusBadgeVariant(workflow.status)}>{workflow.status}</Badge>
+                    {workflow.type && (
+                      <Badge variant={getTypeBadge(workflow.type).variant} className='text-sm'>
+                        {getTypeBadge(workflow.type).icon} {workflow.type}
+                      </Badge>
+                    )}
+                  </div>
+                  {confirmedAtLabel && <p className='text-sm text-muted-foreground'>Confirmed at {confirmedAtLabel}</p>}
+                  <p className='text-sm'>
+                    Workflow runs and agent execution are not wired in this UI yet — use the API or worker flows when
+                    available.
+                  </p>
+                  {orgId && projectId && (
+                    <Button variant='outline' onClick={() => navigate(routes.projectWorkflows(orgId, projectId))}>
+                      Back to all workflows
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+
+              {messages.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className='text-base'>Brainstorm history</CardTitle>
+                    <CardDescription>Read-only transcript from the requirements conversation</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className='max-h-[min(480px,calc(100dvh-16rem))] overflow-y-auto overscroll-contain rounded-lg border bg-muted/50 p-4'>
+                      <BrainstormMessageList messages={messages} />
+                    </div>
+                  </CardContent>
+                </Card>
               )}
-            </CardContent>
-          </Card>
+            </>
+          )}
         </div>
 
         <div className='space-y-4'>
@@ -487,6 +499,66 @@ export function WorkflowDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  )
+}
+
+type BrainstormMessage = {
+  id: string
+  role: 'user' | 'assistant' | 'system'
+  content: string
+  timestamp: Date
+}
+
+function BrainstormMessageList({
+  messages,
+  isSending = false,
+  emptyHint,
+}: {
+  messages: BrainstormMessage[]
+  isSending?: boolean
+  emptyHint?: string
+}) {
+  return (
+    <div className='min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain'>
+      {messages.length === 0 ? (
+        <p className='text-sm text-muted-foreground'>
+          {emptyHint ?? 'No messages yet. Describe what you want to build or fix to start the conversation.'}
+        </p>
+      ) : (
+        messages.map((message) => (
+          <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div
+              className={`max-w-[80%] rounded-lg px-4 py-2 ${
+                message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-background border shadow-sm'
+              }`}
+            >
+              {message.role === 'assistant' ? (
+                <ChatMarkdown content={message.content} />
+              ) : (
+                <p className='whitespace-pre-wrap text-sm'>{message.content}</p>
+              )}
+              <p className='mt-1 text-xs opacity-70'>
+                {message.timestamp.toLocaleTimeString([], {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </p>
+            </div>
+          </div>
+        ))
+      )}
+      {isSending && (
+        <div className='flex justify-start'>
+          <div className='max-w-[80%] rounded-lg border bg-background px-4 py-2 shadow-sm'>
+            <div className='flex items-center gap-1'>
+              <div className='h-2 w-2 animate-bounce rounded-full bg-muted-foreground [animation-delay:-0.3s]'></div>
+              <div className='h-2 w-2 animate-bounce rounded-full bg-muted-foreground [animation-delay:-0.15s]'></div>
+              <div className='h-2 w-2 animate-bounce rounded-full bg-muted-foreground'></div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

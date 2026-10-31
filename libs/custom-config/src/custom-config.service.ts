@@ -100,6 +100,7 @@ export class CustomConfigService {
 
       this._config = convertToCamelCase(rawConfig) as AppConfig
       this.overrideWithEnv(this._config as unknown as Record<string, unknown>)
+      this.normalizeOptionalAnthropicConfig()
 
       BootstrapLogger.log(`Configuration loaded successfully from ${path.basename(configPath)} (APP_ENV=${env})`)
     } catch (error) {
@@ -126,6 +127,34 @@ export class CustomConfigService {
           obj[key] = parsed
         }
       }
+    }
+  }
+
+  /** Normalize optional Anthropic fields after env overrides. */
+  private normalizeOptionalAnthropicConfig(): void {
+    const anthropic = this._config.anthropic
+    if (!anthropic) {
+      return
+    }
+
+    if (anthropic.apiUrl) {
+      const url = anthropic.apiUrl.trim()
+      if (url === '' || url === 'replace_me') {
+        delete anthropic.apiUrl
+      } else {
+        anthropic.apiUrl = url
+      }
+    }
+
+    const scheme = anthropic.authScheme?.toString().trim().toLowerCase()
+    if (!scheme || scheme === 'replace_me') {
+      anthropic.authScheme = 'x-api-key'
+    } else if (scheme === 'x-api-key' || scheme === 'bearer') {
+      anthropic.authScheme = scheme
+    } else {
+      throw new Error(
+        `Invalid anthropic.authScheme "${anthropic.authScheme}". Use "x-api-key" or "bearer" (ANTHROPIC__AUTH_SCHEME).`
+      )
     }
   }
 
@@ -234,7 +263,7 @@ export class CustomConfigService {
       }
     }
 
-    // Validate Anthropic config (skip in test environment or if apiKey is placeholder)
+    // Validate Anthropic config (skip if apiKey is placeholder). apiUrl is optional (ANTHROPIC__API_URL).
     if (this._config.anthropic && !isPlaceholder(this._config.anthropic.apiKey)) {
       const anthropic = this._config.anthropic
 

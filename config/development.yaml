@@ -44,3 +44,5 @@ frontend_url: replace_me
 anthropic:
   api_key: replace_me
   model: replace_me
+  api_url: ''
+  auth_scheme: x-api-key
