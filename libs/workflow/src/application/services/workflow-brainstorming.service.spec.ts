@@ -89,7 +89,7 @@ describe('WorkflowBrainstormingService', () => {
 
       await service.brainstorm(request)
 
-      expect(mockConversationService.addMessage).toHaveBeenCalledWith({
+      expect(mockConversationService.addMessage).toHaveBeenNthCalledWith(1, {
         sessionId: 'session-123',
         role: 'user',
         content: 'I want to add authentication',
@@ -244,7 +244,7 @@ describe('WorkflowBrainstormingService', () => {
 
       await service.brainstorm(request)
 
-      expect(mockConversationService.addMessage).toHaveBeenCalledWith({
+      expect(mockConversationService.addMessage).toHaveBeenNthCalledWith(2, {
         sessionId: 'session-123',
         role: 'assistant',
         content: 'Tell me about scope',
@@ -393,7 +393,7 @@ describe('WorkflowBrainstormingService', () => {
       const generator = service.brainstormStream(request)
       await generator.next()
 
-      expect(mockConversationService.addMessage).toHaveBeenCalledWith({
+      expect(mockConversationService.addMessage).toHaveBeenNthCalledWith(1, {
         sessionId: 'session-456',
         role: 'user',
         content: 'Stream this message',
@@ -463,7 +463,7 @@ describe('WorkflowBrainstormingService', () => {
         // consume generator
       }
 
-      expect(mockConversationService.addMessage).toHaveBeenCalledWith({
+      expect(mockConversationService.addMessage).toHaveBeenNthCalledWith(2, {
         sessionId: 'session-456',
         role: 'assistant',
         content: 'Part1Part2Part3',
@@ -501,7 +501,7 @@ describe('WorkflowBrainstormingService', () => {
         // consume
       }
 
-      expect(mockConversationService.addMessage).toHaveBeenLastCalledWith({
+      expect(mockConversationService.addMessage).toHaveBeenNthCalledWith(2, {
         sessionId: 'session-456',
         role: 'assistant',
         content: 'How many files will be affected?',
@@ -1012,7 +1012,7 @@ describe('WorkflowBrainstormingService', () => {
       const result = await service.brainstorm(request)
 
       expect(result).toBeDefined()
-      expect(mockConversationService.addMessage).toHaveBeenCalledWith({
+      expect(mockConversationService.addMessage).toHaveBeenNthCalledWith(1, {
         sessionId: 'session-123',
         role: 'user',
         content: '',
