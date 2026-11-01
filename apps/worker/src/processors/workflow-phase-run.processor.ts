@@ -3,7 +3,8 @@ import { Inject } from '@nestjs/common'
 import { CONVERSATION_SERVICE, IConversationService } from '@vyrak/conversation'
 import { CustomConfigService } from '@vyrak/custom-config'
 import { DatabaseService } from '@vyrak/database'
-import { WorkflowPhaseRunHandler, WorkflowPhaseRunJobSchema } from '@vyrak/workflow'
+import { WorkflowPhaseRunJobSchema } from '@vyrak/workflow-core'
+import { WorkflowPhaseRunHandler } from '@vyrak/workflow-execution'
 import { Job } from 'bullmq'
 
 @Processor('workflow-execution')

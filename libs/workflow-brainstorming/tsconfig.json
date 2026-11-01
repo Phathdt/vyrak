@@ -2,7 +2,10 @@
   "extends": "../../config/tsconfig.lib.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./src"
+    "rootDir": "./src",
+    "paths": {
+      "@vyrak/workflow-core": ["../../libs/workflow-core/dist/index.d.ts"]
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["**/*.spec.ts", "**/*.test.ts", "**/__tests__/**"]

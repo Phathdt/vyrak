@@ -28,10 +28,10 @@ import {
   WORKFLOW_PHASE_SERVICE,
   WORKFLOW_SERVICE,
   WorkflowPhaseListResponseDto,
-  WorkflowPhaseOrchestratorService,
   WorkflowPhaseResponseDto,
   WorkflowResponse,
-} from '@vyrak/workflow'
+} from '@vyrak/workflow-core'
+import { WorkflowPhaseOrchestratorService } from '@vyrak/workflow-execution'
 
 import { AuthGuard } from '../../auth'
 import { OrganizationMemberGuard } from '../../guards'

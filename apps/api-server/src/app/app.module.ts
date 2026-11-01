@@ -11,7 +11,10 @@ import { DatabaseModule } from '@vyrak/database'
 import { OrganizationModule } from '@vyrak/organization'
 import { ProjectModule } from '@vyrak/project'
 import { UserModule } from '@vyrak/user'
-import { WorkflowModule } from '@vyrak/workflow'
+import { WorkflowBrainstormingModule } from '@vyrak/workflow-brainstorming'
+import { WorkflowCoreModule } from '@vyrak/workflow-core'
+import { WorkflowExecutionModule } from '@vyrak/workflow-execution'
+import { WorkflowPlanningModule } from '@vyrak/workflow-planning'
 
 import { DomainExceptionFilter } from '../common/filters'
 import { OrganizationMemberGuard } from '../guards'
@@ -61,7 +64,10 @@ import {
     UserModule,
     OrganizationModule,
     ProjectModule,
-    WorkflowModule,
+    WorkflowCoreModule,
+    WorkflowBrainstormingModule,
+    WorkflowPlanningModule,
+    WorkflowExecutionModule,
   ],
   controllers: [
     AppController,

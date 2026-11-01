@@ -6,7 +6,7 @@ import {
   PlanningChatResponseDto,
   PlanningSessionResponseDto,
   WORKFLOW_PLANNING_SERVICE,
-} from '@vyrak/workflow'
+} from '@vyrak/workflow-planning'
 
 import { AuthGuard } from '../auth'
 import { OrganizationMemberGuard } from '../guards'

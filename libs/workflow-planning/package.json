@@ -12,7 +12,7 @@
     }
   },
   "scripts": {
-    "build": "rolldown -c rolldown.config.mjs",
+    "build": "tsc && rolldown -c rolldown.config.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -28,9 +28,9 @@
   },
   "devDependencies": {
     "@nestjs/testing": "^12.2.0",
-    "@types/node": "catalog:",
-    "rolldown": "catalog:",
-    "typescript": "catalog:",
-    "vitest": "catalog:"
+    "@types/node": "~26.6.5",
+    "rolldown": "^1.2.15",
+    "typescript": "~7.0.2",
+    "vitest": "^3.0.8"
   }
 }

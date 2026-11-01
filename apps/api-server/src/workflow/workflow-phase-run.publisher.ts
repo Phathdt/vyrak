@@ -1,7 +1,7 @@
 import { InjectQueue } from '@nestjs/bullmq'
 import { Queue } from 'bullmq'
 
-import type { IWorkflowPhaseRunPublisher, WorkflowPhaseRunJob } from '@vyrak/workflow'
+import type { IWorkflowPhaseRunPublisher, WorkflowPhaseRunJob } from '@vyrak/workflow-execution'
 
 export const WORKFLOW_PHASE_RUN_QUEUE = 'workflow-execution'
 

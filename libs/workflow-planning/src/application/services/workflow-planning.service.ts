@@ -15,7 +15,7 @@ import type {
 import type { IAIAgentService, Message } from '@vyrak/ai-agent'
 import type { ConversationMessage } from '@vyrak/conversation'
 import type { IGitRepositoryService } from '@vyrak/project'
-import type { IWorkflowRepository, IWorkflowRepositoryRepository } from '@vyrak/workflow-core'
+import type { IWorkflowRepository, IWorkflowRepositoryRepository, WorkflowRepositoryEntity } from '@vyrak/workflow-core'
 
 export class WorkflowPlanningService implements IWorkflowPlanningService {
   constructor(

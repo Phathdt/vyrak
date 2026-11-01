@@ -3,10 +3,10 @@ import { CONVERSATION_SERVICE, ConversationModule, IConversationService } from '
 import { DatabaseService } from '@vyrak/database'
 import {
   WORKFLOW_PHASE_RUN_PUBLISHER,
-  WorkflowPhaseOrchestratorService,
   WorkflowPhasePrismaRepository,
   WorkflowPrismaRepository,
-} from '@vyrak/workflow'
+} from '@vyrak/workflow-core'
+import { WorkflowPhaseOrchestratorService } from '@vyrak/workflow-execution'
 
 import { BullWorkflowPhaseRunPublisher, WORKFLOW_PHASE_RUN_QUEUE } from './workflow-phase-run.publisher'
 

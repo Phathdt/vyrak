@@ -8,7 +8,7 @@ import {
   ClassifyResponseDto,
   IWorkflowBrainstormingService,
   WORKFLOW_BRAINSTORMING_SERVICE,
-} from '@vyrak/workflow'
+} from '@vyrak/workflow-brainstorming'
 import { Observable } from 'rxjs'
 
 import { AuthGuard } from '../auth'
