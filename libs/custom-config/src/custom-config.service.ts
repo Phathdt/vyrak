@@ -3,10 +3,23 @@ import * as yaml from 'js-yaml'
 import * as path from 'path'
 
 import { BootstrapLogger } from './bootstrap-logger'
-import { AppConfig } from './config.interface'
 import { camelToSnakeCase, convertToCamelCase } from './utils'
 
-export class CustomConfigService {
+import type {
+  AgentRuntimeConfig,
+  AnthropicConfig,
+  AppConfig,
+  DatabaseConfig,
+  HostConfig,
+  IConfigService,
+  JwtConfig,
+  LogConfig,
+  RedisConfig,
+} from './config.interface'
+import type { S3Config } from './configs/s3.config'
+import type { WorkspaceConfig } from './workspace.config'
+
+export class CustomConfigService implements IConfigService {
   private _config!: AppConfig
   private proxyCache = new WeakMap<object, object>()
 
@@ -293,7 +306,45 @@ export class CustomConfigService {
     }
     return value as T
   }
-}
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface CustomConfigService extends AppConfig {}
+  // IConfigService interface implementation via getters
+  get host(): HostConfig {
+    return this._config.host
+  }
+
+  get database(): DatabaseConfig {
+    return this._config.database
+  }
+
+  get redis(): RedisConfig {
+    return this._config.redis
+  }
+
+  get log(): LogConfig {
+    return this._config.log
+  }
+
+  get workspace(): WorkspaceConfig {
+    return this._config.workspace
+  }
+
+  get agentRuntime(): AgentRuntimeConfig {
+    return this._config.agentRuntime
+  }
+
+  get jwt(): JwtConfig {
+    return this._config.jwt
+  }
+
+  get s3(): S3Config {
+    return this._config.s3
+  }
+
+  get anthropic(): AnthropicConfig | undefined {
+    return this._config.anthropic
+  }
+
+  get frontendUrl(): string {
+    return this._config.frontendUrl
+  }
+}

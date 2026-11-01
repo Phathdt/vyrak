@@ -1,6 +1,6 @@
 import * as jose from 'jose'
 
-import type { CustomConfigService } from '@vyrak/custom-config'
+import type { IConfigService } from '@vyrak/custom-config'
 
 export interface JwtPayload {
   sub: string
@@ -14,7 +14,7 @@ export class JwtProvider {
   private readonly algorithm = 'HS256'
   private readonly expiresIn: string
 
-  constructor(config: CustomConfigService) {
+  constructor(config: IConfigService) {
     const secretKey = config.jwt.secret
     this.secret = new TextEncoder().encode(secretKey)
     this.expiresIn = config.jwt.expiry

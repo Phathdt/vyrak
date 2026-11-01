@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common'
 import { PassportModule } from '@nestjs/passport'
-import { CustomConfigModule, CustomConfigService } from '@vyrak/custom-config'
+import { CONFIG_SERVICE, CustomConfigModule } from '@vyrak/custom-config'
 import { DatabaseModule, DatabaseService } from '@vyrak/database'
 import { OrganizationModule, ORGANIZATION_SERVICE } from '@vyrak/organization'
 import { UserModule, USER_SERVICE } from '@vyrak/user'
@@ -33,18 +33,18 @@ import {
     // JWT Provider
     {
       provide: JWT_PROVIDER,
-      useFactory: (config: CustomConfigService) => {
+      useFactory: (config) => {
         return new JwtProvider(config)
       },
-      inject: [CustomConfigService],
+      inject: [CONFIG_SERVICE],
     },
     // JWT Strategy (for Passport)
     {
       provide: JwtStrategy,
-      useFactory: (config: CustomConfigService) => {
+      useFactory: (config) => {
         return new JwtStrategy(config)
       },
-      inject: [CustomConfigService],
+      inject: [CONFIG_SERVICE],
     },
     // Auth Repository
     {

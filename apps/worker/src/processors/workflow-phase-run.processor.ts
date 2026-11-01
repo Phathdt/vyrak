@@ -2,11 +2,13 @@ import { Processor, WorkerHost } from '@nestjs/bullmq'
 import { Inject } from '@nestjs/common'
 import { AI_AGENT_SERVICE, IAIAgentService } from '@vyrak/ai-agent'
 import { CONVERSATION_SERVICE, IConversationService } from '@vyrak/conversation'
-import { CustomConfigService } from '@vyrak/custom-config'
+import { CONFIG_SERVICE } from '@vyrak/custom-config'
 import { DatabaseService } from '@vyrak/database'
 import { WorkflowPhaseRunJobSchema } from '@vyrak/workflow-core'
 import { WorkflowPhaseRunHandler } from '@vyrak/workflow-execution'
 import { Job } from 'bullmq'
+
+import type { IConfigService } from '@vyrak/custom-config'
 
 @Processor('workflow-execution')
 export class WorkflowPhaseRunProcessor extends WorkerHost {
@@ -18,7 +20,8 @@ export class WorkflowPhaseRunProcessor extends WorkerHost {
     conversationService: IConversationService,
     @Inject(AI_AGENT_SERVICE)
     aiAgentService: IAIAgentService,
-    configService: CustomConfigService
+    @Inject(CONFIG_SERVICE)
+    configService: IConfigService
   ) {
     super()
     this.handler = new WorkflowPhaseRunHandler(databaseService, conversationService, aiAgentService, configService)

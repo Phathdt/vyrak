@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common'
-import { CustomConfigModule, CustomConfigService } from '@vyrak/custom-config'
+import { CONFIG_SERVICE, CustomConfigModule } from '@vyrak/custom-config'
 
 import { DatabaseService } from './database.service'
 
@@ -8,10 +8,10 @@ import { DatabaseService } from './database.service'
   providers: [
     {
       provide: DatabaseService,
-      useFactory: (configService: CustomConfigService) => {
+      useFactory: (configService) => {
         return new DatabaseService(configService)
       },
-      inject: [CustomConfigService],
+      inject: [CONFIG_SERVICE],
     },
   ],
   exports: [DatabaseService],

@@ -6,7 +6,7 @@
 import './load-env'
 import { NestFactory } from '@nestjs/core'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
-import { CustomConfigService } from '@vyrak/custom-config'
+import { CONFIG_SERVICE } from '@vyrak/custom-config'
 import { DatabaseService, TenantContextInterceptor } from '@vyrak/database'
 import { LoggerErrorInterceptor, Logger as PinoLogger } from 'nestjs-pino'
 import { ZodValidationPipe } from 'nestjs-zod'
@@ -14,12 +14,14 @@ import { ZodValidationPipe } from 'nestjs-zod'
 import { AppModule } from './app'
 import { ResponseExceptionFilter, ResponseLoggerInterceptor, ZodValidationExceptionFilter } from './interceptors'
 
+import type { IConfigService } from '@vyrak/custom-config'
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     bufferLogs: true,
   })
 
-  const configService = app.get(CustomConfigService)
+  const configService = app.get(CONFIG_SERVICE) as IConfigService
   const databaseService = app.get(DatabaseService)
 
   const corsOrigins = [configService.frontendUrl, 'http://localhost:5173', 'http://127.0.0.1:5173'].filter(

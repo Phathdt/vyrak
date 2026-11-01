@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common'
 import { AI_AGENT_SERVICE, AIAgentModule, type IAIAgentService } from '@vyrak/ai-agent'
 import { CONVERSATION_SERVICE, ConversationModule, type IConversationService } from '@vyrak/conversation'
-import { CustomConfigModule, CustomConfigService } from '@vyrak/custom-config'
+import { CONFIG_SERVICE, CustomConfigModule } from '@vyrak/custom-config'
 import { GIT_REPOSITORY_SERVICE, type IGitRepositoryService, ProjectModule } from '@vyrak/project'
 import {
   WORKFLOW_REPOSITORY,
@@ -27,7 +27,7 @@ import { WORKFLOW_PLANNING_SERVICE } from './infras'
         workflowRepoRepo: IWorkflowRepositoryRepository,
         gitRepositoryService: IGitRepositoryService,
         repositoryContextService: RepositoryContextService,
-        configService: CustomConfigService
+        configService
       ) =>
         new WorkflowPlanningService(
           conversationService,
@@ -45,7 +45,7 @@ import { WORKFLOW_PLANNING_SERVICE } from './infras'
         WORKFLOW_REPOSITORY_REPOSITORY,
         GIT_REPOSITORY_SERVICE,
         RepositoryContextService,
-        CustomConfigService,
+        CONFIG_SERVICE,
       ],
     },
   ],

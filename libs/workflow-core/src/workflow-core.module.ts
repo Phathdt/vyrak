@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common'
-import { CustomConfigService } from '@vyrak/custom-config'
+import { CONFIG_SERVICE, CustomConfigModule } from '@vyrak/custom-config'
 import { DatabaseModule, DatabaseService } from '@vyrak/database'
 import { ProjectModule, GIT_REPOSITORY_REPOSITORY } from '@vyrak/project'
 
@@ -24,7 +24,7 @@ import type {
 import type { IGitRepositoryRepository } from '@vyrak/project'
 
 @Module({
-  imports: [DatabaseModule, ProjectModule],
+  imports: [DatabaseModule, ProjectModule, CustomConfigModule],
   providers: [
     // Repositories (only 3 used ones provided)
     {
@@ -64,9 +64,9 @@ import type { IGitRepositoryRepository } from '@vyrak/project'
       useFactory: (
         workflowRepoRepo: IWorkflowRepositoryRepository,
         gitRepoRepo: IGitRepositoryRepository,
-        configService: CustomConfigService
+        configService
       ) => new RepositoryContextService(workflowRepoRepo, gitRepoRepo, configService),
-      inject: [WORKFLOW_REPOSITORY_REPOSITORY, GIT_REPOSITORY_REPOSITORY, CustomConfigService],
+      inject: [WORKFLOW_REPOSITORY_REPOSITORY, GIT_REPOSITORY_REPOSITORY, CONFIG_SERVICE],
     },
   ],
   exports: [

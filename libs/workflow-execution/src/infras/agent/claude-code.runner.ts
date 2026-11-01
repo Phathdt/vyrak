@@ -2,7 +2,7 @@ import { writeFile } from 'node:fs/promises'
 import path from 'node:path'
 
 import type { IAIAgentService } from '@vyrak/ai-agent'
-import type { CustomConfigService } from '@vyrak/custom-config'
+import type { IConfigService } from '@vyrak/custom-config'
 
 const IMPLEMENTATION_SYSTEM_APPEND = `You are implementing a change in an existing codebase (Vyrak monorepo conventions when applicable).
 Follow the planning document. Make minimal, correct diffs. Run relevant tests or typecheck when reasonable.
@@ -23,7 +23,7 @@ export type ClaudeCodeRunResult = {
 
 export class ClaudeCodeRunner {
   constructor(
-    private readonly configService: CustomConfigService,
+    private readonly configService: IConfigService,
     private readonly aiAgentService: IAIAgentService
   ) {}
 

@@ -6,3 +6,4 @@ export * from './utils'
 export * from './workspace.config'
 
 export * from './configs'
+export * from './test-utils'

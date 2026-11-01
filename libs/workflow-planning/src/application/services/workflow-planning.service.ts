@@ -1,5 +1,4 @@
 import { ConversationPhase, IConversationService, MessageRole } from '@vyrak/conversation'
-import { CustomConfigService } from '@vyrak/custom-config'
 import {
   InvalidPlanningStateError,
   WorkflowNotFoundError,
@@ -17,6 +16,7 @@ import type {
 } from '../../domain/schemas/workflow-planning.schemas'
 import type { IAIAgentService, Message } from '@vyrak/ai-agent'
 import type { ConversationMessage } from '@vyrak/conversation'
+import type { IConfigService } from '@vyrak/custom-config'
 import type { IGitRepositoryService } from '@vyrak/project'
 import type { IWorkflowRepository, IWorkflowRepositoryRepository, WorkflowRepositoryEntity } from '@vyrak/workflow-core'
 
@@ -30,7 +30,7 @@ export class WorkflowPlanningService implements IWorkflowPlanningService {
     private readonly workflowRepositoryRepository: IWorkflowRepositoryRepository,
     private readonly gitRepositoryService: IGitRepositoryService,
     private readonly repositoryContextService: RepositoryContextService,
-    private readonly configService: CustomConfigService
+    private readonly configService: IConfigService
   ) {
     // Get model from config
     const anthropicConfig = this.configService.anthropic

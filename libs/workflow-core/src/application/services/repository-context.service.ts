@@ -1,7 +1,7 @@
 import { access } from 'node:fs/promises'
 
 import type { IWorkflowRepositoryRepository } from '../../domain/interfaces'
-import type { CustomConfigService } from '@vyrak/custom-config'
+import type { IConfigService } from '@vyrak/custom-config'
 import type { IGitRepositoryRepository } from '@vyrak/project'
 
 /**
@@ -12,7 +12,7 @@ export class RepositoryContextService {
   constructor(
     private readonly workflowRepositoryRepository: IWorkflowRepositoryRepository,
     private readonly gitRepositoryRepository: IGitRepositoryRepository,
-    private readonly configService: CustomConfigService
+    private readonly configService: IConfigService
   ) {}
 
   /**

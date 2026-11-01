@@ -1,7 +1,7 @@
 import { query } from '@anthropic-ai/claude-agent-sdk'
 
 import type { AgentRequest, AgentResponse, IAIAgentPort, WorkflowClassification } from '../../../domain'
-import type { CustomConfigService } from '@vyrak/custom-config'
+import type { IConfigService } from '@vyrak/custom-config'
 
 type StreamEventMessage = {
   type: 'stream_event'
@@ -29,7 +29,7 @@ type AgentMessage = StreamEventMessage | ResultMessage | { type: string }
 export class ClaudeAgentSdkAdapter implements IAIAgentPort {
   private model: string
 
-  constructor(private readonly configService: CustomConfigService) {
+  constructor(private readonly configService: IConfigService) {
     const anthropic = this.configService.anthropic
     if (!anthropic?.apiKey || !anthropic.model) {
       throw new Error(

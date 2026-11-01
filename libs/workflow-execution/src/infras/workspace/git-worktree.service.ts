@@ -3,7 +3,7 @@ import { access, mkdir } from 'node:fs/promises'
 import path from 'node:path'
 import { promisify } from 'node:util'
 
-import type { CustomConfigService } from '@vyrak/custom-config'
+import type { IConfigService } from '@vyrak/custom-config'
 
 const execFileAsync = promisify(execFile)
 
@@ -35,7 +35,7 @@ async function isGitRepo(dir: string): Promise<boolean> {
 }
 
 export class GitWorktreeService {
-  constructor(private readonly configService: CustomConfigService) {}
+  constructor(private readonly configService: IConfigService) {}
 
   async resolveMainRepoRoot(input: WorktreePrepareInput): Promise<string | null> {
     const mainReposPath = this.configService.workspace?.mainReposPath

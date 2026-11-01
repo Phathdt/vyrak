@@ -1,11 +1,12 @@
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import { PrismaPg } from '@prisma/adapter-pg'
-import { CustomConfigService } from '@vyrak/custom-config'
 import { AsyncLocalStorage } from 'node:async_hooks'
 import { Pool } from 'pg'
 
 import { createTenantFilterExtension } from './extensions'
 import { PrismaClient } from './generated/prisma/client'
+
+import type { IConfigService } from '@vyrak/custom-config'
 
 /**
  * Type of the extended Prisma client with tenant filter
@@ -56,7 +57,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   private readonly extendedClient: ExtendedPrismaClient
   private readonly asyncLocalStorage = new AsyncLocalStorage<TenantFilterContext>()
 
-  constructor(configService: CustomConfigService) {
+  constructor(configService: IConfigService) {
     // Create pg Pool for health checks (bypassing Prisma adapter)
     const pool = new Pool({
       connectionString: configService.database.url,

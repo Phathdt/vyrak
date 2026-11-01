@@ -22,9 +22,30 @@ describe('CustomConfigService', () => {
     },
     log: {
       level: 'info',
-      enableJsonFormat: false,
+      enable_json_format: false,
     },
     frontend_url: 'http://localhost:5173',
+    jwt: {
+      secret: 'test-secret',
+      expiry: '1h',
+    },
+    anthropic: {
+      api_key: 'test-key',
+      model: 'claude-3-5-sonnet-20241022',
+    },
+    s3: {
+      endpoint: 'http://localhost:4566',
+      region: 'us-east-1',
+      bucket: 'test-bucket',
+      access_key_id: 'test',
+      secret_access_key: 'test',
+      force_path_style: true,
+    },
+    workspace: {
+      mode: 'worktree',
+      workspaces_path: '/tmp/workspaces',
+      main_repos_path: '/var/vyrak/repos',
+    },
   }
 
   const setupMocks = (config = mockConfigYaml) => {

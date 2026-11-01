@@ -17,7 +17,7 @@ import type {
 } from '../../domain'
 import type { IAIAgentService, Message } from '@vyrak/ai-agent'
 import type { ConversationMessage } from '@vyrak/conversation'
-import type { CustomConfigService } from '@vyrak/custom-config'
+import type { IConfigService } from '@vyrak/custom-config'
 import type { IWorkflowRepository } from '@vyrak/workflow-core'
 
 export class WorkflowBrainstormingService implements IWorkflowBrainstormingService {
@@ -28,7 +28,7 @@ export class WorkflowBrainstormingService implements IWorkflowBrainstormingServi
     private readonly aiAgentService: IAIAgentService,
     private readonly workflowRepository: IWorkflowRepository,
     private readonly repositoryContextService: RepositoryContextService,
-    private readonly configService: CustomConfigService
+    private readonly configService: IConfigService
   ) {
     // Get model from config
     const anthropicConfig = this.configService.anthropic

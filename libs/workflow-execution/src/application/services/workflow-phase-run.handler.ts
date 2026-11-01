@@ -1,5 +1,4 @@
 import { ConversationPhase, IConversationService, MessageRole } from '@vyrak/conversation'
-import { CustomConfigService } from '@vyrak/custom-config'
 import { DatabaseService } from '@vyrak/database'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
@@ -10,6 +9,7 @@ import { GitWorktreeService } from '../../infras/workspace/git-worktree.service'
 
 import type { PhaseExecutionMeta, WorkflowPhaseRunJob } from '../../domain/schemas/phase-execution.schemas'
 import type { IAIAgentService } from '@vyrak/ai-agent'
+import type { IConfigService } from '@vyrak/custom-config'
 
 const execFileAsync = promisify(execFile)
 
@@ -21,7 +21,7 @@ export class WorkflowPhaseRunHandler {
     private readonly databaseService: DatabaseService,
     private readonly conversationService: IConversationService,
     aiAgentService: IAIAgentService,
-    configService: CustomConfigService
+    configService: IConfigService
   ) {
     this.gitWorktree = new GitWorktreeService(configService)
     this.claudeCode = new ClaudeCodeRunner(configService, aiAgentService)
