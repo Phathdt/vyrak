@@ -49,6 +49,9 @@ libs/{module-name}/
 │   │   ├── entities/
 │   │   │   ├── index.ts
 │   │   │   └── {entity}.entity.ts      # Entity type + Zod schema
+│   │   ├── exceptions/
+│   │   │   ├── index.ts
+│   │   │   └── {module}.exceptions.ts  # Domain exception classes
 │   │   ├── interfaces/
 │   │   │   ├── index.ts
 │   │   │   ├── {module}.repository.interface.ts
@@ -78,6 +81,7 @@ libs/{module-name}/
 
 1. **Domain Layer** (`/domain`) - Business rules and contracts
    - **entities/**: Domain entity types with Zod schemas for runtime validation
+   - **exceptions/**: Domain exception classes (framework-independent errors)
    - **interfaces/**: Abstract contracts for repository and service
    - **schemas/**: Request/response DTOs using `nestjs-zod` with OpenAPI decorators
    - NO framework dependencies, NO external system calls
@@ -86,9 +90,10 @@ libs/{module-name}/
    - **services/**: Implement service interfaces, depend on repository abstractions
    - Orchestrate domain logic, pagination, error handling
    - Maps repository data to service responses
-   - Throws domain exceptions (NotFoundException, etc.)
+   - Throws domain exceptions (NOT HTTP exceptions like NotFoundException)
    - **CRITICAL: NO @Injectable() decorator** - Application services must be plain TypeScript classes
    - **CRITICAL: NO NestJS decorators** - Framework-independent business logic
+   - **CRITICAL: NO HTTP exceptions** - Use domain exceptions only (e.g., `ProjectNotFoundError` instead of `NotFoundException`)
 
 3. **Infrastructure Layer** (`/infras`) - Framework-specific implementations
    - **repositories/**: Implement repository interfaces with Prisma
@@ -112,6 +117,92 @@ Domain (contracts) ← Application (orchestration) ← Infrastructure (implement
                                           Controller (api-server)
                                           Processor (worker)
 ```
+
+### Domain Exceptions Pattern
+
+**CRITICAL RULE:** Application services MUST throw domain exceptions, NOT HTTP exceptions. Domain exceptions are framework-independent and mapped to HTTP status codes by the global exception filter in `api-server`.
+
+**Exception Structure (libs/{module}/src/domain/exceptions/):**
+
+```typescript
+// Base exception for the module
+export class {Module}DomainError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = this.constructor.name
+  }
+}
+
+// Specific exceptions with typed properties
+export class {Entity}NotFoundError extends {Module}DomainError {
+  constructor(public readonly entityId: string) {
+    super(`{Entity} not found: ${entityId}`)
+  }
+}
+
+export class {Entity}AlreadyExistsError extends {Module}DomainError {
+  constructor(public readonly slug: string) {
+    super(`{Entity} already exists: ${slug}`)
+  }
+}
+```
+
+**Example (Project Module):**
+
+```typescript
+// Domain exception
+export class ProjectNotFoundError extends ProjectDomainError {
+  constructor(public readonly projectId: string) {
+    super(`Project not found: ${projectId}`)
+  }
+}
+
+// Application service throws domain exception
+async findOne(id: string): Promise<Project> {
+  const project = await this.repository.findOne(id)
+  if (!project) {
+    throw new ProjectNotFoundError(id)  // ✅ Domain exception
+  }
+  return project
+}
+
+// Controller just calls service (no exception handling)
+@Get(':id')
+async findOne(@Param('id') id: string) {
+  return this.projectService.findOne(id)
+}
+
+// DomainExceptionFilter maps to HTTP
+case 'ProjectNotFoundError':
+  return { status: 404, message: error.message }
+```
+
+**HTTP Status Mapping (apps/api-server/src/common/filters/domain-exception.filter.ts):**
+
+- `*NotFoundError` → 404 Not Found
+- `InvalidCredentialsError` → 401 Unauthorized
+- `NotOrganizationMemberError`, `InsufficientPermissionsError` → 403 Forbidden
+- All other domain errors → 400 Bad Request
+- Unknown errors → 500 Internal Server Error
+
+**Benefits:**
+- ✅ Framework-independent application layer
+- ✅ Services reusable in CLI, workers, tests
+- ✅ Type-safe exception properties with rich context
+- ✅ Clean separation between domain logic and HTTP concerns
+- ✅ Single source of truth for exception → HTTP mapping
+
+**Reference Implementations:**
+- `libs/project/src/domain/exceptions/project.exceptions.ts`
+- `libs/organization/src/domain/exceptions/organization.exceptions.ts`
+- `libs/workflow/src/domain/exceptions/workflow.exceptions.ts`
+- `libs/auth/src/domain/exceptions/auth.exceptions.ts`
+
+**DO NOT:**
+- ❌ Import HTTP exceptions (`BadRequestException`, `NotFoundException`) in application services
+- ❌ Import `@nestjs/common` in application or domain layers
+- ❌ Handle exceptions in controllers (let the global filter handle them)
+- ❌ Define exception classes inline in service files
 
 ### Monitoring & Metrics (Epic 7)
 
@@ -419,24 +510,25 @@ Oxfmt is configured in `.oxfmtrc.json` with `sortImports` enabled.
 1. **Create business module in libs/** - All new domain modules go in `libs/{module-name}/` following hexagonal architecture
 2. **Follow the product module pattern** - Use `libs/product/` as reference implementation
 3. **Structure layers correctly**:
-   - Domain layer: entities (Zod schemas), interfaces, DTOs with OpenAPI decorators - **NO NestJS decorators**
+   - Domain layer: entities (Zod schemas), exceptions, interfaces, DTOs with OpenAPI decorators - **NO NestJS decorators**
    - Application layer: service implementation with business logic - **NO @Injectable(), plain TypeScript classes**
    - Infrastructure layer: repository implementation (Prisma), DI tokens - **NO @Injectable(), plain TypeScript classes**
    - Module: NestJS module with DI wiring - **ONLY place for @Module() decorator**
-4. **Add controller to api-server** - Create lightweight controller in `apps/api-server/src/{module}/` that injects and calls the service from `libs/{module}/`
-5. **Add processor to worker (if needed)** - Create processor/consumer in `apps/worker/src/{module}/` for background jobs
-6. **Use shared base configs**:
+4. **Create domain exceptions** - Add `domain/exceptions/{module}.exceptions.ts` with base error + specific exceptions
+5. **Add controller to api-server** - Create lightweight controller in `apps/api-server/src/{module}/` that injects and calls the service from `libs/{module}/`
+6. **Add processor to worker (if needed)** - Create processor/consumer in `apps/worker/src/{module}/` for background jobs
+7. **Use shared base configs**:
    - Rolldown: `import { createLibConfig } from '../../config/rolldown.base.mjs'` for libs, `createAppConfig({ appName: 'app-name' })` for apps
    - TypeScript: Extend `../../config/tsconfig.lib.json` for libs, `../../config/tsconfig.app.json` for apps
    - See `config/README.md` for detailed documentation
-7. **Run code generation**:
+8. **Run code generation**:
    - `yarn ctix` - Regenerate index.ts barrel exports
    - `yarn generate:openapi` - Generate OpenAPI spec
    - `yarn generate:api` - Generate React Query hooks
-8. **Use generated hooks** - NEVER write React Query hooks manually, always use Orval-generated hooks from `apps/web/src/api/generated/`
-9. **Frontend validation** - Add Zod schemas in `lib/schemas/` for form validation only (not for API calls)
-10. **Test endpoints** - Verify API works before integrating frontend
-11. **Update examples** - Keep product CRUD as reference implementation
+9. **Use generated hooks** - NEVER write React Query hooks manually, always use Orval-generated hooks from `apps/web/src/api/generated/`
+10. **Frontend validation** - Add Zod schemas in `lib/schemas/` for form validation only (not for API calls)
+11. **Test endpoints** - Verify API works before integrating frontend
+12. **Update examples** - Keep product CRUD as reference implementation
 
 ### When Debugging
 
@@ -455,6 +547,14 @@ Oxfmt is configured in `.oxfmtrc.json` with `sortImports` enabled.
 - **Missing layers**: Always implement all three layers (domain, application, infrastructure) for consistency
 - **Direct Prisma in services**: Services should depend on repository interfaces, NOT Prisma directly
 - **@Injectable() in libs**: NEVER use `@Injectable()` decorator in `libs/` code. Services, repositories, and use cases MUST be plain TypeScript classes. Only `apps/` controllers/processors and `*.module.ts` files can use NestJS decorators
+
+### Exception Handling
+
+- **HTTP exceptions in services**: NEVER import or throw HTTP exceptions (`BadRequestException`, `NotFoundException`) in application services. Use domain exceptions only.
+- **Inline exception classes**: DO NOT define exception classes inside service files. Create them in `domain/exceptions/`
+- **Missing exception mapping**: When adding new domain exceptions, update `DomainExceptionFilter` if they need specific HTTP status codes (otherwise defaults to 400)
+- **Handling exceptions in controllers**: Controllers should NOT catch or handle exceptions. Let the global `DomainExceptionFilter` handle all exceptions.
+- **Framework dependencies**: Domain exceptions must be plain TypeScript Error classes with NO framework dependencies
 
 ### OpenAPI Generation
 
