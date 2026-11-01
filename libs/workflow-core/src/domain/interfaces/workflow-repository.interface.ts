@@ -7,8 +7,7 @@ export interface IWorkflowRepository {
   create(projectId: string, createdById: string, data: CreateWorkflowData): Promise<WorkflowEntity>
   update(id: string, data: UpdateWorkflowData): Promise<WorkflowEntity>
   updateStatus(id: string, status: WorkflowStatus): Promise<void>
-  updateType(id: string, type: WorkflowType, confirmedById: string): Promise<void>
-  updateClassification(id: string, classification: Record<string, unknown>): Promise<void>
+  updateWorkflowType(id: string, type: WorkflowType): Promise<void>
   updateDefinitionContext(
     id: string,
     data: { currentPhaseKey: string | null; definitionSnapshot: Record<string, unknown> }

@@ -158,7 +158,7 @@ export class WorkflowPrismaRepository extends BaseTenantRepository implements IW
         status,
       }
 
-      if (status === WorkflowStatus.ACTIVE || status === WorkflowStatus.BRAINSTORMING) {
+      if (status === WorkflowStatus.ACTIVE) {
         updateData.startedAt = new Date()
       }
 
@@ -176,32 +176,14 @@ export class WorkflowPrismaRepository extends BaseTenantRepository implements IW
     })
   }
 
-  async updateType(id: string, type: WorkflowType, confirmedById: string): Promise<void> {
+  async updateWorkflowType(id: string, type: WorkflowType): Promise<void> {
     await this.withTenantContext(async (organizationId) => {
       await this.prisma.client.workflow.update({
         where: {
           id,
           organizationId,
         },
-        data: {
-          type,
-          classificationConfirmedById: confirmedById,
-          classificationConfirmedAt: new Date(),
-        },
-      })
-    })
-  }
-
-  async updateClassification(id: string, classification: Record<string, unknown>): Promise<void> {
-    await this.withTenantContext(async (organizationId) => {
-      await this.prisma.client.workflow.update({
-        where: {
-          id,
-          organizationId,
-        },
-        data: {
-          classification: classification as Prisma.InputJsonValue,
-        },
+        data: { type },
       })
     })
   }

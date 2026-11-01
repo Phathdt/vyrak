@@ -10,7 +10,7 @@ import {
   WorkflowStatus,
   WorkflowType,
 } from '../../domain'
-import { buildDefinitionSnapshot, DEFAULT_WORKFLOW_PHASE_DEFINITIONS } from '../../domain/phase-definitions'
+import { buildDefinitionSnapshot } from '../../domain/phase-definitions'
 
 import type {
   AdvanceWorkflowPhaseResult,
@@ -38,37 +38,15 @@ export class WorkflowPhaseService implements IWorkflowPhaseService {
     return this.workflowPhaseRepository.findByWorkflowId(workflowId)
   }
 
-  async initializePhasesForWorkflow(workflowId: string, workflowType: WorkflowType): Promise<WorkflowPhaseEntity[]> {
-    const existing = await this.workflowPhaseRepository.findByWorkflowId(workflowId)
-    if (existing.length > 0) {
-      return existing
-    }
-
-    const snapshot = buildDefinitionSnapshot(workflowType)
-    const created: WorkflowPhaseEntity[] = []
-
-    for (const template of DEFAULT_WORKFLOW_PHASE_DEFINITIONS) {
-      const phase = await this.workflowPhaseRepository.create(workflowId, {
-        key: template.key,
-        name: template.name,
-        sequence: template.sequence,
-        config: { workflowType },
-      })
-      created.push(phase)
-    }
-
-    const firstPhase = created[0]
-    if (firstPhase) {
-      await this.workflowPhaseRepository.updateStatus(firstPhase.id, WorkflowPhaseStatus.IN_PROGRESS)
-      await this.workflowPhaseRepository.update(firstPhase.id, { startedAt: new Date() })
-    }
-
-    await this.workflowRepository.updateDefinitionContext(workflowId, {
-      currentPhaseKey: firstPhase?.key ?? null,
-      definitionSnapshot: snapshot,
+  async create(
+    workflowId: string,
+    data: { name: string; key: string; sequence: number }
+  ): Promise<WorkflowPhaseEntity> {
+    return this.workflowPhaseRepository.create(workflowId, {
+      name: data.name,
+      key: data.key,
+      sequence: data.sequence,
     })
-
-    return created
   }
 
   async approveCurrentPhase(
@@ -121,9 +99,10 @@ export class WorkflowPhaseService implements IWorkflowPhaseService {
       throw new InvalidPhaseSendBackError('Workflow must be active to send back a phase')
     }
 
-    const allowedFrom = new Set(['review', 'qc'])
+    // Updated: code-review and qa can send back to earlier phases
+    const allowedFrom = new Set(['code-review', 'qa'])
     if (!allowedFrom.has(ctx.currentKey)) {
-      throw new InvalidPhaseSendBackError('Send-back is only supported from Review or QC')
+      throw new InvalidPhaseSendBackError('Send-back is only supported from Code Review or QA')
     }
 
     const target = ctx.sortedPhases.find((p) => p.key === targetPhaseKey)

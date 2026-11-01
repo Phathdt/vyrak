@@ -8,6 +8,7 @@ import { WorkflowStatus, WorkflowType } from '../entities'
 export const CreateWorkflowSchema = z.object({
   title: z.string().min(1).max(500),
   description: z.string().max(5000).optional(),
+  type: z.enum([WorkflowType.HOTFIX, WorkflowType.STORY, WorkflowType.EPIC]),
   repositoryIds: z.array(z.string()).min(1),
 })
 
@@ -30,8 +31,6 @@ export const ListWorkflowsQuerySchema = z.object({
   status: z
     .enum([
       WorkflowStatus.DRAFT,
-      WorkflowStatus.BRAINSTORMING,
-      WorkflowStatus.CLASSIFICATION_PENDING,
       WorkflowStatus.ACTIVE,
       WorkflowStatus.WAITING_APPROVAL,
       WorkflowStatus.COMPLETED,
@@ -45,20 +44,6 @@ export const ListWorkflowsQuerySchema = z.object({
 })
 
 export class ListWorkflowsQueryDto extends createZodDto(ListWorkflowsQuerySchema) {}
-
-// Workflow Classification Request
-export const ClassifyWorkflowSchema = z.object({
-  force: z.boolean().optional().default(false),
-})
-
-export class ClassifyWorkflowDto extends createZodDto(ClassifyWorkflowSchema) {}
-
-// Confirm Classification
-export const ConfirmClassificationSchema = z.object({
-  type: z.enum([WorkflowType.HOTFIX, WorkflowType.STORY, WorkflowType.EPIC]),
-})
-
-export class ConfirmClassificationDto extends createZodDto(ConfirmClassificationSchema) {}
 
 // Workflow Response
 export class WorkflowResponse {
@@ -85,14 +70,7 @@ export class WorkflowResponse {
     description: 'Workflow status',
     enum: Object.values(WorkflowStatus),
   })
-  status:
-    | WorkflowStatus
-    | 'CLASSIFICATION_PENDING'
-    | 'ACTIVE'
-    | 'WAITING_APPROVAL'
-    | 'COMPLETED'
-    | 'FAILED'
-    | 'CANCELLED'
+  status: WorkflowStatus
 
   @ApiProperty({
     example: 'Implement user authentication',
@@ -123,30 +101,6 @@ export class WorkflowResponse {
     nullable: true,
   })
   definitionSnapshot: Record<string, unknown> | null
-
-  @ApiProperty({
-    type: Object,
-    example: null,
-    description: 'AI classification result',
-    nullable: true,
-  })
-  classification: Record<string, unknown> | null
-
-  @ApiProperty({
-    type: String,
-    example: '2024-10-31T00:00:00Z',
-    description: 'Classification confirmation timestamp',
-    nullable: true,
-  })
-  classificationConfirmedAt: string | null
-
-  @ApiProperty({
-    type: String,
-    example: 'user-uuid',
-    description: 'User who confirmed classification',
-    nullable: true,
-  })
-  classificationConfirmedById: string | null
 
   @ApiProperty({ example: 'user-uuid', description: 'Creator user ID' })
   createdById: string
@@ -219,9 +173,6 @@ export interface WorkflowWithRepositories {
   description: string | null
   currentPhaseKey: string | null
   definitionSnapshot: Record<string, unknown> | null
-  classification: Record<string, unknown> | null
-  classificationConfirmedAt: Date | null
-  classificationConfirmedById: string | null
   createdById: string
   startedAt: Date | null
   completedAt: Date | null

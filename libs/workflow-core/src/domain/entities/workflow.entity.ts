@@ -6,10 +6,12 @@ export const WorkflowType = {
 
 export type WorkflowType = (typeof WorkflowType)[keyof typeof WorkflowType]
 
+/**
+ * Workflow statuses.
+ * Note: BRAINSTORMING and CLASSIFICATION_PENDING are disabled for MVP.
+ */
 export const WorkflowStatus = {
   DRAFT: 'DRAFT',
-  BRAINSTORMING: 'BRAINSTORMING',
-  CLASSIFICATION_PENDING: 'CLASSIFICATION_PENDING',
   ACTIVE: 'ACTIVE',
   WAITING_APPROVAL: 'WAITING_APPROVAL',
   COMPLETED: 'COMPLETED',

@@ -17,7 +17,6 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import {
   AdvanceWorkflowPhaseResponseDto,
   ApproveWorkflowPhaseDto,
-  ConfirmClassificationDto,
   CreateWorkflowDto,
   IWorkflowPhaseService,
   IWorkflowService,
@@ -36,7 +35,8 @@ import { WorkflowPhaseOrchestratorService } from '@vyrak/workflow-execution'
 import { AuthGuard } from '../../auth'
 import { OrganizationMemberGuard } from '../../guards'
 
-const AUTOMATED_PHASE_KEYS = new Set(['implementation', 'review', 'qc'])
+// Updated: implementation, code-review, qa are automated
+const AUTOMATED_PHASE_KEYS = new Set(['implementation', 'code-review', 'qa'])
 
 @ApiTags('Workflows')
 @Controller('api/organizations/:orgId/projects/:projectId/workflows')
@@ -73,9 +73,6 @@ export class WorkflowsController {
       description: workflow.description,
       currentPhaseKey: workflow.currentPhaseKey,
       definitionSnapshot: workflow.definitionSnapshot,
-      classification: workflow.classification,
-      classificationConfirmedAt: workflow.classificationConfirmedAt?.toISOString() || null,
-      classificationConfirmedById: workflow.classificationConfirmedById,
       createdById: workflow.createdById,
       startedAt: workflow.startedAt?.toISOString() || null,
       completedAt: workflow.completedAt?.toISOString() || null,
@@ -283,9 +280,6 @@ export class WorkflowsController {
       description: workflow.description,
       currentPhaseKey: workflow.currentPhaseKey,
       definitionSnapshot: workflow.definitionSnapshot,
-      classification: workflow.classification,
-      classificationConfirmedAt: workflow.classificationConfirmedAt?.toISOString() || null,
-      classificationConfirmedById: workflow.classificationConfirmedById,
       createdById: workflow.createdById,
       startedAt: workflow.startedAt?.toISOString() || null,
       completedAt: workflow.completedAt?.toISOString() || null,
@@ -328,9 +322,6 @@ export class WorkflowsController {
       description: workflow.description,
       currentPhaseKey: workflow.currentPhaseKey,
       definitionSnapshot: workflow.definitionSnapshot,
-      classification: workflow.classification,
-      classificationConfirmedAt: workflow.classificationConfirmedAt?.toISOString() || null,
-      classificationConfirmedById: workflow.classificationConfirmedById,
       createdById: workflow.createdById,
       startedAt: workflow.startedAt?.toISOString() || null,
       completedAt: workflow.completedAt?.toISOString() || null,
@@ -352,24 +343,5 @@ export class WorkflowsController {
     @Param('id') id: string
   ): Promise<void> {
     await this.workflowService.delete(orgId, id)
-  }
-
-  @Post(':id/confirm-classification')
-  @ApiOperation({ summary: 'Confirm workflow classification' })
-  @ApiResponse({ status: 200, description: 'Classification confirmed and workflow activated' })
-  @ApiResponse({ status: 404, description: 'Workflow not found' })
-  @ApiResponse({
-    status: 400,
-    description: 'Can only confirm classification from BRAINSTORMING or CLASSIFICATION_PENDING',
-  })
-  async confirmClassification(
-    @Param('orgId') orgId: string,
-    @Param('projectId') _projectId: string,
-    @Param('id') id: string,
-    @Body() body: ConfirmClassificationDto
-  ) {
-    await this.workflowService.confirmClassification(orgId, id, body.type, 'user-id-placeholder')
-
-    return { message: 'Classification confirmed and workflow activated' }
   }
 }

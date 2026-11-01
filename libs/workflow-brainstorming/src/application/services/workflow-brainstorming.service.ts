@@ -1,3 +1,12 @@
+/**
+ * DISABLED FOR MVP
+ *
+ * This service is temporarily disabled and will be re-enabled after MVP.
+ * The WorkflowBrainstormingModule is commented out in apps/api-server/src/app.module.ts
+ *
+ * TODO: Re-enable brainstorming and classification features post-MVP
+ */
+
 import { ConversationPhase, ConversationStatus, IConversationService, MessageRole } from '@vyrak/conversation'
 import {
   InvalidBrainstormingStateError,
@@ -252,11 +261,12 @@ You have access to the project repository. Use Read, Glob, and Grep tools to exp
       reasoning: classification.reasoning,
     }
 
-    await this.workflowRepository.updateClassification(workflowId, {
-      ...result,
-      proposedAt: new Date().toISOString(),
-    })
-    await this.workflowRepository.updateStatus(workflowId, WorkflowStatus.CLASSIFICATION_PENDING)
+    // DISABLED: updateClassification method removed in workflow-core
+    // await this.workflowRepository.updateClassification(workflowId, {
+    //   ...result,
+    //   proposedAt: new Date().toISOString(),
+    // })
+    // await this.workflowRepository.updateStatus(workflowId, WorkflowStatus.CLASSIFICATION_PENDING)
 
     return result
   }
@@ -268,20 +278,17 @@ You have access to the project repository. Use Read, Glob, and Grep tools to exp
       throw new WorkflowNotFoundError(workflowId)
     }
 
-    const allowedStatuses: WorkflowStatus[] = [
-      WorkflowStatus.DRAFT,
-      WorkflowStatus.BRAINSTORMING,
-      WorkflowStatus.CLASSIFICATION_PENDING,
-    ]
+    // DISABLED: BRAINSTORMING and CLASSIFICATION_PENDING statuses removed
+    // For MVP, only allow brainstorming on DRAFT status
+    const allowedStatuses: WorkflowStatus[] = [WorkflowStatus.DRAFT]
     const canBrainstorm = allowedStatuses.includes(workflow.status)
 
     if (!canBrainstorm) {
       throw new InvalidBrainstormingStateError('This workflow is no longer in the brainstorming phase')
     }
 
-    if (workflow.status === WorkflowStatus.DRAFT) {
-      await this.workflowRepository.updateStatus(workflowId, WorkflowStatus.BRAINSTORMING)
-    }
+    // Note: In MVP, workflow stays in DRAFT during brainstorming
+    // BRAINSTORMING status will be re-added post-MVP
   }
 
   private toAIMessages(messages: ConversationMessage[]): Message[] {

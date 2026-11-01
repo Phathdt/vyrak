@@ -11,7 +11,8 @@ import { DatabaseModule } from '@vyrak/database'
 import { OrganizationModule } from '@vyrak/organization'
 import { ProjectModule } from '@vyrak/project'
 import { UserModule } from '@vyrak/user'
-import { WorkflowBrainstormingModule } from '@vyrak/workflow-brainstorming'
+// Brainstorming disabled for MVP - will be re-enabled later
+// import { WorkflowBrainstormingModule } from '@vyrak/workflow-brainstorming'
 import { WorkflowCoreModule } from '@vyrak/workflow-core'
 import { WorkflowExecutionModule } from '@vyrak/workflow-execution'
 import { WorkflowPlanningModule } from '@vyrak/workflow-planning'
@@ -19,7 +20,8 @@ import { WorkflowPlanningModule } from '@vyrak/workflow-planning'
 import { DomainExceptionFilter } from '../common/filters'
 import { OrganizationMemberGuard } from '../guards'
 import { ResponseInterceptor, TenantContextInterceptor, TraceIdInterceptor } from '../interceptors'
-import { WorkflowBrainstormingController } from '../workflow/workflow-brainstorming.controller'
+// Brainstorming disabled for MVP - will be re-enabled later
+// import { WorkflowBrainstormingController } from '../workflow/workflow-brainstorming.controller'
 import {
   workflowPhaseAutomationImports,
   workflowPhaseAutomationProviders,
@@ -65,7 +67,8 @@ import {
     OrganizationModule,
     ProjectModule,
     WorkflowCoreModule,
-    WorkflowBrainstormingModule,
+    // Brainstorming disabled for MVP - will be re-enabled later
+    // WorkflowBrainstormingModule,
     WorkflowPlanningModule,
     WorkflowExecutionModule,
   ],
@@ -77,7 +80,8 @@ import {
     ProjectsController,
     RepositoriesController,
     WorkflowsController,
-    WorkflowBrainstormingController,
+    // Brainstorming disabled for MVP - will be re-enabled later
+    // WorkflowBrainstormingController,
     WorkflowPlanningController,
   ],
   providers: [

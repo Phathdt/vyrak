@@ -1,4 +1,9 @@
-import { InvalidWorkflowStatusError, WorkflowNotFoundError, WorkflowStatus, WorkflowType } from '../../domain'
+import {
+  DEFAULT_WORKFLOW_PHASE_DEFINITIONS,
+  InvalidWorkflowStatusError,
+  WorkflowNotFoundError,
+  WorkflowStatus,
+} from '../../domain'
 
 import type {
   CreateWorkflowInput,
@@ -25,17 +30,48 @@ export class WorkflowService implements IWorkflowService {
     createdById: string,
     data: CreateWorkflowInput
   ): Promise<WorkflowWithRelations> {
+    // Create workflow with type
     const workflow = await this.workflowRepository.create(projectId, createdById, {
       title: data.title,
       description: data.description,
     })
 
+    // Set workflow type
+    await this.workflowRepository.updateWorkflowType(workflow.id, data.type)
+
+    // Auto-create 6 fixed phases for the workflow
+    const createdPhases = await Promise.all(
+      DEFAULT_WORKFLOW_PHASE_DEFINITIONS.map((phaseDef) =>
+        this.workflowPhaseService.create(workflow.id, {
+          name: phaseDef.name,
+          key: phaseDef.key,
+          sequence: phaseDef.sequence,
+        })
+      )
+    )
+
+    // Set first phase (Planning) to IN_PROGRESS
+    const firstPhase = createdPhases[0]
+    if (firstPhase) {
+      await this.workflowRepository.updateDefinitionContext(workflow.id, {
+        currentPhaseKey: firstPhase.key,
+        definitionSnapshot: { type: data.type },
+      })
+    }
+
+    // Set workflow to ACTIVE status
+    await this.workflowRepository.updateStatus(workflow.id, WorkflowStatus.ACTIVE)
+
+    // Link repositories
     await this.workflowRepositoryRepository.createMany(workflow.id, data.repositoryIds)
 
     const repositories = await this.workflowRepositoryRepository.findByWorkflowId(workflow.id)
 
+    // Fetch updated workflow with type and status
+    const updatedWorkflow = await this.workflowRepository.findById(workflow.id)
+
     return {
-      ...workflow,
+      ...updatedWorkflow!,
       repositories,
     }
   }
@@ -131,47 +167,5 @@ export class WorkflowService implements IWorkflowService {
 
     await this.workflowRepositoryRepository.deleteByWorkflowId(id)
     await this.workflowRepository.delete(id)
-  }
-
-  async startBrainstorming(_organizationId: string, id: string): Promise<void> {
-    const workflow = await this.workflowRepository.findById(id)
-
-    if (!workflow) {
-      throw new WorkflowNotFoundError(id)
-    }
-
-    if (workflow.status !== WorkflowStatus.DRAFT) {
-      throw new InvalidWorkflowStatusError('Can only start brainstorming from DRAFT status', workflow.status, [
-        WorkflowStatus.DRAFT,
-      ])
-    }
-
-    await this.workflowRepository.updateStatus(id, WorkflowStatus.BRAINSTORMING)
-  }
-
-  async confirmClassification(
-    _organizationId: string,
-    id: string,
-    _type: WorkflowType,
-    confirmedById: string
-  ): Promise<void> {
-    const workflow = await this.workflowRepository.findById(id)
-
-    if (!workflow) {
-      throw new WorkflowNotFoundError(id)
-    }
-
-    if (workflow.status !== WorkflowStatus.CLASSIFICATION_PENDING && workflow.status !== WorkflowStatus.BRAINSTORMING) {
-      throw new InvalidWorkflowStatusError(
-        'Can only confirm classification from BRAINSTORMING or CLASSIFICATION_PENDING',
-        workflow.status,
-        [WorkflowStatus.BRAINSTORMING, WorkflowStatus.CLASSIFICATION_PENDING]
-      )
-    }
-
-    // MVP: all workflows use STORY + default 4-phase pipeline (planning → implementation → review → qc).
-    await this.workflowRepository.updateType(id, WorkflowType.STORY, confirmedById)
-    await this.workflowPhaseService.initializePhasesForWorkflow(id, WorkflowType.STORY)
-    await this.workflowRepository.updateStatus(id, WorkflowStatus.ACTIVE)
   }
 }

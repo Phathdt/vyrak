@@ -15,15 +15,12 @@ export interface IWorkflowService {
   update(organizationId: string, id: string, data: UpdateWorkflowInput): Promise<WorkflowEntity>
 
   delete(organizationId: string, id: string): Promise<void>
-
-  startBrainstorming(organizationId: string, id: string): Promise<void>
-
-  confirmClassification(organizationId: string, id: string, type: WorkflowType, confirmedById: string): Promise<void>
 }
 
 export interface CreateWorkflowInput {
   title: string
   description?: string | null
+  type: WorkflowType
   repositoryIds: string[]
 }
 

@@ -6,12 +6,18 @@ export type PhaseDefinitionTemplate = {
   sequence: number
 }
 
-/** Default phase pipeline (PRD FR-06). Snapshot per workflow at confirmation time. */
+/**
+ * Default phase pipeline - 6 fixed phases (PRD Section 3).
+ * Brainstorm and Classify phases are disabled for MVP.
+ * Phases are automatically created when workflow is initialized.
+ */
 export const DEFAULT_WORKFLOW_PHASE_DEFINITIONS: PhaseDefinitionTemplate[] = [
   { key: 'planning', name: 'Planning', sequence: 1 },
-  { key: 'implementation', name: 'Implementation', sequence: 2 },
-  { key: 'review', name: 'Review', sequence: 3 },
-  { key: 'qc', name: 'QC', sequence: 4 },
+  { key: 'technical-refinement', name: 'Technical Refinement', sequence: 2 },
+  { key: 'implementation', name: 'Implementation', sequence: 3 },
+  { key: 'code-review', name: 'Code Review', sequence: 4 },
+  { key: 'qa', name: 'QA', sequence: 5 },
+  { key: 'completed', name: 'Completed', sequence: 6 },
 ]
 
 export function buildDefinitionSnapshot(workflowType: WorkflowType): Record<string, unknown> {
