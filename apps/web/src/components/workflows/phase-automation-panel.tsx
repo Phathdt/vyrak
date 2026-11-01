@@ -17,6 +17,7 @@ type PhaseAutomationPanelProps = {
   phaseKey: string
   execution?: PhaseExecutionView | null
   reviewSummary?: string
+  commitSha?: string | null
   isCurrentPhase: boolean
   onSendBack?: () => void
   sendBackBusy?: boolean
@@ -42,6 +43,7 @@ export function PhaseAutomationPanel({
   phaseKey,
   execution,
   reviewSummary,
+  commitSha,
   isCurrentPhase,
   onSendBack,
   sendBackBusy,
@@ -65,6 +67,12 @@ export function PhaseAutomationPanel({
         <p>
           <span className='text-muted-foreground'>Branch: </span>
           <code className='rounded bg-background px-1'>{execution.branch}</code>
+        </p>
+      )}
+
+      {commitSha && (
+        <p className='text-xs text-muted-foreground'>
+          Commit: <code className='rounded bg-background px-1'>{commitSha.slice(0, 12)}</code>
         </p>
       )}
 

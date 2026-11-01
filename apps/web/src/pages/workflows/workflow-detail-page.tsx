@@ -111,6 +111,7 @@ type WorkflowPhaseItem = {
     updatedAt?: string
   } | null
   reviewSummary?: string
+  commitSha?: string
 }
 
 const AUTOMATED_PHASE_KEYS = new Set(['implementation', 'review', 'qc'])
@@ -684,6 +685,7 @@ export function WorkflowDetailPage() {
                               phaseKey={selectedPhase.key}
                               execution={selectedPhase.execution}
                               reviewSummary={selectedPhase.reviewSummary}
+                              commitSha={selectedPhase.commitSha}
                               isCurrentPhase={selectedPhase.key === workflow.currentPhaseKey}
                               onSendBack={
                                 selectedPhase.key === workflow.currentPhaseKey

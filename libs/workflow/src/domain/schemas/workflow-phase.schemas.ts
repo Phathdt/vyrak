@@ -34,6 +34,7 @@ export const WorkflowPhaseResponseSchema = z.object({
     .nullable()
     .optional(),
   reviewSummary: z.string().optional(),
+  commitSha: z.string().optional(),
 })
 
 export class WorkflowPhaseResponseDto extends createZodDto(WorkflowPhaseResponseSchema) {
@@ -75,6 +76,9 @@ export class WorkflowPhaseResponseDto extends createZodDto(WorkflowPhaseResponse
 
   @ApiProperty({ required: false })
   reviewSummary?: string
+
+  @ApiProperty({ required: false })
+  commitSha?: string
 }
 
 export class WorkflowPhaseListResponseDto {

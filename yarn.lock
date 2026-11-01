@@ -39,6 +39,60 @@
     ora "9.4.1"
     rxjs "7.8.2"
 
+"@anthropic-ai/claude-agent-sdk-darwin-arm64@0.3.316":
+  version "0.3.316"
+  resolved "https://registry.yarnpkg.com/@anthropic-ai/claude-agent-sdk-darwin-arm64/-/claude-agent-sdk-darwin-arm64-0.3.316.tgz#e975e4f6ddaae3ef453d2d1533960277ac42d218"
+  integrity sha512-1I1oJ/YGqq4pFQvJqycD2e8pbsUQLLR+DwEzG9jQAGCoSKkxP1TBfHpjSik/0byCixyzpYObrYXPC0PKBIR91g==
+
+"@anthropic-ai/claude-agent-sdk-darwin-x64@0.3.316":
+  version "0.3.316"
+  resolved "https://registry.yarnpkg.com/@anthropic-ai/claude-agent-sdk-darwin-x64/-/claude-agent-sdk-darwin-x64-0.3.316.tgz#ee0ff187ec20042825e35519f7c6680268ba7a4e"
+  integrity sha512-gzNncKrID/6yJIKCAuF/pY1kfygQZ4dU0J+MNFl0bU+iQW65ERoIyoghYVfrAQ/gH2fuvnQtWxa8LQNScHgNMA==
+
+"@anthropic-ai/claude-agent-sdk-linux-arm64-musl@0.3.316":
+  version "0.3.316"
+  resolved "https://registry.yarnpkg.com/@anthropic-ai/claude-agent-sdk-linux-arm64-musl/-/claude-agent-sdk-linux-arm64-musl-0.3.316.tgz#d4d9042e671d7c8128a8dba5b7e488e8138403ff"
+  integrity sha512-1qqaEdsAs6eipEQQ4bMAWiwDjIouyA/YN5KQWS0/+kuPb+GKS8rUVW2dty2elV703hsMovb4IhMP4cv5K7R9YA==
+
+"@anthropic-ai/claude-agent-sdk-linux-arm64@0.3.316":
+  version "0.3.316"
+  resolved "https://registry.yarnpkg.com/@anthropic-ai/claude-agent-sdk-linux-arm64/-/claude-agent-sdk-linux-arm64-0.3.316.tgz#962e12f37f1fe6ee0667d3538c3a1ab32c44d103"
+  integrity sha512-+lm9XSw/em14yMZ41fbo80kfblbylfBQc9nYS6GgLoZVvgT3wSeEbv88v+mEK/jFw9g3VCH4ZI01sjNM34o7uw==
+
+"@anthropic-ai/claude-agent-sdk-linux-x64-musl@0.3.316":
+  version "0.3.316"
+  resolved "https://registry.yarnpkg.com/@anthropic-ai/claude-agent-sdk-linux-x64-musl/-/claude-agent-sdk-linux-x64-musl-0.3.316.tgz#96f0bc8503444dbfd28e1f1960143d2174c974f9"
+  integrity sha512-pMG9MRkjxMMbIxpwg/cKz6JorNjZtJOA9l/fifRQ/A01zGTKrRIaSCWoGg+Asmc64QBOa3aA4vzE/od9B1R0Tw==
+
+"@anthropic-ai/claude-agent-sdk-linux-x64@0.3.316":
+  version "0.3.316"
+  resolved "https://registry.yarnpkg.com/@anthropic-ai/claude-agent-sdk-linux-x64/-/claude-agent-sdk-linux-x64-0.3.316.tgz#28e287cbed010a7d9d8dc2a72802456d4aedfcfa"
+  integrity sha512-+csYyGkHziNp4It+ZykqTmXRZBuNrieTiBnji+zwAxNmLLCWz8xEWjNmwhaLPIMpUiaYREkDhZXt/AS6xXta5w==
+
+"@anthropic-ai/claude-agent-sdk-win32-arm64@0.3.316":
+  version "0.3.316"
+  resolved "https://registry.yarnpkg.com/@anthropic-ai/claude-agent-sdk-win32-arm64/-/claude-agent-sdk-win32-arm64-0.3.316.tgz#f7df65e92c7c69e277c2c173c1790381796b0f1d"
+  integrity sha512-Xj4iTS8NsB6isGhnZEnaIXIpUcSspv/lyIVnfPZjVGwuttaVHjq4IxfDopsPaVsPuTKd+L7DLAaBram1k85U2g==
+
+"@anthropic-ai/claude-agent-sdk-win32-x64@0.3.316":
+  version "0.3.316"
+  resolved "https://registry.yarnpkg.com/@anthropic-ai/claude-agent-sdk-win32-x64/-/claude-agent-sdk-win32-x64-0.3.316.tgz#615443dad5a5789239fa4114783b04ba268db105"
+  integrity sha512-FzQA1zHbYJTtLR9nn1McwkGYeiEmroTmYjIg7xZqo5eweJ8U/DESZKR/QdfF04MXe2DF23oLL8WHjEa+WxbGQw==
+
+"@anthropic-ai/claude-agent-sdk@^0.3.316":
+  version "0.3.316"
+  resolved "https://registry.yarnpkg.com/@anthropic-ai/claude-agent-sdk/-/claude-agent-sdk-0.3.316.tgz#f901da212e53640522c0ca38a55d0f60ef8fd69c"
+  integrity sha512-mCMr0que5kIy80JslJub6WFDB2+GYRGWNeVgSZaBpkBwXrr4wnRMnnGHitkA2BEJ5QP5xWyc6YH/6do/edxCWg==
+  optionalDependencies:
+    "@anthropic-ai/claude-agent-sdk-darwin-arm64" "0.3.316"
+    "@anthropic-ai/claude-agent-sdk-darwin-x64" "0.3.316"
+    "@anthropic-ai/claude-agent-sdk-linux-arm64" "0.3.316"
+    "@anthropic-ai/claude-agent-sdk-linux-arm64-musl" "0.3.316"
+    "@anthropic-ai/claude-agent-sdk-linux-x64" "0.3.316"
+    "@anthropic-ai/claude-agent-sdk-linux-x64-musl" "0.3.316"
+    "@anthropic-ai/claude-agent-sdk-win32-arm64" "0.3.316"
+    "@anthropic-ai/claude-agent-sdk-win32-x64" "0.3.316"
+
 "@anthropic-ai/sdk@^0.32.1":
   version "0.32.1"
   resolved "https://registry.yarnpkg.com/@anthropic-ai/sdk/-/sdk-0.32.1.tgz#d22c8ebae2adccc59d78fb416e89de337ff09014"
@@ -51,6 +105,15 @@
     form-data-encoder "1.7.2"
     formdata-node "^4.3.2"
     node-fetch "^2.6.7"
+
+"@anthropic-ai/sdk@^1.3.0":
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/@anthropic-ai/sdk/-/sdk-1.3.0.tgz#0976efeca0e050b67d8753d027b1e43f920040c5"
+  integrity sha512-k7z9BlLLPxfZH+ov7dS6EnaN/wiZeV8YNT1LZfrpAHIy7oY7pHr4UzirF9f2OlHtFEnRBOX+AZQ91Y5fK+TPTw==
+  dependencies:
+    "@opentelemetry/api" "^1.4.1"
+    json-schema-to-ts "^3.1.1"
+    standardwebhooks "^1.0.0"
 
 "@asamuzakjp/css-color@^3.2.0":
   version "3.2.0"
@@ -280,7 +343,7 @@
     "@babel/plugin-transform-modules-commonjs" "^7.29.7"
     "@babel/plugin-transform-typescript" "^7.29.7"
 
-"@babel/runtime@^7.12.5":
+"@babel/runtime@^7.12.5", "@babel/runtime@^7.18.3":
   version "7.29.10"
   resolved "https://registry.npmjs.org/@babel/runtime/-/runtime-7.29.10.tgz"
   integrity sha512-NpugTzbKgGrNe45Ui32cN8vCFFMxVtP/9rtfwv0nP5FRDAjvYBxJcLVpYA9mr1jxP6cnIT7x9LUzuDTbWYYNRA==
@@ -1462,6 +1525,11 @@
   resolved "https://registry.npmjs.org/@open-draft/until/-/until-2.1.0.tgz"
   integrity sha512-U69T3ItWHvLwGg5eJ0n3I62nWuE6ilHlmz7zM0npLBRvPRd7e6NYmg54vvRtP5mZG7kZqZCFVdsTWo7BPtBujg==
 
+"@opentelemetry/api@^1.4.1":
+  version "1.10.0"
+  resolved "https://registry.yarnpkg.com/@opentelemetry/api/-/api-1.10.0.tgz#31d2e3d36ffc6cdd5ce165251e7fa13bbad0fd8a"
+  integrity sha512-lMkyes8iHrG+mk6WH7X70MdCLI2RS0FwNBY1PyQ8UemaijE2m5mv5A0Niy3HtbYTFrgkUEQjFMXmSAk2hQDuPQ==
+
 "@orval/angular@8.46.0":
   version "8.46.0"
   resolved "https://registry.yarnpkg.com/@orval/angular/-/angular-8.46.0.tgz#eddfc442d880bcf5da11f100c4b4402f031cb279"
@@ -2314,6 +2382,11 @@
   dependencies:
     "@sinonjs/commons" "^3.0.1"
     type-detect "^4.1.0"
+
+"@stablelib/base64@^1.0.0":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@stablelib/base64/-/base64-1.0.1.tgz#bdfc1c6d3a62d7a3b7bbc65b6cce1bb4561641be"
+  integrity sha512-1bnPQqSxSuc3Ii6MhBysoWCg58j97aUjuCSZrGSmDxNqtytIi0k8utUenAwTZN4V5mXXYGsVUI9zeBqy+jBOSQ==
 
 "@standard-schema/spec@1.1.0", "@standard-schema/spec@^1.0.0", "@standard-schema/spec@^1.1.0":
   version "1.1.0"
@@ -5397,6 +5470,11 @@ fast-safe-stringify@2.1.1, fast-safe-stringify@^2.1.1:
   resolved "https://registry.npmjs.org/fast-safe-stringify/-/fast-safe-stringify-2.1.1.tgz"
   integrity sha512-W+KJc2dmILlPplD/H4K9l9LcAHAfPtP6BY84uVLXQ6Evcz9Lcg33Y2z1IVblT6xdY54PXYVHEv+0Wpq8Io6zkA==
 
+fast-sha256@^1.3.0:
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/fast-sha256/-/fast-sha256-1.3.0.tgz#7916ba2054eeb255982608cccd0f6660c79b7ae6"
+  integrity sha512-n11RGP/lrWEFI/bWdygLxhI+pVeo1ZYIVwvvPkW7azl/rOy+F3HYRZ2K5zeE9mmkhQppyv9sQFx0JM9UabnpPQ==
+
 fast-string-truncated-width@^3.0.2:
   version "3.0.3"
   resolved "https://registry.npmjs.org/fast-string-truncated-width/-/fast-string-truncated-width-3.0.3.tgz"
@@ -6443,6 +6521,14 @@ json-parse-even-better-errors@^2.3.0:
   version "2.3.1"
   resolved "https://registry.npmjs.org/json-parse-even-better-errors/-/json-parse-even-better-errors-2.3.1.tgz"
   integrity sha512-xyFwyhro/JEof6Ghe2iz2NcXoj2sloNsWr/XsERDK/oiPCfaNhl5ONfp+jQdAZRQQ0IJWNzH9zIZF7li91kh2w==
+
+json-schema-to-ts@^3.1.1:
+  version "3.1.1"
+  resolved "https://registry.yarnpkg.com/json-schema-to-ts/-/json-schema-to-ts-3.1.1.tgz#81f3acaf5a34736492f6f5f51870ef9ece1ca853"
+  integrity sha512-+DWg8jCJG2TEnpy7kOm/7/AxaYoaRbjVB4LFZLySZlWn8exGs3A4OLJR966cVvU26N7X9TWxl+Jsw7dzAqKT6g==
+  dependencies:
+    "@babel/runtime" "^7.18.3"
+    ts-algebra "^2.0.0"
 
 json-schema-traverse@^0.4.1:
   version "0.4.1"
@@ -9264,6 +9350,14 @@ standard-as-callback@2.1.0:
   resolved "https://registry.npmjs.org/standard-as-callback/-/standard-as-callback-2.1.0.tgz"
   integrity sha512-qoRRSyROncaz1z0mvYqIE4lCd9p2R90i6GxW3uZv5ucSu8tU7B5HXUP1gG8pVZsYNVaXjk8ClXHPttLyxAL48A==
 
+standardwebhooks@^1.0.0:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/standardwebhooks/-/standardwebhooks-1.1.1.tgz#25b98fa2bbe4edad7b42778135c923563e3d5e2f"
+  integrity sha512-bCbX9ZEyFkWPsRz7Bl3NuQUJohmwGSev/yhr7vhaGPlc4AfIrspIRa6cPTBuI1ItmrTDJ4d/S2hCsfe4+vQGnQ==
+  dependencies:
+    "@stablelib/base64" "^1.0.0"
+    fast-sha256 "^1.3.0"
+
 statuses@^2.0.1, statuses@^2.0.2, statuses@~2.0.2:
   version "2.0.2"
   resolved "https://registry.npmjs.org/statuses/-/statuses-2.0.2.tgz"
@@ -9763,6 +9857,11 @@ trough@^2.0.0:
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/trough/-/trough-2.2.0.tgz#94a60bd6bd375c152c1df911a4b11d5b0256f50f"
   integrity sha512-tmMpK00BjZiUyVyvrBK7knerNgmgvcV/KLVyuma/SC+TQN167GrMRciANTz09+k3zW8L8t60jWO1GpfkZdjTaw==
+
+ts-algebra@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/ts-algebra/-/ts-algebra-2.0.0.tgz#4e3e0953878f26518fce7f6bb115064a65388b7a"
+  integrity sha512-FPAhNPFMrkwz76P7cdjdmiShwMynZYN6SgOujD1urY4oNm80Ou9oMdmbR45LotcKOXoy7wSmHkRFE6Mxbrhefw==
 
 ts-api-utils@^2.5.0:
   version "2.5.0"

@@ -210,6 +210,7 @@ export class WorkflowsController {
       const output = (phase.output ?? {}) as Record<string, unknown>
       const execution = (output.execution ?? null) as WorkflowPhaseResponseDto['execution']
       const reviewSummary = typeof output.reviewSummary === 'string' ? output.reviewSummary : undefined
+      const commitSha = typeof output.commitSha === 'string' ? output.commitSha : undefined
 
       return {
         id: phase.id,
@@ -222,6 +223,7 @@ export class WorkflowsController {
         completedAt: phase.completedAt?.toISOString() ?? null,
         execution,
         reviewSummary,
+        commitSha,
       }
     })
   }

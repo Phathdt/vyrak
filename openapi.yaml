@@ -1845,6 +1845,9 @@ components:
         reviewSummary:
           type: string
           x-nestjs_zod-uses-3-point-1-syntax: true
+        commitSha:
+          type: string
+          x-nestjs_zod-uses-3-point-1-syntax: true
       required:
         - id
         - workflowId
@@ -1928,6 +1931,8 @@ components:
                   - status
                 nullable: true
               reviewSummary:
+                type: string
+              commitSha:
                 type: string
             required:
               - id

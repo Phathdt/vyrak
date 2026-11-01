@@ -2,58 +2,95 @@ import { ConversationPhase, ConversationService, MessageRole } from '@vyrak/conv
 import { CustomConfigService } from '@vyrak/custom-config'
 import { DatabaseService } from '@vyrak/database'
 import { execFile } from 'node:child_process'
-import { mkdir, writeFile } from 'node:fs/promises'
-import path from 'node:path'
 import { promisify } from 'node:util'
 
 import { PhaseExecutionStatus, PhaseRunType } from '../../domain/schemas/phase-execution.schemas'
+import { ClaudeCodeRunner } from '../../infras/agent/claude-code.runner'
+import { GitWorktreeService } from '../../infras/workspace/git-worktree.service'
 
 import type { PhaseExecutionMeta, WorkflowPhaseRunJob } from '../../domain/schemas/phase-execution.schemas'
 
 const execFileAsync = promisify(execFile)
 
 export class WorkflowPhaseRunHandler {
+  private readonly gitWorktree: GitWorktreeService
+  private readonly claudeCode: ClaudeCodeRunner
+
   constructor(
     private readonly databaseService: DatabaseService,
     private readonly conversationService: ConversationService,
-    private readonly configService: CustomConfigService
-  ) {}
+    configService: CustomConfigService
+  ) {
+    this.gitWorktree = new GitWorktreeService(configService)
+    this.claudeCode = new ClaudeCodeRunner(configService)
+  }
 
   async handle(job: WorkflowPhaseRunJob): Promise<void> {
-    switch (job.runType) {
-      case PhaseRunType.IMPLEMENTATION:
-        await this.runImplementation(job)
-        return
-      case PhaseRunType.REVIEW:
-        await this.runReview(job)
-        return
-      case PhaseRunType.QA:
-        await this.runQa(job)
-        return
-      default:
-        throw new Error(`Unsupported run type: ${job.runType}`)
+    try {
+      switch (job.runType) {
+        case PhaseRunType.IMPLEMENTATION:
+          await this.runImplementation(job)
+          return
+        case PhaseRunType.REVIEW:
+          await this.runReview(job)
+          return
+        case PhaseRunType.QA:
+          await this.runQa(job)
+          return
+        default:
+          throw new Error(`Unsupported run type: ${job.runType}`)
+      }
+    } catch (error) {
+      await this.markFailed(job, error)
+      throw error
     }
   }
 
-  private async runImplementation(job: WorkflowPhaseRunJob): Promise<void> {
-    const planText = await this.buildPlanningTranscript(job.workflowId)
-    const branch = `workflow/${job.workflowId.slice(0, 8)}/implementation`
-    const workspacePath = await this.prepareWorkspace(job, branch)
-
-    // TODO: invoke Claude Code agent in workspacePath with planText
-    await writeFile(path.join(workspacePath, '.vyrak-plan.md'), planText, 'utf8')
-
-    const pullRequestUrl = `https://github.com/example/org/pull/${Math.floor(Math.random() * 9000) + 1000}`
-
+  async markFailed(job: WorkflowPhaseRunJob, error: unknown): Promise<void> {
+    const message = error instanceof Error ? error.message : String(error)
     await this.finishPhaseRun(job, {
-      status: PhaseExecutionStatus.AWAITING_USER,
-      runType: PhaseRunType.IMPLEMENTATION,
-      branch,
-      workspacePath,
-      pullRequestUrl,
-      pullRequestNumber: Number(pullRequestUrl.split('/').pop()),
+      status: PhaseExecutionStatus.FAILED,
+      runType: job.runType,
+      lastError: message.slice(0, 2000),
       finishedAt: new Date().toISOString(),
     })
+  }
+
+  private async runImplementation(job: WorkflowPhaseRunJob): Promise<void> {
+    const context = await this.loadWorkflowContext(job)
+    const planText = await this.buildPlanningTranscript(job.workflowId)
+
+    const { workspacePath, branch } = await this.gitWorktree.prepareWorktree({
+      organizationId: job.organizationId,
+      projectId: context.projectId,
+      workflowId: job.workflowId,
+      repositoryName: context.repositoryName,
+      phaseKey: job.phaseKey,
+    })
+
+    const agentResult = await this.claudeCode.runImplementation({
+      workspacePath,
+      planText,
+      workflowId: job.workflowId,
+    })
+
+    const commitSha = await this.commitWorkspaceChanges(workspacePath, job.workflowId)
+
+    await this.finishPhaseRun(
+      job,
+      {
+        status: PhaseExecutionStatus.AWAITING_USER,
+        runType: PhaseRunType.IMPLEMENTATION,
+        branch,
+        workspacePath,
+        finishedAt: new Date().toISOString(),
+      },
+      {
+        implementationLog: agentResult.content.slice(0, 12_000),
+        commitSha,
+        usedFakeAgent: agentResult.usedFakeAgent,
+      }
+    )
   }
 
   private async runReview(job: WorkflowPhaseRunJob): Promise<void> {
@@ -62,10 +99,30 @@ export class WorkflowPhaseRunHandler {
     })
     const implOutput = (implPhase?.output ?? {}) as { execution?: PhaseExecutionMeta }
     const branch = implOutput.execution?.branch ?? 'unknown'
+    const workspacePath = implOutput.execution?.workspacePath
 
-    // TODO: Claude Code review on branch with criteria checklist
-    const reviewSummary = `Review (stub) for branch \`${branch}\`: no blocking issues found. Verify tests and security manually.`
+    if (workspacePath && branch !== 'unknown') {
+      const result = await this.claudeCode.runReview({
+        workspacePath,
+        branch,
+        workflowId: job.workflowId,
+      })
 
+      await this.finishPhaseRun(
+        job,
+        {
+          status: PhaseExecutionStatus.AWAITING_USER,
+          runType: PhaseRunType.REVIEW,
+          branch,
+          workspacePath,
+          finishedAt: new Date().toISOString(),
+        },
+        { reviewSummary: result.content.slice(0, 12_000) }
+      )
+      return
+    }
+
+    const reviewSummary = `Review skipped: no implementation workspace metadata for branch \`${branch}\`.`
     await this.finishPhaseRun(
       job,
       {
@@ -79,7 +136,6 @@ export class WorkflowPhaseRunHandler {
   }
 
   private async runQa(job: WorkflowPhaseRunJob): Promise<void> {
-    // TODO: run test suite in workspace
     await this.finishPhaseRun(
       job,
       {
@@ -89,6 +145,48 @@ export class WorkflowPhaseRunHandler {
       },
       { qaErrors: [] }
     )
+  }
+
+  private async loadWorkflowContext(job: WorkflowPhaseRunJob): Promise<{
+    projectId: string
+    repositoryName?: string
+  }> {
+    const workflow = await this.databaseService.client.workflow.findFirst({
+      where: { id: job.workflowId, organizationId: job.organizationId },
+    })
+    if (!workflow) {
+      throw new Error('Workflow not found for phase run')
+    }
+
+    const link = await this.databaseService.client.workflowRepository.findFirst({
+      where: { workflowId: job.workflowId, organizationId: job.organizationId },
+    })
+
+    let repositoryName: string | undefined
+    if (link) {
+      const repo = await this.databaseService.client.gitRepository.findFirst({
+        where: { id: link.repositoryId, organizationId: job.organizationId },
+      })
+      repositoryName = repo?.name
+    }
+
+    return { projectId: workflow.projectId, repositoryName }
+  }
+
+  private async commitWorkspaceChanges(workspacePath: string, workflowId: string): Promise<string | null> {
+    try {
+      const { stdout: status } = await execFileAsync('git', ['status', '--porcelain'], { cwd: workspacePath })
+      if (!status.trim()) {
+        return null
+      }
+      await execFileAsync('git', ['add', '-A'], { cwd: workspacePath })
+      const message = `feat(workflow): implementation for ${workflowId.slice(0, 8)}`
+      await execFileAsync('git', ['commit', '-m', message], { cwd: workspacePath })
+      const { stdout: sha } = await execFileAsync('git', ['rev-parse', 'HEAD'], { cwd: workspacePath })
+      return sha.trim()
+    } catch {
+      return null
+    }
   }
 
   private async buildPlanningTranscript(workflowId: string): Promise<string> {
@@ -106,31 +204,6 @@ export class WorkflowPhaseRunHandler {
       .filter((m) => m.role === MessageRole.USER || m.role === MessageRole.ASSISTANT)
       .map((m) => `## ${m.role}\n\n${m.content}`)
       .join('\n\n')
-  }
-
-  private async prepareWorkspace(job: WorkflowPhaseRunJob, branch: string): Promise<string> {
-    const workspacesPath = this.configService.workspace?.workspacesPath ?? '/tmp/vyrak-workspaces'
-    const workspacePath = path.join(workspacesPath, job.organizationId, job.workflowId, job.phaseKey)
-    await mkdir(workspacePath, { recursive: true })
-
-    const mainReposPath = this.configService.workspace?.mainReposPath
-    if (mainReposPath) {
-      try {
-        await execFileAsync('git', ['worktree', 'add', '-B', branch, workspacePath, 'HEAD'], {
-          cwd: mainReposPath,
-        })
-        return workspacePath
-      } catch {
-        // fall through — stub workspace without git
-      }
-    }
-
-    await writeFile(
-      path.join(workspacePath, 'README.vyrak-stub'),
-      `Stub workspace for workflow ${job.workflowId}\nBranch: ${branch}\n`,
-      'utf8'
-    )
-    return workspacePath
   }
 
   private async finishPhaseRun(
