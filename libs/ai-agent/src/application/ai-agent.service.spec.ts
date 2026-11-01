@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
-import { AIAgentService } from './ai-agent.service'
+import { AIAgentService } from './services/ai-agent.service'
 
 import type {
   AgentRequest,

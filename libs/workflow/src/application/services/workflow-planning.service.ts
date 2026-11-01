@@ -1,5 +1,4 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common'
-import { AIAgentService } from '@vyrak/ai-agent'
 import { ConversationPhase, ConversationService, MessageRole } from '@vyrak/conversation'
 import { CustomConfigService } from '@vyrak/custom-config'
 
@@ -15,14 +14,14 @@ import type {
   PlanningChatResponseDto,
   PlanningSessionResponseDto,
 } from '../../domain/schemas/workflow-planning.schemas'
-import type { Message } from '@vyrak/ai-agent'
+import type { IAIAgentService, Message } from '@vyrak/ai-agent'
 import type { ConversationMessage } from '@vyrak/conversation'
 import type { IGitRepositoryService } from '@vyrak/project'
 
 export class WorkflowPlanningService implements IWorkflowPlanningService {
   constructor(
     private readonly conversationService: ConversationService,
-    private readonly aiAgentService: AIAgentService,
+    private readonly aiAgentService: IAIAgentService,
     private readonly workflowRepository: IWorkflowRepository,
     private readonly workflowRepositoryRepository: IWorkflowRepositoryRepository,
     private readonly gitRepositoryService: IGitRepositoryService,

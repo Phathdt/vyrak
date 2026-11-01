@@ -1,12 +1,14 @@
-import { Inject, Injectable } from '@nestjs/common'
+import type {
+  AgentRequest,
+  AgentResponse,
+  BrainstormingContext,
+  IAIAgentPort,
+  IAIAgentService,
+  WorkflowClassification,
+} from '../../domain'
 
-import { AI_AGENT_PORT } from '../domain'
-
-import type { AgentRequest, AgentResponse, BrainstormingContext, IAIAgentPort, WorkflowClassification } from '../domain'
-
-@Injectable()
-export class AIAgentService {
-  constructor(@Inject(AI_AGENT_PORT) private readonly aiAgent: IAIAgentPort) {}
+export class AIAgentService implements IAIAgentService {
+  constructor(private readonly aiAgent: IAIAgentPort) {}
 
   /**
    * Send a chat message and get response

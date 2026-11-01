@@ -1,4 +1,4 @@
-import type { AgentRequest, AgentResponse, IAIAgentPort, WorkflowClassification } from '../domain'
+import type { AgentRequest, AgentResponse, IAIAgentPort, WorkflowClassification } from '../../domain'
 
 const NOT_CONFIGURED_MESSAGE =
   'Anthropic is not configured. Set ANTHROPIC__API_KEY and ANTHROPIC__MODEL in apps/api-server/.env'

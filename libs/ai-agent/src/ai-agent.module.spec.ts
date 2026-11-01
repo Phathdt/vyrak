@@ -3,11 +3,11 @@ import { CustomConfigService } from '@vyrak/custom-config'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 import { AIAgentModule } from './ai-agent.module'
-import { AIAgentService } from './application'
 import { AI_AGENT_PORT } from './domain'
-import { ClaudeAdapter } from './infrastructure'
+import { AI_AGENT_SERVICE } from './infras'
+import { ClaudeAdapter } from './infras'
 
-import type { IAIAgentPort } from './domain'
+import type { IAIAgentPort, IAIAgentService } from './domain'
 
 // Mock CustomConfigService
 const mockCustomConfigService = {
@@ -51,10 +51,9 @@ describe('AIAgentModule', () => {
   })
 
   describe('Provider Registration', () => {
-    it('should register AIAgentService as a provider', () => {
-      const service = module.get(AIAgentService)
+    it('should register AI_AGENT_SERVICE as a provider', () => {
+      const service = module.get<IAIAgentService>(AI_AGENT_SERVICE)
       expect(service).toBeDefined()
-      expect(service).toBeInstanceOf(AIAgentService)
     })
 
     it('should register AI_AGENT_PORT with mocked port implementation', () => {
@@ -64,7 +63,7 @@ describe('AIAgentModule', () => {
     })
 
     it('should inject AI_AGENT_PORT into AIAgentService', () => {
-      const service = module.get(AIAgentService)
+      const service = module.get<IAIAgentService>(AI_AGENT_SERVICE)
       // Service should have private property 'aiAgent' which is the injected port
       expect(service).toBeDefined()
       // Verify the service can be used and has the expected methods
@@ -78,12 +77,12 @@ describe('AIAgentModule', () => {
   })
 
   describe('Module Exports', () => {
-    it('should export AIAgentService', () => {
-      const service = module.get(AIAgentService)
+    it('should export AI_AGENT_SERVICE', () => {
+      const service = module.get<IAIAgentService>(AI_AGENT_SERVICE)
       expect(service).toBeDefined()
     })
 
-    it('exported AIAgentService should be accessible from module', async () => {
+    it('exported AI_AGENT_SERVICE should be accessible from module', async () => {
       const testModule = await Test.createTestingModule({
         imports: [AIAgentModule],
       })
@@ -95,9 +94,8 @@ describe('AIAgentModule', () => {
         .useValue(mockAIAgentPort)
         .compile()
 
-      const service = testModule.get(AIAgentService)
+      const service = testModule.get<IAIAgentService>(AI_AGENT_SERVICE)
       expect(service).toBeDefined()
-      expect(service).toBeInstanceOf(AIAgentService)
     })
 
     it('should provide AI_AGENT_PORT through module', async () => {
@@ -133,16 +131,16 @@ describe('AIAgentModule', () => {
     })
 
     it('should inject the same AI_AGENT_PORT instance into service', async () => {
-      const service = module.get(AIAgentService)
+      const service = module.get<IAIAgentService>(AI_AGENT_SERVICE)
       const port = module.get(AI_AGENT_PORT)
 
       // Both should exist
-      expect(service).toBeInstanceOf(AIAgentService)
+      expect(service).toBeDefined()
       expect(port).toEqual(mockAIAgentPort)
     })
 
-    it('AIAgentService should have access to IAIAgentPort methods through DI', () => {
-      const service = module.get(AIAgentService)
+    it('AI_AGENT_SERVICE should have access to IAIAgentPort methods through DI', () => {
+      const service = module.get<IAIAgentService>(AI_AGENT_SERVICE)
 
       // Service methods should delegate to the injected port
       expect(service.chat).toBeDefined()
@@ -196,8 +194,8 @@ describe('AIAgentModule', () => {
         .useValue(mockAIAgentPort)
         .compile()
 
-      const service1 = module1.get(AIAgentService)
-      const service2 = module2.get(AIAgentService)
+      const service1 = module1.get<IAIAgentService>(AI_AGENT_SERVICE)
+      const service2 = module2.get<IAIAgentService>(AI_AGENT_SERVICE)
 
       // Different modules should have different service instances
       expect(service1).not.toBe(service2)
@@ -218,8 +216,8 @@ describe('AIAgentModule', () => {
         .useValue(mockAIAgentPort)
         .compile()
 
-      const service1 = testModule.get(AIAgentService)
-      const service2 = testModule.get(AIAgentService)
+      const service1 = testModule.get<IAIAgentService>(AI_AGENT_SERVICE)
+      const service2 = testModule.get<IAIAgentService>(AI_AGENT_SERVICE)
       const port1 = testModule.get(AI_AGENT_PORT)
       const port2 = testModule.get(AI_AGENT_PORT)
 
@@ -257,37 +255,37 @@ describe('AIAgentModule', () => {
 
   describe('Service Methods Availability', () => {
     it('should have chat method available', () => {
-      const service = module.get(AIAgentService)
+      const service = module.get<IAIAgentService>(AI_AGENT_SERVICE)
       expect(service.chat).toBeDefined()
       expect(typeof service.chat).toBe('function')
     })
 
     it('should have chatStream method available', () => {
-      const service = module.get(AIAgentService)
+      const service = module.get<IAIAgentService>(AI_AGENT_SERVICE)
       expect(service.chatStream).toBeDefined()
       expect(typeof service.chatStream).toBe('function')
     })
 
     it('should have startBrainstorming method available', () => {
-      const service = module.get(AIAgentService)
+      const service = module.get<IAIAgentService>(AI_AGENT_SERVICE)
       expect(service.startBrainstorming).toBeDefined()
       expect(typeof service.startBrainstorming).toBe('function')
     })
 
     it('should have continueBrainstorming method available', () => {
-      const service = module.get(AIAgentService)
+      const service = module.get<IAIAgentService>(AI_AGENT_SERVICE)
       expect(service.continueBrainstorming).toBeDefined()
       expect(typeof service.continueBrainstorming).toBe('function')
     })
 
     it('should have classifyWorkflow method available', () => {
-      const service = module.get(AIAgentService)
+      const service = module.get<IAIAgentService>(AI_AGENT_SERVICE)
       expect(service.classifyWorkflow).toBeDefined()
       expect(typeof service.classifyWorkflow).toBe('function')
     })
 
     it('should have shouldClassify method available', () => {
-      const service = module.get(AIAgentService)
+      const service = module.get<IAIAgentService>(AI_AGENT_SERVICE)
       expect(service.shouldClassify).toBeDefined()
       expect(typeof service.shouldClassify).toBe('function')
     })
@@ -312,7 +310,7 @@ describe('AIAgentModule', () => {
         .compile()
 
       expect(testModule).toBeDefined()
-      const service = testModule.get(AIAgentService)
+      const service = testModule.get<IAIAgentService>(AI_AGENT_SERVICE)
       expect(service).toBeDefined()
 
       await testModule.close()
@@ -328,7 +326,7 @@ describe('AIAgentModule', () => {
         .useValue(mockAIAgentPort)
         .compile()
 
-      const service = testModule.get(AIAgentService)
+      const service = testModule.get<IAIAgentService>(AI_AGENT_SERVICE)
       expect(service).toBeDefined()
 
       await testModule.close()
@@ -336,8 +334,8 @@ describe('AIAgentModule', () => {
   })
 
   describe('Service Integration', () => {
-    it('AIAgentService.chat() should delegate to port', async () => {
-      const service = module.get(AIAgentService)
+    it('AI_AGENT_SERVICE.chat() should delegate to port', async () => {
+      const service = module.get<IAIAgentService>(AI_AGENT_SERVICE)
       const mockRequest = { messages: [{ role: 'user' as const, content: 'Test' }] }
       const mockResponse = { content: 'Response' }
 
@@ -349,8 +347,8 @@ describe('AIAgentModule', () => {
       expect(result).toEqual(mockResponse)
     })
 
-    it('AIAgentService.chatStream() should delegate to port', () => {
-      const service = module.get(AIAgentService)
+    it('AI_AGENT_SERVICE.chatStream() should delegate to port', () => {
+      const service = module.get<IAIAgentService>(AI_AGENT_SERVICE)
       const mockRequest = { messages: [{ role: 'user' as const, content: 'Test' }] }
 
       async function* mockGenerator() {
@@ -364,8 +362,8 @@ describe('AIAgentModule', () => {
       expect(mockAIAgentPort.chatStream).toHaveBeenCalledWith(mockRequest)
     })
 
-    it('AIAgentService.classifyWorkflow() should delegate to port', async () => {
-      const service = module.get(AIAgentService)
+    it('AI_AGENT_SERVICE.classifyWorkflow() should delegate to port', async () => {
+      const service = module.get<IAIAgentService>(AI_AGENT_SERVICE)
       const mockRequest = { messages: [] }
       const mockClassification = {
         type: 'STORY' as const,
@@ -388,8 +386,8 @@ describe('AIAgentModule', () => {
       expect(result).toEqual(mockClassification)
     })
 
-    it('AIAgentService.startBrainstorming() should use port', async () => {
-      const service = module.get(AIAgentService)
+    it('AI_AGENT_SERVICE.startBrainstorming() should use port', async () => {
+      const service = module.get<IAIAgentService>(AI_AGENT_SERVICE)
       const mockResponse = { content: 'Starting brainstorm' }
 
       mockAIAgentPort.chat = vi.fn().mockResolvedValue(mockResponse)
@@ -404,8 +402,8 @@ describe('AIAgentModule', () => {
       expect(result).toEqual(mockResponse)
     })
 
-    it('AIAgentService.continueBrainstorming() should use port', async () => {
-      const service = module.get(AIAgentService)
+    it('AI_AGENT_SERVICE.continueBrainstorming() should use port', async () => {
+      const service = module.get<IAIAgentService>(AI_AGENT_SERVICE)
       const mockResponse = { content: 'Continuing brainstorm' }
 
       mockAIAgentPort.chat = vi.fn().mockResolvedValue(mockResponse)
@@ -423,8 +421,8 @@ describe('AIAgentModule', () => {
       expect(result).toEqual(mockResponse)
     })
 
-    it('AIAgentService.shouldClassify() should check conversation history', () => {
-      const service = module.get(AIAgentService)
+    it('AI_AGENT_SERVICE.shouldClassify() should check conversation history', () => {
+      const service = module.get<IAIAgentService>(AI_AGENT_SERVICE)
 
       const context = {
         workflowId: 'test',
@@ -457,12 +455,11 @@ describe('AIAgentModule', () => {
         .useValue(mockAIAgentPort)
         .compile()
 
-      const service = testModule.get(AIAgentService)
+      const service = testModule.get<IAIAgentService>(AI_AGENT_SERVICE)
       const port = testModule.get(AI_AGENT_PORT)
 
       expect(service).toBeDefined()
       expect(port).toBeDefined()
-      expect(service).toBeInstanceOf(AIAgentService)
 
       await testModule.close()
     })
@@ -486,8 +483,8 @@ describe('AIAgentModule', () => {
         .useValue(mockAIAgentPort)
         .compile()
 
-      const service1 = module1.get(AIAgentService)
-      const service2 = module2.get(AIAgentService)
+      const service1 = module1.get<IAIAgentService>(AI_AGENT_SERVICE)
+      const service2 = module2.get<IAIAgentService>(AI_AGENT_SERVICE)
 
       expect(service1).not.toBe(service2)
 
@@ -496,7 +493,7 @@ describe('AIAgentModule', () => {
     })
 
     it('should provide port to service through DI container', () => {
-      const service = module.get(AIAgentService)
+      const service = module.get<IAIAgentService>(AI_AGENT_SERVICE)
       const port = module.get(AI_AGENT_PORT)
 
       // Verify both are defined and service has access to port methods
@@ -506,8 +503,8 @@ describe('AIAgentModule', () => {
     })
 
     it('should register providers as singletons within module scope', () => {
-      const service1 = module.get(AIAgentService)
-      const service2 = module.get(AIAgentService)
+      const service1 = module.get<IAIAgentService>(AI_AGENT_SERVICE)
+      const service2 = module.get<IAIAgentService>(AI_AGENT_SERVICE)
       const port1 = module.get(AI_AGENT_PORT)
       const port2 = module.get(AI_AGENT_PORT)
 
@@ -517,7 +514,7 @@ describe('AIAgentModule', () => {
   })
 
   describe('Module Re-export Behavior', () => {
-    it('should export AIAgentService for use in parent module', async () => {
+    it('should export AI_AGENT_SERVICE for use in parent module', async () => {
       const parentModule = await Test.createTestingModule({
         imports: [AIAgentModule],
       })
@@ -527,9 +524,8 @@ describe('AIAgentModule', () => {
         .useValue(mockAIAgentPort)
         .compile()
 
-      const service = parentModule.get(AIAgentService)
+      const service = parentModule.get<IAIAgentService>(AI_AGENT_SERVICE)
       expect(service).toBeDefined()
-      expect(service).toBeInstanceOf(AIAgentService)
 
       await parentModule.close()
     })
@@ -544,7 +540,7 @@ describe('AIAgentModule', () => {
         .useValue(mockAIAgentPort)
         .compile()
 
-      const service = consumingModule.get(AIAgentService)
+      const service = consumingModule.get<IAIAgentService>(AI_AGENT_SERVICE)
       expect(service).toBeDefined()
 
       await consumingModule.close()

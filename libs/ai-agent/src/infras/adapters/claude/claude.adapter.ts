@@ -3,7 +3,7 @@ import { CustomConfigService } from '@vyrak/custom-config'
 
 import { buildAnthropicClientOptions } from './build-anthropic-client-options'
 
-import type { AgentRequest, AgentResponse, IAIAgentPort, Message, WorkflowClassification } from '../../domain'
+import type { AgentRequest, AgentResponse, IAIAgentPort, Message, WorkflowClassification } from '../../../domain'
 
 export class ClaudeAdapter implements IAIAgentPort {
   private client: Anthropic
