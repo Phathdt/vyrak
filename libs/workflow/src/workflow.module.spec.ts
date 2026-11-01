@@ -3,7 +3,7 @@
  */
 
 import { Test, TestingModule } from '@nestjs/testing'
-import { CustomConfigModule, CustomConfigService } from '@vyrak/custom-config'
+import { CustomConfigService } from '@vyrak/custom-config'
 import { GitRepositoryService } from '@vyrak/project'
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 

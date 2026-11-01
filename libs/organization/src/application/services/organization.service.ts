@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException } from '@nestjs/common'
+import { InsufficientPermissionsError, NotOrganizationMemberError, OrganizationSlugExistsError } from '../../domain'
 
 import type {
   CreateOrganizationDto,
@@ -15,7 +15,7 @@ export class OrganizationService implements IOrganizationService {
     const existing = await this.repository.findBySlug(data.slug)
 
     if (existing) {
-      throw new BadRequestException('Organization slug already exists')
+      throw new OrganizationSlugExistsError(data.slug)
     }
 
     return this.repository.create(userId, data)
@@ -29,7 +29,7 @@ export class OrganizationService implements IOrganizationService {
     const organization = await this.repository.findOne(id, userId)
 
     if (!organization) {
-      throw new ForbiddenException('Not a member of this organization')
+      throw new NotOrganizationMemberError(id, userId)
     }
 
     return organization
@@ -45,11 +45,11 @@ export class OrganizationService implements IOrganizationService {
     const organization = await this.repository.findOne(organizationId, userId)
 
     if (!organization) {
-      throw new ForbiddenException('Not a member of this organization')
+      throw new NotOrganizationMemberError(organizationId, userId)
     }
 
     if (!allowedRoles.includes(organization.role)) {
-      throw new ForbiddenException('Insufficient permissions')
+      throw new InsufficientPermissionsError(allowedRoles, organization.role)
     }
 
     return { id: organization.id, role: organization.role }

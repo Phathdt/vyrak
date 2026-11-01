@@ -1,6 +1,6 @@
-import { NotFoundException } from '@nestjs/common'
 import { ConversationPhase, IConversationService, MessageRole } from '@vyrak/conversation'
 
+import { WorkflowNotFoundError } from '../../domain'
 import { PhaseExecutionStatus, PhaseRunType } from '../../domain/schemas/phase-execution.schemas'
 
 import type { IWorkflowPhaseRepository, IWorkflowRepository } from '../../domain'
@@ -29,7 +29,7 @@ export class WorkflowPhaseOrchestratorService {
 
     const workflow = await this.workflowRepository.findById(workflowId)
     if (!workflow) {
-      throw new NotFoundException('Workflow not found')
+      throw new WorkflowNotFoundError(workflowId)
     }
 
     const phases = await this.workflowPhaseRepository.findByWorkflowId(workflowId)

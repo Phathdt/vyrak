@@ -2,7 +2,7 @@ import { BullModule } from '@nestjs/bullmq'
 import { CacheModule } from '@nestjs/cache-manager'
 import { Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
-import { APP_INTERCEPTOR } from '@nestjs/core'
+import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core'
 import { ScheduleModule } from '@nestjs/schedule'
 import { AuthModule } from '@vyrak/auth'
 import { CustomConfigModule } from '@vyrak/custom-config'
@@ -13,6 +13,7 @@ import { ProjectModule } from '@vyrak/project'
 import { UserModule } from '@vyrak/user'
 import { WorkflowModule } from '@vyrak/workflow'
 
+import { DomainExceptionFilter } from '../common/filters'
 import { OrganizationMemberGuard } from '../guards'
 import { ResponseInterceptor, TenantContextInterceptor, TraceIdInterceptor } from '../interceptors'
 import { WorkflowBrainstormingController } from '../workflow/workflow-brainstorming.controller'
@@ -77,6 +78,10 @@ import {
     AppService,
     ...workflowPhaseAutomationProviders,
     OrganizationMemberGuard,
+    {
+      provide: APP_FILTER,
+      useClass: DomainExceptionFilter,
+    },
     {
       provide: APP_INTERCEPTOR,
       useClass: TraceIdInterceptor,

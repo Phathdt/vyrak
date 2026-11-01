@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common'
+import { ProjectNotFoundError } from '../../domain/exceptions/project.exceptions'
 
 import type { GitRepositoryEntity } from '../../domain/entities/git-repository.entity'
 import type { IGitRepositoryRepository } from '../../domain/interfaces/git-repository-repository.interface'
@@ -15,7 +15,7 @@ export class GitRepositoryService implements IGitRepositoryService {
     const project = await this.projectRepository.findOne(projectId)
 
     if (!project) {
-      throw new NotFoundException('Project not found')
+      throw new ProjectNotFoundError(projectId)
     }
 
     return this.gitRepositoryRepository.findByProjectId(projectId)

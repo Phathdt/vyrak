@@ -1,7 +1,12 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common'
 import { ConversationPhase, ConversationStatus, IConversationService, MessageRole } from '@vyrak/conversation'
 
-import { WorkflowStatus, WorkflowType } from '../../domain'
+import {
+  InvalidBrainstormingStateError,
+  SessionError,
+  WorkflowNotFoundError,
+  WorkflowStatus,
+  WorkflowType,
+} from '../../domain'
 
 import type {
   BrainstormInput,
@@ -125,16 +130,16 @@ export class WorkflowBrainstormingService implements IWorkflowBrainstormingServi
     const sessionWithMessages = await this.conversationService.getSessionWithMessages(sessionId)
 
     if (!sessionWithMessages) {
-      throw new Error('Session not found')
+      throw new SessionError('Session not found')
     }
 
     if (sessionWithMessages.workflowId !== workflowId) {
-      throw new Error('Session does not belong to this workflow')
+      throw new SessionError('Session does not belong to this workflow')
     }
 
     const canClassify = await this.conversationService.canClassify(sessionId)
     if (!canClassify) {
-      throw new Error('Not enough messages for classification. Continue brainstorming.')
+      throw new SessionError('Not enough messages for classification. Continue brainstorming.')
     }
 
     const aiMessages = this.toAIMessages(sessionWithMessages.messages)
@@ -166,7 +171,7 @@ export class WorkflowBrainstormingService implements IWorkflowBrainstormingServi
     const workflow = await this.workflowRepository.findById(workflowId)
 
     if (!workflow) {
-      throw new NotFoundException('Workflow not found')
+      throw new WorkflowNotFoundError(workflowId)
     }
 
     const allowedStatuses: WorkflowStatus[] = [
@@ -177,7 +182,7 @@ export class WorkflowBrainstormingService implements IWorkflowBrainstormingServi
     const canBrainstorm = allowedStatuses.includes(workflow.status)
 
     if (!canBrainstorm) {
-      throw new BadRequestException('This workflow is no longer in the brainstorming phase')
+      throw new InvalidBrainstormingStateError('This workflow is no longer in the brainstorming phase')
     }
 
     if (workflow.status === WorkflowStatus.DRAFT) {

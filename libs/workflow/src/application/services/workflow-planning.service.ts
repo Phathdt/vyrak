@@ -1,8 +1,7 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common'
 import { ConversationPhase, IConversationService, MessageRole } from '@vyrak/conversation'
 import { CustomConfigService } from '@vyrak/custom-config'
 
-import { WorkflowStatus } from '../../domain'
+import { InvalidPlanningStateError, WorkflowNotFoundError, WorkflowStatus } from '../../domain'
 import { buildDefaultRepoPaths, discoverRepoRoots, loadRepoFilesFromRoots } from '../../infras/planning/load-repo-files'
 
 import type { IWorkflowRepository, IWorkflowRepositoryRepository } from '../../domain'
@@ -116,15 +115,15 @@ export class WorkflowPlanningService implements IWorkflowPlanningService {
   private async ensurePlanningPhase(workflowId: string) {
     const workflow = await this.workflowRepository.findById(workflowId)
     if (!workflow) {
-      throw new NotFoundException('Workflow not found')
+      throw new WorkflowNotFoundError(workflowId)
     }
 
     if (workflow.status !== WorkflowStatus.ACTIVE) {
-      throw new BadRequestException('Planning chat is only available for active workflows')
+      throw new InvalidPlanningStateError('Planning chat is only available for active workflows')
     }
 
     if (workflow.currentPhaseKey && workflow.currentPhaseKey !== 'planning') {
-      throw new BadRequestException('Planning chat is only available while the Planning phase is current')
+      throw new InvalidPlanningStateError('Planning chat is only available while the Planning phase is current')
     }
 
     return workflow

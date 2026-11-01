@@ -1,13 +1,13 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common'
-
-import type {
-  CreateProjectDto,
-  IProjectRepository,
-  IProjectService,
-  ListProjectsQueryDto,
-  PaginatedProjects,
-  ProjectWithStats,
-  UpdateProjectDto,
+import {
+  ProjectNotFoundError,
+  ProjectSlugExistsError,
+  type CreateProjectDto,
+  type IProjectRepository,
+  type IProjectService,
+  type ListProjectsQueryDto,
+  type PaginatedProjects,
+  type ProjectWithStats,
+  type UpdateProjectDto,
 } from '../../domain'
 
 export class ProjectService implements IProjectService {
@@ -17,7 +17,7 @@ export class ProjectService implements IProjectService {
     const existing = await this.repository.findBySlug(data.slug)
 
     if (existing) {
-      throw new BadRequestException('Project slug already exists in this organization')
+      throw new ProjectSlugExistsError(data.slug)
     }
 
     return this.repository.create(data)
@@ -31,7 +31,7 @@ export class ProjectService implements IProjectService {
     const project = await this.repository.findOne(id)
 
     if (!project) {
-      throw new NotFoundException('Project not found')
+      throw new ProjectNotFoundError(id)
     }
 
     return project
@@ -41,7 +41,7 @@ export class ProjectService implements IProjectService {
     const existing = await this.repository.findOne(id)
 
     if (!existing) {
-      throw new NotFoundException('Project not found')
+      throw new ProjectNotFoundError(id)
     }
 
     return this.repository.update(id, data)
@@ -51,7 +51,7 @@ export class ProjectService implements IProjectService {
     const existing = await this.repository.findOne(id)
 
     if (!existing) {
-      throw new NotFoundException('Project not found')
+      throw new ProjectNotFoundError(id)
     }
 
     await this.repository.delete(id)

@@ -1,4 +1,9 @@
-import { BadRequestException, ForbiddenException } from '@nestjs/common'
+import {
+  InsufficientPermissionsError,
+  InvalidInvitationError,
+  InvitationEmailMismatchError,
+  UserAlreadyMemberError,
+} from '../../domain'
 
 import type {
   IInvitationRepository,
@@ -26,7 +31,7 @@ export class InvitationService implements IInvitationService {
     const existingMember = await this.repository.findExistingMember(organizationId, data.email)
 
     if (existingMember) {
-      throw new BadRequestException('User is already a member')
+      throw new UserAlreadyMemberError(data.email)
     }
 
     await this.repository.cancelPending(organizationId, data.email)
@@ -40,17 +45,17 @@ export class InvitationService implements IInvitationService {
     const invitation = await this.repository.findOne(invitationId)
 
     if (!invitation || invitation.status !== 'pending') {
-      throw new BadRequestException('Invalid or expired invitation')
+      throw new InvalidInvitationError('not_found')
     }
 
     if (new Date() > invitation.expiresAt) {
-      throw new BadRequestException('Invitation has expired')
+      throw new InvalidInvitationError('expired')
     }
 
     const user = await this.userRepository.findById(userId)
 
     if (!user || user.email !== invitation.email) {
-      throw new ForbiddenException('Email does not match invitation')
+      throw new InvitationEmailMismatchError(invitation.email, user?.email ?? '')
     }
 
     await this.repository.createMembership(invitation.organizationId, userId, invitation.role)
@@ -66,13 +71,13 @@ export class InvitationService implements IInvitationService {
     const invitation = await this.repository.findOne(invitationId)
 
     if (!invitation || invitation.status !== 'pending') {
-      throw new BadRequestException('Invalid invitation')
+      throw new InvalidInvitationError('not_found')
     }
 
     const user = await this.userRepository.findById(userId)
 
     if (!user || user.email !== invitation.email) {
-      throw new ForbiddenException('Email does not match invitation')
+      throw new InvitationEmailMismatchError(invitation.email, user?.email ?? '')
     }
 
     await this.repository.updateStatus(invitationId, 'rejected')
@@ -102,7 +107,7 @@ export class InvitationService implements IInvitationService {
     const membership = await this.memberRepository.findMembership(organizationId, userId)
 
     if (!membership || !allowedRoles.includes(membership.role)) {
-      throw new ForbiddenException('Insufficient permissions')
+      throw new InsufficientPermissionsError(allowedRoles, membership?.role ?? null)
     }
 
     return membership

@@ -1,6 +1,6 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 
-import { WorkflowStatus, WorkflowType } from '../../domain'
+import { InvalidWorkflowStatusError, WorkflowNotFoundError, WorkflowStatus, WorkflowType } from '../../domain'
 
 import type {
   CreateWorkflowInput,
@@ -107,11 +107,13 @@ export class WorkflowService implements IWorkflowService {
     const workflow = await this.workflowRepository.findById(id)
 
     if (!workflow) {
-      throw new NotFoundException('Workflow not found')
+      throw new WorkflowNotFoundError(id)
     }
 
     if (workflow.status !== WorkflowStatus.DRAFT) {
-      throw new BadRequestException('Only DRAFT workflows can be updated')
+      throw new InvalidWorkflowStatusError('Only DRAFT workflows can be updated', workflow.status, [
+        WorkflowStatus.DRAFT,
+      ])
     }
 
     return this.workflowRepository.update(id, data)
@@ -121,11 +123,13 @@ export class WorkflowService implements IWorkflowService {
     const workflow = await this.workflowRepository.findById(id)
 
     if (!workflow) {
-      throw new NotFoundException('Workflow not found')
+      throw new WorkflowNotFoundError(id)
     }
 
     if (workflow.status !== WorkflowStatus.DRAFT) {
-      throw new BadRequestException('Only DRAFT workflows can be deleted')
+      throw new InvalidWorkflowStatusError('Only DRAFT workflows can be deleted', workflow.status, [
+        WorkflowStatus.DRAFT,
+      ])
     }
 
     await this.workflowRepositoryRepository.deleteByWorkflowId(id)
@@ -136,11 +140,13 @@ export class WorkflowService implements IWorkflowService {
     const workflow = await this.workflowRepository.findById(id)
 
     if (!workflow) {
-      throw new NotFoundException('Workflow not found')
+      throw new WorkflowNotFoundError(id)
     }
 
     if (workflow.status !== WorkflowStatus.DRAFT) {
-      throw new BadRequestException('Can only start brainstorming from DRAFT status')
+      throw new InvalidWorkflowStatusError('Can only start brainstorming from DRAFT status', workflow.status, [
+        WorkflowStatus.DRAFT,
+      ])
     }
 
     await this.workflowRepository.updateStatus(id, WorkflowStatus.BRAINSTORMING)
@@ -155,11 +161,15 @@ export class WorkflowService implements IWorkflowService {
     const workflow = await this.workflowRepository.findById(id)
 
     if (!workflow) {
-      throw new NotFoundException('Workflow not found')
+      throw new WorkflowNotFoundError(id)
     }
 
     if (workflow.status !== WorkflowStatus.CLASSIFICATION_PENDING && workflow.status !== WorkflowStatus.BRAINSTORMING) {
-      throw new BadRequestException('Can only confirm classification from BRAINSTORMING or CLASSIFICATION_PENDING')
+      throw new InvalidWorkflowStatusError(
+        'Can only confirm classification from BRAINSTORMING or CLASSIFICATION_PENDING',
+        workflow.status,
+        [WorkflowStatus.BRAINSTORMING, WorkflowStatus.CLASSIFICATION_PENDING]
+      )
     }
 
     // MVP: all workflows use STORY + default 4-phase pipeline (planning → implementation → review → qc).

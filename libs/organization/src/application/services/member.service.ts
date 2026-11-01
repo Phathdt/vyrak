@@ -1,4 +1,10 @@
-import { BadRequestException, ForbiddenException } from '@nestjs/common'
+import {
+  CannotModifyOwnerError,
+  CannotRemoveLastOwnerError,
+  InsufficientPermissionsError,
+  MemberNotFoundError,
+  NotOrganizationMemberError,
+} from '../../domain'
 
 import type { IMemberRepository, IMemberService, MemberResponse, UpdateMemberRoleDto } from '../../domain'
 
@@ -22,18 +28,18 @@ export class MemberService implements IMemberService {
     const member = await this.repository.findOne(memberId)
 
     if (!member || member.organizationId !== organizationId) {
-      throw new BadRequestException('Member not found')
+      throw new MemberNotFoundError(memberId)
     }
 
     if (actor.role === 'admin' && (data.role === 'owner' || member.role === 'owner')) {
-      throw new ForbiddenException('Admins cannot modify owner roles')
+      throw new CannotModifyOwnerError()
     }
 
     if (member.role === 'owner' && data.role !== 'owner') {
       const ownerCount = await this.repository.countOwners(organizationId)
 
       if (ownerCount <= 1) {
-        throw new BadRequestException('Cannot demote last owner')
+        throw new CannotRemoveLastOwnerError()
       }
     }
 
@@ -46,14 +52,14 @@ export class MemberService implements IMemberService {
     const member = await this.repository.findOne(memberId)
 
     if (!member || member.organizationId !== organizationId) {
-      throw new BadRequestException('Member not found')
+      throw new MemberNotFoundError(memberId)
     }
 
     if (member.role === 'owner') {
       const ownerCount = await this.repository.countOwners(organizationId)
 
       if (ownerCount <= 1) {
-        throw new BadRequestException('Cannot remove last owner')
+        throw new CannotRemoveLastOwnerError()
       }
     }
 
@@ -64,7 +70,7 @@ export class MemberService implements IMemberService {
     const membership = await this.repository.findMembership(organizationId, userId)
 
     if (!membership) {
-      throw new ForbiddenException('Not a member of this organization')
+      throw new NotOrganizationMemberError(organizationId, userId)
     }
 
     return membership
@@ -74,7 +80,7 @@ export class MemberService implements IMemberService {
     const membership = await this.verifyMembership(organizationId, userId)
 
     if (!allowedRoles.includes(membership.role)) {
-      throw new ForbiddenException('Insufficient permissions')
+      throw new InsufficientPermissionsError(allowedRoles, membership.role)
     }
 
     return membership

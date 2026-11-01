@@ -1,6 +1,15 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common'
-
-import { WorkflowPhaseStatus, WorkflowStatus, WorkflowType } from '../../domain'
+import {
+  CurrentPhaseNotFoundError,
+  InvalidPhaseApprovalError,
+  InvalidPhaseSendBackError,
+  NoCurrentPhaseError,
+  PhaseNotFoundError,
+  PhasesNotInitializedError,
+  WorkflowNotFoundError,
+  WorkflowPhaseStatus,
+  WorkflowStatus,
+  WorkflowType,
+} from '../../domain'
 import { buildDefinitionSnapshot, DEFAULT_WORKFLOW_PHASE_DEFINITIONS } from '../../domain/phase-definitions'
 
 import type {
@@ -72,14 +81,14 @@ export class WorkflowPhaseService implements IWorkflowPhaseService {
     const workflowOk =
       ctx.workflow.status === WorkflowStatus.ACTIVE || ctx.workflow.status === WorkflowStatus.WAITING_APPROVAL
     if (!workflowOk) {
-      throw new BadRequestException('Workflow cannot approve a phase in its current status')
+      throw new InvalidPhaseApprovalError('Workflow cannot approve a phase in its current status')
     }
 
     const phaseOk =
       ctx.currentPhase.status === WorkflowPhaseStatus.IN_PROGRESS ||
       ctx.currentPhase.status === WorkflowPhaseStatus.WAITING_APPROVAL
     if (!phaseOk) {
-      throw new BadRequestException('Current phase cannot be approved')
+      throw new InvalidPhaseApprovalError('Current phase cannot be approved')
     }
 
     const approvedAt = new Date().toISOString()
@@ -109,21 +118,21 @@ export class WorkflowPhaseService implements IWorkflowPhaseService {
     const ctx = await this.loadCurrentPhaseContext(workflowId)
 
     if (ctx.workflow.status !== WorkflowStatus.ACTIVE) {
-      throw new BadRequestException('Workflow must be active to send back a phase')
+      throw new InvalidPhaseSendBackError('Workflow must be active to send back a phase')
     }
 
     const allowedFrom = new Set(['review', 'qc'])
     if (!allowedFrom.has(ctx.currentKey)) {
-      throw new BadRequestException('Send-back is only supported from Review or QC')
+      throw new InvalidPhaseSendBackError('Send-back is only supported from Review or QC')
     }
 
     const target = ctx.sortedPhases.find((p) => p.key === targetPhaseKey)
     if (!target) {
-      throw new BadRequestException(`Target phase "${targetPhaseKey}" not found`)
+      throw new PhaseNotFoundError(targetPhaseKey)
     }
 
     if (target.sequence >= ctx.currentPhase.sequence) {
-      throw new BadRequestException('Target phase must be earlier than the current phase')
+      throw new InvalidPhaseSendBackError('Target phase must be earlier than the current phase')
     }
 
     const now = new Date()
@@ -203,23 +212,23 @@ export class WorkflowPhaseService implements IWorkflowPhaseService {
   private async loadCurrentPhaseContext(workflowId: string): Promise<PhaseContext> {
     const workflow = await this.workflowRepository.findById(workflowId)
     if (!workflow) {
-      throw new NotFoundException('Workflow not found')
+      throw new WorkflowNotFoundError(workflowId)
     }
 
     const currentKey = workflow.currentPhaseKey
     if (!currentKey) {
-      throw new BadRequestException('Workflow has no current phase')
+      throw new NoCurrentPhaseError(workflowId)
     }
 
     const phases = await this.workflowPhaseRepository.findByWorkflowId(workflowId)
     if (phases.length === 0) {
-      throw new BadRequestException('Workflow phases are not initialized')
+      throw new PhasesNotInitializedError(workflowId)
     }
 
     const sortedPhases = [...phases].sort((a, b) => a.sequence - b.sequence)
     const currentIndex = sortedPhases.findIndex((p) => p.key === currentKey)
     if (currentIndex < 0) {
-      throw new BadRequestException(`Current phase "${currentKey}" was not found`)
+      throw new CurrentPhaseNotFoundError(currentKey)
     }
 
     return {
