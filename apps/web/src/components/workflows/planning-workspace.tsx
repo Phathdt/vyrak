@@ -123,7 +123,7 @@ export function PlanningWorkspace({ orgId, projectId, workflowId, scopeSummary, 
           codeSnippets,
         },
       })
-      setLastLoadedFiles(response.repoFilesLoaded ?? [])
+      setLastLoadedFiles((response.repoFilesLoaded ?? []) as Array<{ path: string; bytes: number }>)
       await queryClient.invalidateQueries({
         queryKey: getWorkflowPlanningControllerGetPlanningSessionQueryKey(orgId, projectId, workflowId),
       })
