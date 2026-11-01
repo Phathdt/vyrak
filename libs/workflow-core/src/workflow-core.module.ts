@@ -13,6 +13,13 @@ import {
   WorkflowRepositoryPrismaRepository,
 } from './infras'
 
+import type {
+  IWorkflowPhaseRepository,
+  IWorkflowPhaseService,
+  IWorkflowRepository,
+  IWorkflowRepositoryRepository,
+} from './domain'
+
 @Module({
   imports: [DatabaseModule],
   providers: [
@@ -35,16 +42,26 @@ import {
     // Services
     {
       provide: WORKFLOW_SERVICE,
-      useFactory: (workflowRepo, workflowPhaseRepo, workflowRepoRepo) =>
-        new WorkflowService(workflowRepo, workflowPhaseRepo, workflowRepoRepo),
-      inject: [WORKFLOW_REPOSITORY, WORKFLOW_PHASE_REPOSITORY, WORKFLOW_REPOSITORY_REPOSITORY],
+      useFactory: (
+        workflowRepo: IWorkflowRepository,
+        workflowRepoRepo: IWorkflowRepositoryRepository,
+        workflowPhaseService: IWorkflowPhaseService
+      ) => new WorkflowService(workflowRepo, workflowRepoRepo, workflowPhaseService),
+      inject: [WORKFLOW_REPOSITORY, WORKFLOW_REPOSITORY_REPOSITORY, WORKFLOW_PHASE_SERVICE],
     },
     {
       provide: WORKFLOW_PHASE_SERVICE,
-      useFactory: (workflowRepo, workflowPhaseRepo) => new WorkflowPhaseService(workflowRepo, workflowPhaseRepo),
+      useFactory: (workflowRepo: IWorkflowRepository, workflowPhaseRepo: IWorkflowPhaseRepository) =>
+        new WorkflowPhaseService(workflowRepo, workflowPhaseRepo),
       inject: [WORKFLOW_REPOSITORY, WORKFLOW_PHASE_REPOSITORY],
     },
   ],
-  exports: [WORKFLOW_SERVICE, WORKFLOW_PHASE_SERVICE],
+  exports: [
+    WORKFLOW_SERVICE,
+    WORKFLOW_PHASE_SERVICE,
+    WORKFLOW_REPOSITORY,
+    WORKFLOW_PHASE_REPOSITORY,
+    WORKFLOW_REPOSITORY_REPOSITORY,
+  ],
 })
 export class WorkflowCoreModule {}
