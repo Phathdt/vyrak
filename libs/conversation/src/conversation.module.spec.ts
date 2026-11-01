@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ConversationService } from './application'
 import { ConversationModule } from './conversation.module'
 import { CONVERSATION_REPOSITORY } from './domain'
-import { PrismaConversationRepository } from './infrastructure'
+import { PrismaConversationRepository } from './infras'
 
 describe('ConversationModule', () => {
   let module: TestingModule

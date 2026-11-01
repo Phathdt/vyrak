@@ -1,7 +1,6 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common'
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 
-import { WorkflowStatus, WorkflowType } from '../../domain'
+import { InvalidWorkflowStatusError, WorkflowNotFoundError, WorkflowStatus, WorkflowType } from '../../domain'
 import { WorkflowService } from './workflow.service'
 
 import type {
@@ -478,7 +477,7 @@ describe('WorkflowService', () => {
         title: 'New Title',
       }
 
-      await expect(service.update('org-123', 'nonexistent-id', data)).rejects.toThrow(NotFoundException)
+      await expect(service.update('org-123', 'nonexistent-id', data)).rejects.toThrow(WorkflowNotFoundError)
       await expect(service.update('org-123', 'nonexistent-id', data)).rejects.toThrow('Workflow not found')
     })
 
@@ -490,7 +489,7 @@ describe('WorkflowService', () => {
         title: 'New Title',
       }
 
-      await expect(service.update('org-123', 'workflow-123', data)).rejects.toThrow(BadRequestException)
+      await expect(service.update('org-123', 'workflow-123', data)).rejects.toThrow(InvalidWorkflowStatusError)
       await expect(service.update('org-123', 'workflow-123', data)).rejects.toThrow(
         'Only DRAFT workflows can be updated'
       )
@@ -605,7 +604,7 @@ describe('WorkflowService', () => {
     it('should throw NotFoundException if workflow not found', async () => {
       mockWorkflowRepository.findById.mockResolvedValue(null)
 
-      await expect(service.delete('org-123', 'nonexistent-id')).rejects.toThrow(NotFoundException)
+      await expect(service.delete('org-123', 'nonexistent-id')).rejects.toThrow(WorkflowNotFoundError)
       await expect(service.delete('org-123', 'nonexistent-id')).rejects.toThrow('Workflow not found')
     })
 
@@ -613,7 +612,7 @@ describe('WorkflowService', () => {
       const mockWorkflow = createMockWorkflow({ status: WorkflowStatus.ACTIVE })
       mockWorkflowRepository.findById.mockResolvedValue(mockWorkflow)
 
-      await expect(service.delete('org-123', 'workflow-123')).rejects.toThrow(BadRequestException)
+      await expect(service.delete('org-123', 'workflow-123')).rejects.toThrow(InvalidWorkflowStatusError)
       await expect(service.delete('org-123', 'workflow-123')).rejects.toThrow('Only DRAFT workflows can be deleted')
     })
 
@@ -690,7 +689,7 @@ describe('WorkflowService', () => {
     it('should throw NotFoundException if workflow not found', async () => {
       mockWorkflowRepository.findById.mockResolvedValue(null)
 
-      await expect(service.startBrainstorming('org-123', 'nonexistent-id')).rejects.toThrow(NotFoundException)
+      await expect(service.startBrainstorming('org-123', 'nonexistent-id')).rejects.toThrow(WorkflowNotFoundError)
       await expect(service.startBrainstorming('org-123', 'nonexistent-id')).rejects.toThrow('Workflow not found')
     })
 
@@ -698,7 +697,7 @@ describe('WorkflowService', () => {
       const mockWorkflow = createMockWorkflow({ status: WorkflowStatus.ACTIVE })
       mockWorkflowRepository.findById.mockResolvedValue(mockWorkflow)
 
-      await expect(service.startBrainstorming('org-123', 'workflow-123')).rejects.toThrow(BadRequestException)
+      await expect(service.startBrainstorming('org-123', 'workflow-123')).rejects.toThrow(InvalidWorkflowStatusError)
       await expect(service.startBrainstorming('org-123', 'workflow-123')).rejects.toThrow(
         'Can only start brainstorming from DRAFT status'
       )
