@@ -34,6 +34,10 @@ vi.mock('@vyrak/custom-config', () => ({
       model: 'claude-sonnet-4-20250514',
     }
   },
+  AnthropicAuthScheme: {
+    X_API_KEY: 'x-api-key',
+    BEARER: 'bearer',
+  },
 }))
 
 describe('ClaudeAdapter', () => {
@@ -85,17 +89,15 @@ describe('ClaudeAdapter', () => {
         expect.objectContaining({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 4096,
-          temperature: 0.7,
           messages: [{ role: 'user', content: 'Hello Claude' }],
         })
       )
     })
 
-    it('should use custom maxTokens and temperature from request', async () => {
+    it('should use custom maxTokens from request', async () => {
       const request: AgentRequest = {
         messages: [{ role: 'user', content: 'Test' }],
         maxTokens: 2000,
-        temperature: 0.3,
       }
 
       mockCreate.mockResolvedValue({
@@ -109,7 +111,6 @@ describe('ClaudeAdapter', () => {
       expect(mockCreate).toHaveBeenCalledWith(
         expect.objectContaining({
           max_tokens: 2000,
-          temperature: 0.3,
         })
       )
     })
@@ -312,7 +313,6 @@ describe('ClaudeAdapter', () => {
       expect(mockCreate).toHaveBeenCalledWith(
         expect.objectContaining({
           max_tokens: 4096,
-          temperature: 0.7,
           system: undefined,
         })
       )
@@ -440,7 +440,6 @@ describe('ClaudeAdapter', () => {
         messages: [{ role: 'user', content: 'Test' }],
         systemPrompt: 'Be concise',
         maxTokens: 1000,
-        temperature: 0.5,
       }
 
       const mockStreamObject = {
@@ -461,7 +460,6 @@ describe('ClaudeAdapter', () => {
         expect.objectContaining({
           system: 'Be concise',
           max_tokens: 1000,
-          temperature: 0.5,
         })
       )
     })
@@ -517,7 +515,6 @@ describe('ClaudeAdapter', () => {
       expect(mockStream).toHaveBeenCalledWith(
         expect.objectContaining({
           max_tokens: 4096,
-          temperature: 0.7,
         })
       )
     })
@@ -752,10 +749,9 @@ describe('ClaudeAdapter', () => {
       expect(result.risks).toContain('High complexity')
     })
 
-    it('should use lower temperature for classification', async () => {
+    it('should use classification prompt as system message', async () => {
       const request: AgentRequest = {
         messages: [{ role: 'user', content: 'Test' }],
-        temperature: 0.8,
       }
 
       mockCreate.mockResolvedValue({
@@ -771,10 +767,9 @@ describe('ClaudeAdapter', () => {
 
       await adapter.classifyWorkflow(request)
 
-      // Classification should override temperature to 0.3
       expect(mockCreate).toHaveBeenCalledWith(
         expect.objectContaining({
-          temperature: 0.3,
+          system: expect.stringContaining('classify software development workflows'),
         })
       )
     })
@@ -1149,15 +1144,15 @@ This should be fixed immediately.`,
       expect(result.usage?.outputTokens).toBe(888888)
     })
 
-    it('should handle temperature at boundaries (0.0 and 2.0)', async () => {
+    it('should handle multiple requests with different parameters', async () => {
       const request1: AgentRequest = {
         messages: [{ role: 'user', content: 'Test' }],
-        temperature: 0.1,
+        maxTokens: 1000,
       }
 
       const request2: AgentRequest = {
         messages: [{ role: 'user', content: 'Test' }],
-        temperature: 2.0,
+        maxTokens: 2000,
       }
 
       mockCreate.mockResolvedValue({
@@ -1168,7 +1163,7 @@ This should be fixed immediately.`,
 
       await adapter.chat(request1)
       const call1Args = mockCreate.mock.calls[0][0]
-      expect(call1Args.temperature).toBe(0.1)
+      expect(call1Args.max_tokens).toBe(1000)
 
       mockCreate.mockClear()
       mockCreate.mockResolvedValue({
@@ -1179,7 +1174,7 @@ This should be fixed immediately.`,
 
       await adapter.chat(request2)
       const call2Args = mockCreate.mock.calls[0][0]
-      expect(call2Args.temperature).toBe(2.0)
+      expect(call2Args.max_tokens).toBe(2000)
     })
 
     it('should handle stop_reason values', async () => {

@@ -40,7 +40,6 @@ export class ClaudeAdapter implements IAIAgentPort {
     const response = await this.client.messages.create({
       model: this.model,
       max_tokens: request.maxTokens || 4096,
-      temperature: request.temperature || 0.7,
       system: request.systemPrompt,
       messages: this.toClaudeMessages(request.messages),
     })
@@ -73,7 +72,6 @@ export class ClaudeAdapter implements IAIAgentPort {
     const stream = await this.client.messages.stream({
       model: this.model,
       max_tokens: request.maxTokens || 4096,
-      temperature: request.temperature || 0.7,
       system: request.systemPrompt,
       messages: this.toClaudeMessages(request.messages),
     })
@@ -119,7 +117,6 @@ Respond in JSON format:
     const response = await this.chat({
       ...request,
       systemPrompt: classificationPrompt,
-      temperature: 0.3, // Lower temperature for more consistent classification
     })
 
     // Parse JSON response
