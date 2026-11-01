@@ -1,19 +1,12 @@
-import type { IAuthRepository, IAuthService, UserWithOrganizations } from '../../domain'
+import {
+  InvalidCredentialsError,
+  type IAuthRepository,
+  type IAuthService,
+  type UserWithOrganizations,
+} from '../../domain'
+
 import type { IOrganizationService } from '@vyrak/organization'
 import type { IUserService } from '@vyrak/user'
-
-/**
- * Custom error for authentication failures
- */
-class UnauthorizedError extends Error {
-  constructor(message: string) {
-    super(message)
-    this.name = 'UnauthorizedError'
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, UnauthorizedError)
-    }
-  }
-}
 
 /**
  * JWT Provider interface
@@ -53,13 +46,13 @@ export class AuthService implements IAuthService {
     // Find user by email using UserService
     const user = await this.userService.findByEmail(email)
     if (!user || !user.passwordHash) {
-      throw new UnauthorizedError('Invalid credentials')
+      throw new InvalidCredentialsError()
     }
 
     // Verify password
     const isValid = await this.passwordService.verify(user.passwordHash, password)
     if (!isValid) {
-      throw new UnauthorizedError('Invalid credentials')
+      throw new InvalidCredentialsError()
     }
 
     // Generate JWT

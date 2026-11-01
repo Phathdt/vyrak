@@ -7,7 +7,7 @@ import type { UserWithOrganizations } from './auth-repository.interface'
 export interface IAuthService {
   /**
    * Login with email and password
-   * @throws UnauthorizedError if credentials are invalid
+   * @throws InvalidCredentialsError if credentials are invalid
    */
   login(
     email: string,
