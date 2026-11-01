@@ -150,6 +150,13 @@ async function main() {
         slug: 'mobile-app',
         description: 'iOS and Android mobile applications',
       },
+      {
+        id: '950e8400-e29b-41d4-a716-446655440003',
+        organizationId: '650e8400-e29b-41d4-a716-446655440001',
+        name: 'Demo',
+        slug: 'demo',
+        description: 'Demo project with real Git repositories',
+      },
     ],
   })
 
@@ -161,7 +168,7 @@ async function main() {
       {
         id: 'a50e8400-e29b-41d4-a716-446655440001',
         organizationId: '650e8400-e29b-41d4-a716-446655440001',
-        projectId: '950e8400-e29b-41d4-a716-446655440001',
+        projectId: '950e8400-e29b-41d4-a716-446655440003',
         name: 'vyrak-demo-admin',
         url: 'https://github.com/Phathdt/vyrak-demo-admin',
         branch: 'main',
@@ -171,7 +178,7 @@ async function main() {
       {
         id: 'a50e8400-e29b-41d4-a716-446655440002',
         organizationId: '650e8400-e29b-41d4-a716-446655440001',
-        projectId: '950e8400-e29b-41d4-a716-446655440002',
+        projectId: '950e8400-e29b-41d4-a716-446655440003',
         name: 'vyrak-demo-client',
         url: 'https://github.com/Phathdt/vyrak-demo-client',
         branch: 'main',

@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common'
+import { CustomConfigService } from '@vyrak/custom-config'
 import { DatabaseModule, DatabaseService } from '@vyrak/database'
+import { ProjectModule, GIT_REPOSITORY_REPOSITORY } from '@vyrak/project'
 
-import { WorkflowPhaseService, WorkflowService } from './application'
+import { RepositoryContextService, WorkflowPhaseService, WorkflowService } from './application'
 import {
   WORKFLOW_PHASE_REPOSITORY,
   WORKFLOW_PHASE_SERVICE,
@@ -19,9 +21,10 @@ import type {
   IWorkflowRepository,
   IWorkflowRepositoryRepository,
 } from './domain'
+import type { IGitRepositoryRepository } from '@vyrak/project'
 
 @Module({
-  imports: [DatabaseModule],
+  imports: [DatabaseModule, ProjectModule],
   providers: [
     // Repositories (only 3 used ones provided)
     {
@@ -55,6 +58,16 @@ import type {
         new WorkflowPhaseService(workflowRepo, workflowPhaseRepo),
       inject: [WORKFLOW_REPOSITORY, WORKFLOW_PHASE_REPOSITORY],
     },
+    // Generic repository context service
+    {
+      provide: RepositoryContextService,
+      useFactory: (
+        workflowRepoRepo: IWorkflowRepositoryRepository,
+        gitRepoRepo: IGitRepositoryRepository,
+        configService: CustomConfigService
+      ) => new RepositoryContextService(workflowRepoRepo, gitRepoRepo, configService),
+      inject: [WORKFLOW_REPOSITORY_REPOSITORY, GIT_REPOSITORY_REPOSITORY, CustomConfigService],
+    },
   ],
   exports: [
     WORKFLOW_SERVICE,
@@ -62,6 +75,7 @@ import type {
     WORKFLOW_REPOSITORY,
     WORKFLOW_PHASE_REPOSITORY,
     WORKFLOW_REPOSITORY_REPOSITORY,
+    RepositoryContextService,
   ],
 })
 export class WorkflowCoreModule {}

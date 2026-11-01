@@ -33,4 +33,21 @@ export class GitRepositoryPrismaRepository extends BaseTenantRepository implemen
       return rows.map((row) => this.mapToEntity(row))
     })
   }
+
+  async findById(id: string): Promise<GitRepositoryEntity | null> {
+    return this.withTenantContext(async (organizationId) => {
+      const repository = await this.prisma.client.gitRepository.findFirst({
+        where: {
+          id,
+          organizationId,
+        },
+      })
+
+      if (!repository) {
+        return null
+      }
+
+      return this.mapToEntity(repository)
+    })
+  }
 }

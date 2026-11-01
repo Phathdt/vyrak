@@ -5,6 +5,7 @@ import {
   WorkflowNotFoundError,
   WorkflowStatus,
   WorkflowType,
+  RepositoryContextService,
 } from '@vyrak/workflow-core'
 
 import type {
@@ -16,14 +17,26 @@ import type {
 } from '../../domain'
 import type { IAIAgentService, Message } from '@vyrak/ai-agent'
 import type { ConversationMessage } from '@vyrak/conversation'
+import type { CustomConfigService } from '@vyrak/custom-config'
 import type { IWorkflowRepository } from '@vyrak/workflow-core'
 
 export class WorkflowBrainstormingService implements IWorkflowBrainstormingService {
+  private readonly model: string
+
   constructor(
     private readonly conversationService: IConversationService,
     private readonly aiAgentService: IAIAgentService,
-    private readonly workflowRepository: IWorkflowRepository
-  ) {}
+    private readonly workflowRepository: IWorkflowRepository,
+    private readonly repositoryContextService: RepositoryContextService,
+    private readonly configService: CustomConfigService
+  ) {
+    // Get model from config
+    const anthropicConfig = this.configService.anthropic
+    if (!anthropicConfig?.model) {
+      throw new Error('ANTHROPIC__MODEL not configured in .env')
+    }
+    this.model = anthropicConfig.model
+  }
 
   async getBrainstormSession(workflowId: string): Promise<BrainstormSessionView> {
     const sessions = await this.conversationService.getWorkflowSessions(workflowId)
@@ -73,15 +86,58 @@ export class WorkflowBrainstormingService implements IWorkflowBrainstormingServi
     const messages = await this.conversationService.getMessages(session.id)
     const aiMessages = this.toAIMessages(messages)
 
-    const aiResponse = await this.aiAgentService.chat({
-      messages: aiMessages,
-      systemPrompt: this.getBrainstormingSystemPrompt(),
-    })
+    // Use generic repository context service
+    const repoPath = await this.repositoryContextService.resolveRepositoryPath(input.workflowId)
+
+    let aiResponseContent: string
+
+    if (repoPath) {
+      // Use Agent SDK with repository context
+      const conversationContext = aiMessages.map((m) => `${m.role}: ${m.content}`).join('\n\n')
+
+      const promptWithHistory = `${this.getBrainstormingSystemPrompt()}
+
+Previous conversation:
+${conversationContext}
+
+User's latest message: ${input.userMessage}
+
+You have access to the project repository. Use Read, Glob, and Grep tools to explore the codebase when needed to:
+- Understand existing patterns and architecture
+- Suggest implementations that match the codebase style
+- Provide specific examples from actual code
+- Give more accurate scope and complexity estimates
+`
+
+      const { query } = await import('@anthropic-ai/claude-agent-sdk')
+
+      aiResponseContent = ''
+      for await (const message of query({
+        prompt: promptWithHistory,
+        options: {
+          model: this.model, // Use model from config (my-opus)
+          allowedTools: ['Read', 'Glob', 'Grep'],
+          maxTurns: 8,
+          cwd: repoPath,
+        },
+      })) {
+        if (message.type === 'result' && message.subtype === 'success' && !message.is_error) {
+          aiResponseContent = message.result
+        }
+      }
+    } else {
+      // Fallback: chat without repo context
+      const aiResponse = await this.aiAgentService.chat({
+        messages: aiMessages,
+        systemPrompt: this.getBrainstormingSystemPrompt(),
+      })
+      aiResponseContent = aiResponse.content
+    }
 
     await this.conversationService.addMessage({
       sessionId: session.id,
       role: MessageRole.ASSISTANT,
-      content: aiResponse.content,
+      content: aiResponseContent,
     })
 
     const messageCount = await this.conversationService.getMessageCount(session.id)
@@ -89,7 +145,7 @@ export class WorkflowBrainstormingService implements IWorkflowBrainstormingServi
 
     return {
       sessionId: session.id,
-      aiMessage: aiResponse.content,
+      aiMessage: aiResponseContent,
       canClassify,
       messageCount,
     }
@@ -109,13 +165,52 @@ export class WorkflowBrainstormingService implements IWorkflowBrainstormingServi
     const messages = await this.conversationService.getMessages(session.id)
     const aiMessages = this.toAIMessages(messages)
 
+    // Use generic repository context service
+    const repoPath = await this.repositoryContextService.resolveRepositoryPath(input.workflowId)
+
     let fullResponse = ''
-    for await (const chunk of this.aiAgentService.chatStream({
-      messages: aiMessages,
-      systemPrompt: this.getBrainstormingSystemPrompt(),
-    })) {
-      fullResponse += chunk
-      yield chunk
+
+    if (repoPath) {
+      // Use Agent SDK with repository context (streaming)
+      const conversationContext = aiMessages.map((m) => `${m.role}: ${m.content}`).join('\n\n')
+
+      const promptWithHistory = `${this.getBrainstormingSystemPrompt()}
+
+Previous conversation:
+${conversationContext}
+
+User's latest message: ${input.userMessage}
+
+You have access to the project repository. Use Read, Glob, and Grep tools to explore the codebase when needed.
+`
+
+      const { query } = await import('@anthropic-ai/claude-agent-sdk')
+
+      for await (const message of query({
+        prompt: promptWithHistory,
+        options: {
+          model: this.model, // Use model from config (my-opus)
+          allowedTools: ['Read', 'Glob', 'Grep'],
+          maxTurns: 8,
+          cwd: repoPath,
+        },
+      })) {
+        // Agent SDK returns messages of various types
+        // We only care about 'result' type with success
+        if (message.type === 'result' && message.subtype === 'success' && !message.is_error) {
+          fullResponse = message.result
+          yield message.result
+        }
+      }
+    } else {
+      // Fallback: chat without repo context
+      for await (const chunk of this.aiAgentService.chatStream({
+        messages: aiMessages,
+        systemPrompt: this.getBrainstormingSystemPrompt(),
+      })) {
+        fullResponse += chunk
+        yield chunk
+      }
     }
 
     await this.conversationService.addMessage({
