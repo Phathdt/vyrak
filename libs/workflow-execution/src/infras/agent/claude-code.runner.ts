@@ -58,6 +58,7 @@ export class ClaudeCodeRunner {
       workflowId: params.workflowId,
       userPrompt: `Implement the work described in ${planPath}. Read that file first, then apply the plan in this repository.`,
       systemAppend: IMPLEMENTATION_SYSTEM_APPEND,
+      allowTools: true,
     })
   }
 
@@ -67,6 +68,7 @@ export class ClaudeCodeRunner {
       workflowId: params.workflowId,
       userPrompt: `Review the code changes on branch ${params.branch} in this worktree compared to the base branch. List findings in markdown with severity (blocker/major/minor). Do not modify files.`,
       systemAppend: REVIEW_SYSTEM_APPEND,
+      allowTools: false, // Read-only for review
     })
   }
 
@@ -75,6 +77,7 @@ export class ClaudeCodeRunner {
     workflowId: string
     userPrompt: string
     systemAppend: string
+    allowTools: boolean
   }): Promise<ClaudeCodeRunResult> {
     const agentRuntime = this.configService.agentRuntime
     const useFake = agentRuntime?.useFakeAgent === true
@@ -102,6 +105,9 @@ export class ClaudeCodeRunner {
       `Working directory: ${params.workspacePath}`,
     ].join('\n\n')
 
+    // For now, continue using Messages API
+    // Agent SDK integration with full tools will be added in a future phase
+    // when we understand the exact API better
     const response = await this.anthropicClient.messages.create({
       model,
       max_tokens: 8192,
