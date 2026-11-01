@@ -21,6 +21,16 @@ export interface IAIAgentPort {
 }
 
 /**
- * Token for dependency injection
+ * Token for dependency injection - Messages API adapter
  */
 export const AI_AGENT_PORT = Symbol('AI_AGENT_PORT')
+
+/**
+ * Token for dependency injection - Chat adapter (Messages API)
+ */
+export const AI_AGENT_CHAT_PORT = Symbol('AI_AGENT_CHAT_PORT')
+
+/**
+ * Token for dependency injection - Agent SDK adapter
+ */
+export const AI_AGENT_AGENT_PORT = Symbol('AI_AGENT_AGENT_PORT')

@@ -16,6 +16,22 @@ export interface AgentRequest {
   maxTokens?: number
   temperature?: number
   stream?: boolean
+
+  // Agent mode fields
+  sessionId?: string // For session caching
+  workingDirectory?: string // Workspace path for tools
+  allowedTools?: string[] // Tool restrictions
+  timeoutMs?: number // Execution timeout
+}
+
+/**
+ * Tool Usage Metadata
+ */
+export interface ToolUsage {
+  tool: string
+  input: unknown
+  output: string
+  timestamp: Date
 }
 
 /**
@@ -26,8 +42,15 @@ export interface AgentResponse {
   usage?: {
     inputTokens: number
     outputTokens: number
+    cachedTokens?: number // Cache hits
   }
   finishReason?: string
+
+  // Tool metadata
+  toolsUsed?: ToolUsage[]
+  filesRead?: string[]
+  filesModified?: string[]
+  commandsExecuted?: string[]
 }
 
 /**

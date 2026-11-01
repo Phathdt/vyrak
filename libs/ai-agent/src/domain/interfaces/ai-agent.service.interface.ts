@@ -5,7 +5,7 @@ import type { AgentRequest, AgentResponse, BrainstormingContext, WorkflowClassif
  */
 export interface IAIAgentService {
   /**
-   * Send a chat message and get response
+   * Send a chat message and get response (Messages API)
    */
   chat(request: AgentRequest): Promise<AgentResponse>
 
@@ -13,6 +13,16 @@ export interface IAIAgentService {
    * Stream chat response for real-time interaction
    */
   chatStream(request: AgentRequest): AsyncGenerator<string, void, unknown>
+
+  /**
+   * Run agent with tools (Agent SDK)
+   */
+  runAgent(request: AgentRequest): Promise<AgentResponse>
+
+  /**
+   * Smart routing - use agent mode when tools are needed
+   */
+  smartChat(request: AgentRequest): Promise<AgentResponse>
 
   /**
    * Start brainstorming session with initial prompt

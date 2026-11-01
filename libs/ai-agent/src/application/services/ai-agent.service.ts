@@ -8,20 +8,61 @@ import type {
 } from '../../domain'
 
 export class AIAgentService implements IAIAgentService {
-  constructor(private readonly aiAgent: IAIAgentPort) {}
+  constructor(
+    private readonly chatAdapter: IAIAgentPort,
+    private readonly agentAdapter: IAIAgentPort
+  ) {}
 
   /**
-   * Send a chat message and get response
+   * Send a chat message and get response (Messages API)
    */
   async chat(request: AgentRequest): Promise<AgentResponse> {
-    return this.aiAgent.chat(request)
+    return this.chatAdapter.chat(request)
   }
 
   /**
    * Stream chat response for real-time interaction
    */
   chatStream(request: AgentRequest): AsyncGenerator<string, void, unknown> {
-    return this.aiAgent.chatStream(request)
+    return this.chatAdapter.chatStream(request)
+  }
+
+  /**
+   * Run agent with tools (Agent SDK)
+   */
+  async runAgent(request: AgentRequest): Promise<AgentResponse> {
+    if (!request.workingDirectory) {
+      throw new Error('workingDirectory required for agent mode')
+    }
+
+    return this.agentAdapter.chat(request)
+  }
+
+  /**
+   * Smart routing - use agent mode when tools are needed
+   */
+  async smartChat(request: AgentRequest): Promise<AgentResponse> {
+    const needsTools = this.detectToolNeed(request)
+
+    if (needsTools && request.workingDirectory) {
+      return this.runAgent(request)
+    }
+
+    return this.chat(request)
+  }
+
+  private detectToolNeed(request: AgentRequest): boolean {
+    // Explicit flag
+    if (request.allowedTools) return true
+
+    // Keyword detection
+    const lastMessage = request.messages[request.messages.length - 1]
+    if (!lastMessage || lastMessage.role !== 'user') return false
+
+    const content = lastMessage.content.toLowerCase()
+    const toolKeywords = ['read', 'show', 'implement', 'create', 'modify', 'add', 'update', 'change', 'fix', 'refactor']
+
+    return toolKeywords.some((kw) => content.includes(kw))
   }
 
   /**
@@ -47,7 +88,7 @@ ${context.description ? `\nDescription: ${context.description}` : ''}
 Let me understand your requirements better. Can you tell me more about what you're trying to achieve?
 `
 
-    return this.aiAgent.chat({
+    return this.chatAdapter.chat({
       messages: [
         {
           role: 'assistant',
@@ -80,7 +121,7 @@ Guidelines:
       },
     ]
 
-    return this.aiAgent.chat({
+    return this.chatAdapter.chat({
       messages,
       systemPrompt,
     })
@@ -97,7 +138,7 @@ ${context.description ? `Description: ${context.description}` : ''}
 Based on the discussion, classify this workflow.
 `
 
-    return this.aiAgent.classifyWorkflow({
+    return this.chatAdapter.classifyWorkflow({
       messages: context.conversationHistory,
       systemPrompt,
     })
