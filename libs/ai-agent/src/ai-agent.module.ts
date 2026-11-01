@@ -3,7 +3,7 @@ import { CustomConfigModule, CustomConfigService } from '@vyrak/custom-config'
 
 import { AIAgentService } from './application'
 import { AI_AGENT_AGENT_PORT, AI_AGENT_PORT } from './domain'
-import { AI_AGENT_SERVICE, ClaudeAgentAdapter, DisabledAiAgentAdapter } from './infras'
+import { AI_AGENT_SERVICE, ClaudeAgentSdkAdapter, DisabledAiAgentAdapter } from './infras'
 
 function isAnthropicConfigured(configService: CustomConfigService): boolean {
   const apiKey = configService.anthropic?.apiKey
@@ -13,18 +13,18 @@ function isAnthropicConfigured(configService: CustomConfigService): boolean {
 @Module({
   imports: [CustomConfigModule],
   providers: [
-    // Single adapter - Agent SDK only
+    // Agent SDK adapter
     {
       provide: AI_AGENT_AGENT_PORT,
       useFactory: (configService: CustomConfigService) => {
         if (!isAnthropicConfigured(configService)) {
           return new DisabledAiAgentAdapter()
         }
-        return new ClaudeAgentAdapter(configService)
+        return new ClaudeAgentSdkAdapter(configService)
       },
       inject: [CustomConfigService],
     },
-    // Service with single adapter
+    // Service with Agent SDK
     {
       provide: AI_AGENT_SERVICE,
       useFactory: (agentPort) => new AIAgentService(agentPort),
