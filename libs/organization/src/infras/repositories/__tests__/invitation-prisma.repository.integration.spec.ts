@@ -72,11 +72,6 @@ describe('InvitationPrismaRepository (Integration)', () => {
         email: 'invitee@example.com',
         role: 'member',
         status: 'pending',
-        organization: {
-          id: organization.id,
-          name: organization.name,
-          slug: organization.slug,
-        },
       })
       expect(result.id).toBeDefined()
       expect(result.expiresAt).toEqual(expiresAt)

@@ -115,6 +115,11 @@ describe('WorkflowApprovalPrismaRepository (Integration)', () => {
     it('should return null for non-existent approval', async () => {
       if (setupFailed || !databaseService) return
 
+      const prisma = getPrismaClient()
+      const { organization } = await createTestOrgWithOwner(prisma)
+
+      databaseService.setTenantContext(organization.id)
+
       const result = await repository.findById('nonexistent-id')
 
       expect(result).toBeNull()
@@ -178,6 +183,11 @@ describe('WorkflowApprovalPrismaRepository (Integration)', () => {
 
     it('should return empty array for workflow with no approvals', async () => {
       if (setupFailed || !databaseService) return
+
+      const prisma = getPrismaClient()
+      const { organization } = await createTestOrgWithOwner(prisma)
+
+      databaseService.setTenantContext(organization.id)
 
       const approvals = await repository.findByWorkflowId('workflow-no-approvals')
 

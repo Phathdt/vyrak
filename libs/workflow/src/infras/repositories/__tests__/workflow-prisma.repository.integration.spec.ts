@@ -141,6 +141,11 @@ describe('WorkflowPrismaRepository (Integration)', () => {
     it('should return null for non-existent workflow', async () => {
       if (setupFailed || !databaseService) return
 
+      const prisma = getPrismaClient()
+      const { organization } = await createTestOrgWithOwner(prisma)
+
+      databaseService.setTenantContext(organization.id)
+
       const result = await repository.findById('nonexistent-id')
 
       expect(result).toBeNull()
