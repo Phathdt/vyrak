@@ -10,10 +10,10 @@
   },
   "dependencies": {
     "@vyrak/custom-config": "*",
-    "@nestjs/common": "^12.2.0",
-    "@nestjs/core": "^12.2.0",
+    "@nestjs/common": "^12.3.2",
+    "@nestjs/core": "^12.3.2",
     "@opentelemetry/api": "^1.10.0",
-    "nestjs-cls": "^7.0.1",
+    "nestjs-cls": "^7.0.2",
     "nestjs-pino": "^5.3.1",
     "pino": "^10.4.0",
     "pino-http": "^11.0.0",
@@ -28,7 +28,7 @@
     "rxjs": "^7.0.0"
   },
   "devDependencies": {
-    "@types/node": "~26.6.5",
+    "@types/node": "~26.6.6",
     "@types/uuid": "^11.0.0",
     "typescript": "~7.0.2",
     "vitest": "^5.0.5"
