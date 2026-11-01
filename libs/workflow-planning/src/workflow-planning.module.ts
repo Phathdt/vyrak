@@ -7,6 +7,7 @@ import {
   WORKFLOW_REPOSITORY,
   WORKFLOW_REPOSITORY_REPOSITORY,
   WorkflowCoreModule,
+  RepositoryContextService,
   type IWorkflowRepository,
   type IWorkflowRepositoryRepository,
 } from '@vyrak/workflow-core'
@@ -25,6 +26,7 @@ import { WORKFLOW_PLANNING_SERVICE } from './infras'
         workflowRepo: IWorkflowRepository,
         workflowRepoRepo: IWorkflowRepositoryRepository,
         gitRepositoryService: IGitRepositoryService,
+        repositoryContextService: RepositoryContextService,
         configService: CustomConfigService
       ) =>
         new WorkflowPlanningService(
@@ -33,6 +35,7 @@ import { WORKFLOW_PLANNING_SERVICE } from './infras'
           workflowRepo,
           workflowRepoRepo,
           gitRepositoryService,
+          repositoryContextService,
           configService
         ),
       inject: [
@@ -41,6 +44,7 @@ import { WORKFLOW_PLANNING_SERVICE } from './infras'
         WORKFLOW_REPOSITORY,
         WORKFLOW_REPOSITORY_REPOSITORY,
         GIT_REPOSITORY_SERVICE,
+        RepositoryContextService,
         CustomConfigService,
       ],
     },

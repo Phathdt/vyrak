@@ -1,8 +1,11 @@
 import { ConversationPhase, IConversationService, MessageRole } from '@vyrak/conversation'
 import { CustomConfigService } from '@vyrak/custom-config'
-import { InvalidPlanningStateError, WorkflowNotFoundError, WorkflowStatus } from '@vyrak/workflow-core'
-
-import { buildDefaultRepoPaths, discoverRepoRoots, loadRepoFilesFromRoots } from '../../infras/planning/load-repo-files'
+import {
+  InvalidPlanningStateError,
+  WorkflowNotFoundError,
+  WorkflowStatus,
+  RepositoryContextService,
+} from '@vyrak/workflow-core'
 
 import type {
   IWorkflowPlanningService,
@@ -18,14 +21,24 @@ import type { IGitRepositoryService } from '@vyrak/project'
 import type { IWorkflowRepository, IWorkflowRepositoryRepository, WorkflowRepositoryEntity } from '@vyrak/workflow-core'
 
 export class WorkflowPlanningService implements IWorkflowPlanningService {
+  private readonly model: string
+
   constructor(
     private readonly conversationService: IConversationService,
     private readonly aiAgentService: IAIAgentService,
     private readonly workflowRepository: IWorkflowRepository,
     private readonly workflowRepositoryRepository: IWorkflowRepositoryRepository,
     private readonly gitRepositoryService: IGitRepositoryService,
+    private readonly repositoryContextService: RepositoryContextService,
     private readonly configService: CustomConfigService
-  ) {}
+  ) {
+    // Get model from config
+    const anthropicConfig = this.configService.anthropic
+    if (!anthropicConfig?.model) {
+      throw new Error('ANTHROPIC__MODEL not configured in .env')
+    }
+    this.model = anthropicConfig.model
+  }
 
   async getPlanningSession(
     workflowId: string,
@@ -67,8 +80,8 @@ export class WorkflowPlanningService implements IWorkflowPlanningService {
 
     const session = await this.conversationService.getOrCreateSession(input.workflowId, ConversationPhase.PLANNING)
 
-    const repoFiles = await this.resolveRepoFiles(workflow.organizationId, workflow.projectId, input.repoPaths)
-    const userContent = this.formatUserMessage(input.userMessage, input.codeSnippets, repoFiles)
+    // Format user message with code snippets if provided
+    const userContent = this.formatUserMessage(input.userMessage, input.codeSnippets)
 
     await this.conversationService.addMessage({
       sessionId: session.id,
@@ -80,26 +93,70 @@ export class WorkflowPlanningService implements IWorkflowPlanningService {
     const aiMessages = this.toAIMessages(messages)
     const systemPrompt = await this.buildPlanningSystemPrompt(workflow, input.organizationId, input.projectId)
 
-    const aiResponse = await this.aiAgentService.chat({
-      messages: aiMessages,
-      systemPrompt,
-      temperature: 0.3,
-      maxTokens: 4096,
-    })
+    // Use generic repository context service
+    const repoPath = await this.repositoryContextService.resolveRepositoryPath(input.workflowId)
+
+    let aiResponseContent: string
+
+    if (repoPath) {
+      // Use Agent SDK with repository context
+      const conversationContext = aiMessages.map((m) => `${m.role}: ${m.content}`).join('\n\n')
+
+      const promptWithHistory = `${systemPrompt}
+
+Previous conversation:
+${conversationContext}
+
+User's latest message: ${input.userMessage}
+
+You have access to the project repository. Use Read, Glob, and Grep tools to explore the codebase when needed to:
+- Understand existing architecture and patterns
+- Identify files and components to modify
+- Estimate complexity based on actual code structure
+- Provide specific implementation guidance
+- Create detailed, accurate plans
+`
+
+      const { query } = await import('@anthropic-ai/claude-agent-sdk')
+
+      aiResponseContent = ''
+      for await (const message of query({
+        prompt: promptWithHistory,
+        options: {
+          model: this.model,
+          allowedTools: ['Read', 'Glob', 'Grep'],
+          maxTurns: 10,
+          cwd: repoPath,
+        },
+      })) {
+        if (message.type === 'result' && message.subtype === 'success' && !message.is_error) {
+          aiResponseContent = message.result
+        }
+      }
+    } else {
+      // Fallback: chat without repo context
+      const aiResponse = await this.aiAgentService.chat({
+        messages: aiMessages,
+        systemPrompt,
+        temperature: 0.3,
+        maxTokens: 4096,
+      })
+      aiResponseContent = aiResponse.content
+    }
 
     await this.conversationService.addMessage({
       sessionId: session.id,
       role: MessageRole.ASSISTANT,
-      content: aiResponse.content,
+      content: aiResponseContent,
     })
 
     const messageCount = await this.conversationService.getMessageCount(session.id)
 
     return {
       sessionId: session.id,
-      aiMessage: aiResponse.content,
+      aiMessage: aiResponseContent,
       messageCount,
-      repoFilesLoaded: repoFiles.map((f) => ({ path: f.path, bytes: f.bytes })),
+      repoFilesLoaded: repoPath ? [{ path: repoPath, bytes: 0 }] : [],
     }
   }
 
@@ -144,39 +201,8 @@ export class WorkflowPlanningService implements IWorkflowPlanningService {
       }))
   }
 
-  private async resolveRepoFiles(organizationId: string, projectId: string, repoPaths?: string[]) {
-    const mainReposPath = this.configService.workspace?.mainReposPath
-    if (!mainReposPath) {
-      return []
-    }
-
-    const roots = await discoverRepoRoots([
-      pathJoin(mainReposPath, organizationId, projectId),
-      pathJoin(mainReposPath, projectId),
-      mainReposPath,
-    ])
-
-    if (roots.length === 0) {
-      return []
-    }
-
-    const paths = repoPaths?.length ? repoPaths : buildDefaultRepoPaths()
-    return loadRepoFilesFromRoots(roots, paths)
-  }
-
-  private formatUserMessage(
-    userMessage: string,
-    codeSnippets: PlanningChatInput['codeSnippets'],
-    repoFiles: Awaited<ReturnType<typeof loadRepoFilesFromRoots>>
-  ): string {
+  private formatUserMessage(userMessage: string, codeSnippets: PlanningChatInput['codeSnippets']): string {
     const parts: string[] = [userMessage.trim()]
-
-    if (repoFiles.length > 0) {
-      parts.push('\n\n--- Repository files (auto-loaded from local checkout) ---')
-      for (const file of repoFiles) {
-        parts.push(`\n### ${file.path}\n\`\`\`\n${file.content}\n\`\`\``)
-      }
-    }
 
     if (codeSnippets?.length) {
       parts.push('\n\n--- Attached snippets ---')
@@ -249,8 +275,4 @@ Respond in clear markdown. Prefer concrete recommendations over generic advice.`
         content: msg.content,
       }))
   }
-}
-
-function pathJoin(...parts: string[]): string {
-  return parts.filter(Boolean).join('/').replace(/\/+/g, '/')
 }
