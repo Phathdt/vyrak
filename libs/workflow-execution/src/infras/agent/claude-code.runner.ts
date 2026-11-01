@@ -1,7 +1,7 @@
-import Anthropic from '@anthropic-ai/sdk'
 import { writeFile } from 'node:fs/promises'
 import path from 'node:path'
 
+import type { IAIAgentService } from '@vyrak/ai-agent'
 import type { CustomConfigService } from '@vyrak/custom-config'
 
 const IMPLEMENTATION_SYSTEM_APPEND = `You are implementing a change in an existing codebase (Vyrak monorepo conventions when applicable).
@@ -22,28 +22,10 @@ export type ClaudeCodeRunResult = {
 }
 
 export class ClaudeCodeRunner {
-  private anthropicClient: Anthropic | null = null
-
-  constructor(private readonly configService: CustomConfigService) {
-    this.initializeClient()
-  }
-
-  private initializeClient(): void {
-    const anthropicConfig = this.configService.anthropic
-    if (!anthropicConfig?.apiKey) {
-      return
-    }
-
-    this.anthropicClient = new Anthropic({
-      apiKey: anthropicConfig.apiKey,
-      baseURL: anthropicConfig.apiUrl ? this.normalizeBaseUrl(anthropicConfig.apiUrl) : undefined,
-    })
-  }
-
-  private normalizeBaseUrl(url: string): string {
-    const base = url.replace(/\/$/, '')
-    return base.endsWith('/v1') ? base : `${base}/v1`
-  }
+  constructor(
+    private readonly configService: CustomConfigService,
+    private readonly aiAgentService: IAIAgentService
+  ) {}
 
   async runImplementation(params: {
     workspacePath: string
@@ -58,7 +40,7 @@ export class ClaudeCodeRunner {
       workflowId: params.workflowId,
       userPrompt: `Implement the work described in ${planPath}. Read that file first, then apply the plan in this repository.`,
       systemAppend: IMPLEMENTATION_SYSTEM_APPEND,
-      allowTools: true,
+      allowTools: ['Read', 'Edit', 'Write', 'Bash', 'Grep'],
     })
   }
 
@@ -68,7 +50,7 @@ export class ClaudeCodeRunner {
       workflowId: params.workflowId,
       userPrompt: `Review the code changes on branch ${params.branch} in this worktree compared to the base branch. List findings in markdown with severity (blocker/major/minor). Do not modify files.`,
       systemAppend: REVIEW_SYSTEM_APPEND,
-      allowTools: false, // Read-only for review
+      allowTools: ['Read', 'Bash', 'Grep'], // Read-only for review
     })
   }
 
@@ -77,7 +59,7 @@ export class ClaudeCodeRunner {
     workflowId: string
     userPrompt: string
     systemAppend: string
-    allowTools: boolean
+    allowTools: string[]
   }): Promise<ClaudeCodeRunResult> {
     const agentRuntime = this.configService.agentRuntime
     const useFake = agentRuntime?.useFakeAgent === true
@@ -86,18 +68,13 @@ export class ClaudeCodeRunner {
       const marker = path.join(params.workspacePath, '.vyrak-fake-agent.txt')
       await writeFile(marker, `Fake agent run for workflow ${params.workflowId}\n`, 'utf8')
       return {
-        content: 'Fake agent: wrote .vyrak-fake-agent.txt (set AGENT_RUNTIME__USE_FAKE_AGENT=false for real SDK).',
+        content:
+          'Fake agent: wrote .vyrak-fake-agent.txt (set AGENT_RUNTIME__USE_FAKE_AGENT=false for real Agent SDK).',
         stopReason: 'end_turn',
         usage: { inputTokens: 0, outputTokens: 0 },
         usedFakeAgent: true,
       }
     }
-
-    if (!this.anthropicClient) {
-      throw new Error('Anthropic client not initialized. Check ANTHROPIC__API_KEY configuration.')
-    }
-
-    const model = this.configService.anthropic?.model || 'claude-sonnet-4-20250514'
 
     const systemPrompt = [
       'You are Claude, an AI assistant with access to tools for reading, editing, and executing code.',
@@ -105,32 +82,26 @@ export class ClaudeCodeRunner {
       `Working directory: ${params.workspacePath}`,
     ].join('\n\n')
 
-    // For now, continue using Messages API
-    // Agent SDK integration with full tools will be added in a future phase
-    // when we understand the exact API better
-    const response = await this.anthropicClient.messages.create({
-      model,
-      max_tokens: 8192,
-      system: systemPrompt,
+    // Use Agent SDK with real tools
+    const response = await this.aiAgentService.chat({
       messages: [
         {
           role: 'user',
           content: params.userPrompt,
         },
       ],
+      systemPrompt,
+      workingDirectory: params.workspacePath,
+      allowedTools: params.allowTools,
+      maxTokens: 8192,
     })
 
-    const textContent = response.content
-      .filter((block) => block.type === 'text')
-      .map((block) => (block.type === 'text' ? block.text : ''))
-      .join('\n')
-
     return {
-      content: textContent,
-      stopReason: response.stop_reason || 'end_turn',
+      content: response.content,
+      stopReason: response.finishReason || 'end_turn',
       usage: {
-        inputTokens: response.usage.input_tokens,
-        outputTokens: response.usage.output_tokens,
+        inputTokens: response.usage?.inputTokens || 0,
+        outputTokens: response.usage?.outputTokens || 0,
       },
       usedFakeAgent: false,
     }

@@ -1,6 +1,7 @@
 import { BullModule } from '@nestjs/bullmq'
 import { Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
+import { AIAgentModule } from '@vyrak/ai-agent'
 import { ConversationModule } from '@vyrak/conversation'
 import { CustomConfigModule } from '@vyrak/custom-config'
 import { CustomLoggerModule } from '@vyrak/custom-logger'
@@ -23,6 +24,7 @@ import { ExampleProcessor, WorkflowPhaseRunProcessor } from './processors'
     CustomLoggerModule,
     DatabaseModule,
     ConversationModule,
+    AIAgentModule,
     ClsModule.forRoot({
       global: true,
       middleware: { mount: false },

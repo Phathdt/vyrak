@@ -9,6 +9,7 @@ import { ClaudeCodeRunner } from '../../infras/agent/claude-code.runner'
 import { GitWorktreeService } from '../../infras/workspace/git-worktree.service'
 
 import type { PhaseExecutionMeta, WorkflowPhaseRunJob } from '../../domain/schemas/phase-execution.schemas'
+import type { IAIAgentService } from '@vyrak/ai-agent'
 
 const execFileAsync = promisify(execFile)
 
@@ -19,10 +20,11 @@ export class WorkflowPhaseRunHandler {
   constructor(
     private readonly databaseService: DatabaseService,
     private readonly conversationService: IConversationService,
+    aiAgentService: IAIAgentService,
     configService: CustomConfigService
   ) {
     this.gitWorktree = new GitWorktreeService(configService)
-    this.claudeCode = new ClaudeCodeRunner(configService)
+    this.claudeCode = new ClaudeCodeRunner(configService, aiAgentService)
   }
 
   async handle(job: WorkflowPhaseRunJob): Promise<void> {
