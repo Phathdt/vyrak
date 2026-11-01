@@ -18,12 +18,14 @@
   "dependencies": {
     "@vyrak/database": "*",
     "@nestjs/common": "^12.3.2",
+    "@opentelemetry/api": "^1.10.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2"
   },
   "devDependencies": {
     "@types/node": "~26.6.6",
     "rolldown": "^1.2.16",
-    "typescript": "~7.0.2"
+    "typescript": "~7.0.2",
+    "vitest": "^5.0.5"
   }
 }

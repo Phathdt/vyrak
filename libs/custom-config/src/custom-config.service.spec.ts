@@ -313,6 +313,187 @@ describe('CustomConfigService', () => {
     })
   })
 
+  describe('anthropic config normalization', () => {
+    it('should normalize empty apiUrl after trim', () => {
+      const config = {
+        ...mockConfigYaml,
+        anthropic: {
+          ...mockConfigYaml.anthropic,
+          api_url: '  ',
+        },
+      }
+      setupMocks(config)
+      service = new CustomConfigService()
+      expect(service.anthropic?.apiUrl).toBeUndefined()
+    })
+
+    it('should normalize replace_me apiUrl', () => {
+      const config = {
+        ...mockConfigYaml,
+        anthropic: {
+          ...mockConfigYaml.anthropic,
+          api_url: 'replace_me',
+        },
+      }
+      setupMocks(config)
+      service = new CustomConfigService()
+      expect(service.anthropic?.apiUrl).toBeUndefined()
+    })
+
+    it('should keep valid apiUrl', () => {
+      const config = {
+        ...mockConfigYaml,
+        anthropic: {
+          ...mockConfigYaml.anthropic,
+          api_url: 'https://api.anthropic.com',
+        },
+      }
+      setupMocks(config)
+      service = new CustomConfigService()
+      expect(service.anthropic?.apiUrl).toBe('https://api.anthropic.com')
+    })
+
+    it('should default authScheme to x-api-key when missing', () => {
+      const config = {
+        ...mockConfigYaml,
+        anthropic: {
+          api_key: 'test-key',
+          model: 'claude-3-5-sonnet-20241022',
+        },
+      }
+      setupMocks(config)
+      service = new CustomConfigService()
+      expect(service.anthropic?.authScheme).toBe('x-api-key')
+    })
+
+    it('should accept bearer authScheme', () => {
+      const config = {
+        ...mockConfigYaml,
+        anthropic: {
+          ...mockConfigYaml.anthropic,
+          auth_scheme: 'bearer',
+        },
+      }
+      setupMocks(config)
+      service = new CustomConfigService()
+      expect(service.anthropic?.authScheme).toBe('bearer')
+    })
+
+    it('should throw error for invalid authScheme', () => {
+      const config = {
+        ...mockConfigYaml,
+        anthropic: {
+          ...mockConfigYaml.anthropic,
+          auth_scheme: 'invalid',
+        },
+      }
+      setupMocks(config)
+      expect(() => {
+        new CustomConfigService()
+      }).toThrow('Invalid anthropic.authScheme')
+    })
+  })
+
+  describe('workspace validation', () => {
+    it('should validate workspace mode is worktree', () => {
+      const config = {
+        ...mockConfigYaml,
+        workspace: {
+          ...mockConfigYaml.workspace,
+          mode: 'clone',
+        },
+      }
+      setupMocks(config)
+      expect(() => {
+        new CustomConfigService()
+      }).toThrow('workspace.mode must be "worktree"')
+    })
+
+    it('should validate workspace mainReposPath', () => {
+      const config = {
+        ...mockConfigYaml,
+        workspace: {
+          ...mockConfigYaml.workspace,
+          main_repos_path: '',
+        },
+      }
+      setupMocks(config)
+      expect(() => {
+        new CustomConfigService()
+      }).toThrow('workspace.mainReposPath must be configured')
+    })
+  })
+
+  describe('s3 config validation', () => {
+    it('should validate s3 endpoint', () => {
+      const config = {
+        ...mockConfigYaml,
+        s3: {
+          ...mockConfigYaml.s3,
+          endpoint: '',
+        },
+      }
+      setupMocks(config)
+      expect(() => {
+        new CustomConfigService()
+      }).toThrow('s3.endpoint must be configured')
+    })
+
+    it('should validate s3 bucket', () => {
+      const config = {
+        ...mockConfigYaml,
+        s3: {
+          ...mockConfigYaml.s3,
+          bucket: 'replace_me',
+        },
+      }
+      setupMocks(config)
+      expect(() => {
+        new CustomConfigService()
+      }).toThrow('s3.bucket must be configured')
+    })
+
+    it('should validate s3 credentials', () => {
+      const config = {
+        ...mockConfigYaml,
+        s3: {
+          ...mockConfigYaml.s3,
+          access_key_id: null,
+        },
+      }
+      setupMocks(config)
+      expect(() => {
+        new CustomConfigService()
+      }).toThrow('s3.accessKeyId must be configured')
+    })
+  })
+
+  describe('env array parsing', () => {
+    it('should parse comma-separated arrays', () => {
+      const config = {
+        ...mockConfigYaml,
+        allowed_origins: ['http://localhost:3000'],
+      }
+      setupMocks(config)
+      process.env.ALLOWED_ORIGINS = 'http://localhost:3000,http://localhost:5173'
+      service = new CustomConfigService()
+      const origins = service.get<string[]>('allowedOrigins')
+      expect(origins).toEqual(['http://localhost:3000', 'http://localhost:5173'])
+    })
+
+    it('should handle empty array env value', () => {
+      const config = {
+        ...mockConfigYaml,
+        allowed_origins: [],
+      }
+      setupMocks(config)
+      process.env.ALLOWED_ORIGINS = ''
+      service = new CustomConfigService()
+      const origins = service.get<string[]>('allowedOrigins')
+      expect(origins).toEqual([])
+    })
+  })
+
   describe('camelCase conversion', () => {
     it('should convert snake_case keys to camelCase', () => {
       const snakeCaseConfig = {

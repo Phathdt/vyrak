@@ -6096,7 +6096,7 @@ hookified@^2.1.1:
 
 hookified@^3.0.3:
   version "3.1.0"
-  resolved "https://registry.npmjs.org/hookified/-/hookified-3.1.0.tgz"
+  resolved "https://registry.yarnpkg.com/hookified/-/hookified-3.1.0.tgz#f0035a0dbb3a1f25dcc1f56907cbe0458322a974"
   integrity sha512-G2jPVpzwIiV7pcYcg62ngNvY+y0iCkKmuJIaQpomFdvtY89UiSvWuPiNo1AalSr1t2op1cdz21ZThZc3DSbmvA==
 
 html-encoding-sniffer@^7.0.0:
@@ -6638,7 +6638,7 @@ keyv@^5.6.0:
 
 keyv@^6.1.0:
   version "6.1.0"
-  resolved "https://registry.npmjs.org/keyv/-/keyv-6.1.0.tgz"
+  resolved "https://registry.yarnpkg.com/keyv/-/keyv-6.1.0.tgz#e3608f04569a8b5324ec8958bfa5b973033f5716"
   integrity sha512-0OO64DxKOITdyQljNCcO+vc+iyaPmm3OV5eKOWRxWCp3V0QnXenpqcKfjGjycNILUJNV+erm1ose6Hsgr1fNFA==
   dependencies:
     hookified "^3.0.3"

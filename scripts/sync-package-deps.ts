@@ -3,13 +3,14 @@
 /**
  * Script to scan all imports in each lib/app module and sync dependencies in package.json
  *
- * Usage: tsx scripts/sync-package-deps.ts [--dry-run] [--module <module-name>] [--strict] [--check-versions]
+ * Usage: tsx scripts/sync-package-deps.ts [--dry-run] [--module <module-name>] [--strict] [--check-versions] [--ci]
  *
  * Options:
  *   --dry-run         Show what would be changed without modifying files
  *   --module          Only process a specific module (e.g., --module bitcoin or --module api-server)
  *   --strict          Remove unused dependencies from libs/apps only (skips root package.json)
  *   --check-versions  Check for version mismatches across packages (exits with error if found)
+ *   --ci              CI mode: sync dependencies but exit with error if changes were made (for CI/CD validation)
  */
 import * as fs from 'fs'
 import * as path from 'path'
@@ -91,6 +92,7 @@ const IGNORE_PACKAGES = new Set([
   'process',
   'punycode',
   'tls',
+  'async_hooks',
   // Node.js prefixed imports (node:* protocol)
   'node:fs',
   'node:path',
@@ -122,6 +124,7 @@ const IGNORE_PACKAGES = new Set([
   'node:process',
   'node:punycode',
   'node:tls',
+  'node:async_hooks',
 ])
 
 // Load versions from root package.json
@@ -548,12 +551,16 @@ function main() {
   const dryRun = args.includes('--dry-run')
   const strict = args.includes('--strict')
   const checkVersions = args.includes('--check-versions')
+  const ciMode = args.includes('--ci')
   const moduleIndex = args.indexOf('--module')
   const targetModule = moduleIndex !== -1 ? args[moduleIndex + 1] : null
 
   console.log('🔍 Scanning module dependencies...\n')
   if (dryRun) {
     console.log('📝 DRY RUN MODE - No files will be modified\n')
+  }
+  if (ciMode) {
+    console.log('🤖 CI MODE - Will sync and exit with error if changes detected\n')
   }
   if (strict) {
     console.log('⚠️  STRICT MODE - Unused dependencies will be removed from libs/apps (root skipped)\n')
@@ -636,12 +643,23 @@ function main() {
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
   console.log(`📊 Summary: ${totalAdded} added, ${totalRemoved} removed, ${totalMoved} moved to devDeps`)
 
-  if (dryRun && (totalAdded > 0 || totalRemoved > 0)) {
+  const hasChanges = totalAdded > 0 || totalRemoved > 0 || totalMoved > 0
+
+  if (dryRun && hasChanges) {
     console.log('\n💡 Run without --dry-run to apply changes')
   }
 
   if (!strict) {
     console.log('\n💡 Use --strict to remove unused dependencies')
+  }
+
+  // CI mode: fail if changes were made
+  if (ciMode && hasChanges) {
+    console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    console.log('❌ CI MODE: Dependencies were out of sync and have been synced.')
+    console.log('   Please commit the changes and push again.')
+    console.log('   Run locally: yarn sync:deps')
+    process.exit(1)
   }
 
   // Check for version mismatches
