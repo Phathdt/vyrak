@@ -1,5 +1,3 @@
-import { Injectable } from '@nestjs/common'
-
 import { InvalidWorkflowStatusError, WorkflowNotFoundError, WorkflowStatus, WorkflowType } from '../../domain'
 
 import type {
@@ -14,7 +12,6 @@ import type {
   WorkflowWithRelations,
 } from '../../domain'
 
-@Injectable()
 export class WorkflowService implements IWorkflowService {
   constructor(
     private readonly workflowRepository: IWorkflowRepository,
