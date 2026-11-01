@@ -811,7 +811,7 @@ describe('WorkflowService', () => {
 
       await expect(
         service.confirmClassification('org-123', 'nonexistent-id', WorkflowType.STORY, 'user-456')
-      ).rejects.toThrow(NotFoundException)
+      ).rejects.toThrow(WorkflowNotFoundError)
       await expect(
         service.confirmClassification('org-123', 'nonexistent-id', WorkflowType.STORY, 'user-456')
       ).rejects.toThrow('Workflow not found')
@@ -823,7 +823,7 @@ describe('WorkflowService', () => {
 
       await expect(
         service.confirmClassification('org-123', 'workflow-123', WorkflowType.STORY, 'user-456')
-      ).rejects.toThrow(BadRequestException)
+      ).rejects.toThrow(InvalidWorkflowStatusError)
       await expect(
         service.confirmClassification('org-123', 'workflow-123', WorkflowType.STORY, 'user-456')
       ).rejects.toThrow('Can only confirm classification from BRAINSTORMING or CLASSIFICATION_PENDING')
