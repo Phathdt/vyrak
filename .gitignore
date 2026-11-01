@@ -71,3 +71,5 @@ libs/database/src/generated/
 **/coverage
 apps/web/src/api/generated
 .smoke-tmp/
+
+repos

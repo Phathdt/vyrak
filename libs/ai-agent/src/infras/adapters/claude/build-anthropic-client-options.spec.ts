@@ -8,11 +8,11 @@ describe('buildAnthropicClientOptions', () => {
     expect(
       buildAnthropicClientOptions({
         apiKey: 'sk-test',
-        apiUrl: 'http://192.168.1.16:5555',
+        apiUrl: 'http://localhost:20128',
       })
     ).toEqual({
       apiKey: 'sk-test',
-      baseURL: 'http://192.168.1.16:5555/v1',
+      baseURL: 'http://localhost:20128/v1',
     })
   })
 
@@ -20,13 +20,13 @@ describe('buildAnthropicClientOptions', () => {
     expect(
       buildAnthropicClientOptions({
         apiKey: 'sk-test',
-        apiUrl: 'http://192.168.1.16:5555/',
+        apiUrl: 'http://localhost:20128/',
         authScheme: AnthropicAuthScheme.BEARER,
       })
     ).toEqual({
       apiKey: null,
       authToken: 'sk-test',
-      baseURL: 'http://192.168.1.16:5555/v1',
+      baseURL: 'http://localhost:20128/v1',
     })
   })
 })
