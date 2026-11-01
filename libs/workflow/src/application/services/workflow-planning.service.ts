@@ -1,5 +1,5 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common'
-import { ConversationPhase, ConversationService, MessageRole } from '@vyrak/conversation'
+import { ConversationPhase, IConversationService, MessageRole } from '@vyrak/conversation'
 import { CustomConfigService } from '@vyrak/custom-config'
 
 import { WorkflowStatus } from '../../domain'
@@ -20,7 +20,7 @@ import type { IGitRepositoryService } from '@vyrak/project'
 
 export class WorkflowPlanningService implements IWorkflowPlanningService {
   constructor(
-    private readonly conversationService: ConversationService,
+    private readonly conversationService: IConversationService,
     private readonly aiAgentService: IAIAgentService,
     private readonly workflowRepository: IWorkflowRepository,
     private readonly workflowRepositoryRepository: IWorkflowRepositoryRepository,
@@ -104,7 +104,7 @@ export class WorkflowPlanningService implements IWorkflowPlanningService {
     }
   }
 
-  private pickPlanningSession(sessions: Awaited<ReturnType<ConversationService['getWorkflowSessions']>>) {
+  private pickPlanningSession(sessions: Awaited<ReturnType<IConversationService['getWorkflowSessions']>>) {
     return (
       sessions.find((s) => s.phase === ConversationPhase.PLANNING) ??
       [...sessions]

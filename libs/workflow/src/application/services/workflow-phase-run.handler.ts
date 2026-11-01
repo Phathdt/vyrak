@@ -1,4 +1,4 @@
-import { ConversationPhase, ConversationService, MessageRole } from '@vyrak/conversation'
+import { ConversationPhase, IConversationService, MessageRole } from '@vyrak/conversation'
 import { CustomConfigService } from '@vyrak/custom-config'
 import { DatabaseService } from '@vyrak/database'
 import { execFile } from 'node:child_process'
@@ -18,7 +18,7 @@ export class WorkflowPhaseRunHandler {
 
   constructor(
     private readonly databaseService: DatabaseService,
-    private readonly conversationService: ConversationService,
+    private readonly conversationService: IConversationService,
     configService: CustomConfigService
   ) {
     this.gitWorktree = new GitWorktreeService(configService)

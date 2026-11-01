@@ -22,5 +22,3 @@ export interface IConversationRepository {
   findMessagesBySession(sessionId: string): Promise<ConversationMessage[]>
   countMessagesBySession(sessionId: string): Promise<number>
 }
-
-export const CONVERSATION_REPOSITORY = Symbol('CONVERSATION_REPOSITORY')

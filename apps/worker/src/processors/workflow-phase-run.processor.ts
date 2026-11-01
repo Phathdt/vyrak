@@ -1,5 +1,6 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq'
-import { ConversationService } from '@vyrak/conversation'
+import { Inject } from '@nestjs/common'
+import { CONVERSATION_SERVICE, IConversationService } from '@vyrak/conversation'
 import { CustomConfigService } from '@vyrak/custom-config'
 import { DatabaseService } from '@vyrak/database'
 import { WorkflowPhaseRunHandler, WorkflowPhaseRunJobSchema } from '@vyrak/workflow'
@@ -11,7 +12,8 @@ export class WorkflowPhaseRunProcessor extends WorkerHost {
 
   constructor(
     databaseService: DatabaseService,
-    conversationService: ConversationService,
+    @Inject(CONVERSATION_SERVICE)
+    conversationService: IConversationService,
     configService: CustomConfigService
   ) {
     super()

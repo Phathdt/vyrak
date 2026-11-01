@@ -7,9 +7,9 @@ import type {
   ConversationSession,
   CreateMessageInput,
   CreateSessionInput,
+  IConversationRepository,
   SessionWithMessages,
-} from '../domain'
-import type { IConversationRepository } from '../domain'
+} from '../../domain'
 
 describe('ConversationService', () => {
   let service: ConversationService

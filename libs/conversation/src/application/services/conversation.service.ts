@@ -1,6 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common'
-
-import { CONVERSATION_REPOSITORY, ConversationStatus } from '../domain'
+import { ConversationStatus } from '../../domain'
 
 import type {
   ConversationMessage,
@@ -9,15 +7,12 @@ import type {
   CreateMessageInput,
   CreateSessionInput,
   IConversationRepository,
+  IConversationService,
   SessionWithMessages,
-} from '../domain'
+} from '../../domain'
 
-@Injectable()
-export class ConversationService {
-  constructor(
-    @Inject(CONVERSATION_REPOSITORY)
-    private readonly repository: IConversationRepository
-  ) {}
+export class ConversationService implements IConversationService {
+  constructor(private readonly repository: IConversationRepository) {}
 
   /**
    * Start a new conversation session for a workflow phase

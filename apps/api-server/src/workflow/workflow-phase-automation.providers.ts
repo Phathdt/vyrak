@@ -1,5 +1,5 @@
 import { BullModule } from '@nestjs/bullmq'
-import { ConversationModule, ConversationService } from '@vyrak/conversation'
+import { CONVERSATION_SERVICE, ConversationModule, IConversationService } from '@vyrak/conversation'
 import { DatabaseService } from '@vyrak/database'
 import {
   WORKFLOW_PHASE_RUN_PUBLISHER,
@@ -32,7 +32,7 @@ export const workflowPhaseAutomationProviders = [
     provide: WorkflowPhaseOrchestratorService,
     useFactory: (
       databaseService: DatabaseService,
-      conversationService: ConversationService,
+      conversationService: IConversationService,
       publisher: BullWorkflowPhaseRunPublisher
     ) =>
       new WorkflowPhaseOrchestratorService(
@@ -41,6 +41,6 @@ export const workflowPhaseAutomationProviders = [
         conversationService,
         publisher
       ),
-    inject: [DatabaseService, ConversationService, BullWorkflowPhaseRunPublisher],
+    inject: [DatabaseService, CONVERSATION_SERVICE, BullWorkflowPhaseRunPublisher],
   },
 ]

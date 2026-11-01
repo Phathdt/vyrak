@@ -1,4 +1,3 @@
-import { Injectable } from '@nestjs/common'
 import { BaseTenantRepository, DatabaseService } from '@vyrak/database'
 
 import { ConversationStatus } from '../../domain'
@@ -14,8 +13,7 @@ import type {
   SessionWithMessages,
 } from '../../domain'
 
-@Injectable()
-export class PrismaConversationRepository extends BaseTenantRepository implements IConversationRepository {
+export class ConversationPrismaRepository extends BaseTenantRepository implements IConversationRepository {
   constructor(db: DatabaseService) {
     super(db)
   }

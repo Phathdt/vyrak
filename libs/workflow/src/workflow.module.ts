@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common'
 import { AI_AGENT_SERVICE, AIAgentModule, type IAIAgentService } from '@vyrak/ai-agent'
-import { ConversationModule, ConversationService } from '@vyrak/conversation'
+import { CONVERSATION_SERVICE, ConversationModule, IConversationService } from '@vyrak/conversation'
 import { CustomConfigModule, CustomConfigService } from '@vyrak/custom-config'
 import { DatabaseModule, DatabaseService } from '@vyrak/database'
 import { GIT_REPOSITORY_SERVICE, GitRepositoryService, ProjectModule } from '@vyrak/project'
@@ -30,11 +30,11 @@ import {
     {
       provide: WORKFLOW_BRAINSTORMING_SERVICE,
       useFactory: (
-        conversationService: ConversationService,
+        conversationService: IConversationService,
         aiAgentService: IAIAgentService,
         workflowRepository: WorkflowPrismaRepository
       ) => new WorkflowBrainstormingService(conversationService, aiAgentService, workflowRepository),
-      inject: [ConversationService, AI_AGENT_SERVICE, WORKFLOW_REPOSITORY],
+      inject: [CONVERSATION_SERVICE, AI_AGENT_SERVICE, WORKFLOW_REPOSITORY],
     },
     {
       provide: WORKFLOW_REPOSITORY,
@@ -60,7 +60,7 @@ import {
     {
       provide: WORKFLOW_PLANNING_SERVICE,
       useFactory: (
-        conversationService: ConversationService,
+        conversationService: IConversationService,
         aiAgentService: IAIAgentService,
         workflowRepo: WorkflowPrismaRepository,
         workflowRepoRepo: WorkflowRepositoryPrismaRepository,
@@ -76,7 +76,7 @@ import {
           configService
         ),
       inject: [
-        ConversationService,
+        CONVERSATION_SERVICE,
         AI_AGENT_SERVICE,
         WORKFLOW_REPOSITORY,
         WORKFLOW_REPOSITORY_REPOSITORY,

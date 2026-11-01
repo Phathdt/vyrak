@@ -1,5 +1,5 @@
 import { NotFoundException } from '@nestjs/common'
-import { ConversationPhase, ConversationService, MessageRole } from '@vyrak/conversation'
+import { ConversationPhase, IConversationService, MessageRole } from '@vyrak/conversation'
 
 import { PhaseExecutionStatus, PhaseRunType } from '../../domain/schemas/phase-execution.schemas'
 
@@ -17,7 +17,7 @@ export class WorkflowPhaseOrchestratorService {
   constructor(
     private readonly workflowRepository: IWorkflowRepository,
     private readonly workflowPhaseRepository: IWorkflowPhaseRepository,
-    private readonly conversationService: ConversationService,
+    private readonly conversationService: IConversationService,
     private readonly runPublisher: IWorkflowPhaseRunPublisher
   ) {}
 

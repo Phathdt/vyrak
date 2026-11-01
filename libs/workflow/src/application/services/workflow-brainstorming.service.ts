@@ -1,5 +1,5 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common'
-import { ConversationPhase, ConversationService, ConversationStatus, MessageRole } from '@vyrak/conversation'
+import { ConversationPhase, ConversationStatus, IConversationService, MessageRole } from '@vyrak/conversation'
 
 import { WorkflowStatus, WorkflowType } from '../../domain'
 
@@ -16,7 +16,7 @@ import type { ConversationMessage } from '@vyrak/conversation'
 
 export class WorkflowBrainstormingService implements IWorkflowBrainstormingService {
   constructor(
-    private readonly conversationService: ConversationService,
+    private readonly conversationService: IConversationService,
     private readonly aiAgentService: IAIAgentService,
     private readonly workflowRepository: IWorkflowRepository
   ) {}
