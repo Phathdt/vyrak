@@ -10,9 +10,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@vyrak/ai-agent": "*",
+    "@vyrak/conversation": "*",
     "@vyrak/custom-config": "*",
     "@vyrak/custom-logger": "*",
-    "@vyrak/conversation": "*",
     "@vyrak/database": "*",
     "@vyrak/workflow-core": "*",
     "@vyrak/workflow-execution": "*",

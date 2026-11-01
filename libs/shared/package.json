@@ -10,14 +10,9 @@
   },
   "dependencies": {
     "@nestjs/common": "^12.2.0",
-    "@vitest/coverage-v8": "^5.0.5",
-    "@vitest/ui": "^5.0.5",
-    "happy-dom": "^21.0.4",
-    "jsdom": "^25",
+    "@opentelemetry/api": "^1.10.0",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.2",
-    "vite": "^8.3.5",
-    "vitest": "^5.0.5"
+    "rxjs": "^7.8.2"
   },
   "peerDependencies": {
     "@nestjs/common": "^11.0.0",
@@ -25,6 +20,7 @@
   },
   "devDependencies": {
     "@types/node": "~26.6.5",
-    "typescript": "~7.0.2"
+    "typescript": "~7.0.2",
+    "vitest": "^5.0.5"
   }
 }

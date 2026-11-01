@@ -25,7 +25,21 @@ const SKIP_MODULES = new Set(['web'])
 const NPM_PACKAGE_VERSIONS: Record<string, string> = {}
 
 // Packages that should only be in devDependencies (not dependencies)
-const DEV_ONLY_PACKAGES = new Set(['@nestjs/testing', '@types/node', 'typescript', '@swc/core', 'eslint', 'oxfmt'])
+const DEV_ONLY_PACKAGES = new Set([
+  '@nestjs/testing',
+  '@types/node',
+  'typescript',
+  '@swc/core',
+  'eslint',
+  'oxfmt',
+  // Test frameworks and utilities
+  'vitest',
+  '@vitest/coverage-v8',
+  '@vitest/ui',
+  'happy-dom',
+  'jsdom',
+  'vite', // Vite is used for dev/test, not runtime
+])
 
 /**
  * Load always-keep dependencies from .keep-deps file in module directory.
