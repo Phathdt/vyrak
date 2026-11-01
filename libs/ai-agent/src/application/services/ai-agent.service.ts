@@ -9,55 +9,39 @@ import type {
 
 export class AIAgentService implements IAIAgentService {
   constructor(
-    private readonly chatAdapter: IAIAgentPort,
-    private readonly agentAdapter: IAIAgentPort
+    private readonly agentAdapter: IAIAgentPort // Single adapter - Agent SDK only
   ) {}
 
   /**
-   * Send a chat message and get response (Messages API)
+   * Send a chat message and get response (Agent SDK)
    */
   async chat(request: AgentRequest): Promise<AgentResponse> {
-    return this.chatAdapter.chat(request)
+    return this.agentAdapter.chat(request)
   }
 
   /**
    * Stream chat response for real-time interaction
    */
   chatStream(request: AgentRequest): AsyncGenerator<string, void, unknown> {
-    return this.chatAdapter.chatStream(request)
+    return this.agentAdapter.chatStream(request)
   }
 
   /**
    * Run agent with tools (Agent SDK)
    */
   async runAgent(request: AgentRequest): Promise<AgentResponse> {
-    if (!request.workingDirectory) {
-      throw new Error('workingDirectory required for agent mode')
-    }
-
     return this.agentAdapter.chat(request)
   }
 
   /**
-   * Smart routing - use agent mode when tools are needed
+   * Smart routing - backward compat, now just calls agent
    */
   async smartChat(request: AgentRequest): Promise<AgentResponse> {
-    const needsTools = this.detectToolNeed(request)
-
-    if (needsTools && request.workingDirectory) {
-      return this.runAgent(request)
-    }
-
-    return this.chat(request)
+    return this.agentAdapter.chat(request)
   }
 
-  private detectToolNeed(request: AgentRequest): boolean {
-    // Explicit flag
-    if (request.allowedTools) return true
-
-    // Keyword detection
-    const lastMessage = request.messages[request.messages.length - 1]
-    if (!lastMessage || lastMessage.role !== 'user') return false
+  /**
+   * Start brainstorming conversation
 
     const content = lastMessage.content.toLowerCase()
     const toolKeywords = ['read', 'show', 'implement', 'create', 'modify', 'add', 'update', 'change', 'fix', 'refactor']
@@ -88,7 +72,7 @@ ${context.description ? `\nDescription: ${context.description}` : ''}
 Let me understand your requirements better. Can you tell me more about what you're trying to achieve?
 `
 
-    return this.chatAdapter.chat({
+    return this.agentAdapter.chat({
       messages: [
         {
           role: 'assistant',
@@ -121,7 +105,7 @@ Guidelines:
       },
     ]
 
-    return this.chatAdapter.chat({
+    return this.agentAdapter.chat({
       messages,
       systemPrompt,
     })
@@ -138,7 +122,7 @@ ${context.description ? `Description: ${context.description}` : ''}
 Based on the discussion, classify this workflow.
 `
 
-    return this.chatAdapter.classifyWorkflow({
+    return this.agentAdapter.classifyWorkflow({
       messages: context.conversationHistory,
       systemPrompt,
     })

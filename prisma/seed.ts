@@ -155,15 +155,15 @@ async function main() {
 
   console.log('🚀 Created projects')
 
-  // Create git repositories
+  // Create git repositories (actual GitHub repos)
   await prisma.gitRepository.createMany({
     data: [
       {
         id: 'a50e8400-e29b-41d4-a716-446655440001',
         organizationId: '650e8400-e29b-41d4-a716-446655440001',
         projectId: '950e8400-e29b-41d4-a716-446655440001',
-        name: 'vyrak-web',
-        url: 'https://github.com/acme/vyrak-web',
+        name: 'vyrak-demo-admin',
+        url: 'https://github.com/Phathdt/vyrak-demo-admin',
         branch: 'main',
         provider: 'github',
         status: 'active',
@@ -171,19 +171,9 @@ async function main() {
       {
         id: 'a50e8400-e29b-41d4-a716-446655440002',
         organizationId: '650e8400-e29b-41d4-a716-446655440001',
-        projectId: '950e8400-e29b-41d4-a716-446655440001',
-        name: 'vyrak-api',
-        url: 'https://github.com/acme/vyrak-api',
-        branch: 'develop',
-        provider: 'github',
-        status: 'active',
-      },
-      {
-        id: 'a50e8400-e29b-41d4-a716-446655440003',
-        organizationId: '650e8400-e29b-41d4-a716-446655440001',
         projectId: '950e8400-e29b-41d4-a716-446655440002',
-        name: 'mobile-ios',
-        url: 'https://github.com/acme/mobile-ios',
+        name: 'vyrak-demo-client',
+        url: 'https://github.com/Phathdt/vyrak-demo-client',
         branch: 'main',
         provider: 'github',
         status: 'active',
