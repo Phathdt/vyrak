@@ -60,6 +60,7 @@
     "sync:deps": "tsx scripts/sync-package-deps.ts",
     "sync:deps:dry": "tsx scripts/sync-package-deps.ts --dry-run",
     "sync:deps:strict": "tsx scripts/sync-package-deps.ts --strict --check-versions",
+    "sync:deps:ci": "tsx scripts/sync-package-deps.ts --ci",
     "test:e2e": "yarn workspace @vyrak/e2e test",
     "test:e2e:headed": "yarn workspace @vyrak/e2e test:headed",
     "test:e2e:ui": "yarn workspace @vyrak/e2e test:ui",
