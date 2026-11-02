@@ -244,7 +244,7 @@ export const CodeReviewReportResponseSchema = z.object({
   findings: z.array(CodeReviewFindingSchema),
   summary: CodeReviewSummarySchema,
   artifactId: z.string().uuid().optional(),
-  completedAt: z.date(),
+  completedAt: z.string().datetime().nullable(),
 })
 
 export class CodeReviewReportResponseDto extends createZodDto(CodeReviewReportResponseSchema) {
