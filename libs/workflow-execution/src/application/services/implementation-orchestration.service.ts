@@ -59,6 +59,9 @@ export class ImplementationOrchestrationService implements IImplementationOrches
       // Load workflow
       const workflow = await this.workflowRepository.findById(workflowId)
       if (!workflow) {
+        throw new Error(`Workflow ${workflowId} not found`)
+      }
+      if (!workflow) {
         throw new Error(`Workflow not found: ${workflowId}`)
       }
 
@@ -249,6 +252,9 @@ export class ImplementationOrchestrationService implements IImplementationOrches
 
       if (!workflow) {
         workflow = await this.workflowRepository.findById(task.workflowId)
+        if (!workflow) {
+          throw new Error(`Workflow not found: ${task.workflowId}`)
+        }
       }
 
       if (!implementationPlan && task.phaseId) {
@@ -262,9 +268,9 @@ export class ImplementationOrchestrationService implements IImplementationOrches
       // Build execution context
       const executionContext: ImplementationContext = {
         workflow: {
-          id: workflow.id,
-          title: workflow.title,
-          description: workflow.description,
+          id: workflow.id as string,
+          title: workflow.title as string,
+          description: (workflow.description as string) || '',
         },
         phase: {
           id: task.phaseId || '',
