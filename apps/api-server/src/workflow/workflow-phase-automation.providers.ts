@@ -22,6 +22,8 @@ import {
   CODE_REVIEW_SERVICE,
   QAVerificationService,
   QA_VERIFICATION_SERVICE,
+  ReworkOrchestratorService,
+  REWORK_ORCHESTRATOR_SERVICE,
 } from '@vyrak/workflow-execution'
 
 import { BullWorkflowPhaseRunPublisher, WORKFLOW_PHASE_RUN_QUEUE } from './workflow-phase-run.publisher'
@@ -132,5 +134,37 @@ export const workflowPhaseAutomationProviders = [
         logger
       ),
     inject: [DatabaseService, ARTIFACT_SERVICE, AI_AGENT_SERVICE, CONFIG_SERVICE, EnhancedLogger],
+  },
+  // Rework Orchestrator Service
+  {
+    provide: REWORK_ORCHESTRATOR_SERVICE,
+    useFactory: (
+      databaseService: DatabaseService,
+      codeReviewService: CodeReviewService,
+      qaVerificationService: QAVerificationService,
+      artifactService: IArtifactService,
+      aiAgentService: IAIAgentService,
+      configService: IConfigService,
+      logger: EnhancedLogger
+    ) =>
+      new ReworkOrchestratorService(
+        new WorkflowPrismaRepository(databaseService),
+        new WorkflowPhasePrismaRepository(databaseService),
+        codeReviewService,
+        qaVerificationService,
+        artifactService,
+        aiAgentService,
+        configService,
+        logger
+      ),
+    inject: [
+      DatabaseService,
+      CODE_REVIEW_SERVICE,
+      QA_VERIFICATION_SERVICE,
+      ARTIFACT_SERVICE,
+      AI_AGENT_SERVICE,
+      CONFIG_SERVICE,
+      EnhancedLogger,
+    ],
   },
 ]

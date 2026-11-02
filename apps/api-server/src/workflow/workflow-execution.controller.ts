@@ -5,6 +5,7 @@ import {
   IMPLEMENTATION_ORCHESTRATION_SERVICE,
   CODE_REVIEW_SERVICE,
   QA_VERIFICATION_SERVICE,
+  REWORK_ORCHESTRATOR_SERVICE,
 } from '@vyrak/workflow-execution'
 
 import { AuthGuard } from '../auth'
@@ -16,6 +17,8 @@ import {
   StartCodeReviewResponseDto,
   CodeReviewReportResponseDto,
   QAVerificationResponseDto,
+  StartReworkResponseDto,
+  ReworkStatusResponseDto,
 } from './workflow-execution.dto'
 
 // Interface imported from workflow-execution lib
@@ -37,6 +40,12 @@ export interface IQAVerificationService {
   getQAReport(workflowId: string, phaseId: string): Promise<unknown>
 }
 
+// Interface for Rework Orchestrator Service
+export interface IReworkOrchestratorService {
+  startRework(workflowId: string, phaseId: string): Promise<unknown>
+  getReworkStatus(workflowId: string, phaseId: string): Promise<unknown>
+}
+
 @ApiTags('Workflows - Execution')
 @Controller('api/organizations/:orgId/projects/:projectId/workflows/:id')
 @UseGuards(AuthGuard, OrganizationMemberGuard)
@@ -48,6 +57,8 @@ export class WorkflowExecutionController {
     private readonly codeReviewService: ICodeReviewService,
     @Inject(QA_VERIFICATION_SERVICE)
     private readonly qaVerificationService: IQAVerificationService,
+    @Inject(REWORK_ORCHESTRATOR_SERVICE)
+    private readonly reworkOrchestratorService: IReworkOrchestratorService,
     @Inject(WORKFLOW_PHASE_REPOSITORY) private readonly phaseRepository: IWorkflowPhaseRepository
   ) {}
 
@@ -87,7 +98,7 @@ export class WorkflowExecutionController {
       message: 'Implementation orchestration started',
       workflowId,
       phaseId: implementationPhase.id,
-      totalTasks: initialStatus.totalTasks,
+      totalTasks: (initialStatus as { totalTasks: number }).totalTasks,
     }
   }
 
@@ -115,21 +126,33 @@ export class WorkflowExecutionController {
 
     const status = await this.orchestrationService.getStatus(workflowId, implementationPhase.id)
 
+    const statusData = status as {
+      workflowId: string
+      phaseId: string
+      totalTasks: number
+      completedTasks: number
+      failedTasks: number
+      inProgressTasks: number
+      pendingTasks: number
+      readyTasks: number
+      tasks: unknown[]
+    }
+
     return {
-      workflowId: status.workflowId,
-      phaseId: status.phaseId,
-      totalTasks: status.totalTasks,
-      completedTasks: status.completedTasks,
-      failedTasks: status.failedTasks,
-      inProgressTasks: status.inProgressTasks,
-      pendingTasks: status.pendingTasks,
-      readyTasks: status.readyTasks,
-      tasks: status.tasks.map((task: unknown) => {
+      workflowId: statusData.workflowId,
+      phaseId: statusData.phaseId,
+      totalTasks: statusData.totalTasks,
+      completedTasks: statusData.completedTasks,
+      failedTasks: statusData.failedTasks,
+      inProgressTasks: statusData.inProgressTasks,
+      pendingTasks: statusData.pendingTasks,
+      readyTasks: statusData.readyTasks,
+      tasks: statusData.tasks.map((task: unknown) => {
         const t = task as {
           id: string
           key: string
           title: string
-          description: string
+          description: string | null
           status: string
           dependencyType: string
           executionOrder: number
@@ -139,8 +162,15 @@ export class WorkflowExecutionController {
           key: t.key,
           title: t.title,
           description: t.description,
-          status: t.status,
-          dependencyType: t.dependencyType,
+          status: t.status as
+            | 'PENDING'
+            | 'READY'
+            | 'IN_PROGRESS'
+            | 'WAITING_DEPENDENCY'
+            | 'COMPLETED'
+            | 'FAILED'
+            | 'BLOCKED',
+          dependencyType: t.dependencyType as 'INDEPENDENT' | 'SEQUENTIAL' | 'DEPENDENT',
           executionOrder: t.executionOrder,
         }
       }),
@@ -165,12 +195,19 @@ export class WorkflowExecutionController {
   ): Promise<RetryTaskResponseDto> {
     const result = await this.orchestrationService.retryTask(taskId)
 
+    const resultData = result as {
+      taskId: string
+      status: string
+      artifactId?: string
+      error?: string
+    }
+
     return {
       message: 'Task retry completed',
-      taskId: result.taskId,
-      status: result.status,
-      artifactId: result.artifactId,
-      error: result.error,
+      taskId: resultData.taskId,
+      status: resultData.status as 'completed' | 'failed',
+      artifactId: resultData.artifactId,
+      error: resultData.error,
     }
   }
 
@@ -238,11 +275,28 @@ export class WorkflowExecutionController {
       throw new Error('Code review report not found')
     }
 
+    const reportData = report as {
+      workflowId: string
+      phaseId: string
+      reviewedFiles: string[]
+      findings: unknown[]
+      summary: {
+        totalFindings: number
+        criticalCount: number
+        highCount: number
+        mediumCount: number
+        lowCount: number
+        infoCount: number
+      }
+      artifactId: string
+      completedAt: string
+    }
+
     return {
-      workflowId: report.workflowId,
-      phaseId: report.phaseId,
-      reviewedFiles: report.reviewedFiles,
-      findings: report.findings.map((f: unknown) => {
+      workflowId: reportData.workflowId,
+      phaseId: reportData.phaseId,
+      reviewedFiles: reportData.reviewedFiles,
+      findings: reportData.findings.map((f: unknown) => {
         const finding = f as {
           file: string
           line?: number
@@ -254,22 +308,22 @@ export class WorkflowExecutionController {
         return {
           file: finding.file,
           line: finding.line,
-          severity: finding.severity,
-          category: finding.category,
+          severity: finding.severity as 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' | 'INFO',
+          category: finding.category as 'quality' | 'security' | 'performance' | 'requirements' | 'best-practices',
           message: finding.message,
           suggestion: finding.suggestion,
         }
       }),
       summary: {
-        totalFindings: report.summary.totalFindings,
-        criticalCount: report.summary.criticalCount,
-        highCount: report.summary.highCount,
-        mediumCount: report.summary.mediumCount,
-        lowCount: report.summary.lowCount,
-        infoCount: report.summary.infoCount,
+        totalFindings: reportData.summary.totalFindings,
+        criticalCount: reportData.summary.criticalCount,
+        highCount: reportData.summary.highCount,
+        mediumCount: reportData.summary.mediumCount,
+        lowCount: reportData.summary.lowCount,
+        infoCount: reportData.summary.infoCount,
       },
-      artifactId: report.artifactId,
-      completedAt: report.completedAt,
+      artifactId: reportData.artifactId,
+      completedAt: reportData.completedAt,
     }
   }
 
@@ -299,11 +353,20 @@ export class WorkflowExecutionController {
     // Start QA verification (synchronous for now - returns result)
     const result = await this.qaVerificationService.startQA(workflowId, qaPhase.id)
 
+    const resultData = result as {
+      workflowId: string
+      phaseId: string
+      reportArtifactId: string
+      criteriaResults: unknown[]
+      overallStatus: string
+      executedAt: Date
+    }
+
     return {
-      workflowId: result.workflowId,
-      phaseId: result.phaseId,
-      reportArtifactId: result.reportArtifactId,
-      criteriaResults: result.criteriaResults.map((c: unknown) => {
+      workflowId: resultData.workflowId,
+      phaseId: resultData.phaseId,
+      reportArtifactId: resultData.reportArtifactId,
+      criteriaResults: resultData.criteriaResults.map((c: unknown) => {
         const criterion = c as {
           criterion: string
           status: string
@@ -312,13 +375,13 @@ export class WorkflowExecutionController {
         }
         return {
           criterion: criterion.criterion,
-          status: criterion.status,
+          status: criterion.status as 'pass' | 'fail' | 'skipped',
           details: criterion.details,
           errorMessage: criterion.errorMessage,
         }
       }),
-      overallStatus: result.overallStatus,
-      executedAt: result.executedAt.toISOString(),
+      overallStatus: resultData.overallStatus as 'passed' | 'failed' | 'partial',
+      executedAt: resultData.executedAt.toISOString(),
     }
   }
 
@@ -350,11 +413,20 @@ export class WorkflowExecutionController {
       throw new Error('QA report not found')
     }
 
+    const reportData = report as {
+      workflowId: string
+      phaseId: string
+      reportArtifactId: string
+      criteriaResults: unknown[]
+      overallStatus: string
+      executedAt: string | Date
+    }
+
     return {
-      workflowId: report.workflowId,
-      phaseId: report.phaseId,
-      reportArtifactId: report.reportArtifactId,
-      criteriaResults: report.criteriaResults.map((c: unknown) => {
+      workflowId: reportData.workflowId,
+      phaseId: reportData.phaseId,
+      reportArtifactId: reportData.reportArtifactId,
+      criteriaResults: reportData.criteriaResults.map((c: unknown) => {
         const criterion = c as {
           criterion: string
           status: string
@@ -363,13 +435,100 @@ export class WorkflowExecutionController {
         }
         return {
           criterion: criterion.criterion,
-          status: criterion.status,
+          status: criterion.status as 'pass' | 'fail' | 'skipped',
           details: criterion.details,
           errorMessage: criterion.errorMessage,
         }
       }),
-      overallStatus: report.overallStatus,
-      executedAt: typeof report.executedAt === 'string' ? report.executedAt : report.executedAt.toISOString(),
+      overallStatus: reportData.overallStatus as 'passed' | 'failed' | 'partial',
+      executedAt:
+        typeof reportData.executedAt === 'string' ? reportData.executedAt : reportData.executedAt.toISOString(),
+    }
+  }
+
+  @Post('rework/start')
+  @ApiOperation({
+    summary: 'Start rework process',
+    description:
+      'Initiates intelligent rework to fix findings from code review and QA. Prioritizes CRITICAL > HIGH > QA_FAILURE findings. Max 3 iterations with convergence checking.',
+  })
+  @ApiParam({ name: 'orgId', description: 'Organization ID' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiParam({ name: 'id', description: 'Workflow ID' })
+  @ApiResponse({ status: 200, type: StartReworkResponseDto })
+  async startRework(
+    @Param('orgId') _orgId: string,
+    @Param('projectId') _projectId: string,
+    @Param('id') workflowId: string
+  ): Promise<StartReworkResponseDto> {
+    // Find implementation phase (rework happens during implementation)
+    const phases = await this.phaseRepository.findByWorkflowId(workflowId)
+    const implementationPhase = phases.find((p) => p.key === 'implementation')
+
+    if (!implementationPhase) {
+      throw new Error('Implementation phase not found')
+    }
+
+    // Start rework (async - does not block)
+    this.reworkOrchestratorService.startRework(workflowId, implementationPhase.id).catch((_error) => {
+      console.error('Rework orchestration failed:', _error)
+    })
+
+    return {
+      message: 'Rework orchestration started',
+      workflowId,
+      phaseId: implementationPhase.id,
+    }
+  }
+
+  @Get('rework/status')
+  @ApiOperation({
+    summary: 'Get rework status',
+    description: 'Returns current rework status including iteration count, findings fixed, and convergence state.',
+  })
+  @ApiParam({ name: 'orgId', description: 'Organization ID' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiParam({ name: 'id', description: 'Workflow ID' })
+  @ApiResponse({ status: 200, type: ReworkStatusResponseDto })
+  async getReworkStatus(
+    @Param('orgId') _orgId: string,
+    @Param('projectId') _projectId: string,
+    @Param('id') workflowId: string
+  ): Promise<ReworkStatusResponseDto> {
+    // Find implementation phase
+    const phases = await this.phaseRepository.findByWorkflowId(workflowId)
+    const implementationPhase = phases.find((p) => p.key === 'implementation')
+
+    if (!implementationPhase) {
+      throw new Error('Implementation phase not found')
+    }
+
+    const status = await this.reworkOrchestratorService.getReworkStatus(workflowId, implementationPhase.id)
+
+    if (!status) {
+      throw new Error('Rework status not found')
+    }
+
+    const statusData = status as {
+      workflowId: string
+      phaseId: string
+      currentIteration: number
+      maxIterations: number
+      findingsFixed: number
+      findingsRemaining: number
+      isConverged: boolean
+      canContinue: boolean
+    }
+
+    return {
+      workflowId: statusData.workflowId,
+      phaseId: statusData.phaseId,
+      currentIteration: statusData.currentIteration,
+      maxIterations: statusData.maxIterations,
+      findingsFixed: statusData.findingsFixed,
+      findingsRemaining: statusData.findingsRemaining,
+      isConverged: statusData.isConverged,
+      canContinue: statusData.canContinue,
     }
   }
 }

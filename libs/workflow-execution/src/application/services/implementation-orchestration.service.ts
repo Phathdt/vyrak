@@ -167,7 +167,7 @@ export class ImplementationOrchestrationService implements IImplementationOrches
   }
 
   private async executeTasksWithDependencies(
-    workflow: unknown,
+    workflow: { id: string; title: string; description?: string | null },
     phaseId: string,
     allTasks: SubTaskEntity[],
     _dependencies: unknown[],
@@ -235,7 +235,7 @@ export class ImplementationOrchestrationService implements IImplementationOrches
   private async executeSingleTask(
     task: SubTaskEntity,
     context?: {
-      workflow: unknown
+      workflow: { id: string; title: string; description?: string | null }
       phaseId: string
       implementationPlan: string
       contextArtifacts: { prd?: string; technicalSpecs?: string }
@@ -251,9 +251,14 @@ export class ImplementationOrchestrationService implements IImplementationOrches
       let contextArtifacts = context?.contextArtifacts
 
       if (!workflow) {
-        workflow = await this.workflowRepository.findById(task.workflowId)
-        if (!workflow) {
+        const workflowEntity = await this.workflowRepository.findById(task.workflowId)
+        if (!workflowEntity) {
           throw new Error(`Workflow not found: ${task.workflowId}`)
+        }
+        workflow = {
+          id: workflowEntity.id,
+          title: workflowEntity.title,
+          description: workflowEntity.description,
         }
       }
 
@@ -268,9 +273,9 @@ export class ImplementationOrchestrationService implements IImplementationOrches
       // Build execution context
       const executionContext: ImplementationContext = {
         workflow: {
-          id: workflow.id as string,
-          title: workflow.title as string,
-          description: (workflow.description as string) || '',
+          id: workflow.id,
+          title: workflow.title,
+          description: workflow.description || '',
         },
         phase: {
           id: task.phaseId || '',

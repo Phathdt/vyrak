@@ -275,8 +275,8 @@ export class CodeReviewReportResponseDto extends createZodDto(CodeReviewReportRe
   })
   artifactId?: string
 
-  @ApiProperty({ example: '2026-11-02T10:30:00Z', description: 'Review completion timestamp' })
-  completedAt!: Date
+  @ApiProperty({ example: '2026-11-02T10:30:00Z', description: 'Review completion timestamp', nullable: true })
+  completedAt!: string | null
 }
 
 // Start QA Request - no body needed
@@ -347,4 +347,62 @@ export class QAVerificationResponseDto extends createZodDto(QAVerificationRespon
 
   @ApiProperty({ example: '2026-11-02T10:30:00Z', description: 'QA execution timestamp' })
   executedAt!: string
+}
+
+// Rework DTOs
+
+// Start Rework Response
+export const StartReworkResponseSchema = z.object({
+  message: z.string(),
+  workflowId: z.string().uuid(),
+  phaseId: z.string().uuid(),
+})
+
+export class StartReworkResponseDto extends createZodDto(StartReworkResponseSchema) {
+  @ApiProperty({ example: 'Rework orchestration started', description: 'Status message' })
+  message!: string
+
+  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000', description: 'Workflow ID' })
+  workflowId!: string
+
+  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174001', description: 'Phase ID' })
+  phaseId!: string
+}
+
+// Rework Status Response
+export const ReworkStatusResponseSchema = z.object({
+  workflowId: z.string().uuid(),
+  phaseId: z.string().uuid(),
+  currentIteration: z.number().int().min(0),
+  maxIterations: z.number().int().min(1),
+  findingsFixed: z.number().int().min(0),
+  findingsRemaining: z.number().int().min(0),
+  isConverged: z.boolean(),
+  canContinue: z.boolean(),
+})
+
+export class ReworkStatusResponseDto extends createZodDto(ReworkStatusResponseSchema) {
+  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000', description: 'Workflow ID' })
+  workflowId!: string
+
+  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174001', description: 'Phase ID' })
+  phaseId!: string
+
+  @ApiProperty({ example: 2, description: 'Current rework iteration number' })
+  currentIteration!: number
+
+  @ApiProperty({ example: 3, description: 'Maximum allowed iterations' })
+  maxIterations!: number
+
+  @ApiProperty({ example: 8, description: 'Number of findings fixed' })
+  findingsFixed!: number
+
+  @ApiProperty({ example: 2, description: 'Number of findings remaining' })
+  findingsRemaining!: number
+
+  @ApiProperty({ example: false, description: 'Whether rework has converged (all critical/high fixed)' })
+  isConverged!: boolean
+
+  @ApiProperty({ example: true, description: 'Whether rework can continue (has remaining issues and iterations)' })
+  canContinue!: boolean
 }
