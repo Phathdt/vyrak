@@ -7,7 +7,7 @@ import {
   useArtifactsControllerRequestApproval,
 } from '@/api/generated/artifacts/artifacts'
 import { Button } from '@/components/ui/button'
-import { useToast } from '@/hooks/use-toast'
+import { useAuth } from '@/contexts/auth-context'
 
 import { ArtifactApprovalDialog } from './artifact-approval-dialog'
 
@@ -16,25 +16,23 @@ import type { ArtifactResponse } from '@/api/generated/models'
 type ArtifactApprovalActionsProps = {
   artifact: ArtifactResponse
   orgId: string
+  workflowId: string
   onStatusChange?: () => void
 }
 
-export function ArtifactApprovalActions({ artifact, orgId, onStatusChange }: ArtifactApprovalActionsProps) {
+export function ArtifactApprovalActions({ artifact, orgId, workflowId, onStatusChange }: ArtifactApprovalActionsProps) {
   const [showRejectDialog, setShowRejectDialog] = useState(false)
-  const { toast } = useToast()
+  const { user } = useAuth()
 
   const { mutate: requestApproval, isPending: isRequesting } = useArtifactsControllerRequestApproval({
     mutation: {
       onSuccess: () => {
-        toast({ title: 'Approval requested', description: 'Artifact submitted for approval' })
+        console.log('Approval requested successfully')
         onStatusChange?.()
       },
       onError: (error) => {
-        toast({
-          title: 'Failed to request approval',
-          description: error.message || 'An error occurred',
-          variant: 'destructive',
-        })
+        console.error('Failed to request approval:', error)
+        alert('Failed to request approval: ' + (error.message || 'An error occurred'))
       },
     },
   })
@@ -42,15 +40,12 @@ export function ArtifactApprovalActions({ artifact, orgId, onStatusChange }: Art
   const { mutate: approve, isPending: isApproving } = useArtifactsControllerApprove({
     mutation: {
       onSuccess: () => {
-        toast({ title: 'Artifact approved', description: 'Artifact has been approved successfully' })
+        console.log('Artifact approved successfully')
         onStatusChange?.()
       },
       onError: (error) => {
-        toast({
-          title: 'Failed to approve',
-          description: error.message || 'An error occurred',
-          variant: 'destructive',
-        })
+        console.error('Failed to approve:', error)
+        alert('Failed to approve: ' + (error.message || 'An error occurred'))
       },
     },
   })
@@ -58,30 +53,45 @@ export function ArtifactApprovalActions({ artifact, orgId, onStatusChange }: Art
   const { mutate: reject, isPending: isRejecting } = useArtifactsControllerReject({
     mutation: {
       onSuccess: () => {
-        toast({ title: 'Artifact rejected', description: 'Artifact has been rejected' })
+        console.log('Artifact rejected successfully')
         setShowRejectDialog(false)
         onStatusChange?.()
       },
       onError: (error) => {
-        toast({
-          title: 'Failed to reject',
-          description: error.message || 'An error occurred',
-          variant: 'destructive',
-        })
+        console.error('Failed to reject:', error)
+        alert('Failed to reject: ' + (error.message || 'An error occurred'))
       },
     },
   })
 
   const handleRequestApproval = () => {
-    requestApproval({ orgId, id: artifact.id })
+    if (!user?.id) return
+    requestApproval({
+      orgId,
+      workflowId,
+      artifactId: artifact.id,
+      data: { requesterId: user.id },
+    })
   }
 
   const handleApprove = () => {
-    approve({ orgId, id: artifact.id })
+    if (!user?.id) return
+    approve({
+      orgId,
+      workflowId,
+      artifactId: artifact.id,
+      data: { approverId: user.id },
+    })
   }
 
   const handleReject = (reason: string) => {
-    reject({ orgId, id: artifact.id, data: { reason } })
+    if (!user?.id) return
+    reject({
+      orgId,
+      workflowId,
+      artifactId: artifact.id,
+      data: { rejectorId: user.id, reason },
+    })
   }
 
   const isLoading = isRequesting || isApproving || isRejecting

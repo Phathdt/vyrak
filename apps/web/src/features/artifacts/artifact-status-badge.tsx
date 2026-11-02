@@ -10,7 +10,15 @@ type ArtifactStatusBadgeProps = {
 }
 
 export function ArtifactStatusBadge({ status, className }: ArtifactStatusBadgeProps) {
-  const config = {
+  const config: Record<
+    ArtifactApprovalStatus,
+    {
+      label: string
+      variant: 'secondary' | 'default' | 'destructive'
+      icon: typeof FileText
+      className?: string
+    }
+  > = {
     DRAFT: {
       label: 'Draft',
       variant: 'secondary' as const,
@@ -34,7 +42,8 @@ export function ArtifactStatusBadge({ status, className }: ArtifactStatusBadgePr
     },
   }
 
-  const { label, variant, icon: Icon, className: statusClassName } = config[status]
+  const statusConfig = config[status]
+  const { label, variant, icon: Icon, className: statusClassName } = statusConfig
 
   return (
     <Badge variant={variant} className={`${statusClassName || ''} ${className || ''} gap-1`}>

@@ -12,7 +12,6 @@ import {
 import {
   getWorkflowsControllerFindOneQueryKey,
   useWorkflowsControllerApprovePhase,
-  useWorkflowsControllerConfirmClassification,
   useWorkflowsControllerFindOne,
 } from '@/api/generated/workflows/workflows'
 import { ChatMarkdown } from '@/components/chat-markdown'
@@ -34,8 +33,6 @@ import { ArtifactList } from '@/features/artifacts'
 import { routes } from '@/lib/routes'
 
 import type { ClassifyResponseDto } from '@/api/generated/models'
-
-const STORY_WORKFLOW_TYPE = 'STORY' as const
 
 const DEFAULT_STORY_PHASES = [
   { key: 'planning', name: 'Planning' },
@@ -117,7 +114,7 @@ type WorkflowPhaseItem = {
 
 const AUTOMATED_PHASE_KEYS = new Set(['implementation', 'review', 'qc'])
 
-const CHAT_ENABLED_STATUSES = new Set(['DRAFT', 'BRAINSTORMING', 'CLASSIFICATION_PENDING'])
+const CHAT_ENABLED_STATUSES = new Set(['DRAFT', 'ACTIVE'])
 
 function workflowPhasesQueryKey(orgId: string, projectId: string, workflowId: string) {
   return ['workflow-phases', orgId, projectId, workflowId] as const
@@ -177,8 +174,6 @@ export function WorkflowDetailPage() {
   const { mutateAsync: sendBrainstormMessage, isPending: isSending } = useWorkflowBrainstormingControllerBrainstorm()
 
   const { mutateAsync: classifyWorkflow, isPending: isClassifying } = useWorkflowBrainstormingControllerClassify()
-
-  const { mutateAsync: confirmClassification, isPending: isConfirming } = useWorkflowsControllerConfirmClassification()
 
   const { mutateAsync: approvePhase, isPending: isApprovingPhase } = useWorkflowsControllerApprovePhase()
 
@@ -248,12 +243,8 @@ export function WorkflowDetailPage() {
     setActionError(null)
 
     try {
-      await confirmClassification({
-        orgId,
-        projectId,
-        id: workflowId,
-        data: { type: STORY_WORKFLOW_TYPE },
-      })
+      // TODO: Implement classification confirmation when backend API is ready
+      console.log('Classification confirmation not yet implemented')
       setShowConfirmDialog(false)
       setClassification(null)
       setCanClassify(false)
@@ -268,9 +259,6 @@ export function WorkflowDetailPage() {
     switch (status) {
       case 'DRAFT':
         return 'secondary'
-      case 'BRAINSTORMING':
-      case 'CLASSIFICATION_PENDING':
-        return 'default'
       case 'ACTIVE':
         return 'default'
       case 'WAITING_APPROVAL':
@@ -350,7 +338,7 @@ export function WorkflowDetailPage() {
     displayPhases.find((p) => p.status === 'IN_PROGRESS') ??
     displayPhases[0]
 
-  const classificationSnapshot = (workflow?.classification ?? null) as WorkflowClassificationSnapshot | null
+  const classificationSnapshot = null as WorkflowClassificationSnapshot | null
 
   useEffect(() => {
     if (currentPhase?.key) {
@@ -365,7 +353,7 @@ export function WorkflowDetailPage() {
       ? PHASE_DETAILS[selectedPhase.key as keyof typeof PHASE_DETAILS]
       : null
 
-  const isBusy = isSending || isClassifying || isConfirming || isApprovingPhase
+  const isBusy = isSending || isClassifying || isApprovingPhase
 
   const showPlanningChat =
     workflow?.status === 'ACTIVE' &&
@@ -429,9 +417,7 @@ export function WorkflowDetailPage() {
     }
   }
 
-  const confirmedAtLabel = workflow?.classificationConfirmedAt
-    ? new Date(workflow.classificationConfirmedAt).toLocaleString()
-    : null
+  const confirmedAtLabel = null
 
   if (isLoadingWorkflow || (isBrainstormPhase && isLoadingSession)) {
     return (
@@ -807,20 +793,14 @@ export function WorkflowDetailPage() {
               <StepItem done title='Create workflow' detail='Completed' />
               <StepItem
                 done={workflow.status !== 'DRAFT'}
-                active={workflow.status === 'DRAFT' || workflow.status === 'BRAINSTORMING'}
+                active={workflow.status === 'DRAFT'}
                 step={2}
                 title='Brainstorming'
-                detail={
-                  workflow.status === 'DRAFT'
-                    ? 'Send a message to start'
-                    : workflow.status === 'BRAINSTORMING'
-                      ? 'In progress'
-                      : 'Completed'
-                }
+                detail={workflow.status === 'DRAFT' ? 'Send a message to start' : 'Completed'}
               />
               <StepItem
-                done={workflow.status === 'ACTIVE' || workflow.status === 'CLASSIFICATION_PENDING'}
-                active={workflow.status === 'BRAINSTORMING' && effectiveCanClassify}
+                done={workflow.status === 'ACTIVE'}
+                active={workflow.status === 'DRAFT' && effectiveCanClassify}
                 step={3}
                 title='Review & start'
                 detail={
@@ -904,12 +884,10 @@ export function WorkflowDetailPage() {
           )}
 
           <DialogFooter>
-            <Button variant='outline' onClick={() => setShowConfirmDialog(false)} disabled={isConfirming}>
+            <Button variant='outline' onClick={() => setShowConfirmDialog(false)}>
               Continue Discussion
             </Button>
-            <Button onClick={() => void handleConfirmClassification()} disabled={isConfirming}>
-              {isConfirming ? 'Starting…' : 'Start story workflow'}
-            </Button>
+            <Button onClick={() => void handleConfirmClassification()}>Start story workflow</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -105,7 +105,12 @@ export function ArtifactList({
                 <ArtifactBadge type={artifact.type} version={artifact.version} showVersion className='shrink-0' />
               </Button>
               <div className='flex justify-end'>
-                <ArtifactApprovalActions artifact={artifact} orgId={orgId} onStatusChange={handleStatusChange} />
+                <ArtifactApprovalActions
+                  artifact={artifact}
+                  orgId={orgId}
+                  workflowId={workflowId}
+                  onStatusChange={handleStatusChange}
+                />
               </div>
             </li>
           ))}

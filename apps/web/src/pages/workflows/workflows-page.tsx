@@ -100,6 +100,7 @@ export function WorkflowsPage() {
         data: {
           title: data.title,
           description: data.description || undefined,
+          type: 'STORY',
           repositoryIds: data.repositoryIds,
         },
       })
