@@ -1,3 +1,4 @@
+import { ArtifactEntity, IArtifactService } from '@vyrak/artifact'
 import { ConversationPhase, IConversationService, MessageRole } from '@vyrak/conversation'
 import {
   InvalidPlanningStateError,
@@ -30,7 +31,8 @@ export class WorkflowPlanningService implements IWorkflowPlanningService {
     private readonly workflowRepositoryRepository: IWorkflowRepositoryRepository,
     private readonly gitRepositoryService: IGitRepositoryService,
     private readonly repositoryContextService: RepositoryContextService,
-    private readonly configService: IConfigService
+    private readonly configService: IConfigService,
+    private readonly artifactService: IArtifactService
   ) {
     // Get model from config
     const anthropicConfig = this.configService.anthropic
@@ -274,5 +276,44 @@ Respond in clear markdown. Prefer concrete recommendations over generic advice.`
         role: msg.role,
         content: msg.content,
       }))
+  }
+
+  async generatePRDArtifact(workflowId: string, sessionId: string, phaseId: string): Promise<ArtifactEntity> {
+    // Get conversation history
+    const messages = await this.conversationService.getMessages(sessionId)
+
+    // Concatenate all assistant messages (where artifacts would be)
+    const assistantMessages = messages
+      .filter((msg) => msg.role === MessageRole.ASSISTANT)
+      .map((msg) => msg.content)
+      .join('\n\n')
+
+    // Parse artifact tags from conversation
+    const parsedArtifacts = this.artifactService.parseArtifactTags(assistantMessages)
+
+    // Find PRD artifact
+    const prdArtifact = parsedArtifacts.find((artifact) => artifact.type === 'prd')
+
+    if (!prdArtifact) {
+      throw new InvalidPlanningStateError(
+        'No PRD artifact found in conversation. The AI must generate a PRD using <artifact type="prd"> tags.'
+      )
+    }
+
+    // Upload artifact to storage
+    const artifact = await this.artifactService.uploadArtifact(
+      workflowId,
+      'prd',
+      prdArtifact.key,
+      prdArtifact.title,
+      prdArtifact.content,
+      {
+        phaseId,
+        fileName: `${prdArtifact.key}.md`,
+        mimeType: 'text/markdown',
+      }
+    )
+
+    return artifact
   }
 }

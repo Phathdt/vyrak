@@ -19,6 +19,7 @@ import type {
   IWorkflowRepository,
   WorkflowPhaseEntity,
 } from '../../domain'
+import type { IArtifactService } from '@vyrak/artifact'
 
 type PhaseContext = {
   workflow: NonNullable<Awaited<ReturnType<IWorkflowRepository['findById']>>>
@@ -31,7 +32,8 @@ type PhaseContext = {
 export class WorkflowPhaseService implements IWorkflowPhaseService {
   constructor(
     private readonly workflowRepository: IWorkflowRepository,
-    private readonly workflowPhaseRepository: IWorkflowPhaseRepository
+    private readonly workflowPhaseRepository: IWorkflowPhaseRepository,
+    private readonly artifactService: IArtifactService
   ) {}
 
   async listByWorkflowId(workflowId: string): Promise<WorkflowPhaseEntity[]> {
@@ -67,6 +69,22 @@ export class WorkflowPhaseService implements IWorkflowPhaseService {
       ctx.currentPhase.status === WorkflowPhaseStatus.WAITING_APPROVAL
     if (!phaseOk) {
       throw new InvalidPhaseApprovalError('Current phase cannot be approved')
+    }
+
+    // Check Planning phase has approved PRD artifact
+    if (ctx.currentKey === 'planning') {
+      const artifacts = await this.artifactService.listPhaseArtifacts(ctx.currentPhase.id)
+      const prdArtifact = artifacts.find((a) => a.type === 'prd')
+
+      if (!prdArtifact) {
+        throw new InvalidPhaseApprovalError('Planning phase requires a PRD artifact before approval')
+      }
+
+      if (prdArtifact.approvalStatus !== 'APPROVED') {
+        throw new InvalidPhaseApprovalError(
+          `PRD artifact must be approved before planning phase can be approved. Current status: ${prdArtifact.approvalStatus}`
+        )
+      }
     }
 
     const approvedAt = new Date().toISOString()

@@ -104,3 +104,28 @@ export class PlanningChatResponseDto extends createZodDto(PlanningChatResponseSc
   @ApiProperty({ type: 'array', items: { type: 'object' } })
   repoFilesLoaded: Array<{ path: string; bytes: number }>
 }
+
+export const GeneratePRDResponseSchema = z.object({
+  artifactId: z.string().uuid(),
+  key: z.string(),
+  title: z.string(),
+  downloadUrl: z.string().url(),
+  approvalStatus: z.string(),
+})
+
+export class GeneratePRDResponseDto extends createZodDto(GeneratePRDResponseSchema) {
+  @ApiProperty({ description: 'Artifact ID' })
+  artifactId: string
+
+  @ApiProperty({ description: 'Artifact key (e.g., "prd")' })
+  key: string
+
+  @ApiProperty({ description: 'Artifact title' })
+  title: string
+
+  @ApiProperty({ description: 'S3 download URL' })
+  downloadUrl: string
+
+  @ApiProperty({ description: 'Approval status (DRAFT, PENDING_APPROVAL, APPROVED, REJECTED)' })
+  approvalStatus: string
+}

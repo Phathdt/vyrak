@@ -3,6 +3,7 @@ import type {
   PlanningChatResponseDto,
   PlanningSessionResponseDto,
 } from '../schemas/workflow-planning.schemas'
+import type { ArtifactEntity } from '@vyrak/artifact'
 
 export type PlanningChatInput = {
   workflowId: string
@@ -16,4 +17,5 @@ export type PlanningChatInput = {
 export interface IWorkflowPlanningService {
   getPlanningSession(workflowId: string, organizationId: string, projectId: string): Promise<PlanningSessionResponseDto>
   chat(input: PlanningChatInput): Promise<PlanningChatResponseDto>
+  generatePRDArtifact(workflowId: string, sessionId: string, phaseId: string): Promise<ArtifactEntity>
 }

@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common'
+import { ARTIFACT_SERVICE, ArtifactModule, type IArtifactService } from '@vyrak/artifact'
 import { CONFIG_SERVICE, CustomConfigModule } from '@vyrak/custom-config'
 import { DatabaseModule, DatabaseService } from '@vyrak/database'
 import { ProjectModule, GIT_REPOSITORY_REPOSITORY } from '@vyrak/project'
@@ -24,7 +25,7 @@ import type {
 import type { IGitRepositoryRepository } from '@vyrak/project'
 
 @Module({
-  imports: [DatabaseModule, ProjectModule, CustomConfigModule],
+  imports: [DatabaseModule, ProjectModule, CustomConfigModule, ArtifactModule],
   providers: [
     // Repositories (only 3 used ones provided)
     {
@@ -54,9 +55,12 @@ import type { IGitRepositoryRepository } from '@vyrak/project'
     },
     {
       provide: WORKFLOW_PHASE_SERVICE,
-      useFactory: (workflowRepo: IWorkflowRepository, workflowPhaseRepo: IWorkflowPhaseRepository) =>
-        new WorkflowPhaseService(workflowRepo, workflowPhaseRepo),
-      inject: [WORKFLOW_REPOSITORY, WORKFLOW_PHASE_REPOSITORY],
+      useFactory: (
+        workflowRepo: IWorkflowRepository,
+        workflowPhaseRepo: IWorkflowPhaseRepository,
+        artifactService: IArtifactService
+      ) => new WorkflowPhaseService(workflowRepo, workflowPhaseRepo, artifactService),
+      inject: [WORKFLOW_REPOSITORY, WORKFLOW_PHASE_REPOSITORY, ARTIFACT_SERVICE],
     },
     // Generic repository context service
     {
