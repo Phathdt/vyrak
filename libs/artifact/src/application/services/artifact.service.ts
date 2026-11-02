@@ -1,4 +1,8 @@
-import { ArtifactNotFoundError } from '../../domain/exceptions/artifact.exceptions'
+import {
+  ArtifactNotFoundError,
+  ArtifactNotPendingApprovalError,
+  InvalidApprovalTransitionError,
+} from '../../domain/exceptions/artifact.exceptions'
 
 import type {
   ArtifactEntity,
@@ -99,6 +103,54 @@ export class ArtifactService implements IArtifactService {
     }
 
     return artifacts
+  }
+
+  async requestApproval(artifactId: string): Promise<ArtifactEntity> {
+    const artifact = await this.getArtifact(artifactId)
+
+    // Validate state transition
+    if (artifact.approvalStatus !== 'DRAFT' && artifact.approvalStatus !== 'REJECTED') {
+      throw new InvalidApprovalTransitionError(artifactId, artifact.approvalStatus, 'PENDING_APPROVAL')
+    }
+
+    return this.repository.updateApprovalStatus(artifactId, {
+      approvalStatus: 'PENDING_APPROVAL',
+      approvedById: null,
+      approvedAt: null,
+      rejectionReason: null,
+    })
+  }
+
+  async approve(artifactId: string, approverId: string): Promise<ArtifactEntity> {
+    const artifact = await this.getArtifact(artifactId)
+
+    // Validate artifact is pending approval
+    if (artifact.approvalStatus !== 'PENDING_APPROVAL') {
+      throw new ArtifactNotPendingApprovalError(artifactId, artifact.approvalStatus)
+    }
+
+    return this.repository.updateApprovalStatus(artifactId, {
+      approvalStatus: 'APPROVED',
+      approvedById: approverId,
+      approvedAt: new Date(),
+      rejectionReason: null,
+    })
+  }
+
+  async reject(artifactId: string, rejectorId: string, reason: string): Promise<ArtifactEntity> {
+    const artifact = await this.getArtifact(artifactId)
+
+    // Validate artifact is pending approval
+    if (artifact.approvalStatus !== 'PENDING_APPROVAL') {
+      throw new ArtifactNotPendingApprovalError(artifactId, artifact.approvalStatus)
+    }
+
+    return this.repository.updateApprovalStatus(artifactId, {
+      approvalStatus: 'REJECTED',
+      approvedById: rejectorId,
+      approvedAt: new Date(),
+      rejectionReason: reason,
+    })
   }
 
   private parseAttributes(rawAttributes: string): Record<string, string> {

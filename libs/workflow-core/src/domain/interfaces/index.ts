@@ -1,3 +1,4 @@
+export * from './subtask-repository.interface'
 export * from './workflow-approval-repository.interface'
 export * from './workflow-brainstorming-service.interface'
 export * from './workflow-dependency-repository.interface'

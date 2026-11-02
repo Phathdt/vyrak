@@ -7,6 +7,15 @@ export const ArtifactType = {
 
 export type ArtifactType = (typeof ArtifactType)[keyof typeof ArtifactType]
 
+export const ArtifactApprovalStatus = {
+  DRAFT: 'DRAFT',
+  PENDING_APPROVAL: 'PENDING_APPROVAL',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
+} as const
+
+export type ArtifactApprovalStatus = (typeof ArtifactApprovalStatus)[keyof typeof ArtifactApprovalStatus]
+
 export interface ArtifactEntity {
   id: string
   organizationId: string
@@ -24,6 +33,11 @@ export interface ArtifactEntity {
   checksum: string | null
   version: number
   metadata: Record<string, unknown> | null
+  approvalStatus: ArtifactApprovalStatus
+  approvedById: string | null
+  approvedAt: Date | null
+  rejectionReason: string | null
+  supersededBy: string | null
   createdAt: Date
   updatedAt: Date
 }

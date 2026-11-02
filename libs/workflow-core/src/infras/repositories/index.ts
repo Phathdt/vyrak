@@ -1,3 +1,4 @@
+export * from './subtask-prisma.repository'
 export * from './workflow-approval-prisma.repository'
 export * from './workflow-dependency-prisma.repository'
 export * from './workflow-event-prisma.repository'

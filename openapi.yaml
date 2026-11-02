@@ -842,6 +842,16 @@ paths:
           in: query
           schema:
             type: string
+        - name: approvalStatus
+          required: false
+          in: query
+          schema:
+            type: string
+            enum:
+              - DRAFT
+              - PENDING_APPROVAL
+              - APPROVED
+              - REJECTED
         - name: orgId
           required: true
           in: path
@@ -959,6 +969,129 @@ paths:
         '404':
           description: Artifact not found
       summary: Get artifact metadata with markdown content
+      tags: *ref_7
+  /api/organizations/{orgId}/workflows/{workflowId}/artifacts/{artifactId}/request-approval:
+    post:
+      operationId: ArtifactsController_requestApproval
+      parameters:
+        - name: artifactId
+          required: true
+          in: path
+          description: Artifact ID
+          schema:
+            type: string
+        - name: workflowId
+          required: true
+          in: path
+          description: Workflow ID
+          schema:
+            type: string
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequestApprovalDto'
+      responses:
+        '200':
+          description: Approval requested successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArtifactResponse'
+        '400':
+          description: Invalid state transition
+        '404':
+          description: Artifact not found
+      summary: Request approval for an artifact
+      tags: *ref_7
+  /api/organizations/{orgId}/workflows/{workflowId}/artifacts/{artifactId}/approve:
+    post:
+      operationId: ArtifactsController_approve
+      parameters:
+        - name: artifactId
+          required: true
+          in: path
+          description: Artifact ID
+          schema:
+            type: string
+        - name: workflowId
+          required: true
+          in: path
+          description: Workflow ID
+          schema:
+            type: string
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApproveArtifactDto'
+      responses:
+        '200':
+          description: Artifact approved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArtifactResponse'
+        '400':
+          description: Artifact not pending approval
+        '404':
+          description: Artifact not found
+      summary: Approve an artifact
+      tags: *ref_7
+  /api/organizations/{orgId}/workflows/{workflowId}/artifacts/{artifactId}/reject:
+    post:
+      operationId: ArtifactsController_reject
+      parameters:
+        - name: artifactId
+          required: true
+          in: path
+          description: Artifact ID
+          schema:
+            type: string
+        - name: workflowId
+          required: true
+          in: path
+          description: Workflow ID
+          schema:
+            type: string
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RejectArtifactDto'
+      responses:
+        '200':
+          description: Artifact rejected successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArtifactResponse'
+        '400':
+          description: Artifact not pending approval
+        '404':
+          description: Artifact not found
+      summary: Reject an artifact
       tags: *ref_7
   /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/planning/session:
     get:
@@ -1960,6 +2093,26 @@ components:
           type: object
           example: null
           nullable: true
+        approvalStatus:
+          type: string
+          enum: &ref_10
+            - DRAFT
+            - PENDING_APPROVAL
+            - APPROVED
+            - REJECTED
+          example: DRAFT
+        approvedById:
+          type: string
+          nullable: true
+        approvedAt:
+          type: string
+          nullable: true
+        rejectionReason:
+          type: string
+          nullable: true
+        supersededBy:
+          type: string
+          nullable: true
         createdAt:
           type: string
         updatedAt:
@@ -1981,6 +2134,11 @@ components:
         - checksum
         - version
         - metadata
+        - approvalStatus
+        - approvedById
+        - approvedAt
+        - rejectionReason
+        - supersededBy
         - createdAt
         - updatedAt
     ArtifactListResponse:
@@ -2090,6 +2248,22 @@ components:
           type: object
           example: null
           nullable: true
+        approvalStatus:
+          type: string
+          enum: *ref_10
+          example: DRAFT
+        approvedById:
+          type: string
+          nullable: true
+        approvedAt:
+          type: string
+          nullable: true
+        rejectionReason:
+          type: string
+          nullable: true
+        supersededBy:
+          type: string
+          nullable: true
         createdAt:
           type: string
         updatedAt:
@@ -2114,9 +2288,50 @@ components:
         - checksum
         - version
         - metadata
+        - approvalStatus
+        - approvedById
+        - approvedAt
+        - rejectionReason
+        - supersededBy
         - createdAt
         - updatedAt
         - content
+    RequestApprovalDto:
+      type: object
+      properties:
+        requesterId:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          description: User ID requesting approval
+      required:
+        - requesterId
+    ApproveArtifactDto:
+      type: object
+      properties:
+        approverId:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          description: User ID approving the artifact
+      required:
+        - approverId
+    RejectArtifactDto:
+      type: object
+      properties:
+        rejectorId:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          description: User ID rejecting the artifact
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 1000
+          description: Reason for rejection
+      required:
+        - rejectorId
+        - reason
     PlanningMessageDto:
       type: object
       properties:

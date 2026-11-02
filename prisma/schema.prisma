@@ -221,11 +221,23 @@ model WorkflowWorkItem {
   // Epic -> Story -> Task
   parentId String? @map("parent_id")
 
+  // Phase association for sub-tasks
+  phaseId String? @map("phase_id")
+
   acceptanceCriteria Json? @map("acceptance_criteria")
 
   // PROPOSED | APPROVED | READY | IN_PROGRESS |
   // BLOCKED | DONE | CANCELLED
   status String @default("PROPOSED")
+
+  // INDEPENDENT | SEQUENTIAL | DEPENDENT
+  dependencyType String @default("INDEPENDENT") @map("dependency_type")
+
+  // Execution order (0 = highest priority)
+  executionOrder Int @default(0) @map("execution_order")
+
+  // DEVELOPER | CODE_REVIEWER | QA
+  assignedAgentRole String? @map("assigned_agent_role")
 
   priority String?
   estimate Json?
@@ -239,6 +251,7 @@ model WorkflowWorkItem {
   @@unique([workflowId, key])
   @@index([organizationId, workflowId, status])
   @@index([organizationId, parentId])
+  @@index([organizationId, phaseId])
   @@map("workflow_work_items")
 }
 
@@ -416,6 +429,13 @@ model Artifact {
 
   metadata Json?
 
+  // Approval workflow
+  approvalStatus  String    @default("DRAFT") @map("approval_status") // DRAFT | PENDING_APPROVAL | APPROVED | REJECTED
+  approvedById    String?   @map("approved_by_id")
+  approvedAt      DateTime? @map("approved_at")
+  rejectionReason String?   @map("rejection_reason") @db.Text
+  supersededBy    String?   @map("superseded_by") // Reference to newer version artifact ID
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -423,6 +443,7 @@ model Artifact {
   @@unique([workflowId, key, version])
   @@index([organizationId, workflowId, type])
   @@index([organizationId, phaseId])
+  @@index([organizationId, workflowId, approvalStatus])
   @@map("artifacts")
 }
 

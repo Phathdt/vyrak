@@ -2,13 +2,20 @@ import { ApiProperty } from '@nestjs/swagger'
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
-import { ArtifactType } from '../entities/artifact.entity'
+import { ArtifactApprovalStatus, ArtifactType } from '../entities/artifact.entity'
 
 const ArtifactTypeEnum = z.enum([
   ArtifactType.PRD,
   ArtifactType.ADR,
   ArtifactType.ARD,
   ArtifactType.IMPLEMENTATION_PLAN,
+])
+
+const ArtifactApprovalStatusEnum = z.enum([
+  ArtifactApprovalStatus.DRAFT,
+  ArtifactApprovalStatus.PENDING_APPROVAL,
+  ArtifactApprovalStatus.APPROVED,
+  ArtifactApprovalStatus.REJECTED,
 ])
 
 export const CreateArtifactSchema = z.object({
@@ -48,9 +55,41 @@ export class CreateArtifactDto extends createZodDto(CreateArtifactSchema) {
   mimeType?: string
 }
 
+export const RequestApprovalSchema = z.object({
+  requesterId: z.string().uuid(),
+})
+
+export class RequestApprovalDto extends createZodDto(RequestApprovalSchema) {
+  @ApiProperty({ description: 'User ID requesting approval' })
+  requesterId: string
+}
+
+export const ApproveArtifactSchema = z.object({
+  approverId: z.string().uuid(),
+})
+
+export class ApproveArtifactDto extends createZodDto(ApproveArtifactSchema) {
+  @ApiProperty({ description: 'User ID approving the artifact' })
+  approverId: string
+}
+
+export const RejectArtifactSchema = z.object({
+  rejectorId: z.string().uuid(),
+  reason: z.string().min(1).max(1000),
+})
+
+export class RejectArtifactDto extends createZodDto(RejectArtifactSchema) {
+  @ApiProperty({ description: 'User ID rejecting the artifact' })
+  rejectorId: string
+
+  @ApiProperty({ description: 'Reason for rejection' })
+  reason: string
+}
+
 export const ListArtifactsQuerySchema = z.object({
   type: ArtifactTypeEnum.optional(),
   key: z.string().optional(),
+  approvalStatus: ArtifactApprovalStatusEnum.optional(),
 })
 
 export class ListArtifactsQueryDto extends createZodDto(ListArtifactsQuerySchema) {
@@ -59,6 +98,9 @@ export class ListArtifactsQueryDto extends createZodDto(ListArtifactsQuerySchema
 
   @ApiProperty({ required: false })
   key?: string
+
+  @ApiProperty({ enum: Object.values(ArtifactApprovalStatus), required: false })
+  approvalStatus?: ArtifactApprovalStatus
 }
 
 export const ArtifactResponseSchema = z.object({
@@ -78,6 +120,11 @@ export const ArtifactResponseSchema = z.object({
   checksum: z.string().nullable(),
   version: z.number().int(),
   metadata: z.record(z.string(), z.unknown()).nullable(),
+  approvalStatus: ArtifactApprovalStatusEnum,
+  approvedById: z.string().uuid().nullable(),
+  approvedAt: z.string().nullable(),
+  rejectionReason: z.string().nullable(),
+  supersededBy: z.string().uuid().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
 })
@@ -134,6 +181,21 @@ export class ArtifactResponse {
 
   @ApiProperty({ type: Object, example: null, nullable: true })
   metadata: Record<string, unknown> | null
+
+  @ApiProperty({ enum: Object.values(ArtifactApprovalStatus), example: ArtifactApprovalStatus.DRAFT })
+  approvalStatus: ArtifactApprovalStatus
+
+  @ApiProperty({ type: String, nullable: true })
+  approvedById: string | null
+
+  @ApiProperty({ type: String, nullable: true })
+  approvedAt: string | null
+
+  @ApiProperty({ type: String, nullable: true })
+  rejectionReason: string | null
+
+  @ApiProperty({ type: String, nullable: true })
+  supersededBy: string | null
 
   @ApiProperty()
   createdAt: string

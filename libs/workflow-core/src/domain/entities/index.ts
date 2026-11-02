@@ -1,3 +1,4 @@
+export * from './subtask.entity'
 export * from './workflow-approval.entity'
 export * from './workflow-dependency.entity'
 export * from './workflow-event.entity'

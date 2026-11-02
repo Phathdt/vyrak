@@ -25,3 +25,28 @@ export class ArtifactContentNotFoundError extends ArtifactDomainError {
     super(`Artifact content not found in storage: ${s3Key}`)
   }
 }
+
+/**
+ * Thrown when an invalid approval state transition is attempted
+ */
+export class InvalidApprovalTransitionError extends ArtifactDomainError {
+  constructor(
+    public readonly artifactId: string,
+    public readonly fromStatus: string,
+    public readonly toStatus: string
+  ) {
+    super(`Invalid approval transition for artifact ${artifactId}: cannot transition from ${fromStatus} to ${toStatus}`)
+  }
+}
+
+/**
+ * Thrown when trying to approve/reject an artifact that is not pending approval
+ */
+export class ArtifactNotPendingApprovalError extends ArtifactDomainError {
+  constructor(
+    public readonly artifactId: string,
+    public readonly currentStatus: string
+  ) {
+    super(`Artifact ${artifactId} is not pending approval (current status: ${currentStatus})`)
+  }
+}

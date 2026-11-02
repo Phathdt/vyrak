@@ -6,7 +6,9 @@ import { getErrorMessage } from '@/api/client'
 import { useArtifactsControllerList } from '@/api/generated/artifacts/artifacts'
 import { Button } from '@/components/ui/button'
 
+import { ArtifactApprovalActions } from './artifact-approval-actions'
 import { ArtifactBadge } from './artifact-badge'
+import { ArtifactStatusBadge } from './artifact-status-badge'
 import { ArtifactViewerModal } from './artifact-viewer-modal'
 
 import type { ArtifactResponse } from '@/api/generated/models'
@@ -59,6 +61,10 @@ export function ArtifactList({
     [artifacts, phaseId]
   )
 
+  const handleStatusChange = () => {
+    query.refetch()
+  }
+
   if (hideWhenEmpty && !query.isPending && !query.isError && visible.length === 0) {
     return null
   }
@@ -79,7 +85,7 @@ export function ArtifactList({
       ) : (
         <ul className='space-y-2'>
           {visible.map((artifact) => (
-            <li key={artifact.id}>
+            <li key={artifact.id} className='space-y-2'>
               <Button
                 variant='outline'
                 className='h-auto w-full justify-start gap-3 px-3 py-2.5 text-left font-normal'
@@ -87,7 +93,10 @@ export function ArtifactList({
               >
                 <FileTextIcon className='size-4 shrink-0 text-muted-foreground' aria-hidden />
                 <span className='min-w-0 flex-1'>
-                  <span className='block truncate text-sm font-medium'>{artifact.title}</span>
+                  <span className='flex items-center gap-2'>
+                    <span className='block truncate text-sm font-medium'>{artifact.title}</span>
+                    <ArtifactStatusBadge status={artifact.approvalStatus} />
+                  </span>
                   <span className='block truncate text-xs text-muted-foreground'>
                     {artifact.key}
                     {artifact.contentSize != null ? ` · ${artifact.contentSize} B` : ''}
@@ -95,6 +104,9 @@ export function ArtifactList({
                 </span>
                 <ArtifactBadge type={artifact.type} version={artifact.version} showVersion className='shrink-0' />
               </Button>
+              <div className='flex justify-end'>
+                <ArtifactApprovalActions artifact={artifact} orgId={orgId} onStatusChange={handleStatusChange} />
+              </div>
             </li>
           ))}
         </ul>

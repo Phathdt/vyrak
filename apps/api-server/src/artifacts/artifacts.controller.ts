@@ -2,11 +2,14 @@ import { Body, Controller, Get, Inject, Param, Post, Query, UseGuards } from '@n
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger'
 import {
   ARTIFACT_SERVICE,
+  ApproveArtifactDto,
   ArtifactListResponse,
   ArtifactResponse,
   ArtifactWithContentResponse,
   CreateArtifactDto,
   ListArtifactsQueryDto,
+  RejectArtifactDto,
+  RequestApprovalDto,
 } from '@vyrak/artifact'
 
 import { AuthGuard } from '../auth'
@@ -33,6 +36,7 @@ export class ArtifactsController {
     const artifacts = await this.artifactService.listWorkflowArtifacts(workflowId, {
       type: query.type,
       key: query.key,
+      approvalStatus: query.approvalStatus,
     })
 
     return { items: artifacts.map((artifact) => this.toResponse(artifact)) }
@@ -95,6 +99,51 @@ export class ArtifactsController {
     }
   }
 
+  @Post(':artifactId/request-approval')
+  @ApiOperation({ summary: 'Request approval for an artifact' })
+  @ApiParam({ name: 'orgId', description: 'Organization ID', type: String })
+  @ApiParam({ name: 'workflowId', description: 'Workflow ID', type: String })
+  @ApiParam({ name: 'artifactId', description: 'Artifact ID', type: String })
+  @ApiResponse({ status: 200, description: 'Approval requested successfully', type: ArtifactResponse })
+  @ApiResponse({ status: 400, description: 'Invalid state transition' })
+  @ApiResponse({ status: 404, description: 'Artifact not found' })
+  async requestApproval(
+    @Param('artifactId') artifactId: string,
+    @Body() dto: RequestApprovalDto
+  ): Promise<ArtifactResponse> {
+    const artifact = await this.artifactService.requestApproval(artifactId, dto.requesterId)
+
+    return this.toResponse(artifact)
+  }
+
+  @Post(':artifactId/approve')
+  @ApiOperation({ summary: 'Approve an artifact' })
+  @ApiParam({ name: 'orgId', description: 'Organization ID', type: String })
+  @ApiParam({ name: 'workflowId', description: 'Workflow ID', type: String })
+  @ApiParam({ name: 'artifactId', description: 'Artifact ID', type: String })
+  @ApiResponse({ status: 200, description: 'Artifact approved successfully', type: ArtifactResponse })
+  @ApiResponse({ status: 400, description: 'Artifact not pending approval' })
+  @ApiResponse({ status: 404, description: 'Artifact not found' })
+  async approve(@Param('artifactId') artifactId: string, @Body() dto: ApproveArtifactDto): Promise<ArtifactResponse> {
+    const artifact = await this.artifactService.approve(artifactId, dto.approverId)
+
+    return this.toResponse(artifact)
+  }
+
+  @Post(':artifactId/reject')
+  @ApiOperation({ summary: 'Reject an artifact' })
+  @ApiParam({ name: 'orgId', description: 'Organization ID', type: String })
+  @ApiParam({ name: 'workflowId', description: 'Workflow ID', type: String })
+  @ApiParam({ name: 'artifactId', description: 'Artifact ID', type: String })
+  @ApiResponse({ status: 200, description: 'Artifact rejected successfully', type: ArtifactResponse })
+  @ApiResponse({ status: 400, description: 'Artifact not pending approval' })
+  @ApiResponse({ status: 404, description: 'Artifact not found' })
+  async reject(@Param('artifactId') artifactId: string, @Body() dto: RejectArtifactDto): Promise<ArtifactResponse> {
+    const artifact = await this.artifactService.reject(artifactId, dto.rejectorId, dto.reason)
+
+    return this.toResponse(artifact)
+  }
+
   private toResponse(artifact: ArtifactEntity): ArtifactResponse {
     return {
       id: artifact.id,
@@ -113,6 +162,11 @@ export class ArtifactsController {
       checksum: artifact.checksum,
       version: artifact.version,
       metadata: artifact.metadata,
+      approvalStatus: artifact.approvalStatus,
+      approvedById: artifact.approvedById,
+      approvedAt: artifact.approvedAt ? artifact.approvedAt.toISOString() : null,
+      rejectionReason: artifact.rejectionReason,
+      supersededBy: artifact.supersededBy,
       createdAt: artifact.createdAt.toISOString(),
       updatedAt: artifact.updatedAt.toISOString(),
     }

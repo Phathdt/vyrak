@@ -1,6 +1,11 @@
 import { BaseTenantRepository, DatabaseService } from '@vyrak/database'
 
-import type { ArtifactEntity, ArtifactFilters, CreateArtifactInput, IArtifactRepository } from '../../domain'
+import type { ArtifactEntity, IArtifactRepository } from '../../domain'
+import type {
+  ArtifactFilters,
+  CreateArtifactInput,
+  UpdateArtifactApprovalInput,
+} from '../../domain/interfaces/artifact-repository.interface'
 import type { Artifact } from '@vyrak/database'
 
 export class ArtifactPrismaRepository extends BaseTenantRepository implements IArtifactRepository {
@@ -26,6 +31,11 @@ export class ArtifactPrismaRepository extends BaseTenantRepository implements IA
       checksum: raw.checksum,
       version: raw.version,
       metadata: raw.metadata as Record<string, unknown> | null,
+      approvalStatus: raw.approvalStatus as ArtifactEntity['approvalStatus'],
+      approvedById: raw.approvedById,
+      approvedAt: raw.approvedAt,
+      rejectionReason: raw.rejectionReason,
+      supersededBy: raw.supersededBy,
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt,
     }
@@ -75,6 +85,7 @@ export class ArtifactPrismaRepository extends BaseTenantRepository implements IA
           workflowId,
           ...(filters.type ? { type: filters.type } : {}),
           ...(filters.key ? { key: filters.key } : {}),
+          ...(filters.approvalStatus ? { approvalStatus: filters.approvalStatus } : {}),
         },
         orderBy: [{ createdAt: 'asc' }, { version: 'desc' }],
       })
@@ -117,6 +128,22 @@ export class ArtifactPrismaRepository extends BaseTenantRepository implements IA
       })
 
       return artifact ? this.mapToEntity(artifact) : null
+    })
+  }
+
+  async updateApprovalStatus(id: string, input: UpdateArtifactApprovalInput): Promise<ArtifactEntity> {
+    return this.withTenantContext(async (organizationId) => {
+      const artifact = await this.prisma.client.artifact.update({
+        where: { id, organizationId },
+        data: {
+          approvalStatus: input.approvalStatus,
+          approvedById: input.approvedById ?? undefined,
+          approvedAt: input.approvedAt ?? undefined,
+          rejectionReason: input.rejectionReason ?? undefined,
+        },
+      })
+
+      return this.mapToEntity(artifact)
     })
   }
 }

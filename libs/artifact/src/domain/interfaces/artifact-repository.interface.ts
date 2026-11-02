@@ -1,8 +1,9 @@
-import type { ArtifactEntity } from '../entities'
+import type { ArtifactApprovalStatus, ArtifactEntity } from '../entities'
 
 export interface ArtifactFilters {
   type?: string
   key?: string
+  approvalStatus?: ArtifactApprovalStatus
 }
 
 export interface CreateArtifactInput {
@@ -22,6 +23,13 @@ export interface CreateArtifactInput {
   metadata: Record<string, unknown> | null
 }
 
+export interface UpdateArtifactApprovalInput {
+  approvalStatus: ArtifactApprovalStatus
+  approvedById?: string | null
+  approvedAt?: Date | null
+  rejectionReason?: string | null
+}
+
 export interface IArtifactRepository {
   create(input: CreateArtifactInput): Promise<ArtifactEntity>
   findById(id: string): Promise<ArtifactEntity | null>
@@ -30,4 +38,5 @@ export interface IArtifactRepository {
   findByType(workflowId: string, type: string): Promise<ArtifactEntity[]>
   findByKey(workflowId: string, key: string): Promise<ArtifactEntity | null>
   findLatestVersion(workflowId: string, key: string): Promise<ArtifactEntity | null>
+  updateApprovalStatus(id: string, input: UpdateArtifactApprovalInput): Promise<ArtifactEntity>
 }
