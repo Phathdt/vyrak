@@ -22,6 +22,7 @@ import { ArtifactsController } from '../artifacts/artifacts.controller'
 import { DomainExceptionFilter } from '../common/filters'
 import { OrganizationMemberGuard } from '../guards'
 import { ResponseInterceptor, TenantContextInterceptor, TraceIdInterceptor } from '../interceptors'
+import { WorkflowExecutionController } from '../workflow/workflow-execution.controller'
 // Brainstorming disabled for MVP - will be re-enabled later
 // import { WorkflowBrainstormingController } from '../workflow/workflow-brainstorming.controller'
 import {
@@ -87,6 +88,7 @@ import {
     // Brainstorming disabled for MVP - will be re-enabled later
     // WorkflowBrainstormingController,
     WorkflowPlanningController,
+    WorkflowExecutionController,
   ],
   providers: [
     AppService,

@@ -1,4 +1,6 @@
 export * from './agent'
+export * from './agents'
 export * from './di'
+export * from './orchestrators'
 export * from './scouts'
 export * from './workspace'

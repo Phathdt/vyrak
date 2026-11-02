@@ -1,2 +1,5 @@
+export * from './code-review.service'
+export * from './implementation-orchestration.service'
+export * from './qa-verification.service'
 export * from './workflow-phase-orchestrator.service'
 export * from './workflow-phase-run.handler'
