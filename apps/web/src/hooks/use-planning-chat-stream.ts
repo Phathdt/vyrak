@@ -1,5 +1,7 @@
 import { useState, useCallback, useRef } from 'react'
 
+import { getAuthToken } from '@/lib/api-client'
+
 interface Message {
   id: string
   role: 'user' | 'assistant'
@@ -49,14 +51,22 @@ export function usePlanningChatStream({ orgId, projectId, workflowId, onError }:
         // Create abort controller for cancellation
         abortControllerRef.current = new AbortController()
 
-        const url = `/api/organizations/${orgId}/projects/${projectId}/workflows/${workflowId}/planning/chat-stream`
+        const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || ''
+        const url = `${apiBaseUrl}/api/organizations/${orgId}/projects/${projectId}/workflows/${workflowId}/planning/chat-stream`
+
+        const token = getAuthToken()
+        const headers: HeadersInit = {
+          'Content-Type': 'application/json',
+          Accept: 'text/event-stream',
+        }
+
+        if (token) {
+          headers.Authorization = `Bearer ${token}`
+        }
 
         const response = await fetch(url, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'text/event-stream',
-          },
+          headers,
           body: JSON.stringify({
             userMessage,
             codeSnippets,
