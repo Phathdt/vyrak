@@ -25,6 +25,7 @@ import type {
   IWorkflowDependencyRepository,
   IWorkflowRepository,
   SubTaskEntity,
+  WorkflowEntity,
 } from '@vyrak/workflow-core'
 
 /**
@@ -167,7 +168,7 @@ export class ImplementationOrchestrationService implements IImplementationOrches
   }
 
   private async executeTasksWithDependencies(
-    workflow: unknown,
+    workflow: WorkflowEntity,
     phaseId: string,
     allTasks: SubTaskEntity[],
     _dependencies: unknown[],
@@ -235,7 +236,7 @@ export class ImplementationOrchestrationService implements IImplementationOrches
   private async executeSingleTask(
     task: SubTaskEntity,
     context?: {
-      workflow: unknown
+      workflow: WorkflowEntity
       phaseId: string
       implementationPlan: string
       contextArtifacts: { prd?: string; technicalSpecs?: string }
@@ -251,10 +252,11 @@ export class ImplementationOrchestrationService implements IImplementationOrches
       let contextArtifacts = context?.contextArtifacts
 
       if (!workflow) {
-        workflow = await this.workflowRepository.findById(task.workflowId)
-        if (!workflow) {
+        const loadedWorkflow = await this.workflowRepository.findById(task.workflowId)
+        if (!loadedWorkflow) {
           throw new Error(`Workflow not found: ${task.workflowId}`)
         }
+        workflow = loadedWorkflow
       }
 
       if (!implementationPlan && task.phaseId) {
@@ -268,9 +270,9 @@ export class ImplementationOrchestrationService implements IImplementationOrches
       // Build execution context
       const executionContext: ImplementationContext = {
         workflow: {
-          id: workflow.id as string,
-          title: workflow.title as string,
-          description: (workflow.description as string) || '',
+          id: workflow.id,
+          title: workflow.title,
+          description: workflow.description || '',
         },
         phase: {
           id: task.phaseId || '',

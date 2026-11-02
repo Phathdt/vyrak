@@ -5,6 +5,9 @@ import {
   IMPLEMENTATION_ORCHESTRATION_SERVICE,
   CODE_REVIEW_SERVICE,
   QA_VERIFICATION_SERVICE,
+  type IImplementationOrchestrationService,
+  type ICodeReviewService,
+  type IQAVerificationService,
 } from '@vyrak/workflow-execution'
 
 import { AuthGuard } from '../auth'
@@ -17,25 +20,6 @@ import {
   CodeReviewReportResponseDto,
   QAVerificationResponseDto,
 } from './workflow-execution.dto'
-
-// Interface imported from workflow-execution lib
-export interface IImplementationOrchestrationService {
-  startImplementation(workflowId: string, phaseId: string): Promise<void>
-  getStatus(workflowId: string, phaseId: string): Promise<unknown>
-  retryTask(taskId: string): Promise<unknown>
-}
-
-// Interface for Code Review Service
-export interface ICodeReviewService {
-  startCodeReview(workflowId: string, phaseId: string): Promise<unknown>
-  getReport(workflowId: string, phaseId: string): Promise<unknown>
-}
-
-// Interface for QA Verification Service
-export interface IQAVerificationService {
-  startQA(workflowId: string, phaseId: string): Promise<unknown>
-  getQAReport(workflowId: string, phaseId: string): Promise<unknown>
-}
 
 @ApiTags('Workflows - Execution')
 @Controller('api/organizations/:orgId/projects/:projectId/workflows/:id')
@@ -124,26 +108,15 @@ export class WorkflowExecutionController {
       inProgressTasks: status.inProgressTasks,
       pendingTasks: status.pendingTasks,
       readyTasks: status.readyTasks,
-      tasks: status.tasks.map((task: unknown) => {
-        const t = task as {
-          id: string
-          key: string
-          title: string
-          description: string
-          status: string
-          dependencyType: string
-          executionOrder: number
-        }
-        return {
-          id: t.id,
-          key: t.key,
-          title: t.title,
-          description: t.description,
-          status: t.status,
-          dependencyType: t.dependencyType,
-          executionOrder: t.executionOrder,
-        }
-      }),
+      tasks: status.tasks.map((task) => ({
+        id: task.id,
+        key: task.key,
+        title: task.title,
+        description: task.description || '',
+        status: task.status,
+        dependencyType: task.dependencyType,
+        executionOrder: task.executionOrder,
+      })),
     }
   }
 
@@ -242,24 +215,14 @@ export class WorkflowExecutionController {
       workflowId: report.workflowId,
       phaseId: report.phaseId,
       reviewedFiles: report.reviewedFiles,
-      findings: report.findings.map((f: unknown) => {
-        const finding = f as {
-          file: string
-          line?: number
-          severity: string
-          category: string
-          message: string
-          suggestion?: string
-        }
-        return {
-          file: finding.file,
-          line: finding.line,
-          severity: finding.severity,
-          category: finding.category,
-          message: finding.message,
-          suggestion: finding.suggestion,
-        }
-      }),
+      findings: report.findings.map((finding) => ({
+        file: finding.file,
+        line: finding.line,
+        severity: finding.severity,
+        category: finding.category,
+        message: finding.message,
+        suggestion: finding.suggestion,
+      })),
       summary: {
         totalFindings: report.summary.totalFindings,
         criticalCount: report.summary.criticalCount,
@@ -269,7 +232,7 @@ export class WorkflowExecutionController {
         infoCount: report.summary.infoCount,
       },
       artifactId: report.artifactId,
-      completedAt: report.completedAt,
+      completedAt: report.completedAt.toISOString(),
     }
   }
 
@@ -303,20 +266,12 @@ export class WorkflowExecutionController {
       workflowId: result.workflowId,
       phaseId: result.phaseId,
       reportArtifactId: result.reportArtifactId,
-      criteriaResults: result.criteriaResults.map((c: unknown) => {
-        const criterion = c as {
-          criterion: string
-          status: string
-          details?: string
-          errorMessage?: string
-        }
-        return {
-          criterion: criterion.criterion,
-          status: criterion.status,
-          details: criterion.details,
-          errorMessage: criterion.errorMessage,
-        }
-      }),
+      criteriaResults: result.criteriaResults.map((criterion) => ({
+        criterion: criterion.criterion,
+        status: criterion.status,
+        details: criterion.details,
+        errorMessage: criterion.errorMessage,
+      })),
       overallStatus: result.overallStatus,
       executedAt: result.executedAt.toISOString(),
     }
@@ -354,22 +309,14 @@ export class WorkflowExecutionController {
       workflowId: report.workflowId,
       phaseId: report.phaseId,
       reportArtifactId: report.reportArtifactId,
-      criteriaResults: report.criteriaResults.map((c: unknown) => {
-        const criterion = c as {
-          criterion: string
-          status: string
-          details?: string
-          errorMessage?: string
-        }
-        return {
-          criterion: criterion.criterion,
-          status: criterion.status,
-          details: criterion.details,
-          errorMessage: criterion.errorMessage,
-        }
-      }),
+      criteriaResults: report.criteriaResults.map((criterion) => ({
+        criterion: criterion.criterion,
+        status: criterion.status,
+        details: criterion.details,
+        errorMessage: criterion.errorMessage,
+      })),
       overallStatus: report.overallStatus,
-      executedAt: typeof report.executedAt === 'string' ? report.executedAt : report.executedAt.toISOString(),
+      executedAt: report.executedAt.toISOString(),
     }
   }
 }

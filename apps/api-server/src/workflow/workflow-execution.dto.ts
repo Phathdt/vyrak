@@ -276,7 +276,7 @@ export class CodeReviewReportResponseDto extends createZodDto(CodeReviewReportRe
   artifactId?: string
 
   @ApiProperty({ example: '2026-11-02T10:30:00Z', description: 'Review completion timestamp' })
-  completedAt!: Date
+  completedAt!: string
 }
 
 // Start QA Request - no body needed
