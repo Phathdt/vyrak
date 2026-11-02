@@ -1165,13 +1165,20 @@ paths:
         - name: orgId
           required: true
           in: path
+          description: Organization ID
           schema:
             type: string
         - name: id
           required: true
           in: path
+          description: Workflow ID
           schema:
             type: string
+        - name: projectId
+          required: true
+          in: path
+          description: Project ID
+          schema: {}
       responses:
         '200':
           description: ''
@@ -1254,13 +1261,20 @@ paths:
         - name: orgId
           required: true
           in: path
+          description: Organization ID
           schema:
             type: string
         - name: id
           required: true
           in: path
+          description: Workflow ID
           schema:
             type: string
+        - name: projectId
+          required: true
+          in: path
+          description: Project ID
+          schema: {}
       responses:
         '200':
           description: ''
@@ -1278,13 +1292,20 @@ paths:
         - name: orgId
           required: true
           in: path
+          description: Organization ID
           schema:
             type: string
         - name: id
           required: true
           in: path
+          description: Workflow ID
           schema:
             type: string
+        - name: projectId
+          required: true
+          in: path
+          description: Project ID
+          schema: {}
       responses:
         '200':
           description: ''
