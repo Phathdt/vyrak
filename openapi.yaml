@@ -1188,6 +1188,43 @@ paths:
                 $ref: '#/components/schemas/GeneratePRDResponseDto'
       summary: Generate PRD artifact from planning conversation
       tags: *ref_8
+  /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/planning/generate-prd-from-message:
+    post:
+      description: Extracts PRD artifact from a specific message containing <artifact> tags and saves it to storage.
+      operationId: WorkflowPlanningController_generatePRDFromMessage
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          description: Workflow ID
+          schema:
+            type: string
+        - name: projectId
+          required: true
+          in: path
+          description: Project ID
+          schema: {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GeneratePRDFromMessageRequestDto'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneratePRDResponseDto'
+      summary: Generate PRD artifact from a specific message
+      tags: *ref_8
   /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/technical-refinement/session:
     get:
       operationId: WorkflowPlanningController_getTechnicalRefinementSession
@@ -2872,6 +2909,12 @@ components:
           type: array
           items:
             type: object
+        artifactCreated:
+          type: boolean
+        artifactId:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
       required:
         - sessionId
         - aiMessage
@@ -2904,6 +2947,16 @@ components:
         - title
         - downloadUrl
         - approvalStatus
+    GeneratePRDFromMessageRequestDto:
+      type: object
+      properties:
+        messageId:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          description: Message ID containing the PRD artifact
+      required:
+        - messageId
     TechnicalRefinementSessionResponseDto:
       type: object
       properties:

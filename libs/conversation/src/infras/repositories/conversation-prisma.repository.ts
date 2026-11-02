@@ -126,6 +126,14 @@ export class ConversationPrismaRepository extends BaseTenantRepository implement
     return messages.map((m) => this.toDomainMessage(m))
   }
 
+  async findMessageById(messageId: string): Promise<ConversationMessage | null> {
+    const message = await this.prisma.client.conversationMessage.findUnique({
+      where: { id: messageId },
+    })
+
+    return message ? this.toDomainMessage(message) : null
+  }
+
   async countMessagesBySession(sessionId: string): Promise<number> {
     return this.prisma.client.conversationMessage.count({
       where: { sessionId },

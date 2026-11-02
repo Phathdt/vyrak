@@ -2,8 +2,8 @@ import { Module } from '@nestjs/common'
 import { CONFIG_SERVICE, CustomConfigModule, type IConfigService } from '@vyrak/custom-config'
 
 import { AIAgentService } from './application'
-import { AI_AGENT_AGENT_PORT, AI_AGENT_PORT } from './domain'
-import { AI_AGENT_SERVICE, ClaudeAgentSdkAdapter, DisabledAiAgentAdapter } from './infras'
+import { AI_AGENT_AGENT_PORT, AI_AGENT_API_PORT, AI_AGENT_PORT } from './domain'
+import { AI_AGENT_SERVICE, AnthropicApiAdapter, ClaudeAgentSdkAdapter, DisabledAiAgentAdapter } from './infras'
 
 function isAnthropicConfigured(configService: IConfigService): boolean {
   const apiKey = configService.anthropic?.apiKey
@@ -13,7 +13,7 @@ function isAnthropicConfigured(configService: IConfigService): boolean {
 @Module({
   imports: [CustomConfigModule],
   providers: [
-    // Agent SDK adapter
+    // Agent SDK adapter (with tools for Tech Refinement onwards)
     {
       provide: AI_AGENT_AGENT_PORT,
       useFactory: (configService: IConfigService) => {
@@ -21,6 +21,17 @@ function isAnthropicConfigured(configService: IConfigService): boolean {
           return new DisabledAiAgentAdapter()
         }
         return new ClaudeAgentSdkAdapter(configService)
+      },
+      inject: [CONFIG_SERVICE],
+    },
+    // API SDK adapter (no tools for Planning phase)
+    {
+      provide: AI_AGENT_API_PORT,
+      useFactory: (configService: IConfigService) => {
+        if (!isAnthropicConfigured(configService)) {
+          return new DisabledAiAgentAdapter()
+        }
+        return new AnthropicApiAdapter(configService)
       },
       inject: [CONFIG_SERVICE],
     },
@@ -36,6 +47,6 @@ function isAnthropicConfigured(configService: IConfigService): boolean {
       useExisting: AI_AGENT_AGENT_PORT,
     },
   ],
-  exports: [AI_AGENT_SERVICE],
+  exports: [AI_AGENT_SERVICE, AI_AGENT_API_PORT],
 })
 export class AIAgentModule {}

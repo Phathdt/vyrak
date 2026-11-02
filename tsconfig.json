@@ -11,7 +11,6 @@
       "@vyrak/database": ["./dist/libs/database/index"],
       "@vyrak/shared": ["./dist/libs/shared/index"],
       "@vyrak/workflow-core": ["./dist/libs/workflow-core/index"],
-      "@vyrak/workflow-brainstorming": ["./dist/libs/workflow-brainstorming/index"],
       "@vyrak/workflow-planning": ["./dist/libs/workflow-planning/index"],
       "@vyrak/workflow-execution": ["./dist/libs/workflow-execution/index"]
     }

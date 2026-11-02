@@ -80,6 +80,13 @@ export class ConversationService implements IConversationService {
   }
 
   /**
+   * Get a specific message by ID
+   */
+  async getMessageById(messageId: string): Promise<ConversationMessage | null> {
+    return this.repository.findMessageById(messageId)
+  }
+
+  /**
    * Complete a conversation session
    */
   async completeSession(sessionId: string): Promise<ConversationSession> {

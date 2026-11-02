@@ -1,20 +1,13 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
 import { customInstance, getErrorMessage } from '@/api/client'
-import {
-  getWorkflowBrainstormingControllerGetBrainstormSessionQueryKey,
-  useWorkflowBrainstormingControllerBrainstorm,
-  useWorkflowBrainstormingControllerClassify,
-  useWorkflowBrainstormingControllerGetBrainstormSession,
-} from '@/api/generated/workflows-brainstorming/workflows-brainstorming'
 import {
   getWorkflowsControllerFindOneQueryKey,
   useWorkflowsControllerApprovePhase,
   useWorkflowsControllerFindOne,
 } from '@/api/generated/workflows/workflows'
-import { ChatMarkdown } from '@/components/chat-markdown'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -31,8 +24,6 @@ import { PhaseAutomationPanel } from '@/components/workflows/phase-automation-pa
 import { PlanningWorkspace } from '@/components/workflows/planning-workspace'
 import { ArtifactList } from '@/features/artifacts'
 import { routes } from '@/lib/routes'
-
-import type { ClassifyResponseDto } from '@/api/generated/models'
 
 const DEFAULT_STORY_PHASES = [
   { key: 'planning', name: 'Planning' },
@@ -79,19 +70,6 @@ const PHASE_DETAILS: Record<
   },
 }
 
-const BRAINSTORM_STARTERS = [
-  'We need inventory tracking with stock-in/out history and low-stock alerts.',
-  'This is a small feature on our existing e-commerce app — about 2 weeks.',
-  'Orders should automatically reduce stock when placed.',
-]
-
-type WorkflowClassificationSnapshot = {
-  reasoning?: string
-  confidence?: number
-  type?: string
-  estimatedHours?: number
-}
-
 type WorkflowPhaseItem = {
   id: string
   key: string
@@ -114,8 +92,6 @@ type WorkflowPhaseItem = {
 
 const AUTOMATED_PHASE_KEYS = new Set(['implementation', 'review', 'qc'])
 
-const CHAT_ENABLED_STATUSES = new Set(['DRAFT', 'ACTIVE'])
-
 function workflowPhasesQueryKey(orgId: string, projectId: string, workflowId: string) {
   return ['workflow-phases', orgId, projectId, workflowId] as const
 }
@@ -129,11 +105,6 @@ export function WorkflowDetailPage() {
     workflowId: string
   }>()
 
-  const [inputMessage, setInputMessage] = useState('')
-  const [sessionId, setSessionId] = useState<string | null>(null)
-  const [canClassify, setCanClassify] = useState(false)
-  const [classification, setClassification] = useState<ClassifyResponseDto | null>(null)
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
   const [selectedPhaseKey, setSelectedPhaseKey] = useState<string>('planning')
   const [workspaceTab, setWorkspaceTab] = useState<'phase' | 'transcript'>('phase')
@@ -151,30 +122,6 @@ export function WorkflowDetailPage() {
     query: { enabled },
   })
 
-  const {
-    data: sessionData,
-    isLoading: isLoadingSession,
-    refetch: refetchSession,
-  } = useWorkflowBrainstormingControllerGetBrainstormSession(orgId!, projectId!, workflowId!, {
-    query: { enabled },
-  })
-
-  const effectiveSessionId = sessionId ?? sessionData?.sessionId ?? null
-  const effectiveCanClassify = canClassify || sessionData?.canClassify === true
-
-  const messages = useMemo(() => {
-    return (sessionData?.messages ?? []).map((msg) => ({
-      id: msg.id,
-      role: msg.role as 'user' | 'assistant' | 'system',
-      content: msg.content,
-      timestamp: new Date(msg.createdAt),
-    }))
-  }, [sessionData?.messages])
-
-  const { mutateAsync: sendBrainstormMessage, isPending: isSending } = useWorkflowBrainstormingControllerBrainstorm()
-
-  const { mutateAsync: classifyWorkflow, isPending: isClassifying } = useWorkflowBrainstormingControllerClassify()
-
   const { mutateAsync: approvePhase, isPending: isApprovingPhase } = useWorkflowsControllerApprovePhase()
 
   const invalidateWorkflowQueries = async () => {
@@ -184,85 +131,19 @@ export function WorkflowDetailPage() {
         queryKey: getWorkflowsControllerFindOneQueryKey(orgId, projectId, workflowId),
       }),
       queryClient.invalidateQueries({
-        queryKey: getWorkflowBrainstormingControllerGetBrainstormSessionQueryKey(orgId, projectId, workflowId),
-      }),
-      queryClient.invalidateQueries({
         queryKey: workflowPhasesQueryKey(orgId, projectId, workflowId),
       }),
     ])
   }
 
-  const handleSendMessage = async () => {
-    if (!orgId || !projectId || !workflowId || !inputMessage.trim()) return
-
-    setActionError(null)
-    const userMessage = inputMessage.trim()
-    setInputMessage('')
-
-    try {
-      const response = await sendBrainstormMessage({
-        orgId,
-        projectId,
-        id: workflowId,
-        data: { userMessage },
-      })
-
-      setSessionId(response.sessionId)
-      setCanClassify(response.canClassify)
-      await invalidateWorkflowQueries()
-      await Promise.all([refetchWorkflow(), refetchSession()])
-    } catch (err) {
-      setInputMessage(userMessage)
-      setActionError(getErrorMessage(err) || 'Failed to send message')
-    }
-  }
-
-  const handleClassify = async () => {
-    if (!orgId || !projectId || !workflowId || !effectiveSessionId) return
-
-    setActionError(null)
-
-    try {
-      const result = await classifyWorkflow({
-        orgId,
-        projectId,
-        id: workflowId,
-        data: { sessionId: effectiveSessionId },
-      })
-      setClassification(result)
-      setShowConfirmDialog(true)
-      await refetchSession()
-    } catch (err) {
-      setActionError(getErrorMessage(err) || 'Classification failed')
-    }
-  }
-
-  const handleConfirmClassification = async () => {
-    if (!orgId || !projectId || !workflowId) return
-
-    setActionError(null)
-
-    try {
-      // TODO: Implement classification confirmation when backend API is ready
-      console.log('Classification confirmation not yet implemented')
-      setShowConfirmDialog(false)
-      setClassification(null)
-      setCanClassify(false)
-      await invalidateWorkflowQueries()
-      await refetchWorkflow()
-    } catch (err) {
-      setActionError(getErrorMessage(err) || 'Failed to confirm classification')
-    }
-  }
-
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
-      case 'DRAFT':
-        return 'secondary'
       case 'ACTIVE':
         return 'default'
       case 'WAITING_APPROVAL':
         return 'outline'
+      case 'COMPLETED':
+        return 'secondary'
       case 'FAILED':
         return 'destructive'
       default:
@@ -283,12 +164,9 @@ export function WorkflowDetailPage() {
     }
   }
 
-  const chatEnabled = workflow ? CHAT_ENABLED_STATUSES.has(workflow.status) : false
-  const isBrainstormPhase = chatEnabled
-
   const { data: phasesData, refetch: refetchPhases } = useQuery({
     queryKey: workflowPhasesQueryKey(orgId!, projectId!, workflowId!),
-    enabled: enabled && !!workflow && !isBrainstormPhase,
+    enabled: enabled && !!workflow,
     refetchInterval: (query) => {
       const items = query.state.data?.items ?? []
       const running = items.some((p) => p.execution?.status === 'RUNNING')
@@ -307,7 +185,7 @@ export function WorkflowDetailPage() {
     if (phases.length > 0) {
       return [...phases].sort((a, b) => a.sequence - b.sequence)
     }
-    if (!workflow || isBrainstormPhase) {
+    if (!workflow) {
       return []
     }
 
@@ -331,14 +209,12 @@ export function WorkflowDetailPage() {
         status,
       }
     })
-  }, [phases, workflow, isBrainstormPhase])
+  }, [phases, workflow])
 
   const currentPhase =
     displayPhases.find((p) => p.key === workflow?.currentPhaseKey) ??
     displayPhases.find((p) => p.status === 'IN_PROGRESS') ??
     displayPhases[0]
-
-  const classificationSnapshot = null as WorkflowClassificationSnapshot | null
 
   useEffect(() => {
     if (currentPhase?.key) {
@@ -353,7 +229,7 @@ export function WorkflowDetailPage() {
       ? PHASE_DETAILS[selectedPhase.key as keyof typeof PHASE_DETAILS]
       : null
 
-  const isBusy = isSending || isClassifying || isApprovingPhase
+  const isBusy = isApprovingPhase
 
   const showPlanningChat =
     workflow?.status === 'ACTIVE' &&
@@ -417,9 +293,7 @@ export function WorkflowDetailPage() {
     }
   }
 
-  const confirmedAtLabel = null
-
-  if (isLoadingWorkflow || (isBrainstormPhase && isLoadingSession)) {
+  if (isLoadingWorkflow) {
     return (
       <div className='flex min-h-[400px] items-center justify-center'>
         <div className='text-center'>
@@ -480,254 +354,143 @@ export function WorkflowDetailPage() {
 
       <div className='grid gap-6 lg:grid-cols-3'>
         <div className='space-y-6 lg:col-span-2'>
-          {isBrainstormPhase ? (
-            <Card className='flex h-[calc(100dvh-10rem)] max-h-[900px] min-h-[480px] flex-col overflow-hidden'>
-              <CardHeader className='shrink-0'>
-                <div className='flex items-start justify-between gap-4'>
-                  <div>
-                    <CardTitle>Brainstorming</CardTitle>
-                    <CardDescription>Discuss with AI to refine requirements and classify the workflow</CardDescription>
-                  </div>
-                  {effectiveCanClassify && (
-                    <Button variant='secondary' size='sm' onClick={handleClassify} disabled={isBusy}>
-                      {isClassifying ? 'Classifying...' : 'Run AI classification'}
-                    </Button>
-                  )}
+          <Card className='overflow-hidden'>
+            <CardHeader className='border-b bg-muted/30'>
+              <div className='flex flex-wrap items-start justify-between gap-4'>
+                <div>
+                  <CardTitle className='text-xl'>Story workflow</CardTitle>
+                  <CardDescription>
+                    {currentPhase
+                      ? `Focus: ${currentPhase.name} — select a phase below to see what to do in this step.`
+                      : 'Select a phase to see guidance for this workflow.'}
+                  </CardDescription>
                 </div>
-                {effectiveCanClassify && (
-                  <p className='mt-2 text-sm text-muted-foreground'>
-                    Enough context collected — run classification when you are ready, or keep chatting to refine scope.
-                  </p>
-                )}
-              </CardHeader>
-              <CardContent className='flex min-h-0 flex-1 flex-col gap-4 overflow-hidden pb-(--card-spacing)'>
-                <div className='flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border bg-muted/50'>
-                  <BrainstormMessageList
-                    messages={messages}
-                    isSending={isSending}
-                    emptyHint='Describe what you want to build. Use the suggestions below or write your own message.'
-                  />
-                </div>
-                {messages.length === 0 && (
-                  <div className='flex shrink-0 flex-wrap gap-2'>
-                    {BRAINSTORM_STARTERS.map((prompt) => (
-                      <Button
-                        key={prompt}
-                        type='button'
-                        variant='outline'
-                        size='sm'
-                        className='h-auto whitespace-normal text-left text-xs'
-                        disabled={isBusy}
-                        onClick={() => setInputMessage(prompt)}
-                      >
-                        {prompt}
-                      </Button>
-                    ))}
-                  </div>
-                )}
-                <div className='flex shrink-0 gap-2'>
-                  <Textarea
-                    value={inputMessage}
-                    onChange={(e) => setInputMessage(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault()
-                        void handleSendMessage()
-                      }
-                    }}
-                    placeholder='Type your message... (Enter to send, Shift+Enter for new line)'
-                    rows={3}
-                    disabled={isBusy}
-                  />
-                  <Button
-                    onClick={() => void handleSendMessage()}
-                    disabled={isBusy || !inputMessage.trim()}
-                    className='self-end'
+                <div className='flex rounded-lg border bg-background p-1 text-sm'>
+                  <button
+                    type='button'
+                    className={`rounded-md px-3 py-1.5 font-medium transition-colors ${
+                      workspaceTab === 'phase'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                    onClick={() => setWorkspaceTab('phase')}
                   >
-                    {isSending ? 'Sending...' : 'Send'}
-                  </Button>
+                    Phase workspace
+                  </button>
                 </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card className='overflow-hidden'>
-              <CardHeader className='border-b bg-muted/30'>
-                <div className='flex flex-wrap items-start justify-between gap-4'>
-                  <div>
-                    <CardTitle className='text-xl'>Story workflow</CardTitle>
-                    <CardDescription>
-                      {currentPhase
-                        ? `Focus: ${currentPhase.name} — select a phase below to see what to do in this step.`
-                        : 'Select a phase to see guidance for this workflow.'}
-                    </CardDescription>
-                  </div>
-                  <div className='flex rounded-lg border bg-background p-1 text-sm'>
-                    <button
-                      type='button'
-                      className={`rounded-md px-3 py-1.5 font-medium transition-colors ${
-                        workspaceTab === 'phase'
-                          ? 'bg-primary text-primary-foreground'
-                          : 'text-muted-foreground hover:text-foreground'
-                      }`}
-                      onClick={() => setWorkspaceTab('phase')}
-                    >
-                      Phase workspace
-                    </button>
-                    <button
-                      type='button'
-                      className={`rounded-md px-3 py-1.5 font-medium transition-colors ${
-                        workspaceTab === 'transcript'
-                          ? 'bg-primary text-primary-foreground'
-                          : 'text-muted-foreground hover:text-foreground'
-                      }`}
-                      onClick={() => setWorkspaceTab('transcript')}
-                    >
-                      Requirements ({messages.length})
-                    </button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className='space-y-6 p-6'>
-                {workspaceTab === 'phase' ? (
-                  <>
-                    <PhaseStepper
-                      phases={displayPhases}
-                      selectedKey={selectedPhaseKey}
-                      onSelect={setSelectedPhaseKey}
+              </div>
+            </CardHeader>
+            <CardContent className='space-y-6 p-6'>
+              {workspaceTab === 'phase' && (
+                <>
+                  <PhaseStepper phases={displayPhases} selectedKey={selectedPhaseKey} onSelect={setSelectedPhaseKey} />
+                  {canShowPhaseApprove && workspaceTab === 'phase' && (
+                    <div className='flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-muted/40 px-4 py-3'>
+                      <p className='text-sm text-muted-foreground'>
+                        {nextPhaseAfterCurrent
+                          ? `When ${selectedPhase?.name ?? 'this phase'} is done, approve to continue to ${nextPhaseAfterCurrent.name}.`
+                          : `When ${selectedPhase?.name ?? 'this phase'} is done, approve to complete the workflow.`}
+                      </p>
+                      <Button
+                        size='sm'
+                        disabled={isBusy}
+                        data-testid='phase-approve-trigger'
+                        onClick={() => setShowPhaseApproveDialog(true)}
+                      >
+                        Approve
+                      </Button>
+                    </div>
+                  )}
+                  {selectedPhase && selectedPhaseDetail ? (
+                    showPlanningChat ? (
+                      <div className='rounded-xl border bg-card p-6 shadow-sm'>
+                        <div className='mb-4 flex flex-wrap items-center justify-between gap-2'>
+                          <div>
+                            <p className='text-xs font-medium uppercase tracking-wide text-muted-foreground'>
+                              Phase {selectedPhase.sequence}
+                            </p>
+                            <h2 className='text-2xl font-semibold tracking-tight'>{selectedPhase.name}</h2>
+                            <p className='mt-1 text-sm text-muted-foreground'>{selectedPhaseDetail.headline}</p>
+                          </div>
+                          <PhaseStatusBadge status={selectedPhase.status} />
+                        </div>
+                        {orgId && projectId && workflowId && (
+                          <PlanningWorkspace
+                            orgId={orgId}
+                            projectId={projectId}
+                            workflowId={workflowId}
+                            onError={setActionError}
+                          />
+                        )}
+                      </div>
+                    ) : (
+                      <div className='rounded-xl border bg-card p-6 shadow-sm'>
+                        <div className='mb-4 flex flex-wrap items-center justify-between gap-2'>
+                          <div>
+                            <p className='text-xs font-medium uppercase tracking-wide text-muted-foreground'>
+                              Phase {selectedPhase.sequence}
+                            </p>
+                            <h2 className='text-2xl font-semibold tracking-tight'>{selectedPhase.name}</h2>
+                          </div>
+                          <PhaseStatusBadge status={selectedPhase.status} />
+                        </div>
+                        <p className='text-lg text-foreground/90'>{selectedPhaseDetail.headline}</p>
+                        <p className='mt-2 text-sm leading-relaxed text-muted-foreground'>{selectedPhaseDetail.body}</p>
+                        {selectedPhase.key === 'planning' &&
+                          workflow.currentPhaseKey !== 'planning' &&
+                          workflow.status === 'ACTIVE' && (
+                            <p className='mt-4 text-sm text-muted-foreground'>
+                              Planning chat is available when this phase is current. Finish or advance phases from the
+                              workflow controls when those are enabled.
+                            </p>
+                          )}
+                        {AUTOMATED_PHASE_KEYS.has(selectedPhase.key) && (
+                          <PhaseAutomationPanel
+                            phaseName={selectedPhase.name}
+                            phaseKey={selectedPhase.key}
+                            execution={selectedPhase.execution}
+                            reviewSummary={selectedPhase.reviewSummary}
+                            commitSha={selectedPhase.commitSha}
+                            isCurrentPhase={selectedPhase.key === workflow.currentPhaseKey}
+                            onSendBack={
+                              selectedPhase.key === workflow.currentPhaseKey
+                                ? handleSendBackToImplementation
+                                : undefined
+                            }
+                            sendBackBusy={isBusy}
+                          />
+                        )}
+                        <div className='mt-6'>
+                          <p className='mb-2 text-sm font-medium'>Suggested checklist</p>
+                          <ul className='space-y-2'>
+                            {selectedPhaseDetail.checklist.map((item) => (
+                              <li key={item} className='flex gap-2 text-sm text-muted-foreground'>
+                                <span className='mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary' aria-hidden />
+                                <span>{item}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    )
+                  ) : (
+                    <p className='text-sm text-muted-foreground'>No phase selected.</p>
+                  )}
+                  {selectedPhase && orgId && workflowId && (
+                    <ArtifactList
+                      orgId={orgId}
+                      workflowId={workflowId}
+                      phaseId={selectedPhase.id}
+                      title={`Artifacts for ${selectedPhase.name}`}
+                      emptyMessage='No artifacts attached to this phase yet.'
+                      className='rounded-xl border bg-card p-6 shadow-sm'
+                      hideWhenEmpty
                     />
-                    {canShowPhaseApprove && workspaceTab === 'phase' && (
-                      <div className='flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-muted/40 px-4 py-3'>
-                        <p className='text-sm text-muted-foreground'>
-                          {nextPhaseAfterCurrent
-                            ? `When ${selectedPhase?.name ?? 'this phase'} is done, approve to continue to ${nextPhaseAfterCurrent.name}.`
-                            : `When ${selectedPhase?.name ?? 'this phase'} is done, approve to complete the workflow.`}
-                        </p>
-                        <Button
-                          size='sm'
-                          disabled={isBusy}
-                          data-testid='phase-approve-trigger'
-                          onClick={() => setShowPhaseApproveDialog(true)}
-                        >
-                          Approve
-                        </Button>
-                      </div>
-                    )}
-                    {selectedPhase && selectedPhaseDetail ? (
-                      showPlanningChat ? (
-                        <div className='rounded-xl border bg-card p-6 shadow-sm'>
-                          <div className='mb-4 flex flex-wrap items-center justify-between gap-2'>
-                            <div>
-                              <p className='text-xs font-medium uppercase tracking-wide text-muted-foreground'>
-                                Phase {selectedPhase.sequence}
-                              </p>
-                              <h2 className='text-2xl font-semibold tracking-tight'>{selectedPhase.name}</h2>
-                              <p className='mt-1 text-sm text-muted-foreground'>{selectedPhaseDetail.headline}</p>
-                            </div>
-                            <PhaseStatusBadge status={selectedPhase.status} />
-                          </div>
-                          {orgId && projectId && workflowId && (
-                            <PlanningWorkspace
-                              orgId={orgId}
-                              projectId={projectId}
-                              workflowId={workflowId}
-                              scopeSummary={classificationSnapshot?.reasoning}
-                              onError={setActionError}
-                            />
-                          )}
-                        </div>
-                      ) : (
-                        <div className='rounded-xl border bg-card p-6 shadow-sm'>
-                          <div className='mb-4 flex flex-wrap items-center justify-between gap-2'>
-                            <div>
-                              <p className='text-xs font-medium uppercase tracking-wide text-muted-foreground'>
-                                Phase {selectedPhase.sequence}
-                              </p>
-                              <h2 className='text-2xl font-semibold tracking-tight'>{selectedPhase.name}</h2>
-                            </div>
-                            <PhaseStatusBadge status={selectedPhase.status} />
-                          </div>
-                          <p className='text-lg text-foreground/90'>{selectedPhaseDetail.headline}</p>
-                          <p className='mt-2 text-sm leading-relaxed text-muted-foreground'>
-                            {selectedPhaseDetail.body}
-                          </p>
-                          {selectedPhase.key === 'planning' &&
-                            workflow.currentPhaseKey !== 'planning' &&
-                            workflow.status === 'ACTIVE' && (
-                              <p className='mt-4 text-sm text-muted-foreground'>
-                                Planning chat is available when this phase is current. Finish or advance phases from the
-                                workflow controls when those are enabled.
-                              </p>
-                            )}
-                          {selectedPhase.key === 'planning' && classificationSnapshot?.reasoning && (
-                            <div className='mt-6 rounded-lg border border-primary/20 bg-primary/5 p-4'>
-                              <p className='mb-2 text-sm font-medium'>Scope from brainstorm</p>
-                              <p className='text-sm leading-relaxed text-foreground/90'>
-                                {classificationSnapshot.reasoning}
-                              </p>
-                            </div>
-                          )}
-                          {AUTOMATED_PHASE_KEYS.has(selectedPhase.key) && (
-                            <PhaseAutomationPanel
-                              phaseName={selectedPhase.name}
-                              phaseKey={selectedPhase.key}
-                              execution={selectedPhase.execution}
-                              reviewSummary={selectedPhase.reviewSummary}
-                              commitSha={selectedPhase.commitSha}
-                              isCurrentPhase={selectedPhase.key === workflow.currentPhaseKey}
-                              onSendBack={
-                                selectedPhase.key === workflow.currentPhaseKey
-                                  ? handleSendBackToImplementation
-                                  : undefined
-                              }
-                              sendBackBusy={isBusy}
-                            />
-                          )}
-                          <div className='mt-6'>
-                            <p className='mb-2 text-sm font-medium'>Suggested checklist</p>
-                            <ul className='space-y-2'>
-                              {selectedPhaseDetail.checklist.map((item) => (
-                                <li key={item} className='flex gap-2 text-sm text-muted-foreground'>
-                                  <span className='mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary' aria-hidden />
-                                  <span>{item}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        </div>
-                      )
-                    ) : (
-                      <p className='text-sm text-muted-foreground'>No phase selected.</p>
-                    )}
-                    {selectedPhase && orgId && workflowId && (
-                      <ArtifactList
-                        orgId={orgId}
-                        workflowId={workflowId}
-                        phaseId={selectedPhase.id}
-                        title={`Artifacts for ${selectedPhase.name}`}
-                        emptyMessage='No artifacts attached to this phase yet.'
-                        className='rounded-xl border bg-card p-6 shadow-sm'
-                        hideWhenEmpty
-                      />
-                    )}
-                  </>
-                ) : (
-                  <div className='min-h-[320px] rounded-xl border bg-muted/30'>
-                    {messages.length > 0 ? (
-                      <BrainstormMessageList messages={messages} />
-                    ) : (
-                      <div className='flex min-h-[320px] flex-col items-center justify-center gap-2 p-8 text-center'>
-                        <p className='font-medium'>No requirements transcript</p>
-                        <p className='max-w-md text-sm text-muted-foreground'>
-                          This workflow has no saved brainstorm messages. Scope may still be in the workflow title and
-                          description.
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
+                  )}
+                </>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
         <div className='space-y-4'>
@@ -742,27 +505,11 @@ export function WorkflowDetailPage() {
               </div>
               <div>
                 <p className='mb-1 text-muted-foreground'>Type</p>
-                <p className='font-medium'>{workflow.type ?? (isBrainstormPhase ? 'Pending' : 'STORY')}</p>
+                <p className='font-medium'>{workflow.type ?? 'STORY'}</p>
               </div>
-              {classificationSnapshot?.reasoning && !isBrainstormPhase && (
-                <div>
-                  <p className='mb-1 text-muted-foreground'>Scope summary</p>
-                  <p className='line-clamp-4 text-sm leading-relaxed'>{classificationSnapshot.reasoning}</p>
-                </div>
-              )}
-              {confirmedAtLabel && (
-                <div>
-                  <p className='mb-1 text-muted-foreground'>Started</p>
-                  <p className='font-medium'>{confirmedAtLabel}</p>
-                </div>
-              )}
               <div>
                 <p className='mb-1 text-muted-foreground'>Repositories</p>
                 <p className='font-medium'>{workflow.repositories?.length ?? 0} linked</p>
-              </div>
-              <div>
-                <p className='mb-1 text-muted-foreground'>Messages</p>
-                <p className='font-medium'>{sessionData?.messageCount ?? messages.length}</p>
               </div>
               <div>
                 <p className='mb-1 text-muted-foreground'>Created</p>
@@ -790,31 +537,11 @@ export function WorkflowDetailPage() {
               <CardTitle className='text-base'>Next Steps</CardTitle>
             </CardHeader>
             <CardContent className='space-y-2 text-sm'>
-              <StepItem done title='Create workflow' detail='Completed' />
-              <StepItem
-                done={workflow.status !== 'DRAFT'}
-                active={workflow.status === 'DRAFT'}
-                step={2}
-                title='Brainstorming'
-                detail={workflow.status === 'DRAFT' ? 'Send a message to start' : 'Completed'}
-              />
-              <StepItem
-                done={workflow.status === 'ACTIVE'}
-                active={workflow.status === 'DRAFT' && effectiveCanClassify}
-                step={3}
-                title='Review & start'
-                detail={
-                  workflow.status === 'ACTIVE'
-                    ? 'Workflow running'
-                    : effectiveCanClassify
-                      ? 'Run review, then start story'
-                      : 'Keep brainstorming'
-                }
-              />
+              <StepItem done title='Create workflow' detail='Workflow created' />
               <StepItem
                 done={workflow.status === 'ACTIVE'}
                 active={workflow.status === 'ACTIVE' && !!currentPhase}
-                step={4}
+                step={2}
                 title='Execute phases'
                 detail={currentPhase ? `In ${currentPhase.name}` : 'Planning → Implementation → Review → QC'}
               />
@@ -822,75 +549,6 @@ export function WorkflowDetailPage() {
           </Card>
         </div>
       </div>
-
-      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-        <DialogContent className='max-w-2xl'>
-          <DialogHeader>
-            <DialogTitle>Ready to start</DialogTitle>
-            <DialogDescription>Review the brainstorm summary and activate the story workflow</DialogDescription>
-          </DialogHeader>
-
-          {classification && (
-            <div className='space-y-4 py-4'>
-              <div className='rounded-lg border-2 border-primary bg-primary/5 p-4'>
-                <div className='mb-2 flex items-center justify-between'>
-                  <h3 className='font-semibold'>Workflow</h3>
-                  <Badge variant='default' className='text-base'>
-                    📝 STORY
-                  </Badge>
-                </div>
-                <div className='space-y-2 text-sm'>
-                  <div>
-                    <span className='text-muted-foreground'>Confidence: </span>
-                    <span className='font-medium'>{(classification.confidence * 100).toFixed(0)}%</span>
-                  </div>
-                  {classification.priority && (
-                    <div>
-                      <span className='text-muted-foreground'>Priority: </span>
-                      <span className='font-medium'>{classification.priority}</span>
-                    </div>
-                  )}
-                  {classification.estimatedHours != null && (
-                    <div>
-                      <span className='text-muted-foreground'>Estimated effort: </span>
-                      <span className='font-medium'>{classification.estimatedHours}h</span>
-                    </div>
-                  )}
-                  <div>
-                    <p className='mb-1 font-medium text-muted-foreground'>Reasoning:</p>
-                    <p>{classification.reasoning}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className='rounded-lg border p-4'>
-                <h3 className='mb-2 font-semibold'>Phases</h3>
-                <p className='mb-3 text-sm text-muted-foreground'>
-                  Standard story pipeline (MVP). AI scope summary above; execution follows these steps.
-                </p>
-                <ol className='space-y-2 text-sm'>
-                  {DEFAULT_STORY_PHASES.map((phase, index) => (
-                    <li key={phase.key} className='flex items-center gap-2'>
-                      <span className='flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium'>
-                        {index + 1}
-                      </span>
-                      <span className='font-medium'>{phase.name}</span>
-                      <span className='text-muted-foreground'>({phase.key})</span>
-                    </li>
-                  ))}
-                </ol>
-              </div>
-            </div>
-          )}
-
-          <DialogFooter>
-            <Button variant='outline' onClick={() => setShowConfirmDialog(false)}>
-              Continue Discussion
-            </Button>
-            <Button onClick={() => void handleConfirmClassification()}>Start story workflow</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       <Dialog open={showPhaseApproveDialog} onOpenChange={setShowPhaseApproveDialog}>
         <DialogContent className='max-w-md' data-testid='phase-approve-modal'>
@@ -924,84 +582,6 @@ export function WorkflowDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  )
-}
-
-type BrainstormMessage = {
-  id: string
-  role: 'user' | 'assistant' | 'system'
-  content: string
-  timestamp: Date
-}
-
-function BrainstormMessageList({
-  messages,
-  isSending = false,
-  emptyHint,
-}: {
-  messages: BrainstormMessage[]
-  isSending?: boolean
-  emptyHint?: string
-}) {
-  const scrollRef = useRef<HTMLDivElement>(null)
-  const previousMessageCountRef = useRef(0)
-
-  useEffect(() => {
-    const container = scrollRef.current
-    if (!container) return
-
-    const messageCount = messages.length
-    const shouldStickToBottom = messageCount > previousMessageCountRef.current || isSending
-    previousMessageCountRef.current = messageCount
-
-    if (shouldStickToBottom) {
-      container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' })
-    }
-  }, [messages, isSending])
-
-  return (
-    <div ref={scrollRef} className='h-full min-h-0 flex-1 overflow-y-auto overscroll-contain p-4'>
-      <div className='space-y-4'>
-        {messages.length === 0 ? (
-          <p className='text-sm text-muted-foreground'>
-            {emptyHint ?? 'No messages yet. Describe what you want to build or fix to start the conversation.'}
-          </p>
-        ) : (
-          messages.map((message) => (
-            <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div
-                className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                  message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-background border shadow-sm'
-                }`}
-              >
-                {message.role === 'assistant' ? (
-                  <ChatMarkdown content={message.content} />
-                ) : (
-                  <p className='whitespace-pre-wrap text-sm'>{message.content}</p>
-                )}
-                <p className='mt-1 text-xs opacity-70'>
-                  {message.timestamp.toLocaleTimeString([], {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </p>
-              </div>
-            </div>
-          ))
-        )}
-        {isSending && (
-          <div className='flex justify-start'>
-            <div className='max-w-[80%] rounded-lg border bg-background px-4 py-2 shadow-sm'>
-              <div className='flex items-center gap-1'>
-                <div className='h-2 w-2 animate-bounce rounded-full bg-muted-foreground [animation-delay:-0.3s]'></div>
-                <div className='h-2 w-2 animate-bounce rounded-full bg-muted-foreground [animation-delay:-0.15s]'></div>
-                <div className='h-2 w-2 animate-bounce rounded-full bg-muted-foreground'></div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
     </div>
   )
 }
@@ -1042,7 +622,7 @@ function PhaseStepper({
   if (phases.length === 0) {
     return (
       <p className='text-sm text-muted-foreground'>
-        Phases are not loaded yet. Refresh the page or start the workflow from the brainstorm step.
+        Phases are not loaded yet. Refresh the page or start the workflow.
       </p>
     )
   }

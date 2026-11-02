@@ -22,7 +22,6 @@
     "@vyrak/organization": "*",
     "@vyrak/project": "*",
     "@vyrak/user": "*",
-    "@vyrak/workflow-brainstorming": "*",
     "@vyrak/workflow-core": "*",
     "@vyrak/workflow-execution": "*",
     "@vyrak/workflow-planning": "*",

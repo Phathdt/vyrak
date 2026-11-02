@@ -18,6 +18,7 @@ export interface IConversationService {
   // Message operations
   addMessage(input: CreateMessageInput): Promise<ConversationMessage>
   getMessages(sessionId: string): Promise<ConversationMessage[]>
+  getMessageById(messageId: string): Promise<ConversationMessage | null>
   getMessageCount(sessionId: string): Promise<number>
 
   // Session lifecycle

@@ -89,6 +89,8 @@ export const PlanningChatResponseSchema = z.object({
       bytes: z.number().int(),
     })
   ),
+  artifactCreated: z.boolean().optional(),
+  artifactId: z.string().uuid().optional(),
 })
 
 export class PlanningChatResponseDto extends createZodDto(PlanningChatResponseSchema) {
@@ -103,6 +105,12 @@ export class PlanningChatResponseDto extends createZodDto(PlanningChatResponseSc
 
   @ApiProperty({ type: 'array', items: { type: 'object' } })
   repoFilesLoaded: Array<{ path: string; bytes: number }>
+
+  @ApiProperty({ required: false })
+  artifactCreated?: boolean
+
+  @ApiProperty({ required: false })
+  artifactId?: string
 }
 
 export const GeneratePRDResponseSchema = z.object({
@@ -128,4 +136,13 @@ export class GeneratePRDResponseDto extends createZodDto(GeneratePRDResponseSche
 
   @ApiProperty({ description: 'Approval status (DRAFT, PENDING_APPROVAL, APPROVED, REJECTED)' })
   approvalStatus: string
+}
+
+export const GeneratePRDFromMessageRequestSchema = z.object({
+  messageId: z.string().uuid(),
+})
+
+export class GeneratePRDFromMessageRequestDto extends createZodDto(GeneratePRDFromMessageRequestSchema) {
+  @ApiProperty({ description: 'Message ID containing the PRD artifact' })
+  messageId: string
 }

@@ -7,6 +7,7 @@ import {
   PlanningChatResponseDto,
   PlanningSessionResponseDto,
   GeneratePRDResponseDto,
+  GeneratePRDFromMessageRequestDto,
   WORKFLOW_PLANNING_SERVICE,
   ITechnicalRefinementService,
   TechnicalRefinementChatRequestDto,
@@ -94,6 +95,44 @@ export class WorkflowPlanningController {
 
     // Request approval
     await artifact // Artifact is already created with DRAFT status by default
+
+    return {
+      artifactId: artifact.id,
+      key: artifact.key,
+      title: artifact.title,
+      downloadUrl: `/api/organizations/${orgId}/artifacts/${artifact.id}/download`,
+      approvalStatus: artifact.approvalStatus,
+    }
+  }
+
+  @Post('planning/generate-prd-from-message')
+  @ApiOperation({
+    summary: 'Generate PRD artifact from a specific message',
+    description: 'Extracts PRD artifact from a specific message containing <artifact> tags and saves it to storage.',
+  })
+  @ApiParam({ name: 'orgId', description: 'Organization ID' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiParam({ name: 'id', description: 'Workflow ID' })
+  @ApiResponse({ status: 200, type: GeneratePRDResponseDto })
+  async generatePRDFromMessage(
+    @Param('orgId') orgId: string,
+    @Param('id') workflowId: string,
+    @Body() body: GeneratePRDFromMessageRequestDto
+  ): Promise<GeneratePRDResponseDto> {
+    // Find planning phase
+    const phases = await this.phaseRepository.findByWorkflowId(workflowId)
+    const planningPhase = phases.find((p) => p.key === 'planning')
+
+    if (!planningPhase) {
+      throw new Error('Planning phase not found')
+    }
+
+    // Generate artifact from specific message
+    const artifact = await this.planningService.generatePRDArtifactFromMessage(
+      workflowId,
+      body.messageId,
+      planningPhase.id
+    )
 
     return {
       artifactId: artifact.id,

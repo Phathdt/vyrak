@@ -6,6 +6,7 @@ import {
   getWorkflowPlanningControllerGetPlanningSessionQueryKey,
   useWorkflowPlanningControllerGetPlanningSession,
   useWorkflowPlanningControllerPlanningChat,
+  useWorkflowPlanningControllerGeneratePRDFromMessage,
 } from '@/api/generated/workflows-planning/workflows-planning'
 import { ChatMarkdown } from '@/components/chat-markdown'
 import { Button } from '@/components/ui/button'
@@ -23,7 +24,17 @@ type PlanningMessage = {
   timestamp: Date
 }
 
-function PlanningMessageList({ messages, isSending }: { messages: PlanningMessage[]; isSending?: boolean }) {
+function PlanningMessageList({
+  messages,
+  isSending,
+  onCreatePRD,
+  isCreatingPRD,
+}: {
+  messages: PlanningMessage[]
+  isSending?: boolean
+  onCreatePRD: (messageId: string) => Promise<void>
+  isCreatingPRD: boolean
+}) {
   return (
     <div className='flex min-h-0 flex-1 flex-col overflow-y-auto p-4'>
       {messages.length === 0 && !isSending && (
@@ -40,7 +51,14 @@ function PlanningMessageList({ messages, isSending }: { messages: PlanningMessag
               }`}
             >
               {msg.role === 'assistant' ? (
-                <ChatMarkdown content={msg.content} />
+                <>
+                  <ChatMarkdown content={msg.content} />
+                  <div className='mt-3 border-t pt-3'>
+                    <Button size='sm' variant='outline' onClick={() => onCreatePRD(msg.id)} disabled={isCreatingPRD}>
+                      {isCreatingPRD ? 'Creating PRD...' : '📄 Create PRD from this message'}
+                    </Button>
+                  </div>
+                </>
               ) : (
                 <p className='whitespace-pre-wrap'>{msg.content}</p>
               )}
@@ -63,11 +81,10 @@ type PlanningWorkspaceProps = {
   orgId: string
   projectId: string
   workflowId: string
-  scopeSummary?: string
   onError: (message: string | null) => void
 }
 
-export function PlanningWorkspace({ orgId, projectId, workflowId, scopeSummary, onError }: PlanningWorkspaceProps) {
+export function PlanningWorkspace({ orgId, projectId, workflowId, onError }: PlanningWorkspaceProps) {
   const queryClient = useQueryClient()
   const [inputMessage, setInputMessage] = useState('')
   const [repoPathsText, setRepoPathsText] = useState('')
@@ -84,6 +101,9 @@ export function PlanningWorkspace({ orgId, projectId, workflowId, scopeSummary, 
 
   const { mutateAsync: sendPlanningMessage, isPending: isSending } = useWorkflowPlanningControllerPlanningChat()
 
+  const { mutateAsync: createPRDFromMessage, isPending: isCreatingPRD } =
+    useWorkflowPlanningControllerGeneratePRDFromMessage()
+
   const messages = useMemo((): PlanningMessage[] => {
     return (sessionData?.messages ?? []).map((msg) => ({
       id: msg.id,
@@ -94,6 +114,23 @@ export function PlanningWorkspace({ orgId, projectId, workflowId, scopeSummary, 
   }, [sessionData?.messages])
 
   const linkedRepos = sessionData?.repositories ?? []
+
+  const handleCreatePRD = async (messageId: string) => {
+    onError(null)
+    try {
+      const result = await createPRDFromMessage({
+        orgId,
+        projectId,
+        id: workflowId,
+        data: { messageId },
+      })
+      // Refresh artifacts list
+      await queryClient.invalidateQueries({ queryKey: ['artifacts', workflowId] })
+      onError(`✅ PRD artifact created: ${result.title}`)
+    } catch (err) {
+      onError(getErrorMessage(err) || 'Failed to create PRD artifact')
+    }
+  }
 
   const handleSend = async () => {
     if (!inputMessage.trim()) return
@@ -136,13 +173,6 @@ export function PlanningWorkspace({ orgId, projectId, workflowId, scopeSummary, 
 
   return (
     <div className='flex min-h-[520px] flex-col gap-4'>
-      {scopeSummary && (
-        <div className='rounded-lg border border-primary/20 bg-primary/5 p-4 text-sm'>
-          <p className='mb-1 font-medium'>Scope from brainstorm</p>
-          <p className='leading-relaxed text-foreground/90'>{scopeSummary}</p>
-        </div>
-      )}
-
       {linkedRepos.length > 0 && (
         <p className='text-xs text-muted-foreground'>
           Linked repos: {linkedRepos.map((r) => r.name).join(', ')} — default files load from local checkout when{' '}
@@ -151,7 +181,12 @@ export function PlanningWorkspace({ orgId, projectId, workflowId, scopeSummary, 
       )}
 
       <div className='flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border bg-muted/50'>
-        <PlanningMessageList messages={messages} isSending={isSending} />
+        <PlanningMessageList
+          messages={messages}
+          isSending={isSending}
+          onCreatePRD={handleCreatePRD}
+          isCreatingPRD={isCreatingPRD}
+        />
       </div>
 
       {messages.length === 0 && (

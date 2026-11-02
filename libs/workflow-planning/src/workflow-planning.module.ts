@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common'
-import { AI_AGENT_SERVICE, AIAgentModule, type IAIAgentService } from '@vyrak/ai-agent'
+import { AI_AGENT_API_PORT, AIAgentModule, type IAIAgentPort } from '@vyrak/ai-agent'
 import { ARTIFACT_SERVICE, ArtifactModule, type IArtifactService } from '@vyrak/artifact'
 import { CONVERSATION_SERVICE, ConversationModule, type IConversationService } from '@vyrak/conversation'
 import { CONFIG_SERVICE, CustomConfigModule } from '@vyrak/custom-config'
@@ -38,33 +38,30 @@ import { WORKFLOW_PLANNING_SERVICE, TECHNICAL_REFINEMENT_SERVICE } from './domai
       provide: WORKFLOW_PLANNING_SERVICE,
       useFactory: (
         conversationService: IConversationService,
-        aiAgentService: IAIAgentService,
+        aiAgentPort: IAIAgentPort,
         workflowRepo: IWorkflowRepository,
         workflowRepoRepo: IWorkflowRepositoryRepository,
         gitRepositoryService: IGitRepositoryService,
-        repositoryContextService: RepositoryContextService,
-        configService,
-        artifactService: IArtifactService
+        artifactService: IArtifactService,
+        workflowPhaseRepo: IWorkflowPhaseRepository
       ) =>
         new WorkflowPlanningService(
           conversationService,
-          aiAgentService,
+          aiAgentPort,
           workflowRepo,
           workflowRepoRepo,
           gitRepositoryService,
-          repositoryContextService,
-          configService,
-          artifactService
+          artifactService,
+          workflowPhaseRepo
         ),
       inject: [
         CONVERSATION_SERVICE,
-        AI_AGENT_SERVICE,
+        AI_AGENT_API_PORT,
         WORKFLOW_REPOSITORY,
         WORKFLOW_REPOSITORY_REPOSITORY,
         GIT_REPOSITORY_SERVICE,
-        RepositoryContextService,
-        CONFIG_SERVICE,
         ARTIFACT_SERVICE,
+        WORKFLOW_PHASE_REPOSITORY,
       ],
     },
     {

@@ -34,3 +34,8 @@ export const AI_AGENT_CHAT_PORT = Symbol('AI_AGENT_CHAT_PORT')
  * Token for dependency injection - Agent SDK adapter
  */
 export const AI_AGENT_AGENT_PORT = Symbol('AI_AGENT_AGENT_PORT')
+
+/**
+ * Token for dependency injection - API SDK adapter (no tools, for Planning phase)
+ */
+export const AI_AGENT_API_PORT = Symbol('AI_AGENT_API_PORT')

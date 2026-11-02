@@ -1,4 +1,3 @@
-export * from './workflow-brainstorming.controller'
 export * from './workflow-execution.controller'
 export * from './workflow-execution.dto'
 export * from './workflow-phase-automation.providers'

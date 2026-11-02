@@ -12,8 +12,6 @@ import { DatabaseModule } from '@vyrak/database'
 import { OrganizationModule } from '@vyrak/organization'
 import { ProjectModule } from '@vyrak/project'
 import { UserModule } from '@vyrak/user'
-// Brainstorming disabled for MVP - will be re-enabled later
-// import { WorkflowBrainstormingModule } from '@vyrak/workflow-brainstorming'
 import { WorkflowCoreModule } from '@vyrak/workflow-core'
 import { WorkflowExecutionModule } from '@vyrak/workflow-execution'
 import { WorkflowPlanningModule } from '@vyrak/workflow-planning'
