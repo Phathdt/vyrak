@@ -1,16 +1,15 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { getErrorMessage } from '@/api/client'
 import {
-  getWorkflowPlanningControllerGetPlanningSessionQueryKey,
   useWorkflowPlanningControllerGetPlanningSession,
-  useWorkflowPlanningControllerPlanningChat,
   useWorkflowPlanningControllerGeneratePRDFromMessage,
 } from '@/api/generated/workflows-planning/workflows-planning'
 import { ChatMarkdown } from '@/components/chat-markdown'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import { usePlanningChatStream } from '@/hooks/use-planning-chat-stream'
 const PLANNING_STARTERS = [
   'Propose a technical design: modules to touch, DB schema, API endpoints, and risks.',
   'Given our hexagonal libs pattern, where should this feature live and why?',
@@ -26,18 +25,20 @@ type PlanningMessage = {
 
 function PlanningMessageList({
   messages,
-  isSending,
+  streamingContent,
+  isStreaming,
   onCreatePRD,
   isCreatingPRD,
 }: {
   messages: PlanningMessage[]
-  isSending?: boolean
+  streamingContent?: string
+  isStreaming?: boolean
   onCreatePRD: (messageId: string) => Promise<void>
   isCreatingPRD: boolean
 }) {
   return (
     <div className='flex min-h-0 flex-1 flex-col overflow-y-auto p-4'>
-      {messages.length === 0 && !isSending && (
+      {messages.length === 0 && !isStreaming && (
         <p className='text-center text-sm text-muted-foreground'>
           Discuss architecture and implementation with AI. Attach repo paths or paste code when needed.
         </p>
@@ -65,7 +66,15 @@ function PlanningMessageList({
             </div>
           </div>
         ))}
-        {isSending && (
+        {isStreaming && streamingContent && (
+          <div className='flex justify-start'>
+            <div className='max-w-[85%] rounded-lg border bg-background px-4 py-3 text-sm shadow-sm'>
+              <ChatMarkdown content={streamingContent} />
+              <span className='ml-1 inline-block h-4 w-2 animate-pulse bg-foreground'>▊</span>
+            </div>
+          </div>
+        )}
+        {isStreaming && !streamingContent && (
           <div className='flex justify-start'>
             <div className='rounded-lg border bg-background px-4 py-3 text-sm text-muted-foreground shadow-sm'>
               Thinking…
@@ -87,31 +96,44 @@ type PlanningWorkspaceProps = {
 export function PlanningWorkspace({ orgId, projectId, workflowId, onError }: PlanningWorkspaceProps) {
   const queryClient = useQueryClient()
   const [inputMessage, setInputMessage] = useState('')
-  const [repoPathsText, setRepoPathsText] = useState('')
   const [showSnippet, setShowSnippet] = useState(false)
   const [snippetPath, setSnippetPath] = useState('')
   const [snippetContent, setSnippetContent] = useState('')
-  const [lastLoadedFiles, setLastLoadedFiles] = useState<Array<{ path: string; bytes: number }>>([])
 
-  const { data: sessionData, refetch: refetchPlanningSession } = useWorkflowPlanningControllerGetPlanningSession(
-    orgId,
-    projectId,
-    workflowId
-  )
-
-  const { mutateAsync: sendPlanningMessage, isPending: isSending } = useWorkflowPlanningControllerPlanningChat()
+  const { data: sessionData } = useWorkflowPlanningControllerGetPlanningSession(orgId, projectId, workflowId)
 
   const { mutateAsync: createPRDFromMessage, isPending: isCreatingPRD } =
     useWorkflowPlanningControllerGeneratePRDFromMessage()
 
-  const messages = useMemo((): PlanningMessage[] => {
-    return (sessionData?.messages ?? []).map((msg) => ({
+  // Use SSE for real-time chat
+  const { messages, streamingContent, isStreaming, sendMessage, setInitialMessages } = usePlanningChatStream({
+    orgId,
+    projectId,
+    workflowId,
+    onError,
+  })
+
+  // Initialize messages from session data
+  useEffect(() => {
+    if (sessionData?.messages) {
+      const initialMessages = sessionData.messages.map((msg) => ({
+        id: msg.id,
+        role: msg.role as 'user' | 'assistant',
+        content: msg.content,
+        createdAt: msg.createdAt,
+      }))
+      setInitialMessages(initialMessages)
+    }
+  }, [sessionData?.messages, setInitialMessages])
+
+  const planningMessages = useMemo((): PlanningMessage[] => {
+    return messages.map((msg) => ({
       id: msg.id,
-      role: msg.role as PlanningMessage['role'],
+      role: msg.role,
       content: msg.content,
       timestamp: new Date(msg.createdAt),
     }))
-  }, [sessionData?.messages])
+  }, [messages])
 
   const linkedRepos = sessionData?.repositories ?? []
 
@@ -133,16 +155,11 @@ export function PlanningWorkspace({ orgId, projectId, workflowId, onError }: Pla
   }
 
   const handleSend = async () => {
-    if (!inputMessage.trim()) return
+    if (!inputMessage.trim() || isStreaming) return
 
     onError(null)
     const userMessage = inputMessage.trim()
     setInputMessage('')
-
-    const repoPaths = repoPathsText
-      .split('\n')
-      .map((line) => line.trim())
-      .filter(Boolean)
 
     const codeSnippets =
       showSnippet && snippetContent.trim()
@@ -150,21 +167,7 @@ export function PlanningWorkspace({ orgId, projectId, workflowId, onError }: Pla
         : undefined
 
     try {
-      const response = await sendPlanningMessage({
-        orgId,
-        projectId,
-        id: workflowId,
-        data: {
-          userMessage,
-          repoPaths: repoPaths.length > 0 ? repoPaths : undefined,
-          codeSnippets,
-        },
-      })
-      setLastLoadedFiles((response.repoFilesLoaded ?? []) as Array<{ path: string; bytes: number }>)
-      await queryClient.invalidateQueries({
-        queryKey: getWorkflowPlanningControllerGetPlanningSessionQueryKey(orgId, projectId, workflowId),
-      })
-      await refetchPlanningSession()
+      await sendMessage(userMessage, codeSnippets)
     } catch (err) {
       setInputMessage(userMessage)
       onError(getErrorMessage(err) || 'Failed to send planning message')
@@ -182,14 +185,15 @@ export function PlanningWorkspace({ orgId, projectId, workflowId, onError }: Pla
 
       <div className='flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border bg-muted/50'>
         <PlanningMessageList
-          messages={messages}
-          isSending={isSending}
+          messages={planningMessages}
+          streamingContent={streamingContent}
+          isStreaming={isStreaming}
           onCreatePRD={handleCreatePRD}
           isCreatingPRD={isCreatingPRD}
         />
       </div>
 
-      {messages.length === 0 && (
+      {planningMessages.length === 0 && (
         <div className='flex flex-wrap gap-2'>
           {PLANNING_STARTERS.map((prompt) => (
             <Button
@@ -198,7 +202,7 @@ export function PlanningWorkspace({ orgId, projectId, workflowId, onError }: Pla
               variant='outline'
               size='sm'
               className='h-auto whitespace-normal text-left text-xs'
-              disabled={isSending}
+              disabled={isStreaming}
               onClick={() => setInputMessage(prompt)}
             >
               {prompt}
@@ -208,21 +212,8 @@ export function PlanningWorkspace({ orgId, projectId, workflowId, onError }: Pla
       )}
 
       <details className='rounded-lg border bg-background p-3 text-sm'>
-        <summary className='cursor-pointer font-medium'>Context for AI (repo paths & snippets)</summary>
+        <summary className='cursor-pointer font-medium'>Context for AI (code snippets)</summary>
         <div className='mt-3 space-y-3'>
-          <div>
-            <label className='mb-1 block text-xs text-muted-foreground'>
-              Repo-relative paths (one per line). Leave empty to load README, package.json, CLAUDE.md, prisma/schema.
-            </label>
-            <Textarea
-              value={repoPathsText}
-              onChange={(e) => setRepoPathsText(e.target.value)}
-              rows={3}
-              placeholder={'libs/product/src/application/services/product.service.ts\napps/web/src/App.tsx'}
-              disabled={isSending}
-              className='font-mono text-xs'
-            />
-          </div>
           <div className='flex items-center gap-2'>
             <Button type='button' variant='outline' size='sm' onClick={() => setShowSnippet((v) => !v)}>
               {showSnippet ? 'Hide snippet' : 'Paste code snippet'}
@@ -236,26 +227,20 @@ export function PlanningWorkspace({ orgId, projectId, workflowId, onError }: Pla
                 placeholder='Optional path or label'
                 value={snippetPath}
                 onChange={(e) => setSnippetPath(e.target.value)}
-                disabled={isSending}
+                disabled={isStreaming}
               />
               <Textarea
                 value={snippetContent}
                 onChange={(e) => setSnippetContent(e.target.value)}
                 rows={6}
                 placeholder='Paste relevant source here…'
-                disabled={isSending}
+                disabled={isStreaming}
                 className='font-mono text-xs'
               />
             </div>
           )}
         </div>
       </details>
-
-      {lastLoadedFiles.length > 0 && (
-        <p className='text-xs text-muted-foreground'>
-          Loaded from repo: {lastLoadedFiles.map((f) => `${f.path} (${f.bytes} B)`).join(', ')}
-        </p>
-      )}
 
       <div className='flex shrink-0 gap-2'>
         <Textarea
@@ -269,10 +254,10 @@ export function PlanningWorkspace({ orgId, projectId, workflowId, onError }: Pla
           }}
           placeholder='Ask about architecture, APIs, schema… (Enter to send)'
           rows={3}
-          disabled={isSending}
+          disabled={isStreaming}
         />
-        <Button onClick={() => void handleSend()} disabled={isSending || !inputMessage.trim()} className='self-end'>
-          {isSending ? 'Sending…' : 'Send'}
+        <Button onClick={() => void handleSend()} disabled={isStreaming || !inputMessage.trim()} className='self-end'>
+          {isStreaming ? 'Sending…' : 'Send'}
         </Button>
       </div>
     </div>
