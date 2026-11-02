@@ -1354,7 +1354,9 @@ paths:
       tags: *ref_8
   /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/planning/chat-stream:
     post:
-      description: Real-time streaming chat for Planning phase. Returns SSE stream with deltas.
+      description: >-
+        Real-time streaming chat for Planning phase. Returns SSE stream with deltas. Rate limited to 10 requests per
+        minute.
       operationId: WorkflowPlanningSSEController_planningChatStream
       parameters:
         - name: orgId
@@ -1387,6 +1389,43 @@ paths:
       summary: Stream planning chat with SSE (Server-Sent Events)
       tags:
         - Workflows - Planning SSE
+  /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/tech-refinement/chat-stream:
+    post:
+      description: >-
+        Real-time streaming chat for Technical Refinement phase with code scouting tools. Returns SSE stream with
+        deltas. Rate limited to 10 requests per minute.
+      operationId: WorkflowTechRefinementSSEController_techRefinementChatStream
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema:
+            type: string
+        - name: projectId
+          required: true
+          in: path
+          description: Project ID
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          description: Workflow ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TechnicalRefinementChatRequestDto'
+      responses:
+        '201':
+          description: ''
+      summary: Stream tech refinement chat with SSE (Server-Sent Events)
+      tags:
+        - Workflows - Tech Refinement SSE
   /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/implementation/start:
     post:
       description: >-

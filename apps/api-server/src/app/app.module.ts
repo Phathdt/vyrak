@@ -4,6 +4,7 @@ import { Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core'
 import { ScheduleModule } from '@nestjs/schedule'
+import { ThrottlerModule } from '@nestjs/throttler'
 import { ArtifactModule } from '@vyrak/artifact'
 import { AuthModule } from '@vyrak/auth'
 import { CustomConfigModule } from '@vyrak/custom-config'
@@ -29,6 +30,7 @@ import {
 } from '../workflow/workflow-phase-automation.providers'
 import { WorkflowPlanningSSEController } from '../workflow/workflow-planning-sse.controller'
 import { WorkflowPlanningController } from '../workflow/workflow-planning.controller'
+import { WorkflowTechRefinementSSEController } from '../workflow/workflow-tech-refinement-sse.controller'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
 import {
@@ -50,6 +52,12 @@ import {
     CacheModule.register({ isGlobal: true }),
     DatabaseModule,
     ScheduleModule.forRoot(),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000, // 60 seconds
+        limit: 10, // 10 requests per TTL window
+      },
+    ]),
     BullModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
@@ -88,6 +96,7 @@ import {
     // WorkflowBrainstormingController,
     WorkflowPlanningController,
     WorkflowPlanningSSEController,
+    WorkflowTechRefinementSSEController,
     WorkflowExecutionController,
   ],
   providers: [

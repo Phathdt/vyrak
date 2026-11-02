@@ -22,6 +22,7 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { PhaseAutomationPanel } from '@/components/workflows/phase-automation-panel'
 import { PlanningWorkspace } from '@/components/workflows/planning-workspace'
+import { TechRefinementWorkspace } from '@/components/workflows/tech-refinement-workspace'
 import { ArtifactList } from '@/features/artifacts'
 import { routes } from '@/lib/routes'
 
@@ -32,10 +33,7 @@ const DEFAULT_STORY_PHASES = [
   { key: 'qc', name: 'QC' },
 ] as const
 
-const PHASE_DETAILS: Record<
-  (typeof DEFAULT_STORY_PHASES)[number]['key'],
-  { headline: string; body: string; checklist: string[] }
-> = {
+const PHASE_DETAILS: Record<string, { headline: string; body: string; checklist: string[] }> = {
   planning: {
     headline: 'Technical planning with AI',
     body: 'Discuss architecture, schema, APIs, and implementation steps. Attach repo paths or code so the AI can ground recommendations in your codebase.',
@@ -43,6 +41,16 @@ const PHASE_DETAILS: Record<
       'Confirm modules and boundaries (libs vs apps)',
       'Agree on data model, migrations, and API contracts',
       'Break work into ordered steps for Implementation',
+    ],
+  },
+  'technical-refinement': {
+    headline: 'Deep technical refinement with AI',
+    body: 'Scout the codebase, discuss architectural decisions, create ADRs, and refine implementation plans. The AI can analyze your code structure and suggest concrete technical approaches.',
+    checklist: [
+      'Scout relevant code paths and dependencies',
+      'Document architectural decisions (ADRs)',
+      'Refine data models and API contracts',
+      'Create detailed implementation plans with file-level tasks',
     ],
   },
   implementation: {
@@ -225,17 +233,19 @@ export function WorkflowDetailPage() {
   const selectedPhase = displayPhases.find((p) => p.key === selectedPhaseKey) ?? displayPhases[0] ?? null
 
   const selectedPhaseDetail =
-    selectedPhase && selectedPhase.key in PHASE_DETAILS
-      ? PHASE_DETAILS[selectedPhase.key as keyof typeof PHASE_DETAILS]
-      : null
+    selectedPhase && selectedPhase.key in PHASE_DETAILS ? PHASE_DETAILS[selectedPhase.key] : null
 
   const isBusy = isApprovingPhase
 
+  // Show chat for planning and technical-refinement phases
+  const CHAT_ENABLED_PHASES = ['planning', 'technical-refinement']
   const showPlanningChat =
     workflow?.status === 'ACTIVE' &&
-    workflow.currentPhaseKey === 'planning' &&
+    workflow.currentPhaseKey &&
+    CHAT_ENABLED_PHASES.includes(workflow.currentPhaseKey) &&
     workspaceTab === 'phase' &&
-    selectedPhase?.key === 'planning'
+    selectedPhase?.key === workflow.currentPhaseKey &&
+    CHAT_ENABLED_PHASES.includes(selectedPhase.key)
 
   const selectedPhaseRunning = selectedPhase?.execution?.status === 'RUNNING'
 
@@ -414,8 +424,16 @@ export function WorkflowDetailPage() {
                           </div>
                           <PhaseStatusBadge status={selectedPhase.status} />
                         </div>
-                        {orgId && projectId && workflowId && (
+                        {orgId && projectId && workflowId && selectedPhase.key === 'planning' && (
                           <PlanningWorkspace
+                            orgId={orgId}
+                            projectId={projectId}
+                            workflowId={workflowId}
+                            onError={setActionError}
+                          />
+                        )}
+                        {orgId && projectId && workflowId && selectedPhase.key === 'technical-refinement' && (
+                          <TechRefinementWorkspace
                             orgId={orgId}
                             projectId={projectId}
                             workflowId={workflowId}
@@ -436,12 +454,12 @@ export function WorkflowDetailPage() {
                         </div>
                         <p className='text-lg text-foreground/90'>{selectedPhaseDetail.headline}</p>
                         <p className='mt-2 text-sm leading-relaxed text-muted-foreground'>{selectedPhaseDetail.body}</p>
-                        {selectedPhase.key === 'planning' &&
-                          workflow.currentPhaseKey !== 'planning' &&
+                        {CHAT_ENABLED_PHASES.includes(selectedPhase.key) &&
+                          workflow.currentPhaseKey !== selectedPhase.key &&
                           workflow.status === 'ACTIVE' && (
                             <p className='mt-4 text-sm text-muted-foreground'>
-                              Planning chat is available when this phase is current. Finish or advance phases from the
-                              workflow controls when those are enabled.
+                              AI chat is available when this phase is current. Finish or advance phases from the
+                              workflow controls.
                             </p>
                           )}
                         {AUTOMATED_PHASE_KEYS.has(selectedPhase.key) && (
