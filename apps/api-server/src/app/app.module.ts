@@ -27,6 +27,7 @@ import {
   workflowPhaseAutomationImports,
   workflowPhaseAutomationProviders,
 } from '../workflow/workflow-phase-automation.providers'
+import { WorkflowPlanningSSEController } from '../workflow/workflow-planning-sse.controller'
 import { WorkflowPlanningController } from '../workflow/workflow-planning.controller'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
@@ -86,6 +87,7 @@ import {
     // Brainstorming disabled for MVP - will be re-enabled later
     // WorkflowBrainstormingController,
     WorkflowPlanningController,
+    WorkflowPlanningSSEController,
     WorkflowExecutionController,
   ],
   providers: [
