@@ -30,6 +30,7 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { PhaseAutomationPanel } from '@/components/workflows/phase-automation-panel'
 import { PlanningWorkspace } from '@/components/workflows/planning-workspace'
+import { ArtifactList } from '@/features/artifacts'
 import { routes } from '@/lib/routes'
 
 import type { ClassifyResponseDto } from '@/api/generated/models'
@@ -711,6 +712,17 @@ export function WorkflowDetailPage() {
                     ) : (
                       <p className='text-sm text-muted-foreground'>No phase selected.</p>
                     )}
+                    {selectedPhase && orgId && workflowId && (
+                      <ArtifactList
+                        orgId={orgId}
+                        workflowId={workflowId}
+                        phaseId={selectedPhase.id}
+                        title={`Artifacts for ${selectedPhase.name}`}
+                        emptyMessage='No artifacts attached to this phase yet.'
+                        className='rounded-xl border bg-card p-6 shadow-sm'
+                        hideWhenEmpty
+                      />
+                    )}
                   </>
                 ) : (
                   <div className='min-h-[320px] rounded-xl border bg-muted/30'>
@@ -770,6 +782,20 @@ export function WorkflowDetailPage() {
                 <p className='mb-1 text-muted-foreground'>Created</p>
                 <p className='font-medium'>{new Date(workflow.createdAt).toLocaleDateString()}</p>
               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className='text-base'>Documents</CardTitle>
+              <CardDescription>PRD, ADR, ARD, and plan output from each phase.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {orgId && workflowId ? (
+                <ArtifactList orgId={orgId} workflowId={workflowId} title={undefined} />
+              ) : (
+                <p className='text-sm text-muted-foreground'>Artifacts unavailable.</p>
+              )}
             </CardContent>
           </Card>
 

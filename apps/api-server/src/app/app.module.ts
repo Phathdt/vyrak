@@ -4,6 +4,7 @@ import { Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core'
 import { ScheduleModule } from '@nestjs/schedule'
+import { ArtifactModule } from '@vyrak/artifact'
 import { AuthModule } from '@vyrak/auth'
 import { CustomConfigModule } from '@vyrak/custom-config'
 import { CustomLoggerModule } from '@vyrak/custom-logger'
@@ -17,6 +18,7 @@ import { WorkflowCoreModule } from '@vyrak/workflow-core'
 import { WorkflowExecutionModule } from '@vyrak/workflow-execution'
 import { WorkflowPlanningModule } from '@vyrak/workflow-planning'
 
+import { ArtifactsController } from '../artifacts/artifacts.controller'
 import { DomainExceptionFilter } from '../common/filters'
 import { OrganizationMemberGuard } from '../guards'
 import { ResponseInterceptor, TenantContextInterceptor, TraceIdInterceptor } from '../interceptors'
@@ -66,6 +68,7 @@ import {
     UserModule,
     OrganizationModule,
     ProjectModule,
+    ArtifactModule,
     WorkflowCoreModule,
     // Brainstorming disabled for MVP - will be re-enabled later
     // WorkflowBrainstormingModule,
@@ -80,6 +83,7 @@ import {
     ProjectsController,
     RepositoriesController,
     WorkflowsController,
+    ArtifactsController,
     // Brainstorming disabled for MVP - will be re-enabled later
     // WorkflowBrainstormingController,
     WorkflowPlanningController,

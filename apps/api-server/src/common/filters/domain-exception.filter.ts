@@ -43,6 +43,8 @@ export class DomainExceptionFilter implements ExceptionFilter {
       case 'InvitationNotFoundError':
       case 'ConversationNotFoundError':
       case 'MessageNotFoundError':
+      case 'ArtifactNotFoundError':
+      case 'ArtifactContentNotFoundError':
         return {
           status: HttpStatus.NOT_FOUND,
           message: errorMessage,
