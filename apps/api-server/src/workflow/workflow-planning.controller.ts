@@ -69,6 +69,9 @@ export class WorkflowPlanningController {
     description:
       'Extracts PRD artifact from conversation history and saves it to storage. Sets status to PENDING_APPROVAL.',
   })
+  @ApiParam({ name: 'orgId', description: 'Organization ID' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiParam({ name: 'id', description: 'Workflow ID' })
   @ApiResponse({ status: 200, type: GeneratePRDResponseDto })
   async generatePRD(@Param('orgId') orgId: string, @Param('id') workflowId: string): Promise<GeneratePRDResponseDto> {
     // Get planning session
@@ -141,6 +144,9 @@ export class WorkflowPlanningController {
     summary: 'Generate technical artifacts (ADR, ARD, Implementation Plan)',
     description: 'Parses conversation history and creates artifacts in DRAFT status.',
   })
+  @ApiParam({ name: 'orgId', description: 'Organization ID' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiParam({ name: 'id', description: 'Workflow ID' })
   @ApiResponse({ status: 200, type: GenerateArtifactsResponseDto })
   async generateTechnicalArtifacts(
     @Param('orgId') orgId: string,
@@ -161,6 +167,9 @@ export class WorkflowPlanningController {
     summary: 'Generate sub-tasks from Implementation Plan',
     description: 'Parses Implementation Plan artifact and creates sub-tasks with dependencies.',
   })
+  @ApiParam({ name: 'orgId', description: 'Organization ID' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiParam({ name: 'id', description: 'Workflow ID' })
   @ApiResponse({ status: 200, type: GenerateSubTasksResponseDto })
   async generateSubTasks(
     @Param('orgId') orgId: string,

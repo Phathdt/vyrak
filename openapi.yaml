@@ -1157,6 +1157,143 @@ paths:
                 $ref: '#/components/schemas/PlanningChatResponseDto'
       summary: Discuss technical plan with AI (Planning phase)
       tags: *ref_8
+  /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/planning/generate-prd:
+    post:
+      description: Extracts PRD artifact from conversation history and saves it to storage. Sets status to PENDING_APPROVAL.
+      operationId: WorkflowPlanningController_generatePRD
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneratePRDResponseDto'
+      summary: Generate PRD artifact from planning conversation
+      tags: *ref_8
+  /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/technical-refinement/session:
+    get:
+      operationId: WorkflowPlanningController_getTechnicalRefinementSession
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: projectId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TechnicalRefinementSessionResponseDto'
+      summary: Get Technical Refinement conversation session
+      tags: *ref_8
+  /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/technical-refinement/chat:
+    post:
+      description: >-
+        Generate ADRs, ARD, and Implementation Plans with repository scouting. Agent has access to PRD from Planning
+        phase.
+      operationId: WorkflowPlanningController_technicalRefinementChat
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: projectId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TechnicalRefinementChatRequestDto'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TechnicalRefinementChatResponseDto'
+      summary: Chat with Technical Refinement Agent
+      tags: *ref_8
+  /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/technical-refinement/generate-artifacts:
+    post:
+      description: Parses conversation history and creates artifacts in DRAFT status.
+      operationId: WorkflowPlanningController_generateTechnicalArtifacts
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerateArtifactsResponseDto'
+      summary: Generate technical artifacts (ADR, ARD, Implementation Plan)
+      tags: *ref_8
+  /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/technical-refinement/generate-subtasks:
+    post:
+      description: Parses Implementation Plan artifact and creates sub-tasks with dependencies.
+      operationId: WorkflowPlanningController_generateSubTasks
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerateSubTasksResponseDto'
+      summary: Generate sub-tasks from Implementation Plan
+      tags: *ref_8
 info:
   title: Vyrak API
   description: Vyrak API documentation
@@ -2482,3 +2619,218 @@ components:
         - aiMessage
         - messageCount
         - repoFilesLoaded
+    GeneratePRDResponseDto:
+      type: object
+      properties:
+        artifactId:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          description: Artifact ID
+        key:
+          type: string
+          description: Artifact key (e.g., "prd")
+        title:
+          type: string
+          description: Artifact title
+        downloadUrl:
+          type: string
+          format: uri
+          description: S3 download URL
+        approvalStatus:
+          type: string
+          description: Approval status (DRAFT, PENDING_APPROVAL, APPROVED, REJECTED)
+      required:
+        - artifactId
+        - key
+        - title
+        - downloadUrl
+        - approvalStatus
+    TechnicalRefinementSessionResponseDto:
+      type: object
+      properties:
+        sessionId:
+          x-nestjs_zod-uses-3-point-1-syntax: true
+          x-nestjs_zod-empty-type: true
+          type: array
+          items:
+            type: string
+        messages:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              role:
+                type: string
+              content:
+                type: string
+              createdAt:
+                type: string
+            required:
+              - id
+              - role
+              - content
+              - createdAt
+          x-nestjs_zod-uses-3-point-1-syntax: true
+        messageCount:
+          type: number
+          x-nestjs_zod-uses-3-point-1-syntax: true
+        repositories:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              url:
+                type: string
+              branch:
+                type: string
+            required:
+              - id
+              - name
+              - url
+              - branch
+          x-nestjs_zod-uses-3-point-1-syntax: true
+        prdArtifact:
+          x-nestjs_zod-uses-3-point-1-syntax: true
+          x-nestjs_zod-empty-type: true
+          type: object
+          properties:
+            id:
+              type: string
+            title:
+              type: string
+            content:
+              type: string
+          required:
+            - id
+            - title
+            - content
+          nullable: true
+      required:
+        - sessionId
+        - messages
+        - messageCount
+        - repositories
+        - prdArtifact
+    TechnicalRefinementChatRequestDto:
+      type: object
+      properties:
+        userMessage:
+          type: string
+          minLength: 1
+        codeSnippets:
+          type: array
+          items:
+            type: object
+            properties:
+              label:
+                type: string
+              path:
+                type: string
+              content:
+                type: string
+            required:
+              - content
+      required:
+        - userMessage
+    TechnicalRefinementChatResponseDto:
+      type: object
+      properties:
+        sessionId:
+          type: string
+        aiMessage:
+          type: string
+        messageCount:
+          type: number
+        repoFilesLoaded:
+          type: array
+          items:
+            type: object
+            properties:
+              path:
+                type: string
+              bytes:
+                type: number
+            required:
+              - path
+              - bytes
+      required:
+        - sessionId
+        - aiMessage
+        - messageCount
+        - repoFilesLoaded
+    GenerateArtifactsResponseDto:
+      type: object
+      properties:
+        artifacts:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              type:
+                type: string
+              key:
+                type: string
+              title:
+                type: string
+              version:
+                type: number
+            required:
+              - id
+              - type
+              - key
+              - title
+              - version
+        count:
+          type: number
+        types:
+          type: array
+          items:
+            type: string
+      required:
+        - artifacts
+        - count
+        - types
+    GenerateSubTasksResponseDto:
+      type: object
+      properties:
+        subTasks:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              key:
+                type: string
+              title:
+                type: string
+              description:
+                type: string
+                nullable: true
+              dependencies:
+                type: array
+                items:
+                  type: string
+            required:
+              - id
+              - key
+              - title
+              - description
+              - dependencies
+        count:
+          type: number
+        dependencyCount:
+          type: number
+      required:
+        - subTasks
+        - count
+        - dependencyCount

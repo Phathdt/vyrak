@@ -11,9 +11,12 @@ import {
   WORKFLOW_REPOSITORY,
   WORKFLOW_REPOSITORY_REPOSITORY,
   WORKFLOW_SERVICE,
+  SUBTASK_REPOSITORY,
+  WORKFLOW_DEPENDENCY_REPOSITORY,
   WorkflowPhasePrismaRepository,
   WorkflowPrismaRepository,
   WorkflowRepositoryPrismaRepository,
+  SubTaskPrismaRepository,
 } from './infras'
 
 import type {
@@ -41,6 +44,20 @@ import type { IGitRepositoryRepository } from '@vyrak/project'
     {
       provide: WORKFLOW_REPOSITORY_REPOSITORY,
       useFactory: (prisma: DatabaseService) => new WorkflowRepositoryPrismaRepository(prisma),
+      inject: [DatabaseService],
+    },
+    {
+      provide: SUBTASK_REPOSITORY,
+      useFactory: (prisma: DatabaseService) => new SubTaskPrismaRepository(prisma),
+      inject: [DatabaseService],
+    },
+    {
+      provide: WORKFLOW_DEPENDENCY_REPOSITORY,
+      useFactory: (prisma: DatabaseService) => {
+        // WorkflowDependency uses same Prisma model as SubTask
+        // For now, return SubTaskPrismaRepository which has dependency methods
+        return new SubTaskPrismaRepository(prisma)
+      },
       inject: [DatabaseService],
     },
     // Services
@@ -79,6 +96,8 @@ import type { IGitRepositoryRepository } from '@vyrak/project'
     WORKFLOW_REPOSITORY,
     WORKFLOW_PHASE_REPOSITORY,
     WORKFLOW_REPOSITORY_REPOSITORY,
+    SUBTASK_REPOSITORY,
+    WORKFLOW_DEPENDENCY_REPOSITORY,
     RepositoryContextService,
   ],
 })
