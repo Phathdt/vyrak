@@ -17,8 +17,10 @@
   },
   "dependencies": {
     "@vyrak/ai-agent": "*",
+    "@vyrak/artifact": "*",
     "@vyrak/conversation": "*",
     "@vyrak/custom-config": "*",
+    "@vyrak/custom-logger": "*",
     "@vyrak/database": "*",
     "@vyrak/workflow-core": "*",
     "@nestjs/common": "^12.3.2",

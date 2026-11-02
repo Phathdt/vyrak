@@ -16,6 +16,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@vyrak/artifact": "*",
     "@vyrak/conversation": "*",
     "@vyrak/custom-config": "*",
     "@vyrak/database": "*",

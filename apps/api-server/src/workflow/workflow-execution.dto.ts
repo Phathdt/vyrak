@@ -61,6 +61,7 @@ export class SubTaskStatusDto extends createZodDto(SubTaskStatusSchema) {
   title!: string
 
   @ApiProperty({
+    type: String,
     example: 'Create login and registration endpoints',
     nullable: true,
     description: 'Task description',

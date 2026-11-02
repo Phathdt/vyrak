@@ -12,6 +12,7 @@
     "generate:openapi": "yarn build && node ../../dist/apps/api-server/generate-openapi.js"
   },
   "dependencies": {
+    "@vyrak/ai-agent": "*",
     "@vyrak/artifact": "*",
     "@vyrak/auth": "*",
     "@vyrak/conversation": "*",

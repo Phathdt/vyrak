@@ -1,6 +1,11 @@
 import { Controller, Get, Inject, Param, Post, UseGuards } from '@nestjs/common'
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { IWorkflowPhaseRepository, WORKFLOW_PHASE_REPOSITORY } from '@vyrak/workflow-core'
+import {
+  IMPLEMENTATION_ORCHESTRATION_SERVICE,
+  CODE_REVIEW_SERVICE,
+  QA_VERIFICATION_SERVICE,
+} from '@vyrak/workflow-execution'
 
 import { AuthGuard } from '../auth'
 import { OrganizationMemberGuard } from '../guards'
@@ -12,15 +17,6 @@ import {
   CodeReviewReportResponseDto,
   QAVerificationResponseDto,
 } from './workflow-execution.dto'
-
-// DI Token for Implementation Orchestration Service
-export const IMPLEMENTATION_ORCHESTRATION_SERVICE = Symbol('IMPLEMENTATION_ORCHESTRATION_SERVICE')
-
-// DI Token for Code Review Service
-export const CODE_REVIEW_SERVICE = Symbol('CODE_REVIEW_SERVICE')
-
-// DI Token for QA Verification Service
-export const QA_VERIFICATION_SERVICE = Symbol('QA_VERIFICATION_SERVICE')
 
 // Interface imported from workflow-execution lib
 export interface IImplementationOrchestrationService {

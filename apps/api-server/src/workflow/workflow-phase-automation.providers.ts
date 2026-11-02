@@ -1,5 +1,5 @@
 import { BullModule } from '@nestjs/bullmq'
-import { AI_AGENT_SERVICE, IAIAgentService } from '@vyrak/ai-agent'
+import { AI_AGENT_SERVICE, AIAgentModule, IAIAgentService } from '@vyrak/ai-agent'
 import { ARTIFACT_SERVICE, IArtifactService } from '@vyrak/artifact'
 import { CONVERSATION_SERVICE, ConversationModule, IConversationService } from '@vyrak/conversation'
 import { IConfigService, CONFIG_SERVICE } from '@vyrak/custom-config'
@@ -28,6 +28,7 @@ import { BullWorkflowPhaseRunPublisher, WORKFLOW_PHASE_RUN_QUEUE } from './workf
 
 export const workflowPhaseAutomationImports = [
   ConversationModule,
+  AIAgentModule,
   BullModule.registerQueue({
     name: WORKFLOW_PHASE_RUN_QUEUE,
     defaultJobOptions: {

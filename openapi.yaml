@@ -1315,6 +1315,243 @@ paths:
                 $ref: '#/components/schemas/GenerateSubTasksResponseDto'
       summary: Generate sub-tasks from Implementation Plan
       tags: *ref_8
+  /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/implementation/start:
+    post:
+      description: >-
+        Begins orchestrating sub-task execution with parallel/sequential dependency handling. Independent tasks execute
+        in parallel (max 3 concurrent).
+      operationId: WorkflowExecutionController_startImplementation
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema:
+            type: string
+        - name: projectId
+          required: true
+          in: path
+          description: Project ID
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          description: Workflow ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StartImplementationResponseDto'
+      summary: Start implementation phase execution
+      tags: &ref_9
+        - Workflows - Execution
+  /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/implementation/status:
+    get:
+      description: Returns current status of all sub-tasks including completion progress.
+      operationId: WorkflowExecutionController_getImplementationStatus
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema:
+            type: string
+        - name: projectId
+          required: true
+          in: path
+          description: Project ID
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          description: Workflow ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImplementationStatusResponseDto'
+      summary: Get implementation orchestration status
+      tags: *ref_9
+  /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/implementation/retry/{taskId}:
+    post:
+      description: Resets task status to READY and re-executes it.
+      operationId: WorkflowExecutionController_retryTask
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema:
+            type: string
+        - name: projectId
+          required: true
+          in: path
+          description: Project ID
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          description: Workflow ID
+          schema:
+            type: string
+        - name: taskId
+          required: true
+          in: path
+          description: Sub-task ID to retry
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RetryTaskResponseDto'
+      summary: Retry a specific failed task
+      tags: *ref_9
+  /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/code-review/start:
+    post:
+      description: >-
+        Runs automated code review agent to analyze implementation changes for quality, security, performance, and
+        requirements compliance.
+      operationId: WorkflowExecutionController_startCodeReview
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema:
+            type: string
+        - name: projectId
+          required: true
+          in: path
+          description: Project ID
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          description: Workflow ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StartCodeReviewResponseDto'
+      summary: Start code review phase execution
+      tags: *ref_9
+  /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/code-review/report:
+    get:
+      description: Returns the code review report with findings categorized by severity.
+      operationId: WorkflowExecutionController_getCodeReviewReport
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema:
+            type: string
+        - name: projectId
+          required: true
+          in: path
+          description: Project ID
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          description: Workflow ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodeReviewReportResponseDto'
+      summary: Get code review report
+      tags: *ref_9
+  /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/qa/start:
+    post:
+      description: >-
+        Runs automated QA verification against PRD acceptance criteria. Tests implementation, verifies edge cases, and
+        generates a QA report.
+      operationId: WorkflowExecutionController_startQA
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema:
+            type: string
+        - name: projectId
+          required: true
+          in: path
+          description: Project ID
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          description: Workflow ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QAVerificationResponseDto'
+      summary: Start QA verification
+      tags: *ref_9
+  /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/qa/report:
+    get:
+      description: Returns the QA verification report with acceptance criteria results and overall status.
+      operationId: WorkflowExecutionController_getQAReport
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema:
+            type: string
+        - name: projectId
+          required: true
+          in: path
+          description: Project ID
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          description: Workflow ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QAVerificationResponseDto'
+      summary: Get QA verification report
+      tags: *ref_9
 info:
   title: Vyrak API
   description: Vyrak API documentation
@@ -2219,7 +2456,7 @@ components:
           example: prd
         type:
           type: string
-          enum: &ref_9
+          enum: &ref_10
             - prd
             - adr
             - ard
@@ -2253,7 +2490,7 @@ components:
           nullable: true
         approvalStatus:
           type: string
-          enum: &ref_10
+          enum: &ref_11
             - DRAFT
             - PENDING_APPROVAL
             - APPROVED
@@ -2378,7 +2615,7 @@ components:
           example: prd
         type:
           type: string
-          enum: *ref_9
+          enum: *ref_10
           example: prd
         title:
           type: string
@@ -2408,7 +2645,7 @@ components:
           nullable: true
         approvalStatus:
           type: string
-          enum: *ref_10
+          enum: *ref_11
           example: DRAFT
         approvedById:
           type: string
@@ -2855,3 +3092,558 @@ components:
         - subTasks
         - count
         - dependencyCount
+    StartImplementationResponseDto:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Implementation orchestration started
+          description: Status message
+        workflowId:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          example: 123e4567-e89b-12d3-a456-426614174000
+          description: Workflow ID
+        phaseId:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          example: 123e4567-e89b-12d3-a456-426614174001
+          description: Phase ID
+        totalTasks:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+          example: 5
+          description: Total number of sub-tasks
+      required:
+        - message
+        - workflowId
+        - phaseId
+        - totalTasks
+    SubTaskStatusDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          example: 123e4567-e89b-12d3-a456-426614174002
+          description: Task ID
+        key:
+          type: string
+          example: task-01
+          description: Task key
+        title:
+          type: string
+          example: Implement user authentication
+          description: Task title
+        description:
+          type: string
+          x-nestjs_zod-empty-type: true
+          example: Create login and registration endpoints
+          nullable: true
+          description: Task description
+        status:
+          type: string
+          enum:
+            - PENDING
+            - READY
+            - IN_PROGRESS
+            - WAITING_DEPENDENCY
+            - COMPLETED
+            - FAILED
+            - BLOCKED
+          example: IN_PROGRESS
+          description: Task status
+        dependencyType:
+          type: string
+          enum:
+            - INDEPENDENT
+            - SEQUENTIAL
+            - DEPENDENT
+          example: INDEPENDENT
+          description: Dependency type
+        executionOrder:
+          type: integer
+          minimum: -9007199254740991
+          maximum: 9007199254740991
+          example: 1
+          description: Execution order
+      required:
+        - id
+        - key
+        - title
+        - description
+        - status
+        - dependencyType
+        - executionOrder
+    ImplementationStatusResponseDto:
+      type: object
+      properties:
+        workflowId:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          example: 123e4567-e89b-12d3-a456-426614174000
+          description: Workflow ID
+        phaseId:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          example: 123e4567-e89b-12d3-a456-426614174001
+          description: Phase ID
+        totalTasks:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+          example: 5
+          description: Total number of tasks
+        completedTasks:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+          example: 2
+          description: Number of completed tasks
+        failedTasks:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+          example: 0
+          description: Number of failed tasks
+        inProgressTasks:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+          example: 1
+          description: Number of in-progress tasks
+        pendingTasks:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+          example: 2
+          description: Number of pending tasks
+        readyTasks:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+          example: 0
+          description: Number of ready tasks
+        tasks:
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+                pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+              key:
+                type: string
+              title:
+                type: string
+              description:
+                type: string
+                nullable: true
+              status:
+                type: string
+                enum:
+                  - PENDING
+                  - READY
+                  - IN_PROGRESS
+                  - WAITING_DEPENDENCY
+                  - COMPLETED
+                  - FAILED
+                  - BLOCKED
+              dependencyType:
+                type: string
+                enum:
+                  - INDEPENDENT
+                  - SEQUENTIAL
+                  - DEPENDENT
+              executionOrder:
+                type: integer
+                minimum: -9007199254740991
+                maximum: 9007199254740991
+            required:
+              - id
+              - key
+              - title
+              - description
+              - status
+              - dependencyType
+              - executionOrder
+          description: List of all tasks with status
+          type: array
+      required:
+        - workflowId
+        - phaseId
+        - totalTasks
+        - completedTasks
+        - failedTasks
+        - inProgressTasks
+        - pendingTasks
+        - readyTasks
+        - tasks
+    RetryTaskResponseDto:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Task retry initiated
+          description: Status message
+        taskId:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          example: 123e4567-e89b-12d3-a456-426614174002
+          description: Task ID
+        status:
+          type: string
+          enum:
+            - completed
+            - failed
+          example: completed
+          description: Execution result status
+        artifactId:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          example: 123e4567-e89b-12d3-a456-426614174003
+          description: Generated artifact ID
+        error:
+          type: string
+          example: 'Task execution failed: timeout'
+          description: Error message if failed
+      required:
+        - message
+        - taskId
+        - status
+    StartCodeReviewResponseDto:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Code review started
+          description: Status message
+        workflowId:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          example: 123e4567-e89b-12d3-a456-426614174000
+          description: Workflow ID
+        phaseId:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          example: 123e4567-e89b-12d3-a456-426614174001
+          description: Phase ID
+      required:
+        - message
+        - workflowId
+        - phaseId
+    CodeReviewFindingDto:
+      type: object
+      properties:
+        file:
+          type: string
+          example: src/auth/auth.service.ts
+          description: File path
+        line:
+          type: integer
+          minimum: -9007199254740991
+          maximum: 9007199254740991
+          example: 42
+          description: Line number
+        severity:
+          type: string
+          enum:
+            - CRITICAL
+            - HIGH
+            - MEDIUM
+            - LOW
+            - INFO
+          example: HIGH
+          description: Finding severity
+        category:
+          type: string
+          enum:
+            - quality
+            - security
+            - performance
+            - requirements
+            - best-practices
+          example: security
+          description: Finding category
+        message:
+          type: string
+          example: Missing input validation on user credentials
+          description: Finding message
+        suggestion:
+          type: string
+          example: Add Zod schema validation before processing
+          description: Suggested fix
+      required:
+        - file
+        - severity
+        - category
+        - message
+    CodeReviewSummaryDto:
+      type: object
+      properties:
+        totalFindings:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+          example: 15
+          description: Total number of findings
+        criticalCount:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+          example: 2
+          description: Number of critical issues
+        highCount:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+          example: 3
+          description: Number of high priority issues
+        mediumCount:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+          example: 5
+          description: Number of medium priority issues
+        lowCount:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+          example: 3
+          description: Number of low priority issues
+        infoCount:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+          example: 2
+          description: Number of informational suggestions
+      required:
+        - totalFindings
+        - criticalCount
+        - highCount
+        - mediumCount
+        - lowCount
+        - infoCount
+    CodeReviewReportResponseDto:
+      type: object
+      properties:
+        workflowId:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          x-nestjs_zod-uses-3-point-1-syntax: true
+          example: 123e4567-e89b-12d3-a456-426614174000
+          description: Workflow ID
+        phaseId:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          x-nestjs_zod-uses-3-point-1-syntax: true
+          example: 123e4567-e89b-12d3-a456-426614174001
+          description: Phase ID
+        reviewedFiles:
+          items:
+            type: string
+          x-nestjs_zod-uses-3-point-1-syntax: true
+          example:
+            - src/auth/auth.service.ts
+            - src/users/users.repository.ts
+          description: List of reviewed files
+          type: array
+        findings:
+          items:
+            type: object
+            properties:
+              file:
+                type: string
+              line:
+                type: integer
+                minimum: -9007199254740991
+                maximum: 9007199254740991
+              severity:
+                type: string
+                enum:
+                  - CRITICAL
+                  - HIGH
+                  - MEDIUM
+                  - LOW
+                  - INFO
+              category:
+                type: string
+                enum:
+                  - quality
+                  - security
+                  - performance
+                  - requirements
+                  - best-practices
+              message:
+                type: string
+              suggestion:
+                type: string
+            required:
+              - file
+              - severity
+              - category
+              - message
+          x-nestjs_zod-uses-3-point-1-syntax: true
+          description: List of findings
+          type: array
+        summary:
+          required:
+            - totalFindings
+            - criticalCount
+            - highCount
+            - mediumCount
+            - lowCount
+            - infoCount
+          properties:
+            totalFindings:
+              type: integer
+              minimum: 0
+              maximum: 9007199254740991
+            criticalCount:
+              type: integer
+              minimum: 0
+              maximum: 9007199254740991
+            highCount:
+              type: integer
+              minimum: 0
+              maximum: 9007199254740991
+            mediumCount:
+              type: integer
+              minimum: 0
+              maximum: 9007199254740991
+            lowCount:
+              type: integer
+              minimum: 0
+              maximum: 9007199254740991
+            infoCount:
+              type: integer
+              minimum: 0
+              maximum: 9007199254740991
+          x-nestjs_zod-uses-3-point-1-syntax: true
+          x-nestjs_zod-self-required: true
+          description: Summary statistics
+          allOf:
+            - $ref: '#/components/schemas/CodeReviewSummaryDto'
+        artifactId:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          x-nestjs_zod-uses-3-point-1-syntax: true
+          example: 123e4567-e89b-12d3-a456-426614174003
+          description: Code review report artifact ID
+        completedAt:
+          x-nestjs_zod-uses-3-point-1-syntax: true
+          x-nestjs_zod-empty-type: true
+          example: '2026-11-02T10:30:00Z'
+          description: Review completion timestamp
+          type: string
+          format: date-time
+          pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+          nullable: true
+      required:
+        - workflowId
+        - phaseId
+        - reviewedFiles
+        - findings
+        - summary
+        - completedAt
+    CriterionResultDto:
+      type: object
+      properties:
+        criterion:
+          type: string
+          example: User authentication works correctly
+          description: Acceptance criterion
+        status:
+          type: string
+          enum:
+            - pass
+            - fail
+            - skipped
+          example: pass
+          description: Verification status
+        details:
+          type: string
+          example: Login and registration endpoints tested successfully
+          description: Verification details
+        errorMessage:
+          type: string
+          example: Login endpoint returns 401 instead of 400
+          description: Error message if failed
+      required:
+        - criterion
+        - status
+    QAVerificationResponseDto:
+      type: object
+      properties:
+        workflowId:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          example: 123e4567-e89b-12d3-a456-426614174000
+          description: Workflow ID
+        phaseId:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          example: 123e4567-e89b-12d3-a456-426614174001
+          description: Phase ID
+        reportArtifactId:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          example: 123e4567-e89b-12d3-a456-426614174003
+          description: QA report artifact ID
+        criteriaResults:
+          items:
+            type: object
+            properties:
+              criterion:
+                type: string
+              status:
+                type: string
+                enum:
+                  - pass
+                  - fail
+                  - skipped
+              details:
+                type: string
+              errorMessage:
+                type: string
+            required:
+              - criterion
+              - status
+          description: List of acceptance criteria results
+          type: array
+        overallStatus:
+          type: string
+          enum:
+            - passed
+            - failed
+            - partial
+          example: passed
+          description: Overall QA verification status
+        executedAt:
+          type: string
+          format: date-time
+          pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+          example: '2026-11-02T10:30:00Z'
+          description: QA execution timestamp
+      required:
+        - workflowId
+        - phaseId
+        - criteriaResults
+        - overallStatus
+        - executedAt
