@@ -109,6 +109,7 @@ export class ConversationPrismaRepository extends BaseTenantRepository implement
           organizationId,
           role: input.role,
           content: input.content,
+          eventId: input.eventId ?? null,
           metadata: (input.metadata ?? {}) as never,
         },
       })
@@ -129,6 +130,14 @@ export class ConversationPrismaRepository extends BaseTenantRepository implement
   async findMessageById(messageId: string): Promise<ConversationMessage | null> {
     const message = await this.prisma.client.conversationMessage.findUnique({
       where: { id: messageId },
+    })
+
+    return message ? this.toDomainMessage(message) : null
+  }
+
+  async findMessageByEventId(eventId: string): Promise<ConversationMessage | null> {
+    const message = await this.prisma.client.conversationMessage.findUnique({
+      where: { eventId },
     })
 
     return message ? this.toDomainMessage(message) : null
@@ -166,6 +175,7 @@ export class ConversationPrismaRepository extends BaseTenantRepository implement
     sessionId: string
     role: string
     content: string
+    eventId?: string | null
     metadata: unknown
     createdAt: Date
   }): ConversationMessage {
@@ -174,6 +184,7 @@ export class ConversationPrismaRepository extends BaseTenantRepository implement
       sessionId: message.sessionId,
       role: message.role as MessageRole,
       content: message.content,
+      eventId: message.eventId || undefined,
       metadata: message.metadata as Record<string, unknown>,
       createdAt: message.createdAt,
     }

@@ -361,11 +361,13 @@ model ConversationMessage {
   role           String  // user | assistant | system | event
   content        String  @db.Text
   metadata       Json?
+  eventId        String? @unique @map("event_id") // For idempotency
   createdAt      DateTime @default(now()) @map("created_at")
 
   session ConversationSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@index([organizationId, sessionId, createdAt])
+  @@index([eventId])
   @@map("conversation_messages")
 }
 

@@ -41,6 +41,7 @@ export interface ConversationMessage {
   sessionId: string
   role: MessageRole
   content: string
+  eventId?: string
   metadata?: {
     tokens?: number
     model?: string
@@ -60,6 +61,7 @@ export interface CreateMessageInput {
   sessionId: string
   role: MessageRole
   content: string
+  eventId?: string
   metadata?: Record<string, unknown>
 }
 

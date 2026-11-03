@@ -21,5 +21,6 @@ export interface IConversationRepository {
   createMessage(input: CreateMessageInput): Promise<ConversationMessage>
   findMessagesBySession(sessionId: string): Promise<ConversationMessage[]>
   findMessageById(messageId: string): Promise<ConversationMessage | null>
+  findMessageByEventId(eventId: string): Promise<ConversationMessage | null>
   countMessagesBySession(sessionId: string): Promise<number>
 }

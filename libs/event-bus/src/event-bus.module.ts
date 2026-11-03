@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common'
+import { Inject, Module, OnModuleDestroy } from '@nestjs/common'
 import { CONFIG_SERVICE, CustomConfigModule } from '@vyrak/custom-config'
 
 import { EVENT_BUS } from './infras/di/di'
@@ -24,4 +24,10 @@ import type { IConfigService } from '@vyrak/custom-config'
   ],
   exports: [EVENT_BUS],
 })
-export class EventBusModule {}
+export class EventBusModule implements OnModuleDestroy {
+  constructor(@Inject(EVENT_BUS) private readonly eventBus: RedisEventBus) {}
+
+  async onModuleDestroy(): Promise<void> {
+    await this.eventBus.close()
+  }
+}

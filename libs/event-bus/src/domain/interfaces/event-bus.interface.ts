@@ -62,4 +62,10 @@ export interface SubscribeOptions {
    * @default 1000
    */
   block?: number
+
+  /**
+   * Maximum number of retries before moving to dead letter queue
+   * @default 3
+   */
+  maxRetries?: number
 }

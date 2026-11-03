@@ -66,10 +66,32 @@ export class ConversationService implements IConversationService {
   }
 
   /**
-   * Add a message to a session
+   * Add a message to a session with idempotency support
    */
   async addMessage(input: CreateMessageInput): Promise<ConversationMessage> {
-    return this.repository.createMessage(input)
+    // If eventId provided, check if already processed
+    if (input.eventId) {
+      const existing = await this.repository.findMessageByEventId(input.eventId)
+
+      if (existing) {
+        // Message already processed, return existing
+        return existing
+      }
+    }
+
+    // Create new message with idempotency protection
+    try {
+      return await this.repository.createMessage(input)
+    } catch (error) {
+      // If duplicate key error on eventId, fetch existing message
+      if (input.eventId && error instanceof Error && error.message.includes('unique constraint')) {
+        const existing = await this.repository.findMessageByEventId(input.eventId)
+        if (existing) {
+          return existing
+        }
+      }
+      throw error
+    }
   }
 
   /**
