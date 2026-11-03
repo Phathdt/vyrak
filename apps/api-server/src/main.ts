@@ -12,6 +12,7 @@ import { LoggerErrorInterceptor, Logger as PinoLogger } from 'nestjs-pino'
 import { ZodValidationPipe } from 'nestjs-zod'
 
 import { AppModule } from './app'
+import { RedisIoAdapter } from './chat/redis-io.adapter'
 import { ResponseExceptionFilter, ResponseLoggerInterceptor, ZodValidationExceptionFilter } from './interceptors'
 
 import type { IConfigService } from '@vyrak/custom-config'
@@ -23,6 +24,11 @@ async function bootstrap() {
 
   const configService = app.get(CONFIG_SERVICE) as IConfigService
   const databaseService = app.get(DatabaseService)
+
+  // Setup Redis adapter for Socket.IO
+  const redisIoAdapter = new RedisIoAdapter(app, configService)
+  await redisIoAdapter.connectToRedis()
+  app.useWebSocketAdapter(redisIoAdapter)
 
   const corsOrigins = [configService.frontendUrl, 'http://localhost:5173', 'http://127.0.0.1:5173'].filter(
     (origin, index, list) => origin && origin !== 'replace_me' && list.indexOf(origin) === index
@@ -59,6 +65,37 @@ async function bootstrap() {
   const port = configService.host.port
   await app.listen(port)
   console.log(`Application is running on: http://localhost:${port}`)
+
+  // Enable graceful shutdown hooks
+  app.enableShutdownHooks()
+
+  // Handle SIGTERM for graceful shutdown (CRITICAL FIX: Clean up Redis connections)
+  process.on('SIGTERM', async () => {
+    console.log('[SIGTERM] Graceful shutdown initiated')
+    try {
+      await redisIoAdapter.close()
+      await app.close()
+      console.log('[SIGTERM] Application closed successfully')
+      process.exit(0)
+    } catch (error) {
+      console.error('[SIGTERM] Error during shutdown:', error)
+      process.exit(1)
+    }
+  })
+
+  // Handle SIGINT (Ctrl+C) for graceful shutdown
+  process.on('SIGINT', async () => {
+    console.log('[SIGINT] Graceful shutdown initiated')
+    try {
+      await redisIoAdapter.close()
+      await app.close()
+      console.log('[SIGINT] Application closed successfully')
+      process.exit(0)
+    } catch (error) {
+      console.error('[SIGINT] Error during shutdown:', error)
+      process.exit(1)
+    }
+  })
 }
 
 bootstrap()

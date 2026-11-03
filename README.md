@@ -31,6 +31,80 @@ vyrak/
 └── docs/               # Project documentation
 ```
 
+## Infrastructure Diagram
+
+```mermaid
+graph TB
+    subgraph "Client Layer"
+        Browser[Browser/Frontend<br/>React + Vite]
+    end
+
+    subgraph "API Layer"
+        APIServer[API Server<br/>NestJS + REST]
+        WSGateway[WebSocket Gateway<br/>Socket.IO + Redis]
+    end
+
+    subgraph "Processing Layer"
+        Worker[Background Worker<br/>Event Consumer]
+        AgentSDK[Agent SDK<br/>Claude AI]
+    end
+
+    subgraph "Storage Layer"
+        PostgreSQL[(PostgreSQL<br/>Database)]
+        Redis[(Redis<br/>Cache + Pub/Sub)]
+        S3[S3/MinIO<br/>Artifacts]
+    end
+
+    subgraph "Message Queue"
+        EventBus[Event Bus<br/>Redis Streams]
+    end
+
+    Browser -->|HTTP/REST| APIServer
+    Browser <-->|WebSocket| WSGateway
+    
+    APIServer -->|Query/Write| PostgreSQL
+    APIServer -->|Publish Events| EventBus
+    APIServer -->|Stream Chat| AgentSDK
+    
+    WSGateway -->|Pub/Sub| Redis
+    WSGateway -->|Publish Events| EventBus
+    WSGateway -->|Stream Chat| AgentSDK
+    
+    EventBus -->|Consume Events| Worker
+    Worker -->|Process Jobs| AgentSDK
+    Worker -->|Query/Write| PostgreSQL
+    Worker -->|Upload| S3
+    
+    AgentSDK -->|AI Processing| Worker
+    AgentSDK -->|AI Streaming| WSGateway
+
+    style Browser fill:#e1f5ff
+    style APIServer fill:#fff4e6
+    style WSGateway fill:#fff4e6
+    style Worker fill:#e8f5e9
+    style PostgreSQL fill:#f3e5f5
+    style Redis fill:#f3e5f5
+    style S3 fill:#f3e5f5
+    style EventBus fill:#fff3e0
+    style AgentSDK fill:#fce4ec
+```
+
+### Key Components
+
+- **API Server**: REST endpoints with OpenAPI documentation
+- **WebSocket Gateway**: Real-time bidirectional communication with Socket.IO
+- **Event Bus**: Redis Streams for async event processing
+- **Worker**: Background job processing (artifacts, analysis)
+- **Agent SDK**: Claude AI integration for chat and code generation
+- **Redis Adapter**: Multi-instance WebSocket scaling with Pub/Sub
+
+### Data Flow
+
+1. **REST API Flow**: `Browser → API Server → PostgreSQL`
+2. **Real-time Chat**: `Browser ↔ WebSocket Gateway ↔ Agent SDK`
+3. **Event Processing**: `Gateway/API → Event Bus → Worker → S3/PostgreSQL`
+4. **Multi-instance WebSocket**: `Gateway ↔ Redis Pub/Sub ↔ Gateway (other instances)`
+
 ## Tech Stack
 
 ### Backend
@@ -307,6 +381,43 @@ SMTP_FROM=noreply@vyrak.local
 
 - `yarn commit` - Interactive commit with Commitizen
 - `yarn prepare` - Setup Lefthook git hooks
+
+## Real-time Chat
+
+Tech Refinement chat uses **WebSocket (Socket.IO)** for bidirectional real-time communication.
+
+### Features
+- Real-time message streaming with AI responses
+- Typing indicators showing when users are typing
+- Presence detection (user joined/left notifications)
+- Connection status monitoring
+- Multi-instance support via Redis adapter
+
+### Setup
+
+WebSocket chat requires Redis for pub/sub:
+
+```bash
+# Start Redis
+yarn docker:up
+
+# Redis will be available at localhost:6379
+```
+
+Frontend configuration:
+
+```bash
+# apps/web/.env
+VITE_API_BASE_URL=http://localhost:3000
+```
+
+### Architecture
+
+```
+Browser ↔ Socket.IO ↔ ChatGateway → ChatService → Event Bus → Workers
+```
+
+For detailed setup instructions, event documentation, and troubleshooting, see [WebSocket Setup Guide](docs/websocket-setup.md).
 
 ## Type-Safe API Workflow
 

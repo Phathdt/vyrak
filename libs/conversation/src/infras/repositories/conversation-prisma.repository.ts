@@ -34,6 +34,55 @@ export class ConversationPrismaRepository extends BaseTenantRepository implement
     })
   }
 
+  async getOrCreateSession(input: CreateSessionInput): Promise<ConversationSession> {
+    return this.withTenantContext(async (organizationId) => {
+      // Try to find existing session first
+      const existing = await this.prisma.client.conversationSession.findFirst({
+        where: {
+          workflowId: input.workflowId,
+          phase: input.phase,
+          organizationId,
+        },
+      })
+
+      if (existing) {
+        return this.toDomainSession(existing)
+      }
+
+      // Create new session if not exists
+      // Note: When DB migration is applied with unique constraint (workflowId, phase),
+      // concurrent creates will fail with unique violation. Retry logic handles this.
+      try {
+        const session = await this.prisma.client.conversationSession.create({
+          data: {
+            workflowId: input.workflowId,
+            organizationId,
+            phase: input.phase,
+            status: ConversationStatus.ACTIVE,
+            metadata: (input.metadata ?? {}) as never,
+          },
+        })
+
+        return this.toDomainSession(session)
+      } catch (error) {
+        // If unique constraint violation, retry findFirst
+        const retrySession = await this.prisma.client.conversationSession.findFirst({
+          where: {
+            workflowId: input.workflowId,
+            phase: input.phase,
+            organizationId,
+          },
+        })
+
+        if (retrySession) {
+          return this.toDomainSession(retrySession)
+        }
+
+        throw error
+      }
+    })
+  }
+
   async findSessionById(sessionId: string): Promise<ConversationSession | null> {
     const session = await this.prisma.client.conversationSession.findUnique({
       where: { id: sessionId },

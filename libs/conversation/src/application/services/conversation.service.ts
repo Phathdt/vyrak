@@ -109,6 +109,13 @@ export class ConversationService implements IConversationService {
   }
 
   /**
+   * Find message by event ID (for idempotency)
+   */
+  async findMessageByEventId(eventId: string): Promise<ConversationMessage | null> {
+    return this.repository.findMessageByEventId(eventId)
+  }
+
+  /**
    * Complete a conversation session
    */
   async completeSession(sessionId: string): Promise<ConversationSession> {

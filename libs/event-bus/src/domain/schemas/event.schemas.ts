@@ -44,6 +44,10 @@ export const AgentMessageCompleteEventSchema = BaseEventSchema.extend({
   sessionId: z.string().uuid('sessionId must be a valid UUID'),
   messageId: z.string().uuid('messageId must be a valid UUID'),
   content: z.string(),
+  metadata: z.object({
+    orgId: z.string().uuid('orgId must be a valid UUID'),
+    projectId: z.string().uuid('projectId must be a valid UUID'),
+  }),
 })
 
 /**

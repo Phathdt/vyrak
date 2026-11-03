@@ -28,6 +28,11 @@ export class TenantContextInterceptor implements NestInterceptor {
   constructor(private readonly databaseService: DatabaseService) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
+    // Skip WebSocket contexts - they handle tenant context differently
+    if (context.getType() === 'ws') {
+      return next.handle()
+    }
+
     const request = context.switchToHttp().getRequest()
     const params = request.params
 

@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
 import { getErrorMessage } from '@/api/client'
@@ -10,7 +10,8 @@ import {
 import { ChatMarkdown } from '@/components/chat-markdown'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { usePlanningChatStream } from '@/hooks/use-planning-chat-stream'
+import { useWebSocketChat } from '@/hooks/use-websocket-chat'
+
 const PLANNING_STARTERS = [
   'Propose a technical design: modules to touch, DB schema, API endpoints, and risks.',
   'Given our hexagonal libs pattern, where should this feature live and why?',
@@ -100,39 +101,31 @@ export function PlanningWorkspace({ orgId, projectId, workflowId, onError }: Pla
   const [showSnippet, setShowSnippet] = useState(false)
   const [snippetPath, setSnippetPath] = useState('')
   const [snippetContent, setSnippetContent] = useState('')
+  const [sessionId] = useState(() => crypto.randomUUID())
 
   const { mutateAsync: createPRDFromMessage, isPending: isCreatingPRD } =
     useWorkflowPlanningControllerGeneratePRDFromMessage()
 
-  // Use SSE for real-time chat
-  const { messages, streamingContent, isStreaming, sendMessage, setInitialMessages } = usePlanningChatStream({
-    orgId,
-    projectId,
-    workflowId,
-    onError,
-  })
-
-  // Pausing the query while streaming keeps a background refetch from re-running the
-  // sync effect below, which would replace locally accumulated messages mid-stream.
+  // Load session data (previous messages)
   const { data: sessionData } = useWorkflowPlanningControllerGetPlanningSession(orgId, projectId, workflowId, {
     query: {
-      enabled: !isStreaming,
+      enabled: true,
       staleTime: 30000,
     },
   })
 
-  // Initialize messages from session data
-  useEffect(() => {
-    if (sessionData?.messages) {
-      const initialMessages = sessionData.messages.map((msg) => ({
-        id: msg.id,
-        role: msg.role as 'user' | 'assistant',
-        content: msg.content,
-        createdAt: msg.createdAt,
-      }))
-      setInitialMessages(initialMessages)
-    }
-  }, [sessionData?.messages, setInitialMessages])
+  // Memoize initial messages to prevent infinite loop
+  const initialMessages = useMemo(() => sessionData?.messages ?? [], [sessionData?.messages])
+
+  // Use WebSocket for real-time chat with initial messages from API
+  const { isConnected, messages, streamingContent, isStreaming, sendMessage } = useWebSocketChat({
+    orgId,
+    projectId,
+    workflowId,
+    sessionId,
+    enabled: true,
+    initialMessages,
+  })
 
   const planningMessages = useMemo((): PlanningMessage[] => {
     return messages.map((msg) => ({
@@ -165,7 +158,7 @@ export function PlanningWorkspace({ orgId, projectId, workflowId, onError }: Pla
   }
 
   const handleSend = async () => {
-    if (!inputMessage.trim() || isStreaming) return
+    if (!inputMessage.trim() || isStreaming || !isConnected) return
 
     onError(null)
     const userMessage = inputMessage.trim()
@@ -173,19 +166,25 @@ export function PlanningWorkspace({ orgId, projectId, workflowId, onError }: Pla
 
     const codeSnippets =
       showSnippet && snippetContent.trim()
-        ? [{ path: snippetPath.trim() || undefined, content: snippetContent.trim() }]
+        ? [{ language: 'text', code: snippetContent.trim() }] // Match WebSocket contract
         : undefined
 
-    try {
-      await sendMessage(userMessage, codeSnippets)
-    } catch (err) {
-      setInputMessage(userMessage)
-      onError(getErrorMessage(err) || 'Failed to send planning message')
-    }
+    // WebSocket sendMessage doesn't throw, just call it
+    sendMessage(userMessage, codeSnippets)
   }
 
   return (
     <div className='flex min-h-[520px] flex-col gap-4'>
+      {/* Connection status */}
+      {!isConnected && (
+        <div className='rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-100'>
+          <div className='flex items-center gap-2'>
+            <div className='h-2 w-2 animate-pulse rounded-full bg-amber-500' />
+            <span className='font-medium'>Reconnecting to chat server...</span>
+          </div>
+        </div>
+      )}
+
       {linkedRepos.length > 0 && (
         <p className='text-xs text-muted-foreground'>
           Linked repos: {linkedRepos.map((r) => r.name).join(', ')} — default files load from local checkout when{' '}

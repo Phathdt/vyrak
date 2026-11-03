@@ -1,11 +1,14 @@
 import { Injectable, Inject, OnModuleInit } from '@nestjs/common'
 import { IArtifactService, ARTIFACT_SERVICE } from '@vyrak/artifact'
 import { EnhancedLogger } from '@vyrak/custom-logger'
+import { DatabaseService } from '@vyrak/database'
 import { IEventBus, EVENT_BUS } from '@vyrak/event-bus'
 import * as fs from 'fs/promises'
 import * as path from 'path'
 
 import type { AgentToolUseEvent } from '@vyrak/event-bus'
+
+import { withTenantContext } from '../common/decorators/with-tenant-context.decorator'
 
 @Injectable()
 export class ArtifactCreationProcessor implements OnModuleInit {
@@ -14,17 +17,22 @@ export class ArtifactCreationProcessor implements OnModuleInit {
   constructor(
     @Inject(EVENT_BUS) private readonly eventBus: IEventBus,
     @Inject(ARTIFACT_SERVICE) private readonly artifactService: IArtifactService,
+    private readonly databaseService: DatabaseService,
     enhancedLogger: EnhancedLogger
   ) {
     this.logger = enhancedLogger.with({ context: 'ArtifactWorker' })
   }
 
   async onModuleInit() {
-    await this.eventBus.subscribe<AgentToolUseEvent>('agent.tool_use', this.handleToolUse.bind(this), {
-      group: 'artifact-workers',
-      consumer: `artifact-worker-${process.pid}`,
-      maxRetries: 3,
-    })
+    await this.eventBus.subscribe<AgentToolUseEvent>(
+      'agent.tool_use',
+      withTenantContext(this.databaseService, this.handleToolUse.bind(this)),
+      {
+        group: 'artifact-workers',
+        consumer: `artifact-worker-${process.pid}`,
+        maxRetries: 3,
+      }
+    )
 
     this.logger.log('Subscribed to agent.tool_use events')
   }

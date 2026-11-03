@@ -19,6 +19,7 @@ import { WorkflowExecutionModule } from '@vyrak/workflow-execution'
 import { WorkflowPlanningModule } from '@vyrak/workflow-planning'
 
 import { ArtifactsController } from '../artifacts/artifacts.controller'
+import { ChatModule } from '../chat/chat.module'
 import { DomainExceptionFilter } from '../common/filters'
 import { OrganizationMemberGuard } from '../guards'
 import { ResponseInterceptor, TenantContextInterceptor, TraceIdInterceptor } from '../interceptors'
@@ -29,9 +30,7 @@ import {
   workflowPhaseAutomationImports,
   workflowPhaseAutomationProviders,
 } from '../workflow/workflow-phase-automation.providers'
-import { WorkflowPlanningSSEController } from '../workflow/workflow-planning-sse.controller'
 import { WorkflowPlanningController } from '../workflow/workflow-planning.controller'
-import { WorkflowTechRefinementSSEController } from '../workflow/workflow-tech-refinement-sse.controller'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
 import {
@@ -84,6 +83,7 @@ import {
     // WorkflowBrainstormingModule,
     WorkflowPlanningModule,
     WorkflowExecutionModule,
+    ChatModule,
   ],
   controllers: [
     AppController,
@@ -97,8 +97,6 @@ import {
     // Brainstorming disabled for MVP - will be re-enabled later
     // WorkflowBrainstormingController,
     WorkflowPlanningController,
-    WorkflowPlanningSSEController,
-    WorkflowTechRefinementSSEController,
     WorkflowExecutionController,
   ],
   providers: [

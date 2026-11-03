@@ -1,13 +1,23 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
 import { getErrorMessage } from '@/api/client'
-import { useWorkflowPlanningControllerGeneratePRDFromMessage } from '@/api/generated/workflows-planning/workflows-planning'
+import {
+  useWorkflowPlanningControllerGeneratePRDFromMessage,
+  useWorkflowPlanningControllerGetTechnicalRefinementSession,
+} from '@/api/generated/workflows-planning/workflows-planning'
 import { ChatMarkdown } from '@/components/chat-markdown'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { useTechRefinementChatStream, type FileChangeEvent } from '@/hooks/use-tech-refinement-chat-stream'
 import { useToast } from '@/hooks/use-toast'
+import { useWebSocketChat } from '@/hooks/use-websocket-chat'
+
+// Legacy type for file changes (to be implemented in WebSocket later)
+export interface FileChangeEvent {
+  changeType: 'file.created' | 'file.updated'
+  path: string
+  timestamp: string
+}
 
 const TECH_REFINEMENT_STARTERS = [
   'Scout the codebase and suggest where this feature should live following hexagonal architecture.',
@@ -140,22 +150,36 @@ export function TechRefinementWorkspace({ orgId, projectId, workflowId, onError 
   const [showSnippet, setShowSnippet] = useState(false)
   const [snippetPath, setSnippetPath] = useState('')
   const [snippetContent, setSnippetContent] = useState('')
+  const [sessionId] = useState(() => crypto.randomUUID())
 
   const { mutateAsync: saveAsArtifact, isPending: isSavingArtifact } =
     useWorkflowPlanningControllerGeneratePRDFromMessage()
 
-  // Use SSE for real-time chat with code scouting
-  const { messages, streamingContent, isStreaming, toolActivity, fileChanges, sendMessage } =
-    useTechRefinementChatStream({
-      orgId,
-      projectId,
-      workflowId,
-      onError,
-    })
+  // Load session data (previous messages)
+  const { data: sessionData } = useWorkflowPlanningControllerGetTechnicalRefinementSession(
+    orgId,
+    projectId,
+    workflowId,
+    {
+      query: {
+        enabled: true,
+        staleTime: 30000,
+      },
+    }
+  )
 
-  // TODO: Fetch initial tech refinement session when backend endpoint is ready
-  // For now, messages start empty
-  // const { data: sessionData } = useWorkflowTechRefinementControllerGetSession(...)
+  // Memoize initial messages to prevent infinite loop
+  const initialMessages = useMemo(() => sessionData?.messages ?? [], [sessionData?.messages])
+
+  // Use WebSocket for real-time chat with initial messages from API
+  const { isConnected, messages, streamingContent, isStreaming, toolActivity, sendMessage } = useWebSocketChat({
+    orgId,
+    projectId,
+    workflowId,
+    sessionId,
+    enabled: true,
+    initialMessages,
+  })
 
   const handleSaveAsArtifact = async (messageId: string) => {
     try {
@@ -192,25 +216,35 @@ export function TechRefinementWorkspace({ orgId, projectId, workflowId, onError 
 
     const codeSnippets =
       showSnippet && snippetContent.trim()
-        ? [{ path: snippetPath.trim() || undefined, content: snippetContent.trim() }]
+        ? [{ language: snippetPath.trim() || 'text', code: snippetContent.trim() }]
         : undefined
 
-    try {
-      await sendMessage(userMessage, codeSnippets)
-      // Clear snippet after sending
-      if (showSnippet) {
-        setSnippetPath('')
-        setSnippetContent('')
-        setShowSnippet(false)
-      }
-    } catch (err) {
-      setInputMessage(userMessage)
-      onError(getErrorMessage(err) || 'Failed to send message')
+    sendMessage(userMessage, codeSnippets)
+
+    // Clear snippet after sending
+    if (showSnippet) {
+      setSnippetPath('')
+      setSnippetContent('')
+      setShowSnippet(false)
     }
   }
 
   return (
     <div className='flex min-h-[520px] flex-col gap-4'>
+      {/* Connection status */}
+      <div
+        className={`rounded-lg border p-3 text-xs ${
+          isConnected
+            ? 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950 text-green-900 dark:text-green-100'
+            : 'border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950 text-red-900 dark:text-red-100'
+        }`}
+      >
+        <div className='flex items-center gap-2'>
+          <div className={`h-2 w-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
+          <span className='font-medium'>{isConnected ? 'Connected via WebSocket' : 'Disconnected'}</span>
+        </div>
+      </div>
+
       <div className='rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950 p-3 text-xs text-amber-900 dark:text-amber-100'>
         <p className='font-medium mb-1'>🔍 Code Scouting Enabled</p>
         <p>
@@ -230,7 +264,7 @@ export function TechRefinementWorkspace({ orgId, projectId, workflowId, onError 
           streamingContent={streamingContent}
           isStreaming={isStreaming}
           toolActivity={toolActivity}
-          fileChanges={fileChanges}
+          fileChanges={undefined}
           onSaveAsArtifact={handleSaveAsArtifact}
           isSaving={isSavingArtifact}
         />

@@ -10,17 +10,6 @@ export class ResponseInterceptor implements NestInterceptor {
     }
 
     const request = context.switchToHttp().getRequest()
-    const response = context.switchToHttp().getResponse()
-
-    // Skip for SSE endpoints - they handle their own data format
-    const isSSE =
-      request.url?.includes('/chat-stream') ||
-      request.headers.accept?.includes('text/event-stream') ||
-      response.getHeader('content-type')?.includes('text/event-stream')
-
-    if (isSSE) {
-      return next.handle()
-    }
 
     return next.handle().pipe(
       map((data) => {

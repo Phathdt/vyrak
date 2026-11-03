@@ -63,6 +63,10 @@ export interface AgentMessageCompleteEvent extends BaseEvent {
   sessionId: string
   messageId: string
   content: string
+  metadata: {
+    orgId: string
+    projectId: string
+  }
 }
 
 /**

@@ -10,6 +10,90 @@ This file provides guidance to Claude Code when working with code in this reposi
 
 ## Architecture
 
+### System Flow Diagram
+
+```mermaid
+sequenceDiagram
+    participant Browser
+    participant API as API Server<br/>(NestJS)
+    participant WS as WebSocket Gateway<br/>(Socket.IO)
+    participant AI as Agent SDK<br/>(Claude)
+    participant EB as Event Bus<br/>(Redis Streams)
+    participant Worker as Background Worker
+    participant DB as PostgreSQL
+    participant S3 as S3/MinIO
+
+    Note over Browser,S3: REST API Flow
+    Browser->>API: HTTP POST /api/resource
+    API->>DB: Query/Write
+    DB-->>API: Data
+    API-->>Browser: JSON Response
+
+    Note over Browser,S3: Real-time Chat Flow (WebSocket)
+    Browser->>WS: Connect (JWT auth)
+    WS->>WS: Verify JWT & Check Access
+    Browser->>WS: chat:join {workflowId}
+    WS->>WS: Join room: workflow:{id}
+    Browser->>WS: chat:send {message}
+    WS->>AI: Stream request
+    
+    loop Real-time Streaming
+        AI-->>WS: Delta chunk
+        WS-->>Browser: chat:delta {content}
+        WS->>EB: Publish event: agent.message.delta
+    end
+    
+    AI-->>WS: Complete
+    WS-->>Browser: chat:complete {messageId}
+    WS->>EB: Publish event: agent.message.complete
+
+    Note over Browser,S3: Background Processing (Async)
+    EB->>Worker: Consume events
+    Worker->>AI: Process artifacts
+    AI-->>Worker: Generated content
+    Worker->>DB: Store metadata
+    Worker->>S3: Upload artifacts
+    Worker->>DB: Update status
+
+    Note over Browser,S3: Multi-instance WebSocket (Redis Pub/Sub)
+    Browser->>WS: Message to room
+    WS->>WS: Redis Pub/Sub
+    WS-->>Browser: Broadcast to all instances
+```
+
+### Data Flow Patterns
+
+**Pattern 1: Real-time Chat (Synchronous)**
+```
+User Message → WebSocket Gateway → Agent SDK (streaming) → Browser
+                     ↓
+                Event Bus (async publish)
+```
+- **Latency:** < 100ms first chunk
+- **Response:** Streaming (real-time)
+- **Use case:** Interactive chat
+
+**Pattern 2: Background Processing (Asynchronous)**
+```
+Event Bus → Worker → Agent SDK → S3/Database
+```
+- **Latency:** Seconds to minutes
+- **Response:** Async (status updates)
+- **Use case:** Artifact generation, analysis
+
+**Pattern 3: REST API (Request-Response)**
+```
+Browser → API Server → Database → Browser
+```
+- **Latency:** 50-200ms
+- **Response:** JSON
+- **Use case:** CRUD operations
+
+### Redis Dual Role
+
+1. **Redis Pub/Sub** - WebSocket scaling across instances
+2. **Redis Streams** - Event Bus for Workers
+
 ### Monorepo Structure
 
 ```
@@ -186,6 +270,7 @@ case 'ProjectNotFoundError':
 - Unknown errors → 500 Internal Server Error
 
 **Benefits:**
+
 - ✅ Framework-independent application layer
 - ✅ Services reusable in CLI, workers, tests
 - ✅ Type-safe exception properties with rich context
@@ -193,12 +278,14 @@ case 'ProjectNotFoundError':
 - ✅ Single source of truth for exception → HTTP mapping
 
 **Reference Implementations:**
+
 - `libs/project/src/domain/exceptions/project.exceptions.ts`
 - `libs/organization/src/domain/exceptions/organization.exceptions.ts`
 - `libs/workflow/src/domain/exceptions/workflow.exceptions.ts`
 - `libs/auth/src/domain/exceptions/auth.exceptions.ts`
 
 **DO NOT:**
+
 - ❌ Import HTTP exceptions (`BadRequestException`, `NotFoundException`) in application services
 - ❌ Import `@nestjs/common` in application or domain layers
 - ❌ Handle exceptions in controllers (let the global filter handle them)
@@ -209,26 +296,31 @@ case 'ProjectNotFoundError':
 Comprehensive monitoring and observability for workflow execution:
 
 **Health Checks:**
+
 - `GET /health` - Liveness probe (application running)
 - `GET /health/ready` - Readiness probe (dependencies healthy)
 
 **Metrics APIs:**
+
 - `GET /api/workflows/metrics` - Aggregated statistics with time-series data
 - `GET /api/workflows/runs/:runId/performance` - Step-level performance analysis
 - `GET /metrics` - Prometheus-compatible metrics export
 
 **Services (libs/workflow-core/application):**
+
 - `HealthCheckService` - Liveness and readiness checks
 - `WorkflowMetricsService` - Aggregated metrics calculation
 - `WorkflowPerformanceService` - Performance stats with bottleneck detection
 - `PrometheusMetricsService` - Prometheus format export
 
 **Controllers:**
+
 - `HealthController` (apps/api-server/src/health) - Health endpoints
 - `WorkflowsController` (apps/api-server/src/workflows) - Metrics and performance endpoints
 - `MetricsController` (apps/api-server/src/metrics) - Prometheus endpoint
 
 **Key Features:**
+
 - On-demand metrics computed from existing `workflow_runs` and `step_runs` tables
 - Bottleneck detection for slow steps and retry patterns
 - Prometheus integration for Grafana dashboards
@@ -243,15 +335,18 @@ All services are plain TypeScript classes (no `@Injectable()`) registered via DI
 Workflow artifacts are stored in S3-compatible object storage (Floci for local development, AWS S3 for production):
 
 **Storage Architecture:**
+
 - **Database:** Metadata only (file path, S3 key, size, content type, timestamps)
 - **S3:** Actual artifact content (on-demand fetching)
 - **Repository:** `ArtifactS3Repository` in `libs/agent-runtime/src/infras/repositories/`
 
 **API Endpoints:**
+
 - `GET /api/organizations/:orgId/workflows/runs/:runId/artifacts` - List artifact metadata
 - `GET /api/organizations/:orgId/workflows/runs/:runId/artifacts/:artifactId` - Get artifact with content
 
 **Configuration (apps/api-server/.env):**
+
 ```bash
 S3__ENDPOINT=http://localhost:4566
 S3__REGION=us-east-1
@@ -262,12 +357,14 @@ S3__FORCE_PATH_STYLE=true
 ```
 
 **Key Features:**
+
 - Content fetched from S3 only when explicitly requested (`includeContent: true`)
 - S3 keys follow pattern: `{orgId}/{runId}/{filename}`
 - Automatic content type detection
 - Tenant isolation via organization ID in key path
 
 **Local Development:**
+
 - Uses Floci (lightweight S3-compatible storage via LocalStack)
 - Setup: `yarn docker:floci && yarn floci:setup`
 - Access: `aws --endpoint-url=http://localhost:4566 s3 ls s3://vyrak-artifacts`
@@ -305,11 +402,13 @@ S3__FORCE_PATH_STYLE=true
 The project uses shared base configurations to ensure consistency:
 
 **Rolldown (Production Builds):**
+
 - `config/rolldown.base.mjs` exports `createLibConfig()` and `createAppConfig()`
 - Libs use: `import { createLibConfig } from '../../config/rolldown.base.mjs'`
 - Apps use: `import { createAppConfig } from '../../config/rolldown.base.mjs'` with `appName` required
 
 **TypeScript:**
+
 - `config/tsconfig.base.json` - Base compiler options (strict mode, decorators, ES2022)
 - `config/tsconfig.lib.json` - Extends base for libs (declaration output)
 - `config/tsconfig.app.json` - Extends base for apps (noEmit for type checking only)
@@ -333,11 +432,11 @@ This project follows a strict type-safe workflow from backend to frontend:
 export const CreateProductSchema = z.object({
   name: z.string().min(1).max(255),
   price: z.number().positive(),
-})
+});
 export class CreateProductDto extends createZodDto(CreateProductSchema) {}
 
 // Frontend: Auto-generated hooks
-const { mutateAsync } = useProductsControllerCreate()
+const { mutateAsync } = useProductsControllerCreate();
 ```
 
 ### Key Commands
@@ -379,11 +478,13 @@ const { mutateAsync } = useProductsControllerCreate()
 Vyrak supports two workspace modes for workflow execution:
 
 **Clone Mode (Default):**
+
 - Each workflow run clones the repository into an isolated workspace
 - Safer for development, easier to debug
 - Slower (30-60s) and uses more disk space (~500MB per run)
 
 **Worktree Mode (Production):**
+
 - Uses git worktree to create lightweight workspaces from a shared main repository
 - 6-12x faster workspace creation (2-5s)
 - 10x disk savings (~50MB per run)
@@ -605,6 +706,7 @@ VITE_API_BASE_URL=http://localhost:3000
 Tests are split into two categories to optimize CI speed and developer workflow:
 
 **Unit Tests** (`*.spec.ts`, `*.test.ts` excluding `*.integration.*`):
+
 - Fast, isolated tests with no external dependencies (5-10 seconds total)
 - Run in CI on every push/PR
 - No database, Redis, or external services required
@@ -615,6 +717,7 @@ Tests are split into two categories to optimize CI speed and developer workflow:
   - `yarn test:ci` - CI mode with coverage
 
 **Integration Tests** (`*.integration.spec.ts`, `*.integration.test.ts`, `**/__tests__/integration/**`):
+
 - Real database and Redis connections via Testcontainers
 - Run on-demand or scheduled (nightly builds)
 - Use PostgreSQL 17 and Redis 7 Docker containers
@@ -626,61 +729,65 @@ Tests are split into two categories to optimize CI speed and developer workflow:
 ### Writing Tests
 
 **Unit Test Pattern:**
+
 ```typescript
 // product.service.spec.ts
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi } from "vitest";
 
-describe('ProductService', () => {
-  it('should create product', () => {
-    const mockRepo = { create: vi.fn() }
-    const service = new ProductService(mockRepo)
+describe("ProductService", () => {
+  it("should create product", () => {
+    const mockRepo = { create: vi.fn() };
+    const service = new ProductService(mockRepo);
     // Test with mocks
-  })
-})
+  });
+});
 ```
 
 **Integration Test Pattern:**
+
 ```typescript
 // product.repository.integration.spec.ts
-import { getPrismaClient, startPostgres, stopPostgres } from '@vyrak/database/test-utils'
-import { beforeAll, afterAll, describe, it, expect } from 'vitest'
+import { getPrismaClient, startPostgres, stopPostgres } from "@vyrak/database/test-utils";
+import { beforeAll, afterAll, describe, it, expect } from "vitest";
 
-describe('ProductRepository Integration', () => {
-  let prisma: PrismaClient
-  let repository: ProductRepository
+describe("ProductRepository Integration", () => {
+  let prisma: PrismaClient;
+  let repository: ProductRepository;
 
   beforeAll(async () => {
     try {
-      await startPostgres()
-      prisma = getPrismaClient()
-      repository = new ProductRepository(prisma)
+      await startPostgres();
+      prisma = getPrismaClient();
+      repository = new ProductRepository(prisma);
     } catch (error) {
-      console.warn('PostgreSQL setup failed, skipping integration tests:', error)
+      console.warn("PostgreSQL setup failed, skipping integration tests:", error);
     }
-  })
+  });
 
   afterAll(async () => {
-    await stopPostgres()
-  })
+    await stopPostgres();
+  });
 
-  it('should create product in real database', async () => {
-    if (!prisma) return // Skip if setup failed
-    
-    const product = await repository.create({ name: 'Test' })
-    expect(product.id).toBeDefined()
-  })
-})
+  it("should create product in real database", async () => {
+    if (!prisma) return; // Skip if setup failed
+
+    const product = await repository.create({ name: "Test" });
+    expect(product.id).toBeDefined();
+  });
+});
 ```
 
 ### CI/CD Integration
 
 **Main CI Workflow** (`.github/workflows/ci.yml`):
+
 - Runs on every push/PR to main/develop
 - Executes unit tests only (fast feedback)
 - No service containers needed
 - Generates coverage reports
 
 **Integration Tests Workflow** (`.github/workflows/integration-tests.yml`):
+
 - Runs on push/PR to main/develop
 - Uses PostgreSQL 17 and Redis 7 service containers
 - Runs database migrations before tests
@@ -689,6 +796,7 @@ describe('ProductRepository Integration', () => {
 ### Running Tests Locally
 
 **Development:**
+
 ```bash
 # Unit tests (fast, no Docker needed)
 yarn test:unit              # Run once
@@ -702,7 +810,9 @@ yarn test:integration:watch # Watch mode
 yarn test                   # Run everything
 yarn test:watch             # Watch all
 ```
+
 **CI:**
+
 - Unit tests run automatically on all PRs/pushes
 - Integration tests run on push/PR to main/develop branches
 - Coverage reports uploaded to Codecov
@@ -714,11 +824,13 @@ E2E test suite using **Playwright Test** for critical user flows.
 **Location:** `apps/e2e/`
 
 **Test Coverage:**
+
 - Authentication flows (login, register, session persistence, auth guards)
 - Dashboard access and navigation
 - 23 test cases total
 
 **Running Tests:**
+
 ```bash
 # All tests (headless)
 yarn test:e2e
@@ -737,18 +849,21 @@ yarn workspace @vyrak/e2e test:report
 ```
 
 **Setup:**
+
 1. Install Playwright browsers: `yarn workspace @vyrak/e2e install:browsers`
 2. Seed test user: `yarn db:seed:test`
 3. Start dev servers: `yarn dev`
 4. Run tests
 
 **Architecture:**
+
 - **Page Objects:** Organized by domain (auth, dashboard)
 - **Fixtures:** Reusable auth setup with storage state
 - **Helpers:** API helpers for test data, storage helpers for localStorage
 - **Test Data:** Faker.js for generating unique test data
 
 **CI Integration:**
+
 - Tests run automatically on PR and push to main
 - Uses GitHub Actions with PostgreSQL service container
 - HTML reports uploaded as artifacts
@@ -813,6 +928,33 @@ To skip hooks temporarily: `LEFTHOOK=0 git commit`
 - Use React.memo for expensive components
 - Lazy load images and heavy dependencies
 
+### Frontend Chat
+
+**Real-time Communication (apps/web/src/):**
+
+Tech Refinement workspace uses WebSocket (Socket.IO) for bidirectional real-time chat.
+
+**WebSocket Hook:**
+
+- `hooks/use-websocket-chat.ts` - Socket.IO client hook
+- Auto-connect with JWT authentication from localStorage
+- Typing indicators with debounce
+- Connection status tracking (`isConnected`)
+- Optimistic UI updates for user messages
+
+**Component:**
+
+- `components/workflows/tech-refinement-workspace.tsx`
+- Always uses `useWebSocketChat` (no feature flags)
+- Connection status indicator (green = connected, red = disconnected)
+- Typing indicators UI
+- Message streaming with tool activity display
+
+**Events:**
+
+- Client → Server: `chat:join`, `chat:send`, `typing:start`, `typing:stop`
+- Server → Client: `chat:thinking`, `chat:delta`, `chat:tool`, `chat:complete`, `chat:error`
+
 ### Build
 
 - Turborepo caching for faster builds
@@ -826,11 +968,13 @@ To skip hooks temporarily: `LEFTHOOK=0 git commit`
 Vyrak supports two workspace modes for workflow execution:
 
 **Clone Mode (Default):**
+
 - Each workflow run clones the repository into an isolated workspace
 - Simple and safe for development
 - Slower (30-60s per workspace) and uses more disk (~500MB per run)
 
 **Worktree Mode (Production):**
+
 - Uses git worktree to create lightweight workspaces from a shared main repository
 - 6-12x faster (2-5s per workspace) and 10x more disk efficient (~50MB per run)
 - Ideal for production environments with concurrent workflows

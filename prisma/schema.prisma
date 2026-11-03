@@ -349,6 +349,7 @@ model ConversationSession {
 
   messages ConversationMessage[]
 
+  @@unique([workflowId, phase])
   @@index([organizationId, workflowId, phase])
   @@index([organizationId, workflowId, status])
   @@map("conversation_sessions")

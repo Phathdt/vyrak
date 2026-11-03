@@ -11,20 +11,6 @@ export class ResponseLoggerInterceptor implements NestInterceptor {
     const response = context.switchToHttp().getResponse()
     const { method, url, body, query, params } = request
 
-    // Skip logging for SSE endpoints to avoid "headers already sent" errors
-    const isSSE = url.includes('/chat-stream') || request.headers.accept?.includes('text/event-stream')
-
-    if (isSSE) {
-      // For SSE, only log the initial request without response logging
-      this.logger.log({
-        message: 'SSE Request',
-        method,
-        url,
-        traceId: request.traceId,
-      })
-      return next.handle()
-    }
-
     // Log the request with body, query params, and route params if they exist
     this.logger.log({
       message: 'Incoming Request',

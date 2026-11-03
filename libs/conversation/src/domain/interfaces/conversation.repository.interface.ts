@@ -11,6 +11,7 @@ import type {
 export interface IConversationRepository {
   // Session operations
   createSession(input: CreateSessionInput): Promise<ConversationSession>
+  getOrCreateSession(input: CreateSessionInput): Promise<ConversationSession>
   findSessionById(sessionId: string): Promise<ConversationSession | null>
   findActiveSessionByWorkflowAndPhase(workflowId: string, phase: ConversationPhase): Promise<ConversationSession | null>
   findSessionsByWorkflow(workflowId: string): Promise<ConversationSession[]>
