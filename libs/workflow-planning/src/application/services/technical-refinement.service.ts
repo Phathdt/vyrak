@@ -552,14 +552,14 @@ You have access to the project repository for scouting existing patterns. Use Re
 
   private async parseImplementationPlanWithClaude(planContent: string): Promise<ParsedImplementationTask[]> {
     try {
-      const prompt = `Analyze this Implementation Plan and extract ONLY the actionable tasks from Phase sections.
+      const prompt = `Analyze this Implementation Plan and extract Phases as sub-tasks.
 
 IMPORTANT RULES:
-1. ONLY extract tasks from sections that start with "### Phase N:" or "## Phase N:"
-2. IGNORE all tasks in "Success Criteria", "Acceptance Criteria", or any non-Phase sections
-3. Each task should be a numbered or bulleted checkbox item like "1. [ ] Task title" or "- [ ] Task title"
-4. Extract task metadata: description, acceptance criteria, dependencies, estimate, files
-5. Return as JSON array
+1. Each Phase (e.g., "### Phase 1: Setup Dependencies") becomes ONE sub-task
+2. Phase title becomes the task title
+3. Extract the Goal, Duration, and Dependencies from each Phase section
+4. The numbered tasks inside each Phase become acceptanceCriteria items
+5. Return as JSON array with one entry per Phase
 
 Implementation Plan:
 ${planContent}
@@ -568,24 +568,49 @@ Return JSON in this exact format:
 {
   "tasks": [
     {
-      "key": "phase-1-1.1",
-      "title": "Task title",
-      "description": "Task description",
-      "acceptanceCriteria": ["criterion 1", "criterion 2"],
-      "dependencyKeys": ["phase-1-1.2"],
+      "key": "phase-1",
+      "title": "Setup Dependencies và Base Configuration",
+      "description": "Goal from the phase description",
+      "acceptanceCriteria": [
+        "Cài đặt React Router DOM v7",
+        "Cài đặt TanStack Query v5",
+        "Cài đặt Axios cho HTTP client",
+        "Tạo cấu trúc thư mục routing"
+      ],
+      "dependencyKeys": [],
       "phaseKey": "phase-1",
-      "phaseTitle": "Phase title",
+      "phaseTitle": "Setup Dependencies và Base Configuration",
       "phaseOrder": 1,
       "taskOrder": 1,
       "executionOrder": 1,
-      "isParallel": true,
-      "estimate": "2h",
-      "files": ["src/file.ts"]
+      "isParallel": false,
+      "estimate": "0.5 day",
+      "files": []
+    },
+    {
+      "key": "phase-2",
+      "title": "Setup TanStack Query Provider",
+      "description": "Goal from phase 2",
+      "acceptanceCriteria": [
+        "Tạo QueryClient configuration",
+        "Tạo Axios instance với interceptors",
+        "Update main.tsx với QueryClientProvider",
+        "Add TanStack Query DevTools"
+      ],
+      "dependencyKeys": ["phase-1"],
+      "phaseKey": "phase-2",
+      "phaseTitle": "Setup TanStack Query Provider",
+      "phaseOrder": 2,
+      "taskOrder": 2,
+      "executionOrder": 2,
+      "isParallel": false,
+      "estimate": "0.5 day",
+      "files": []
     }
   ]
 }
 
-CRITICAL: Only include tasks from Phase sections. Ignore tasks in Success Criteria, Acceptance, Rollback, or any other non-Phase sections.`
+CRITICAL: Extract PHASES as tasks, not individual checkbox items. One Phase = One Task.`
 
       const jsonResponse = await this.callAnthropicAPI(prompt)
       return jsonResponse.tasks || []

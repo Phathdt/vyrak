@@ -61,6 +61,10 @@ export class WorkflowPhaseOrchestratorService {
       phaseId: phase.id,
       phaseKey,
       runType,
+      metadata: {
+        orgId: workflow.organizationId,
+        projectId: workflow.projectId,
+      },
     }
 
     await this.runPublisher.enqueuePhaseRun(job)

@@ -30,7 +30,7 @@ services:
     image: floci/floci:latest
     container_name: vyrak-floci
     ports:
-      - "4566:4566"  # S3-compatible API
+      - "4566:4566" # S3-compatible API
     environment:
       - SERVICES=s3
       - AWS_DEFAULT_REGION=us-east-1
@@ -49,24 +49,24 @@ services:
     image: marlonb/mailcrab:latest
     container_name: vyrak-mailcrab
     ports:
-      - "1080:1080"  # Web interface
-      - "1025:1025"  # SMTP server
+      - "1080:1080" # Web interface
+      - "1025:1025" # SMTP server
     restart: unless-stopped
 
-  # bullboard:
-  #   image: deadly0/bull-board
-  #   container_name: vyrak-bullboard
-  #   ports:
-  #     - "4000:3000"
-  #   environment:
-  #     REDIS_HOST: redis
-  #     REDIS_PORT: 6379
-  #     REDIS_PASSWORD: ""
-  #     BULL_PREFIX: bull
-  #   depends_on:
-  #     redis:
-  #       condition: service_healthy
-  #   restart: unless-stopped
+  bullboard:
+    image: deadly0/bull-board
+    container_name: vyrak-bullboard
+    ports:
+      - "4000:3000"
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ""
+      BULL_PREFIX: bull
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
 
   # api:
   #   build:

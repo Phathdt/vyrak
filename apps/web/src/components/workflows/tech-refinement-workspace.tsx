@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { SubTasksTable } from '@/components/workflows/sub-tasks-table'
 import { useToast } from '@/hooks/use-toast'
-import { useWebSocketChat } from '@/hooks/use-websocket-chat'
+import { useWebSocketChat, type Message } from '@/hooks/use-websocket-chat'
 
 // Legacy type for file changes (to be implemented in WebSocket later)
 export interface FileChangeEvent {
@@ -29,13 +29,6 @@ const TECH_REFINEMENT_STARTERS = [
   'Break down implementation into phases with specific files to create/modify.',
   'Find similar patterns in the codebase I can reuse for this feature.',
 ]
-
-type TechRefinementMessage = {
-  id: string
-  role: 'user' | 'assistant' | 'system' | 'event'
-  content: string
-  timestamp: Date
-}
 
 function FileChangeBadge({ event }: { event: FileChangeEvent }) {
   const icon = event.changeType === 'file.created' ? '📄' : '✏️'
@@ -60,7 +53,7 @@ function TechRefinementMessageList({
   onSaveAsArtifact,
   isSaving,
 }: {
-  messages: TechRefinementMessage[]
+  messages: Message[]
   streamingContent?: string
   isStreaming?: boolean
   toolActivity?: string
@@ -205,7 +198,7 @@ export function TechRefinementWorkspace({ orgId, projectId, workflowId, onError 
     () =>
       (sessionData?.messages ?? []).map((msg) => ({
         ...msg,
-        role: msg.role as 'user' | 'assistant' | 'system' | 'event',
+        role: msg.role as Message['role'],
       })),
     [sessionData?.messages]
   )
@@ -294,12 +287,7 @@ export function TechRefinementWorkspace({ orgId, projectId, workflowId, onError 
 
       <div className='flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border bg-muted/50'>
         <TechRefinementMessageList
-          messages={messages.map((msg) => ({
-            id: msg.id,
-            role: msg.role,
-            content: msg.content,
-            timestamp: new Date(msg.createdAt),
-          }))}
+          messages={messages}
           streamingContent={streamingContent}
           isStreaming={isStreaming}
           toolActivity={toolActivity}

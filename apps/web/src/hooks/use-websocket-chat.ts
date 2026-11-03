@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { io, Socket } from 'socket.io-client'
 
-interface Message {
+export interface Message {
   id: string
   role: 'user' | 'assistant' | 'system' | 'event'
   content: string
@@ -82,6 +82,7 @@ export function useWebSocketChat({
 
     // Chat events
     socket.on('chat:user_message_saved', (data: { messageId: string; content: string }) => {
+      console.log('[WebSocket] User message saved:', data)
       // Replace optimistic message with real message from database
       setMessages((prev) =>
         prev.map((msg) =>

@@ -22,6 +22,7 @@ export interface AgentRequest {
   workingDirectory?: string // Workspace path for tools
   allowedTools?: string[] // Tool restrictions
   timeoutMs?: number // Execution timeout
+  maxTurns?: number // Max agent turns (default: 8, implementation: 100)
 }
 
 /**

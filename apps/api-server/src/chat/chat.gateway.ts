@@ -201,7 +201,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       let fullResponse = ''
       let assistantMessageId: string | null = null
 
+      this.logger.log(`[ChatGateway] Starting stream processing`, 'ChatGateway')
+
       for await (const event of stream) {
+        this.logger.log(`[ChatGateway] Stream event type: ${event.type}`, 'ChatGateway')
+
         switch (event.type) {
           case 'thinking':
             client.emit('chat:thinking', { content: event.content })
@@ -210,6 +214,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           case 'delta':
             fullResponse += event.content
             client.emit('chat:delta', { content: event.content })
+            this.logger.log(`[ChatGateway] Accumulated response length: ${fullResponse.length}`, 'ChatGateway')
             break
 
           case 'tool':
@@ -218,10 +223,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
           case 'complete':
             assistantMessageId = event.messageId
-            client.emit('chat:complete', {
-              messageId: event.messageId,
-              content: event.content,
-            })
+            this.logger.log(`[ChatGateway] Received complete event with messageId: ${assistantMessageId}`, 'ChatGateway')
+            // Don't emit chat:complete here - we'll emit it after the loop with fullResponse
             break
 
           case 'error':
@@ -230,8 +233,19 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         }
       }
 
-      // Stream completed - publish event for worker to save assistant message
+      this.logger.log(
+        `[ChatGateway] Stream loop finished. fullResponse length: ${fullResponse.length}, assistantMessageId: ${assistantMessageId}`,
+        'ChatGateway'
+      )
+
+      // Stream completed - emit complete event and publish to worker
       if (fullResponse && assistantMessageId) {
+        // Emit complete to client with full accumulated response
+        client.emit('chat:complete', {
+          messageId: assistantMessageId,
+          content: fullResponse,
+        })
+
         this.logger.log(`Stream completed, publishing event for worker to save`, 'ChatGateway')
 
         // Publish message complete event with metadata for worker to save
@@ -249,6 +263,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         })
 
         this.logger.log(`Published event for worker to save assistant message`, 'ChatGateway')
+      } else {
+        this.logger.warn(
+          `[ChatGateway] Skipping publish - fullResponse: ${fullResponse.length} chars, assistantMessageId: ${assistantMessageId}`,
+          'ChatGateway'
+        )
       }
     } catch (error) {
       this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Chat send error', 'ChatGateway')

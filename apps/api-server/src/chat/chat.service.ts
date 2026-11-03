@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
+import { randomUUID } from 'node:crypto'
 import { IConversationService, CONVERSATION_SERVICE, MessageRole } from '@vyrak/conversation'
 import { EnhancedLogger } from '@vyrak/custom-logger'
 import { IEventBus, EVENT_BUS, EventType } from '@vyrak/event-bus'
@@ -40,7 +41,7 @@ export class ChatService {
    * Stream chat with Agent SDK and publish events to Event Bus
    */
   async *streamChat(params: StreamChatParams): AsyncGenerator<ChatEvent> {
-    const { workflowId, sessionId, userId, message, orgId, projectId, model, phase } = params
+    const { workflowId, sessionId, message, orgId, projectId, model, phase } = params
 
     try {
       // Get repository path
@@ -50,17 +51,6 @@ export class ChatService {
         yield { type: 'error', message: 'No repository linked' }
         return
       }
-
-      // Publish user message event
-      await this.publishEvent(EventType.AGENT_MESSAGE_USER, {
-        type: EventType.AGENT_MESSAGE_USER,
-        workflowId,
-        sessionId,
-        userId,
-        message,
-        metadata: { repoPath, orgId, projectId },
-        timestamp: Date.now(),
-      })
 
       // Get workflow for system prompt
       const workflow = await this.workflowRepository.findById(workflowId)
@@ -101,6 +91,9 @@ You have access to the project repository for scouting existing patterns. Use Re
 
       this.logger.log(`[ChatService] Starting Agent SDK query`, 'ChatService')
 
+      let fullResponse = ''
+      const messageId = randomUUID()
+
       for await (const agentMessage of query({
         prompt: promptWithHistory,
         options: {
@@ -125,6 +118,8 @@ You have access to the project repository for scouting existing patterns. Use Re
 
               // Text delta
               if (block.type === 'text' && block.text) {
+                fullResponse += block.text
+
                 await this.publishEvent(EventType.AGENT_MESSAGE_DELTA, {
                   type: EventType.AGENT_MESSAGE_DELTA,
                   workflowId,
@@ -175,6 +170,14 @@ You have access to the project repository for scouting existing patterns. Use Re
           // Process pending file changes (workers will handle artifact creation)
           pendingFileChanges.length = 0
         }
+      }
+
+      this.logger.log(`[ChatService] Agent SDK query completed. Response length: ${fullResponse.length}`, 'ChatService')
+
+      // Emit complete event after loop finishes
+      if (fullResponse) {
+        yield { type: 'complete', content: fullResponse, messageId }
+        this.logger.log(`[ChatService] Emitted complete event with messageId: ${messageId}`, 'ChatService')
       }
     } catch (error) {
       this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Chat stream error', 'ChatService')
@@ -262,17 +265,45 @@ You help product teams clarify requirements through:
 3. **PRD Creation**: Structure findings into a comprehensive PRD document
 4. **Stakeholder Alignment**: Ensure all stakeholders have shared understanding
 
+## Tools Available
+- **Read**: Read existing files to understand project context
+- **Glob**: Find files matching patterns
+- **Grep**: Search for text patterns across files
+- **Write**: Create PRD document files in the repository
+- **Edit**: Update existing files
+
+## Workflow
+1. **Discovery Phase**: Ask clarifying questions to gather requirements
+2. **Documentation Phase**: Once requirements are clear, create a PRD document using the Write tool
+
+## Creating PRD Documents
+When requirements are sufficiently clarified, create a PRD file:
+- **Path**: \`docs/prd/prd-{feature-slug}.md\`
+- **Format**: Use clear markdown structure with sections:
+  - Overview (Purpose, Goals, Target Users)
+  - Scope (In Scope, Out of Scope)
+  - User Stories
+  - Functional Requirements
+  - Non-Functional Requirements
+  - Acceptance Criteria
+  - Dependencies
+  - Risks & Mitigations
+  - Success Metrics
+
 ## Approach
 - Start by understanding the "why" behind the feature
 - Ask about target users, use cases, and success metrics
 - Clarify scope, priorities, and dependencies
 - Help identify edge cases and potential challenges
 - Guide toward actionable, testable requirements
+- **When ready**: Use Write tool to create the PRD document in \`docs/prd/\`
 
 ## Output
 Focus on collaborative discovery rather than jumping to solutions. Ask thoughtful questions to help the team articulate their vision clearly.
 
-Keep responses concise and conversational. Use follow-up questions to dig deeper into requirements.`
+Keep responses concise and conversational. Use follow-up questions to dig deeper into requirements.
+
+**IMPORTANT**: After gathering enough information, proactively create a PRD document using the Write tool. The file will be automatically saved as an artifact.`
   }
 
   /**

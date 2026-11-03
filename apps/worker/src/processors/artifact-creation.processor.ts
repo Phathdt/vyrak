@@ -3,6 +3,12 @@ import { IArtifactService, ARTIFACT_SERVICE } from '@vyrak/artifact'
 import { EnhancedLogger } from '@vyrak/custom-logger'
 import { DatabaseService } from '@vyrak/database'
 import { AgentToolUseEventSchema, IEventBus, EVENT_BUS } from '@vyrak/event-bus'
+import {
+  IWorkflowRepository,
+  WORKFLOW_REPOSITORY,
+  IWorkflowPhaseRepository,
+  WORKFLOW_PHASE_REPOSITORY,
+} from '@vyrak/workflow-core'
 import * as fs from 'fs/promises'
 import * as path from 'path'
 
@@ -18,6 +24,8 @@ export class ArtifactCreationProcessor implements OnModuleInit {
   constructor(
     @Inject(EVENT_BUS) private readonly eventBus: IEventBus,
     @Inject(ARTIFACT_SERVICE) private readonly artifactService: IArtifactService,
+    @Inject(WORKFLOW_REPOSITORY) private readonly workflowRepository: IWorkflowRepository,
+    @Inject(WORKFLOW_PHASE_REPOSITORY) private readonly workflowPhaseRepository: IWorkflowPhaseRepository,
     private readonly databaseService: DatabaseService,
     enhancedLogger: EnhancedLogger
   ) {
@@ -76,14 +84,26 @@ export class ArtifactCreationProcessor implements OnModuleInit {
       // Read file content
       const content = await fs.readFile(absolutePath, 'utf-8')
 
+      // Get current phase ID for the workflow
+      const workflow = await this.workflowRepository.findById(workflowId)
+      let currentPhaseId: string | null = null
+
+      if (workflow?.currentPhaseKey) {
+        // Find the phase using repository
+        const phases = await this.workflowPhaseRepository.findByWorkflowId(workflowId)
+        const currentPhase = phases.find((p) => p.key === workflow.currentPhaseKey)
+        currentPhaseId = currentPhase?.id || null
+      }
+
       // Upload artifact
       await this.artifactService.uploadArtifact(
         workflowId,
-        'document',
+        this.getArtifactType(relativePath),
         relativePath,
         path.basename(relativePath),
         content,
         {
+          phaseId: currentPhaseId,
           fileName: path.basename(relativePath),
           mimeType: this.getMimeType(relativePath),
           metadata: {
@@ -95,7 +115,7 @@ export class ArtifactCreationProcessor implements OnModuleInit {
         }
       )
 
-      this.logger.log(`Artifact created: ${relativePath}`)
+      this.logger.log(`Artifact created: ${relativePath} (phaseId: ${currentPhaseId})`)
 
       // Publish success event
       await this.eventBus.publish('artifact.created', {
@@ -157,6 +177,19 @@ export class ArtifactCreationProcessor implements OnModuleInit {
   private shouldSaveAsArtifact(filePath: string): boolean {
     const patterns = [/^plans\//i, /^docs\/adr\//i, /^docs\/prd\//i]
     return patterns.some((pattern) => pattern.test(filePath))
+  }
+
+  private getArtifactType(filePath: string): string {
+    if (/^docs\/prd\//i.test(filePath)) {
+      return 'prd'
+    }
+    if (/^docs\/adr\//i.test(filePath)) {
+      return 'adr'
+    }
+    if (/^plans\//i.test(filePath)) {
+      return 'implementation-plan'
+    }
+    return 'document'
   }
 
   private async waitForFile(filePath: string, opts: { retries: number; initialDelay: number }): Promise<void> {

@@ -94,6 +94,7 @@ export class ClaudeCodeRunner {
       workingDirectory: params.workspacePath,
       allowedTools: params.allowTools,
       maxTokens: 8192,
+      maxTurns: 100, // High limit for implementation tasks
     })
 
     return {

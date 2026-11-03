@@ -53,7 +53,7 @@ export class ClaudeAgentSdkAdapter implements IAIAgentPort {
         model: this.model,
         cwd: request.workingDirectory,
         allowedTools: request.allowedTools || [],
-        maxTurns: 8,
+        maxTurns: request.maxTurns || 8, // Default 8, can be overridden per request
         systemPrompt: request.systemPrompt
           ? {
               type: 'custom',
@@ -96,7 +96,7 @@ export class ClaudeAgentSdkAdapter implements IAIAgentPort {
         model: this.model,
         cwd: request.workingDirectory,
         allowedTools: request.allowedTools || [],
-        maxTurns: 8,
+        maxTurns: request.maxTurns || 8, // Default 8, can be overridden per request
         systemPrompt: request.systemPrompt
           ? {
               type: 'custom',

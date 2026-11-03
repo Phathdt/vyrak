@@ -47,6 +47,10 @@ export const WorkflowPhaseRunJobSchema = z.object({
   phaseId: z.string().uuid(),
   phaseKey: z.string(),
   runType: z.enum([PhaseRunType.IMPLEMENTATION, PhaseRunType.REVIEW, PhaseRunType.QA]),
+  metadata: z.object({
+    orgId: z.string().uuid(),
+    projectId: z.string().uuid().optional(),
+  }),
 })
 
 export type WorkflowPhaseRunJob = z.infer<typeof WorkflowPhaseRunJobSchema>

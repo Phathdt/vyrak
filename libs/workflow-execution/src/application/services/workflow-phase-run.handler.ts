@@ -1,4 +1,5 @@
 import { ConversationPhase, IConversationService, MessageRole } from '@vyrak/conversation'
+import { EnhancedLogger } from '@vyrak/custom-logger'
 import { DatabaseService } from '@vyrak/database'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
@@ -16,13 +17,20 @@ const execFileAsync = promisify(execFile)
 export class WorkflowPhaseRunHandler {
   private readonly gitWorktree: GitWorktreeService
   private readonly claudeCode: ClaudeCodeRunner
+  private readonly logger: EnhancedLogger
 
   constructor(
     private readonly databaseService: DatabaseService,
     private readonly conversationService: IConversationService,
     aiAgentService: IAIAgentService,
-    configService: IConfigService
+    configService: IConfigService,
+    enhancedLogger?: EnhancedLogger
   ) {
+    this.logger = enhancedLogger?.with({ context: 'WorkflowPhaseRunHandler' }) ?? ({
+      log: console.log,
+      error: console.error,
+      warn: console.warn,
+    } as any)
     this.gitWorktree = new GitWorktreeService(configService)
     this.claudeCode = new ClaudeCodeRunner(configService, aiAgentService)
   }
@@ -59,9 +67,13 @@ export class WorkflowPhaseRunHandler {
   }
 
   private async runImplementation(job: WorkflowPhaseRunJob): Promise<void> {
+    this.logger.log(`[Implementation] Loading workflow context: workflowId=${job.workflowId}`)
     const context = await this.loadWorkflowContext(job)
+
+    this.logger.log(`[Implementation] Building planning transcript: workflowId=${job.workflowId}`)
     const planText = await this.buildPlanningTranscript(job.workflowId)
 
+    this.logger.log(`[Implementation] Preparing worktree: projectId=${context.projectId} phaseKey=${job.phaseKey}`)
     const { workspacePath, branch } = await this.gitWorktree.prepareWorktree({
       organizationId: job.organizationId,
       projectId: context.projectId,
@@ -69,15 +81,52 @@ export class WorkflowPhaseRunHandler {
       repositoryName: context.repositoryName,
       phaseKey: job.phaseKey,
     })
+    this.logger.log(`[Implementation] Worktree ready: branch=${branch} workspace=${workspacePath}`)
 
+    this.logger.log(`[Implementation] Starting Claude Code agent (maxTurns: 100): workflowId=${job.workflowId}`)
     const agentResult = await this.claudeCode.runImplementation({
       workspacePath,
       planText,
       workflowId: job.workflowId,
     })
+    this.logger.log(`[Implementation] Claude Code completed: workflowId=${job.workflowId} stopReason=${agentResult.stopReason}`)
 
+    this.logger.log(`[Implementation] Committing changes: workspacePath=${workspacePath}`)
     const commitSha = await this.commitWorkspaceChanges(workspacePath, job.workflowId)
+    if (commitSha) {
+      this.logger.log(`[Implementation] Committed: sha=${commitSha.slice(0, 8)}`)
+    } else {
+      this.logger.log(`[Implementation] No changes to commit`)
+    }
 
+    // Push branch to remote
+    let pushSuccess = false
+    if (commitSha) {
+      this.logger.log(`[Implementation] Pushing branch: branch=${branch}`)
+      pushSuccess = await this.pushBranch(workspacePath, branch)
+      if (pushSuccess) {
+        this.logger.log(`[Implementation] Branch pushed successfully: branch=${branch}`)
+      } else {
+        this.logger.warn(`[Implementation] Failed to push branch: branch=${branch}`)
+      }
+    }
+
+    // Create PR if push succeeded
+    let pullRequestUrl: string | undefined
+    let pullRequestNumber: number | undefined
+    if (pushSuccess) {
+      this.logger.log(`[Implementation] Creating pull request: branch=${branch}`)
+      const prResult = await this.createPullRequest(workspacePath, branch, job.workflowId, agentResult.content)
+      pullRequestUrl = prResult.url
+      pullRequestNumber = prResult.number
+      if (pullRequestUrl) {
+        this.logger.log(`[Implementation] PR created: url=${pullRequestUrl} number=${pullRequestNumber}`)
+      } else {
+        this.logger.warn(`[Implementation] Failed to create PR`)
+      }
+    }
+
+    this.logger.log(`[Implementation] Finishing phase run: workflowId=${job.workflowId} status=AWAITING_USER`)
     await this.finishPhaseRun(
       job,
       {
@@ -85,6 +134,8 @@ export class WorkflowPhaseRunHandler {
         runType: PhaseRunType.IMPLEMENTATION,
         branch,
         workspacePath,
+        pullRequestUrl,
+        pullRequestNumber,
         finishedAt: new Date().toISOString(),
       },
       {
@@ -93,6 +144,7 @@ export class WorkflowPhaseRunHandler {
         usedFakeAgent: agentResult.usedFakeAgent,
       }
     )
+    this.logger.log(`[Implementation] Phase run completed successfully: workflowId=${job.workflowId}`)
   }
 
   private async runReview(job: WorkflowPhaseRunJob): Promise<void> {
@@ -188,6 +240,68 @@ export class WorkflowPhaseRunHandler {
       return sha.trim()
     } catch {
       return null
+    }
+  }
+
+  private async pushBranch(workspacePath: string, branch: string): Promise<boolean> {
+    try {
+      await execFileAsync('git', ['push', '-u', 'origin', branch], { cwd: workspacePath })
+      return true
+    } catch (error) {
+      // Log but don't fail - user can push manually
+      console.error('Failed to push branch:', error)
+      return false
+    }
+  }
+
+  private async createPullRequest(
+    workspacePath: string,
+    branch: string,
+    workflowId: string,
+    implementationLog: string
+  ): Promise<{ url?: string; number?: number }> {
+    try {
+      // Get workflow title from database
+      const workflow = await this.databaseService.client.workflow.findFirst({
+        where: { id: workflowId },
+        select: { title: true },
+      })
+
+      const title = workflow?.title || `Implementation for ${workflowId.slice(0, 8)}`
+      const body = `## Implementation Summary
+
+Automated implementation by Vyrak workflow system.
+
+**Workflow ID:** ${workflowId}
+**Branch:** ${branch}
+
+### Changes
+
+${implementationLog.slice(0, 2000)}
+
+---
+*This PR was automatically created by Vyrak workflow automation.*`
+
+      // Create PR using gh CLI
+      const { stdout } = await execFileAsync(
+        'gh',
+        ['pr', 'create', '--title', title, '--body', body, '--base', 'main', '--head', branch],
+        { cwd: workspacePath }
+      )
+
+      // Extract PR URL from output
+      const urlMatch = stdout.match(/https:\/\/github\.com\/[^\s]+/)
+      const url = urlMatch?.[0]
+
+      // Extract PR number from URL
+      const numberMatch = url?.match(/\/pull\/(\d+)/)
+      const number = numberMatch ? parseInt(numberMatch[1], 10) : undefined
+
+      return { url, number }
+    } catch (error) {
+      // Log but don't fail - user can create PR manually
+      console.error('Failed to create PR:', error)
+      return {}
     }
   }
 
