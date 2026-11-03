@@ -44,7 +44,7 @@ export class PlanningChatRequestDto extends createZodDto(PlanningChatRequestSche
 
 export const PlanningMessageSchema = z.object({
   id: z.string().uuid(),
-  role: z.enum([MessageRole.USER, MessageRole.ASSISTANT, MessageRole.SYSTEM]),
+  role: z.enum([MessageRole.USER, MessageRole.ASSISTANT, MessageRole.SYSTEM, MessageRole.EVENT]),
   content: z.string(),
   createdAt: z.string(),
 })

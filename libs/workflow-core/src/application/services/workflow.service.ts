@@ -2,11 +2,13 @@ import {
   DEFAULT_WORKFLOW_PHASE_DEFINITIONS,
   InvalidWorkflowStatusError,
   WorkflowNotFoundError,
+  WorkflowPhaseStatus,
   WorkflowStatus,
 } from '../../domain'
 
 import type {
   CreateWorkflowInput,
+  IWorkflowPhaseRepository,
   IWorkflowPhaseService,
   IWorkflowRepository,
   IWorkflowRepositoryRepository,
@@ -21,7 +23,8 @@ export class WorkflowService implements IWorkflowService {
   constructor(
     private readonly workflowRepository: IWorkflowRepository,
     private readonly workflowRepositoryRepository: IWorkflowRepositoryRepository,
-    private readonly workflowPhaseService: IWorkflowPhaseService
+    private readonly workflowPhaseService: IWorkflowPhaseService,
+    private readonly workflowPhaseRepository: IWorkflowPhaseRepository
   ) {}
 
   async create(
@@ -57,6 +60,9 @@ export class WorkflowService implements IWorkflowService {
         currentPhaseKey: firstPhase.key,
         definitionSnapshot: { type: data.type },
       })
+      // Update first phase status to IN_PROGRESS and set startedAt
+      await this.workflowPhaseRepository.updateStatus(firstPhase.id, WorkflowPhaseStatus.IN_PROGRESS)
+      await this.workflowPhaseRepository.update(firstPhase.id, { startedAt: new Date() })
     }
 
     // Set workflow to ACTIVE status

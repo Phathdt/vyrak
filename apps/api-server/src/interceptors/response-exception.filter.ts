@@ -9,6 +9,11 @@ export class ResponseExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>()
     const request = ctx.getRequest<Request>()
 
+    // Skip if headers already sent (e.g., SSE streams)
+    if (response.headersSent) {
+      return
+    }
+
     const traceId = (request as Request & { traceId?: string }).traceId || uuidv7()
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR

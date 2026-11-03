@@ -13,8 +13,11 @@ import type { RepositoryContextService } from '@vyrak/workflow-core'
 
 describe('WorkflowPlanningService - generatePRDArtifact', () => {
   let service: WorkflowPlanningService
-  let mockConversationService: IConversationService
-  let mockArtifactService: IArtifactService
+  let mockConversationService: ReturnType<typeof vi.fn>
+  let mockArtifactService: {
+    parseArtifactTags: ReturnType<typeof vi.fn>
+    uploadArtifact: ReturnType<typeof vi.fn>
+  }
 
   beforeEach(() => {
     mockConversationService = {
@@ -24,7 +27,7 @@ describe('WorkflowPlanningService - generatePRDArtifact', () => {
     mockArtifactService = {
       parseArtifactTags: vi.fn(),
       uploadArtifact: vi.fn(),
-    } as any
+    }
 
     const mockConfigService = {
       anthropic: { model: 'claude-3-5-sonnet-20241022' },
@@ -36,9 +39,8 @@ describe('WorkflowPlanningService - generatePRDArtifact', () => {
       {} as IWorkflowRepository,
       {} as IWorkflowRepositoryRepository,
       {} as IGitRepositoryService,
-      {} as RepositoryContextService,
-      mockConfigService,
-      mockArtifactService
+      mockArtifactService as any,
+      {} as any // workflowPhaseRepository
     )
   })
 
@@ -76,7 +78,7 @@ This feature will add user authentication to the system.
     ])
 
     // Mock artifact parsing
-    vi.mocked(mockArtifactService.parseArtifactTags).mockReturnValue([
+    mockArtifactService.parseArtifactTags.mockReturnValue([
       {
         type: 'prd',
         key: 'authentication-prd',
@@ -88,7 +90,7 @@ This feature will add user authentication to the system.
     ])
 
     // Mock artifact upload
-    vi.mocked(mockArtifactService.uploadArtifact).mockResolvedValue({
+    mockArtifactService.uploadArtifact.mockResolvedValue({
       id: 'artifact-123',
       workflowId,
       phaseId,
@@ -141,7 +143,7 @@ This feature will add user authentication to the system.
     ])
 
     // Mock artifact parsing returning empty array
-    vi.mocked(mockArtifactService.parseArtifactTags).mockReturnValue([])
+    mockArtifactService.parseArtifactTags.mockReturnValue([])
 
     await expect(service.generatePRDArtifact(workflowId, sessionId, phaseId)).rejects.toThrow(InvalidPlanningStateError)
     await expect(service.generatePRDArtifact(workflowId, sessionId, phaseId)).rejects.toThrow(

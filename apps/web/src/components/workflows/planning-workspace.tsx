@@ -1,5 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 
 import { getErrorMessage } from '@/api/client'
 import {
@@ -100,8 +101,6 @@ export function PlanningWorkspace({ orgId, projectId, workflowId, onError }: Pla
   const [snippetPath, setSnippetPath] = useState('')
   const [snippetContent, setSnippetContent] = useState('')
 
-  const { data: sessionData } = useWorkflowPlanningControllerGetPlanningSession(orgId, projectId, workflowId)
-
   const { mutateAsync: createPRDFromMessage, isPending: isCreatingPRD } =
     useWorkflowPlanningControllerGeneratePRDFromMessage()
 
@@ -111,6 +110,15 @@ export function PlanningWorkspace({ orgId, projectId, workflowId, onError }: Pla
     projectId,
     workflowId,
     onError,
+  })
+
+  // Pausing the query while streaming keeps a background refetch from re-running the
+  // sync effect below, which would replace locally accumulated messages mid-stream.
+  const { data: sessionData } = useWorkflowPlanningControllerGetPlanningSession(orgId, projectId, workflowId, {
+    query: {
+      enabled: !isStreaming,
+      staleTime: 30000,
+    },
   })
 
   // Initialize messages from session data
@@ -148,7 +156,9 @@ export function PlanningWorkspace({ orgId, projectId, workflowId, onError }: Pla
       })
       // Refresh artifacts list
       await queryClient.invalidateQueries({ queryKey: ['artifacts', workflowId] })
-      onError(`✅ PRD artifact created: ${result.title}`)
+      toast.success('PRD artifact created', {
+        description: result.title,
+      })
     } catch (err) {
       onError(getErrorMessage(err) || 'Failed to create PRD artifact')
     }

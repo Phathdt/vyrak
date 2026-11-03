@@ -66,9 +66,10 @@ import type { IGitRepositoryRepository } from '@vyrak/project'
       useFactory: (
         workflowRepo: IWorkflowRepository,
         workflowRepoRepo: IWorkflowRepositoryRepository,
-        workflowPhaseService: IWorkflowPhaseService
-      ) => new WorkflowService(workflowRepo, workflowRepoRepo, workflowPhaseService),
-      inject: [WORKFLOW_REPOSITORY, WORKFLOW_REPOSITORY_REPOSITORY, WORKFLOW_PHASE_SERVICE],
+        workflowPhaseService: IWorkflowPhaseService,
+        workflowPhaseRepo: IWorkflowPhaseRepository
+      ) => new WorkflowService(workflowRepo, workflowRepoRepo, workflowPhaseService, workflowPhaseRepo),
+      inject: [WORKFLOW_REPOSITORY, WORKFLOW_REPOSITORY_REPOSITORY, WORKFLOW_PHASE_SERVICE, WORKFLOW_PHASE_REPOSITORY],
     },
     {
       provide: WORKFLOW_PHASE_SERVICE,

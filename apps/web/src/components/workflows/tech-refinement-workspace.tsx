@@ -1,10 +1,13 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 
 import { getErrorMessage } from '@/api/client'
+import { useWorkflowPlanningControllerGeneratePRDFromMessage } from '@/api/generated/workflows-planning/workflows-planning'
 import { ChatMarkdown } from '@/components/chat-markdown'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { useTechRefinementChatStream } from '@/hooks/use-tech-refinement-chat-stream'
+import { useTechRefinementChatStream, type FileChangeEvent } from '@/hooks/use-tech-refinement-chat-stream'
+import { useToast } from '@/hooks/use-toast'
 
 const TECH_REFINEMENT_STARTERS = [
   'Scout the codebase and suggest where this feature should live following hexagonal architecture.',
@@ -20,16 +23,36 @@ type TechRefinementMessage = {
   timestamp: Date
 }
 
+function FileChangeBadge({ event }: { event: FileChangeEvent }) {
+  const icon = event.changeType === 'file.created' ? '📄' : '✏️'
+  const label = event.changeType === 'file.created' ? 'Created' : 'Updated'
+  const fileName = event.path.split('/').pop() || event.path
+
+  return (
+    <div className='inline-flex items-center gap-2 rounded-full bg-green-100 dark:bg-green-900/30 px-3 py-1 text-xs text-green-800 dark:text-green-200 border border-green-200 dark:border-green-800'>
+      <span>{icon}</span>
+      <span className='font-medium'>{label}</span>
+      <span className='font-mono'>{fileName}</span>
+    </div>
+  )
+}
+
 function TechRefinementMessageList({
   messages,
   streamingContent,
   isStreaming,
   toolActivity,
+  fileChanges,
+  onSaveAsArtifact,
+  isSaving,
 }: {
   messages: TechRefinementMessage[]
   streamingContent?: string
   isStreaming?: boolean
   toolActivity?: string
+  fileChanges?: FileChangeEvent[]
+  onSaveAsArtifact?: (messageId: string) => void
+  isSaving?: boolean
 }) {
   return (
     <div className='flex min-h-0 flex-1 flex-col overflow-y-auto p-4'>
@@ -50,7 +73,14 @@ function TechRefinementMessageList({
               }`}
             >
               {msg.role === 'assistant' ? (
-                <ChatMarkdown content={msg.content} />
+                <>
+                  <ChatMarkdown content={msg.content} />
+                  <div className='mt-3 flex gap-2 border-t pt-3'>
+                    <Button size='sm' variant='outline' onClick={() => onSaveAsArtifact?.(msg.id)} disabled={isSaving}>
+                      {isSaving ? 'Saving...' : '📝 Save as ADR/Plan'}
+                    </Button>
+                  </div>
+                </>
               ) : (
                 <p className='whitespace-pre-wrap'>{msg.content}</p>
               )}
@@ -64,6 +94,15 @@ function TechRefinementMessageList({
                 <span className='animate-pulse'>🔧</span>
                 {toolActivity}
               </span>
+            </div>
+          </div>
+        )}
+        {fileChanges && fileChanges.length > 0 && (
+          <div className='flex justify-start'>
+            <div className='flex flex-wrap gap-2'>
+              {fileChanges.map((event, idx) => (
+                <FileChangeBadge key={`${event.path}-${idx}`} event={event} />
+              ))}
             </div>
           </div>
         )}
@@ -95,22 +134,54 @@ type TechRefinementWorkspaceProps = {
 }
 
 export function TechRefinementWorkspace({ orgId, projectId, workflowId, onError }: TechRefinementWorkspaceProps) {
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
   const [inputMessage, setInputMessage] = useState('')
   const [showSnippet, setShowSnippet] = useState(false)
   const [snippetPath, setSnippetPath] = useState('')
   const [snippetContent, setSnippetContent] = useState('')
 
+  const { mutateAsync: saveAsArtifact, isPending: isSavingArtifact } =
+    useWorkflowPlanningControllerGeneratePRDFromMessage()
+
   // Use SSE for real-time chat with code scouting
-  const { messages, streamingContent, isStreaming, toolActivity, sendMessage } = useTechRefinementChatStream({
-    orgId,
-    projectId,
-    workflowId,
-    onError,
-  })
+  const { messages, streamingContent, isStreaming, toolActivity, fileChanges, sendMessage } =
+    useTechRefinementChatStream({
+      orgId,
+      projectId,
+      workflowId,
+      onError,
+    })
 
   // TODO: Fetch initial tech refinement session when backend endpoint is ready
   // For now, messages start empty
   // const { data: sessionData } = useWorkflowTechRefinementControllerGetSession(...)
+
+  const handleSaveAsArtifact = async (messageId: string) => {
+    try {
+      await saveAsArtifact({
+        orgId,
+        projectId,
+        id: workflowId,
+        data: { messageId },
+      })
+
+      // Refresh artifacts list
+      await queryClient.invalidateQueries({ queryKey: ['artifacts', workflowId] })
+      toast({
+        title: 'Success',
+        description: 'Technical artifact saved successfully',
+      })
+    } catch (err) {
+      const errorMsg = getErrorMessage(err) || 'Failed to save artifact'
+      onError(errorMsg)
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: errorMsg,
+      })
+    }
+  }
 
   const handleSend = async () => {
     if (!inputMessage.trim() || isStreaming) return
@@ -159,6 +230,9 @@ export function TechRefinementWorkspace({ orgId, projectId, workflowId, onError 
           streamingContent={streamingContent}
           isStreaming={isStreaming}
           toolActivity={toolActivity}
+          fileChanges={fileChanges}
+          onSaveAsArtifact={handleSaveAsArtifact}
+          isSaving={isSavingArtifact}
         />
       </div>
 

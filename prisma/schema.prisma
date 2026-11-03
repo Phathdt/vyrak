@@ -358,7 +358,7 @@ model ConversationMessage {
   id             String  @id @default(uuid())
   organizationId String  @map("organization_id")
   sessionId      String  @map("session_id")
-  role           String  // user | assistant | system
+  role           String  // user | assistant | system | event
   content        String  @db.Text
   metadata       Json?
   createdAt      DateTime @default(now()) @map("created_at")

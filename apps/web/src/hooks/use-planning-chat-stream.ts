@@ -75,7 +75,24 @@ export function usePlanningChatStream({ orgId, projectId, workflowId, onError }:
         })
 
         if (!response.ok) {
+          // Try to read error as JSON first
+          const errorContentType = response.headers.get('content-type')
+
+          if (errorContentType?.includes('application/json')) {
+            const errorData = await response.json()
+            throw new Error(errorData.message || response.statusText)
+          }
+
           throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        }
+
+        // Validate SSE content type
+        const contentType = response.headers.get('content-type')
+        if (!contentType?.includes('text/event-stream')) {
+          const errorText = await response.text()
+          throw new Error(
+            `Expected SSE stream (text/event-stream) but got ${contentType}. Response: ${errorText.slice(0, 200)}`
+          )
         }
 
         if (!response.body) {
@@ -83,69 +100,73 @@ export function usePlanningChatStream({ orgId, projectId, workflowId, onError }:
         }
 
         const reader = response.body.getReader()
-        const decoder = new TextDecoder()
-        let buffer = ''
+        try {
+          const decoder = new TextDecoder()
+          let buffer = ''
 
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
+          while (true) {
+            const { done, value } = await reader.read()
+            if (done) break
 
-          buffer += decoder.decode(value, { stream: true })
-          const lines = buffer.split('\n')
+            buffer += decoder.decode(value, { stream: true })
+            const lines = buffer.split('\n')
 
-          // Keep last incomplete line in buffer
-          buffer = lines.pop() || ''
+            // Keep last incomplete line in buffer
+            buffer = lines.pop() || ''
 
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              try {
-                const data: ChatStreamEvent = JSON.parse(line.slice(6))
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                try {
+                  const data: ChatStreamEvent = JSON.parse(line.slice(6))
 
-                switch (data.type) {
-                  case 'user_message':
-                    // Replace optimistic message with confirmed message
-                    setMessages((prev) =>
-                      prev.map((m) =>
-                        m.id === optimisticId
-                          ? {
-                              ...m,
-                              id: data.messageId!,
-                            }
-                          : m
+                  switch (data.type) {
+                    case 'user_message':
+                      // Replace optimistic message with confirmed message
+                      setMessages((prev) =>
+                        prev.map((m) =>
+                          m.id === optimisticId
+                            ? {
+                                ...m,
+                                id: data.messageId!,
+                              }
+                            : m
+                        )
                       )
-                    )
-                    break
+                      break
 
-                  case 'assistant_delta':
-                    // Append streaming content
-                    setStreamingContent((prev) => prev + (data.content || ''))
-                    break
+                    case 'assistant_delta':
+                      // Append streaming content
+                      setStreamingContent((prev) => prev + (data.content || ''))
+                      break
 
-                  case 'assistant_complete':
-                    // Add complete assistant message
-                    setMessages((prev) => [
-                      ...prev,
-                      {
-                        id: data.messageId!,
-                        role: 'assistant',
-                        content: data.content!,
-                        createdAt: new Date().toISOString(),
-                      },
-                    ])
-                    setStreamingContent('')
-                    setIsStreaming(false)
-                    break
+                    case 'assistant_complete':
+                      // Add complete assistant message
+                      setMessages((prev) => [
+                        ...prev,
+                        {
+                          id: data.messageId!,
+                          role: 'assistant',
+                          content: data.content!,
+                          createdAt: new Date().toISOString(),
+                        },
+                      ])
+                      setStreamingContent('')
+                      setIsStreaming(false)
+                      break
 
-                  case 'error':
-                    onError?.(data.error || 'Unknown error occurred')
-                    setIsStreaming(false)
-                    break
+                    case 'error':
+                      onError?.(data.error || 'Unknown error occurred')
+                      setIsStreaming(false)
+                      break
+                  }
+                } catch (parseError) {
+                  console.error('Failed to parse SSE event:', line, parseError)
                 }
-              } catch (parseError) {
-                console.error('Failed to parse SSE event:', line, parseError)
               }
             }
           }
+        } finally {
+          reader.releaseLock()
         }
       } catch (error) {
         if (error instanceof Error) {

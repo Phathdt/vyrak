@@ -7,6 +7,8 @@ import {
   IWorkflowPhaseRepository,
 } from '@vyrak/workflow-core'
 
+import { PlanningPromptBuilder } from '../utils/planning-prompt-builder'
+
 import type {
   IWorkflowPlanningService,
   PlanningChatInput,
@@ -21,6 +23,8 @@ import type { IGitRepositoryService } from '@vyrak/project'
 import type { IWorkflowRepository, IWorkflowRepositoryRepository, WorkflowRepositoryEntity } from '@vyrak/workflow-core'
 
 export class WorkflowPlanningService implements IWorkflowPlanningService {
+  private readonly promptBuilder: PlanningPromptBuilder
+
   constructor(
     private readonly conversationService: IConversationService,
     private readonly aiAgentPort: IAIAgentPort,
@@ -29,7 +33,13 @@ export class WorkflowPlanningService implements IWorkflowPlanningService {
     private readonly gitRepositoryService: IGitRepositoryService,
     private readonly artifactService: IArtifactService,
     private readonly workflowPhaseRepository: IWorkflowPhaseRepository
-  ) {}
+  ) {
+    this.promptBuilder = new PlanningPromptBuilder(
+      conversationService,
+      workflowRepositoryRepository,
+      gitRepositoryService
+    )
+  }
 
   async getPlanningSession(
     workflowId: string,
@@ -109,18 +119,13 @@ export class WorkflowPlanningService implements IWorkflowPlanningService {
     const hasPRDArtifact = existingArtifacts.some((a: ArtifactEntity) => a.type === 'prd')
 
     if (!hasPRDArtifact && this.containsArtifactTag(aiResponse.content)) {
-      try {
-        const phases = await this.workflowPhaseRepository.findByWorkflowId(input.workflowId)
-        const planningPhase = phases.find((p) => p.key === 'planning')
+      const phases = await this.workflowPhaseRepository.findByWorkflowId(input.workflowId)
+      const planningPhase = phases.find((p) => p.key === 'planning')
 
-        if (planningPhase) {
-          const artifact = await this.generatePRDArtifact(input.workflowId, session.id, planningPhase.id)
-          artifactCreated = true
-          artifactId = artifact.id
-        }
-      } catch (error) {
-        // Log error but don't fail the chat response
-        console.error('Failed to auto-create artifact:', error)
+      if (planningPhase) {
+        const artifact = await this.generatePRDArtifact(input.workflowId, session.id, planningPhase.id)
+        artifactCreated = true
+        artifactId = artifact.id
       }
     }
 
@@ -194,40 +199,14 @@ export class WorkflowPlanningService implements IWorkflowPlanningService {
     organizationId: string,
     projectId: string
   ): Promise<string> {
-    const repositories = await this.loadLinkedRepositories(organizationId, projectId, workflow.id)
-    const classification = workflow.classification as { reasoning?: string; type?: string } | null
-
-    const brainstormSessions = await this.conversationService.getWorkflowSessions(workflow.id)
-    const brainstorm = brainstormSessions
-      .filter((s) => s.phase === ConversationPhase.BRAINSTORMING)
-      .sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime())[0]
-
-    let brainstormExcerpt = ''
-    if (brainstorm) {
-      const msgs = await this.conversationService.getMessages(brainstorm.id)
-      brainstormExcerpt = msgs
-        .filter((m) => m.role === MessageRole.USER || m.role === MessageRole.ASSISTANT)
-        .slice(-6)
-        .map((m) => `${m.role.toUpperCase()}: ${m.content}`)
-        .join('\n\n')
-    }
-
-    const { buildPlanningPrompt } = await import('../../domain/prompts/planning-agent-prompt')
-
-    return buildPlanningPrompt({
-      workflowTitle: workflow.title,
-      workflowDescription: workflow.description || undefined,
-      workflowType: classification?.type || 'STORY',
-      repositories,
-      brainstormExcerpt: brainstormExcerpt || undefined,
-    })
+    return this.promptBuilder.build(workflow, organizationId, projectId)
   }
 
   private toAIMessages(messages: ConversationMessage[]): Message[] {
     return messages
       .filter((msg) => msg.role === MessageRole.USER || msg.role === MessageRole.ASSISTANT)
       .map((msg) => ({
-        role: msg.role,
+        role: msg.role as 'user' | 'assistant',
         content: msg.content,
       }))
   }

@@ -120,7 +120,40 @@ yarn db:migrate
 yarn db:studio
 ```
 
-### 4. Development
+### 4. S3 Storage Setup (Floci)
+
+For local development, Vyrak uses Floci as an S3-compatible storage for workflow artifacts:
+
+```bash
+# Start Floci container and create S3 bucket
+yarn docker:floci
+yarn floci:setup
+```
+
+This will:
+- Start the Floci container (lightweight S3-compatible storage)
+- Automatically read S3 configuration from `apps/api-server/.env`
+- Create the `vyrak-artifacts` bucket
+- Verify the setup
+
+**Configuration** (in `apps/api-server/.env`):
+```bash
+S3__ENDPOINT=http://localhost:4566
+S3__REGION=us-east-1
+S3__BUCKET=vyrak-artifacts
+S3__ACCESS_KEY_ID=test
+S3__SECRET_ACCESS_KEY=test
+S3__FORCE_PATH_STYLE=true
+```
+
+**Available Commands:**
+- `yarn docker:floci` - Start Floci container
+- `yarn floci:setup` - Create S3 bucket (auto-detects AWS CLI or uses Docker)
+- `yarn floci:stop` - Stop Floci container
+
+**Note:** For production, replace Floci with real AWS S3 and update the credentials in `.env`.
+
+### 5. Development
 
 ```bash
 # Start all applications
@@ -132,7 +165,7 @@ yarn dev:web      # Web app on http://localhost:5173
 yarn dev:worker   # Background worker
 ```
 
-### 5. Generate API Client
+### 6. Generate API Client
 
 ```bash
 # Generate OpenAPI spec from NestJS
@@ -183,10 +216,13 @@ yarn generate:api
 
 ### Docker
 
-- `yarn docker:up` - Start all containers (PostgreSQL, Redis, MailCrab)
+- `yarn docker:up` - Start all containers (PostgreSQL, Redis, Floci, MailCrab)
 - `yarn docker:down` - Stop all containers
 - `yarn docker:logs` - View container logs
 - `yarn docker:ps` - List running containers
+- `yarn docker:floci` - Start Floci S3 container only
+- `yarn floci:setup` - Create S3 bucket (auto-detects AWS CLI or uses Docker)
+- `yarn floci:stop` - Stop Floci container
 
 ### Workspace Management
 
@@ -234,11 +270,20 @@ See `docs/workspace-worktree-migration.md` for detailed configuration and migrat
 
 When you run `yarn docker:up`, the following services will be available:
 
-- **PostgreSQL** - Database on `localhost:5433`
-- **Redis** - Cache and queue on `localhost:6379`
-- **MailCrab** - Email testing tool
-  - Web interface: http://localhost:1080
-  - SMTP server: `localhost:1025`
+- **PostgreSQL** - `localhost:5433` - Primary database
+- **Redis** - `localhost:6379` - Cache and session store
+- **Floci** - `localhost:4566` - S3-compatible storage for artifacts (run `yarn floci:setup` to create bucket)
+- **MailCrab** - `localhost:1080` - Email testing interface
+
+### Using Floci (S3 Storage)
+
+Floci provides S3-compatible storage for local development:
+
+1. Start Floci: `yarn docker:floci`
+2. Create bucket: `yarn floci:setup`
+3. Access artifacts at: `http://localhost:4566/vyrak-artifacts`
+
+The setup script automatically reads configuration from `apps/api-server/.env` and uses Docker AWS CLI if local AWS CLI is not available.
 
 ### Using MailCrab
 

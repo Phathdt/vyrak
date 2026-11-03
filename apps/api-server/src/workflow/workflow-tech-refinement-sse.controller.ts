@@ -1,6 +1,7 @@
 import { Body, Controller, Inject, Param, Post, Req, Res, UseGuards } from '@nestjs/common'
 import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger'
 import { Throttle } from '@nestjs/throttler'
+import { IArtifactService, ARTIFACT_SERVICE } from '@vyrak/artifact'
 import { IConversationService, CONVERSATION_SERVICE, ConversationPhase, MessageRole } from '@vyrak/conversation'
 import { IConfigService, CONFIG_SERVICE } from '@vyrak/custom-config'
 import { EnhancedLogger } from '@vyrak/custom-logger'
@@ -39,6 +40,7 @@ export class WorkflowTechRefinementSSEController {
     @Inject(CONVERSATION_SERVICE) private readonly conversationService: IConversationService,
     @Inject(WORKFLOW_REPOSITORY) private readonly workflowRepository: IWorkflowRepository,
     @Inject(CONFIG_SERVICE) private readonly configService: IConfigService,
+    @Inject(ARTIFACT_SERVICE) private readonly artifactService: IArtifactService,
     private readonly repositoryContextService: RepositoryContextService,
     private readonly enhancedLogger: EnhancedLogger
   ) {
@@ -181,39 +183,143 @@ You have access to the project repository for scouting existing patterns. Use Re
 - Reference real file paths in your ADRs and Implementation Plan
 `
 
-      // 10. Stream with Agent SDK
+      // 10. Setup file change handler for auto-artifact creation
+      const FileChangeEventHandler = (await import('@vyrak/workflow-planning')).FileChangeEventHandler
+      const fileChangeHandler = new FileChangeEventHandler(this.artifactService, this.logger)
+
+      // 11. Stream with Agent SDK
       const { query } = await import('@anthropic-ai/claude-agent-sdk')
       let fullResponse = ''
+      const pendingFileChanges: Array<{ path: string; toolName: string }> = []
+
+      this.logger.log(`[AgentSDK] Starting query`, 'TechRefinementSSE')
 
       for await (const message of query({
         prompt: promptWithHistory,
         options: {
           model: this.model,
-          allowedTools: ['Read', 'Glob', 'Grep'],
-          maxTurns: 15,
+          allowedTools: ['Read', 'Glob', 'Grep', 'Write', 'Edit'],
+          maxTurns: 20, // More turns for creating ADR/Plan files
           cwd: repoPath,
         },
       })) {
+        this.logger.log(`[AgentSDK] Message type: ${message.type}`, 'TechRefinementSSE')
+
+        // Check for tool uses and thinking in assistant messages
+        if (message.type === 'assistant' && 'message' in message) {
+          const assistantMsg = (message as Record<string, unknown>).message as Record<string, unknown>
+
+          // Check each content block
+          if (Array.isArray(assistantMsg?.content)) {
+            for (const block of assistantMsg.content) {
+              this.logger.log(`[AgentSDK] Block type: ${block.type}`, 'TechRefinementSSE')
+
+              // Handle thinking blocks
+              if (block.type === 'thinking' && block.thinking) {
+                // Stream thinking to frontend as tool activity
+                sendSSE({
+                  type: 'tool_use',
+                  content: '🤔 Thinking...',
+                })
+              }
+
+              // Handle text blocks
+              if (block.type === 'text' && block.text) {
+                // Stream text (each block is independent complete text)
+                sendSSE({
+                  type: 'assistant_delta',
+                  content: block.text,
+                })
+              }
+
+              // Handle tool_use blocks
+              if (block.type === 'tool_use') {
+                const toolName = block.name
+                const toolInput = block.input
+
+                this.logger.log(
+                  `[AgentSDK] tool_use - name: ${toolName}, hasInput: ${!!toolInput}`,
+                  'TechRefinementSSE'
+                )
+
+                // Show tool activity in UI
+                sendSSE({
+                  type: 'tool_use',
+                  content: `🔧 Using ${toolName}...`,
+                  tool: {
+                    name: toolName,
+                    input: toolInput,
+                  },
+                })
+
+                // Track Write/Edit for auto-artifact creation
+                if ((toolName === 'Write' || toolName === 'Edit') && toolInput) {
+                  const filePath =
+                    (toolInput as Record<string, unknown>).file_path || (toolInput as Record<string, unknown>).path
+
+                  this.logger.log(
+                    `[FileChange] Tool: ${toolName}, FilePath: ${filePath}, Type: ${typeof filePath}`,
+                    'TechRefinementSSE'
+                  )
+
+                  if (typeof filePath === 'string') {
+                    // Store for processing after tool execution completes
+                    pendingFileChanges.push({ path: filePath, toolName })
+                    this.logger.log(`[FileChange] Queued for later: ${filePath}`, 'TechRefinementSSE')
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        // Handle result messages - tool execution completed
+        if (message.type === 'result' && !message.is_error) {
+          this.logger.log(`[AgentSDK] Result received, processing pending file changes`, 'TechRefinementSSE')
+
+          // Process all pending file changes now that tool execution is complete
+          for (const { path: filePath, toolName } of pendingFileChanges) {
+            const event = {
+              type: toolName === 'Write' ? ('file.created' as const) : ('file.updated' as const),
+              path: filePath,
+              toolName,
+              timestamp: new Date().toISOString(),
+            }
+
+            this.logger.log(`[FileChange] Triggering handler for: ${filePath}`, 'TechRefinementSSE')
+
+            // Handle file change asynchronously
+            fileChangeHandler.handleFileChange(event, workflowId, repoPath).catch((error) => {
+              this.logger.error(error instanceof Error ? error : new Error(String(error)), 'File change handler')
+            })
+          }
+
+          // Clear pending changes
+          pendingFileChanges.length = 0
+        }
+
         // Stop streaming if client disconnected
         if (!streamActive || abortController.signal.aborted) {
           break
         }
 
-        // Handle result message
-        if (message.type === 'result' && message.subtype === 'success' && !message.is_error) {
-          fullResponse = message.result
-          // Send full response as delta
-          sendSSE({
-            type: 'assistant_delta',
-            content: message.result,
-          })
-        } else if (message.type === 'result' && message.subtype !== 'success') {
-          const errorMsg =
-            'error_message' in message && typeof message.error_message === 'string'
-              ? message.error_message
-              : 'Agent execution failed'
-          sendError(errorMsg)
-          return
+        // Agent SDK only emits 'result' messages
+        if (message.type === 'result') {
+          if (message.subtype === 'success' && !message.is_error && 'result' in message) {
+            fullResponse = message.result as string
+            // Send complete response (Agent SDK doesn't stream text incrementally)
+            sendSSE({
+              type: 'assistant_delta',
+              content: fullResponse,
+            })
+          } else if (message.subtype !== 'success' || message.is_error) {
+            const errorMsg =
+              'error_message' in message && typeof message.error_message === 'string'
+                ? message.error_message
+                : 'Agent execution failed'
+            sendError(errorMsg)
+            return
+          }
         }
       }
 
@@ -277,56 +383,47 @@ You help developers refine technical implementation details through:
 4. **Technical Validation**: Verify proposed solutions against codebase constraints
 
 ## Tools Available
-- **Read**: Read file contents (use for understanding specific implementations)
-- **Glob**: Find files matching patterns (use for discovering similar files or components)
-- **Grep**: Search for text patterns across files (use for finding usages, patterns, imports)
+- **Read**: Read file contents to understand specific implementations
+- **Glob**: Find files matching patterns to discover similar files or components
+- **Grep**: Search for text patterns across files to find usages, patterns, imports
+- **Write**: Create new ADR or implementation plan files in the repository
+- **Edit**: Update existing files when needed
+
+## File Creation Guidelines
+When creating ADRs or implementation plans, follow the project's conventions:
+
+**For ADRs:**
+- Path: \`docs/adr/adr-{number}-{decision-slug}.md\`
+- Number sequentially starting from 001
+- Include: Status, Context, Decision, Alternatives, Consequences, Implementation Notes
+
+**For Implementation Plans:**
+- Path: \`plans/{date}-{feature-slug}/README.md\`
+- Date format: YYMMDD-HHMM (e.g., 261102-2330)
+- Include: Overview, Phases, Dependencies, Acceptance Criteria, Rollback Strategy
+
+## Workflow
+1. Scout the codebase FIRST using Read, Glob, Grep
+2. Analyze existing patterns and architecture
+3. Create ADR file if architectural decision is needed
+4. Create implementation plan file with specific phases and file paths
+5. Reference real files, classes, and functions in your documentation
+6. Provide concrete, actionable recommendations
 
 ## Guidelines
+- Create files directly in the repository using Write tool
+- Inform the user about created files with their full paths
 - Scout the codebase BEFORE making architectural recommendations
 - Reference specific files, classes, and functions when discussing solutions
 - Consider existing patterns and conventions in the codebase
-- Document trade-offs and alternatives in ADRs
-- Provide actionable, concrete recommendations with real file paths
-- Flag potential risks and edge cases
-- Break down implementation into specific tasks with file locations
+- Keep documentation concise, technical, and actionable
 
-## Output Formats
-When creating an ADR, use:
-\`\`\`markdown
-# ADR-XXX: [Decision Title]
+## Output
+- Use Write tool to create ADR or plan files directly
+- Report the full path of created files to the user
+- Include specific file paths, line numbers when relevant
+- Make documentation concrete and executable
 
-## Status
-Proposed / Accepted / Deprecated
-
-## Context
-What technical problem needs to be solved?
-
-## Decision
-What solution did we choose?
-
-## Alternatives Considered
-### Option 1: [Name]
-**Pros:** ...
-**Cons:** ...
-
-## Consequences
-**Positive:** ...
-**Negative:** ...
-**Neutral:** ...
-
-## Implementation Notes
-- Specific file paths
-- Migration steps
-- Rollback strategy
-\`\`\`
-
-When creating an implementation plan, include:
-- Phase breakdown with clear milestones
-- File-level task list (which files to create/modify)
-- Dependencies between tasks
-- Acceptance criteria per phase
-- Rollback strategy
-
-Respond concisely and technically. Focus on actionable guidance grounded in the actual codebase.`
+Respond concisely and technically. Focus on creating concrete, executable artifacts in the repository.`
   }
 }

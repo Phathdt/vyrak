@@ -2,7 +2,7 @@ import { useState, useCallback, useRef } from 'react'
 
 import { getAuthToken } from '@/lib/api-client'
 
-interface Message {
+export interface Message {
   id: string
   role: 'user' | 'assistant'
   content: string
@@ -10,7 +10,7 @@ interface Message {
 }
 
 interface ChatStreamEvent {
-  type: 'user_message' | 'assistant_delta' | 'assistant_complete' | 'error' | 'tool_use'
+  type: 'user_message' | 'assistant_delta' | 'assistant_complete' | 'error' | 'tool_use' | 'file_change'
   content?: string
   messageId?: string
   error?: string
@@ -20,12 +20,19 @@ interface ChatStreamEvent {
   }
 }
 
+export interface FileChangeEvent {
+  changeType: 'file.created' | 'file.updated'
+  path: string
+  timestamp: string
+}
+
 interface UseTechRefinementChatStreamOptions {
   orgId: string
   projectId: string
   workflowId: string
   onError?: (error: string) => void
   onToolUse?: (toolName: string, toolInput: unknown) => void
+  onFileChange?: (event: FileChangeEvent) => void
 }
 
 export function useTechRefinementChatStream({
@@ -34,11 +41,13 @@ export function useTechRefinementChatStream({
   workflowId,
   onError,
   onToolUse,
+  onFileChange,
 }: UseTechRefinementChatStreamOptions) {
   const [messages, setMessages] = useState<Message[]>([])
   const [streamingContent, setStreamingContent] = useState<string>('')
   const [isStreaming, setIsStreaming] = useState(false)
   const [toolActivity, setToolActivity] = useState<string>('')
+  const [fileChanges, setFileChanges] = useState<FileChangeEvent[]>([])
   const abortControllerRef = useRef<AbortController | null>(null)
 
   const sendMessage = useCallback(
@@ -153,6 +162,19 @@ export function useTechRefinementChatStream({
                       onToolUse?.(data.tool?.name || '', data.tool?.input)
                       break
 
+                    case 'file_change':
+                      // Handle file change event
+                      if (data.content) {
+                        try {
+                          const fileEvent: FileChangeEvent = JSON.parse(data.content)
+                          setFileChanges((prev) => [...prev, fileEvent])
+                          onFileChange?.(fileEvent)
+                        } catch (e) {
+                          console.error('Failed to parse file change event:', e)
+                        }
+                      }
+                      break
+
                     case 'assistant_delta':
                       // Append streaming content
                       setStreamingContent((prev) => prev + (data.content || ''))
@@ -207,7 +229,7 @@ export function useTechRefinementChatStream({
         abortControllerRef.current = null
       }
     },
-    [isStreaming, orgId, projectId, workflowId, onError, onToolUse]
+    [isStreaming, orgId, projectId, workflowId, onError, onToolUse, onFileChange]
   )
 
   const cancelStream = useCallback(() => {
@@ -228,6 +250,7 @@ export function useTechRefinementChatStream({
     streamingContent,
     isStreaming,
     toolActivity,
+    fileChanges,
     sendMessage,
     cancelStream,
     setInitialMessages,

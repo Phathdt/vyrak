@@ -8,7 +8,22 @@ export class ResponseLoggerInterceptor implements NestInterceptor {
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const request = context.switchToHttp().getRequest()
+    const response = context.switchToHttp().getResponse()
     const { method, url, body, query, params } = request
+
+    // Skip logging for SSE endpoints to avoid "headers already sent" errors
+    const isSSE = url.includes('/chat-stream') || request.headers.accept?.includes('text/event-stream')
+
+    if (isSSE) {
+      // For SSE, only log the initial request without response logging
+      this.logger.log({
+        message: 'SSE Request',
+        method,
+        url,
+        traceId: request.traceId,
+      })
+      return next.handle()
+    }
 
     // Log the request with body, query params, and route params if they exist
     this.logger.log({
@@ -31,7 +46,7 @@ export class ResponseLoggerInterceptor implements NestInterceptor {
 
     return next.handle().pipe(
       tap({
-        next: (response) => {
+        next: (res) => {
           const endTime = Date.now()
           const duration = endTime - startTime
 
@@ -41,12 +56,12 @@ export class ResponseLoggerInterceptor implements NestInterceptor {
             method,
             url,
             traceId: request.traceId,
-            statusCode: context.switchToHttp().getResponse().statusCode,
+            statusCode: response.statusCode,
             duration: `${duration}ms`,
             ...(Object.keys(body || {}).length > 0 && {
               requestBody: this.sanitizeData(body),
             }),
-            response: this.sanitizeData(response),
+            response: this.sanitizeData(res),
           })
         },
         error: (error) => {

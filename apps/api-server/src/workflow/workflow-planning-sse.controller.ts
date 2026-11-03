@@ -1,16 +1,20 @@
-import { Controller, Inject, Param, Post, Body, Sse, UseGuards, MessageEvent } from '@nestjs/common'
+import { Body, Controller, Inject, Param, Post, Req, Res, UseGuards } from '@nestjs/common'
 import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger'
+import { Throttle } from '@nestjs/throttler'
 import { IAIAgentPort, AI_AGENT_API_PORT } from '@vyrak/ai-agent'
 import { IConversationService, CONVERSATION_SERVICE, ConversationPhase, MessageRole } from '@vyrak/conversation'
+import { EnhancedLogger } from '@vyrak/custom-logger'
 import { IGitRepositoryService, GIT_REPOSITORY_SERVICE } from '@vyrak/project'
 import {
   IWorkflowRepository,
   IWorkflowRepositoryRepository,
   WORKFLOW_REPOSITORY,
   WORKFLOW_REPOSITORY_REPOSITORY,
+  WorkflowNotFoundError,
+  InvalidPlanningStateError,
 } from '@vyrak/workflow-core'
-import { PlanningChatRequestDto } from '@vyrak/workflow-planning'
-import { Observable } from 'rxjs'
+import { PlanningChatRequestDto, PlanningPromptBuilder } from '@vyrak/workflow-planning'
+import { Request, Response } from 'express'
 
 import { AuthGuard } from '../auth'
 import { OrganizationMemberGuard } from '../guards'
@@ -26,119 +30,178 @@ interface ChatStreamData {
 @Controller('api/organizations/:orgId/projects/:projectId/workflows/:id')
 @UseGuards(AuthGuard, OrganizationMemberGuard)
 export class WorkflowPlanningSSEController {
+  private readonly logger: EnhancedLogger
+
   constructor(
     @Inject(CONVERSATION_SERVICE) private readonly conversationService: IConversationService,
     @Inject(AI_AGENT_API_PORT) private readonly aiAgentPort: IAIAgentPort,
     @Inject(WORKFLOW_REPOSITORY) private readonly workflowRepository: IWorkflowRepository,
     @Inject(WORKFLOW_REPOSITORY_REPOSITORY)
     private readonly workflowRepositoryRepository: IWorkflowRepositoryRepository,
-    @Inject(GIT_REPOSITORY_SERVICE) private readonly gitRepositoryService: IGitRepositoryService
-  ) {}
+    @Inject(GIT_REPOSITORY_SERVICE) private readonly gitRepositoryService: IGitRepositoryService,
+    private readonly enhancedLogger: EnhancedLogger
+  ) {
+    this.logger = this.enhancedLogger
+  }
 
   @Post('planning/chat-stream')
   @ApiOperation({
     summary: 'Stream planning chat with SSE (Server-Sent Events)',
-    description: 'Real-time streaming chat for Planning phase. Returns SSE stream with deltas.',
+    description:
+      'Real-time streaming chat for Planning phase. Returns SSE stream with deltas. Rate limited to 10 requests per minute.',
   })
   @ApiParam({ name: 'orgId', description: 'Organization ID' })
   @ApiParam({ name: 'projectId', description: 'Project ID' })
   @ApiParam({ name: 'id', description: 'Workflow ID' })
-  @Sse()
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   async planningChatStream(
+    @Req() req: Request,
+    @Res() res: Response,
     @Param('orgId') orgId: string,
     @Param('projectId') projectId: string,
     @Param('id') workflowId: string,
     @Body() body: PlanningChatRequestDto
-  ): Promise<Observable<MessageEvent>> {
-    return new Observable((observer) => {
-      ;(async () => {
-        try {
-          // 1. Get or create session
-          const session = await this.conversationService.getOrCreateSession(workflowId, ConversationPhase.PLANNING)
+  ): Promise<void> {
+    // Set SSE headers BEFORE any async operations
+    res.setHeader('Content-Type', 'text/event-stream')
+    res.setHeader('Cache-Control', 'no-cache')
+    res.setHeader('Connection', 'keep-alive')
+    res.setHeader('X-Accel-Buffering', 'no') // Disable nginx buffering
+    res.flushHeaders()
 
-          // 2. Format user message
-          const userContent = this.formatUserMessage(body.userMessage, body.codeSnippets)
+    let streamActive = true
+    const abortController = new AbortController()
 
-          // 3. Save user message
-          const userMessage = await this.conversationService.addMessage({
-            sessionId: session.id,
-            role: MessageRole.USER,
-            content: userContent,
-          })
+    // Cleanup function
+    const cleanup = () => {
+      streamActive = false
+      abortController.abort()
+    }
 
-          // 4. Send user message confirmation
-          observer.next({
-            data: JSON.stringify({
-              type: 'user_message',
-              messageId: userMessage.id,
-              content: userMessage.content,
-            } as ChatStreamData),
-          } as MessageEvent)
+    // Listen for client disconnect
+    req.on('close', cleanup)
+    req.on('error', cleanup)
 
-          // 5. Get conversation history
-          const messages = await this.conversationService.getMessages(session.id)
-          const aiMessages = messages
-            .filter((msg) => msg.role === MessageRole.USER || msg.role === MessageRole.ASSISTANT)
-            .map((msg) => ({
-              role: msg.role,
-              content: msg.content,
-            }))
+    // Helper to send SSE event
+    const sendSSE = (data: ChatStreamData) => {
+      if (!streamActive) return
+      try {
+        res.write(`data: ${JSON.stringify(data)}\n\n`)
+      } catch (error) {
+        this.logger.error(error instanceof Error ? error : new Error(String(error)), undefined, 'SSE:WriteStream')
+        streamActive = false
+      }
+    }
 
-          // 6. Build system prompt
-          const workflow = await this.workflowRepository.findById(workflowId)
-          if (!workflow) {
-            throw new Error('Workflow not found')
-          }
+    // Helper to send error and close
+    const sendError = (error: string) => {
+      if (!streamActive) return
+      try {
+        res.write(`event: error\nid: 1\ndata: ${error}\n\n`)
+        res.end()
+      } catch (e) {
+        this.logger.error(e instanceof Error ? e : new Error(String(e)), undefined, 'SSE:SendError')
+      }
+      streamActive = false
+    }
 
-          const systemPrompt = await this.buildPlanningSystemPrompt(workflow, orgId, projectId)
+    try {
+      // 1. Get or create session
+      const session = await this.conversationService.getOrCreateSession(workflowId, ConversationPhase.PLANNING)
 
-          // 7. Stream AI response
-          let fullResponse = ''
-          const streamGenerator = this.aiAgentPort.chatStream({
-            messages: aiMessages,
-            systemPrompt,
-            temperature: 0.3,
-            maxTokens: 4096,
-          })
+      // 2. Format user message
+      const userContent = this.formatUserMessage(body.userMessage, body.codeSnippets)
 
-          for await (const chunk of streamGenerator) {
-            fullResponse += chunk
-            observer.next({
-              data: JSON.stringify({
-                type: 'assistant_delta',
-                content: chunk,
-              } as ChatStreamData),
-            } as MessageEvent)
-          }
+      // 3. Save user message
+      const userMessage = await this.conversationService.addMessage({
+        sessionId: session.id,
+        role: MessageRole.USER,
+        content: userContent,
+      })
 
-          // 8. Save complete AI message
-          const aiMessage = await this.conversationService.addMessage({
-            sessionId: session.id,
-            role: MessageRole.ASSISTANT,
-            content: fullResponse,
-          })
+      // 4. Send user message confirmation
+      sendSSE({
+        type: 'user_message',
+        messageId: userMessage.id,
+        content: userMessage.content,
+      })
 
-          // 9. Send completion event
-          observer.next({
-            data: JSON.stringify({
-              type: 'assistant_complete',
-              messageId: aiMessage.id,
-              content: fullResponse,
-            } as ChatStreamData),
-          } as MessageEvent)
+      // 5. Get conversation history
+      const messages = await this.conversationService.getMessages(session.id)
+      const aiMessages = messages
+        .filter((msg) => msg.role === MessageRole.USER || msg.role === MessageRole.ASSISTANT)
+        .map((msg) => ({
+          role: msg.role as 'user' | 'assistant',
+          content: msg.content,
+        }))
 
-          observer.complete()
-        } catch (error) {
-          observer.next({
-            data: JSON.stringify({
-              type: 'error',
-              error: error instanceof Error ? error.message : 'Unknown error',
-            } as ChatStreamData),
-          } as MessageEvent)
-          observer.error(error)
+      // 6. Build system prompt
+      const workflow = await this.workflowRepository.findById(workflowId)
+      if (!workflow) {
+        throw new WorkflowNotFoundError(workflowId)
+      }
+
+      // Validate workflow is in PLANNING phase
+      if (workflow.currentPhaseKey !== 'planning') {
+        throw new InvalidPlanningStateError(
+          `Planning chat is only available during PLANNING phase. Current phase: ${workflow.currentPhaseKey}`
+        )
+      }
+
+      const systemPrompt = await this.buildPlanningSystemPrompt(workflow, orgId, projectId)
+
+      // 7. Stream AI response
+      let fullResponse = ''
+      const streamGenerator = this.aiAgentPort.chatStream({
+        messages: aiMessages,
+        systemPrompt,
+        temperature: 0.3,
+        maxTokens: 4096,
+      })
+
+      for await (const chunk of streamGenerator) {
+        // Stop streaming if client disconnected
+        if (!streamActive || abortController.signal.aborted) {
+          break
         }
-      })()
-    })
+
+        fullResponse += chunk
+        sendSSE({
+          type: 'assistant_delta',
+          content: chunk,
+        })
+      }
+
+      // 8. Save complete AI message (only if stream completed)
+      if (streamActive && !abortController.signal.aborted) {
+        const aiMessage = await this.conversationService.addMessage({
+          sessionId: session.id,
+          role: MessageRole.ASSISTANT,
+          content: fullResponse,
+        })
+
+        // 9. Send completion event
+        sendSSE({
+          type: 'assistant_complete',
+          messageId: aiMessage.id,
+          content: fullResponse,
+        })
+
+        // Close stream successfully
+        res.end()
+      }
+    } catch (error) {
+      // Log error for debugging
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), undefined, 'SSE:Controller')
+
+      // Send error event and close
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+      sendError(errorMessage)
+    } finally {
+      // Cleanup listeners
+      req.off('close', cleanup)
+      req.off('error', cleanup)
+    }
   }
 
   private formatUserMessage(userMessage: string, codeSnippets?: PlanningChatRequestDto['codeSnippets']): string {
@@ -160,47 +223,12 @@ export class WorkflowPlanningSSEController {
     organizationId: string,
     projectId: string
   ): Promise<string> {
-    const repositories = await this.loadLinkedRepositories(organizationId, projectId, workflow.id)
-    const classification = workflow.classification as { reasoning?: string; type?: string } | null
+    const promptBuilder = new PlanningPromptBuilder(
+      this.conversationService,
+      this.workflowRepositoryRepository,
+      this.gitRepositoryService
+    )
 
-    const brainstormSessions = await this.conversationService.getWorkflowSessions(workflow.id)
-    const brainstorm = brainstormSessions
-      .filter((s) => s.phase === ConversationPhase.BRAINSTORMING)
-      .sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime())[0]
-
-    let brainstormExcerpt = ''
-    if (brainstorm) {
-      const msgs = await this.conversationService.getMessages(brainstorm.id)
-      brainstormExcerpt = msgs
-        .filter((m) => m.role === MessageRole.USER || m.role === MessageRole.ASSISTANT)
-        .slice(-6)
-        .map((m) => `${m.role.toUpperCase()}: ${m.content}`)
-        .join('\n\n')
-    }
-
-    const { buildPlanningPrompt } = await import('@vyrak/workflow-planning')
-
-    return buildPlanningPrompt({
-      workflowTitle: workflow.title,
-      workflowDescription: workflow.description || undefined,
-      workflowType: classification?.type || 'STORY',
-      repositories,
-      brainstormExcerpt: brainstormExcerpt || undefined,
-    })
-  }
-
-  private async loadLinkedRepositories(organizationId: string, projectId: string, workflowId: string) {
-    const links = await this.workflowRepositoryRepository.findByWorkflowId(workflowId)
-    const allRepos = await this.gitRepositoryService.findAllByProject(organizationId, projectId)
-    const linkedIds = new Set(links.map((l) => l.repositoryId))
-
-    return allRepos
-      .filter((repo) => linkedIds.has(repo.id))
-      .map((repo) => ({
-        id: repo.id,
-        name: repo.name,
-        url: repo.url,
-        branch: repo.branch,
-      }))
+    return promptBuilder.build(workflow, organizationId, projectId)
   }
 }
