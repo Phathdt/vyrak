@@ -5,6 +5,7 @@ import { IArtifactService, ARTIFACT_SERVICE } from '@vyrak/artifact'
 import { IConversationService, CONVERSATION_SERVICE, ConversationPhase, MessageRole } from '@vyrak/conversation'
 import { IConfigService, CONFIG_SERVICE } from '@vyrak/custom-config'
 import { EnhancedLogger } from '@vyrak/custom-logger'
+import { IEventBus, EVENT_BUS, EventType } from '@vyrak/event-bus'
 import {
   IWorkflowRepository,
   WORKFLOW_REPOSITORY,
@@ -41,6 +42,7 @@ export class WorkflowTechRefinementSSEController {
     @Inject(WORKFLOW_REPOSITORY) private readonly workflowRepository: IWorkflowRepository,
     @Inject(CONFIG_SERVICE) private readonly configService: IConfigService,
     @Inject(ARTIFACT_SERVICE) private readonly artifactService: IArtifactService,
+    @Inject(EVENT_BUS) private readonly eventBus: IEventBus,
     private readonly repositoryContextService: RepositoryContextService,
     private readonly enhancedLogger: EnhancedLogger
   ) {
@@ -50,6 +52,18 @@ export class WorkflowTechRefinementSSEController {
       throw new Error('ANTHROPIC__MODEL not configured in .env')
     }
     this.model = anthropicConfig.model
+  }
+
+  /**
+   * Helper to publish events to event bus with error handling
+   */
+  private async publishEvent(eventType: string, data: unknown): Promise<void> {
+    try {
+      await this.eventBus.publish(eventType, data)
+    } catch (error) {
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'EventBus:Publish')
+      // Don't throw - continue chat flow even if event publishing fails
+    }
   }
 
   @Post('tech-refinement/chat-stream')
@@ -142,6 +156,21 @@ export class WorkflowTechRefinementSSEController {
         content: userContent,
       })
 
+      // 4.1. Publish user message event
+      await this.publishEvent(EventType.AGENT_MESSAGE_USER, {
+        type: EventType.AGENT_MESSAGE_USER,
+        workflowId,
+        sessionId: session.id,
+        userId: (req.user as { id: string }).id,
+        message: body.userMessage,
+        metadata: {
+          repoPath: await this.repositoryContextService.resolveRepositoryPath(workflowId),
+          orgId: _orgId,
+          projectId: _projectId,
+        },
+        timestamp: Date.now(),
+      })
+
       // 5. Send user message confirmation
       sendSSE({
         type: 'user_message',
@@ -225,6 +254,15 @@ You have access to the project repository for scouting existing patterns. Use Re
 
               // Handle text blocks
               if (block.type === 'text' && block.text) {
+                // Publish message delta event
+                await this.publishEvent(EventType.AGENT_MESSAGE_DELTA, {
+                  type: EventType.AGENT_MESSAGE_DELTA,
+                  workflowId,
+                  sessionId: session.id,
+                  content: block.text,
+                  timestamp: Date.now(),
+                })
+
                 // Stream text (each block is independent complete text)
                 sendSSE({
                   type: 'assistant_delta',
@@ -241,6 +279,25 @@ You have access to the project repository for scouting existing patterns. Use Re
                   `[AgentSDK] tool_use - name: ${toolName}, hasInput: ${!!toolInput}`,
                   'TechRefinementSSE'
                 )
+
+                // Publish tool use event for Write/Edit
+                if ((toolName === 'Write' || toolName === 'Edit') && toolInput) {
+                  const filePath =
+                    (toolInput as Record<string, unknown>).file_path || (toolInput as Record<string, unknown>).path
+
+                  if (typeof filePath === 'string') {
+                    await this.publishEvent(EventType.AGENT_TOOL_USE, {
+                      type: EventType.AGENT_TOOL_USE,
+                      workflowId,
+                      toolName: toolName as 'Write' | 'Edit',
+                      toolInput: toolInput as { file_path?: string; content?: string; pattern?: string },
+                      metadata: {
+                        repoPath,
+                      },
+                      timestamp: Date.now(),
+                    })
+                  }
+                }
 
                 // Show tool activity in UI
                 sendSSE({
@@ -329,6 +386,16 @@ You have access to the project repository for scouting existing patterns. Use Re
           sessionId: session.id,
           role: MessageRole.ASSISTANT,
           content: fullResponse,
+        })
+
+        // 11.1. Publish message complete event
+        await this.publishEvent(EventType.AGENT_MESSAGE_COMPLETE, {
+          type: EventType.AGENT_MESSAGE_COMPLETE,
+          workflowId,
+          sessionId: session.id,
+          messageId: aiMessage.id,
+          content: fullResponse,
+          timestamp: Date.now(),
         })
 
         // 12. Send completion event

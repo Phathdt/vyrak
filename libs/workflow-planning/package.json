@@ -19,6 +19,7 @@
     "@vyrak/artifact": "*",
     "@vyrak/conversation": "*",
     "@vyrak/custom-config": "*",
+    "@vyrak/custom-logger": "*",
     "@vyrak/project": "*",
     "@vyrak/workflow-core": "*",
     "@vyrak/workflow-execution": "*",

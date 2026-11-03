@@ -10,6 +10,7 @@ import { AuthModule } from '@vyrak/auth'
 import { CustomConfigModule } from '@vyrak/custom-config'
 import { CustomLoggerModule } from '@vyrak/custom-logger'
 import { DatabaseModule } from '@vyrak/database'
+import { EventBusModule } from '@vyrak/event-bus'
 import { OrganizationModule } from '@vyrak/organization'
 import { ProjectModule } from '@vyrak/project'
 import { UserModule } from '@vyrak/user'
@@ -72,6 +73,7 @@ import {
       name: 'example',
     }),
     ...workflowPhaseAutomationImports,
+    EventBusModule,
     AuthModule,
     UserModule,
     OrganizationModule,

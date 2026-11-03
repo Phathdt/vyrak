@@ -2851,6 +2851,7 @@ components:
             - user
             - assistant
             - system
+            - event
         content:
           type: string
         createdAt:
@@ -2884,6 +2885,7 @@ components:
                   - user
                   - assistant
                   - system
+                  - event
               content:
                 type: string
               createdAt:
