@@ -2,11 +2,12 @@ import { Injectable, Inject, OnModuleInit } from '@nestjs/common'
 import { IConversationService, CONVERSATION_SERVICE, MessageRole } from '@vyrak/conversation'
 import { EnhancedLogger } from '@vyrak/custom-logger'
 import { DatabaseService } from '@vyrak/database'
-import { IEventBus, EVENT_BUS } from '@vyrak/event-bus'
-
-import type { AgentMessageUserEvent, AgentMessageCompleteEvent } from '@vyrak/event-bus'
+import { IEventBus, EVENT_BUS, AgentMessageUserEventSchema, AgentMessageCompleteEventSchema } from '@vyrak/event-bus'
 
 import { withTenantContext } from '../common/decorators/with-tenant-context.decorator'
+import { WorkerProcessingError } from '../common/errors/worker-error'
+
+import type { AgentMessageUserEvent, AgentMessageCompleteEvent } from '@vyrak/event-bus'
 
 @Injectable()
 export class MessageStoreProcessor implements OnModuleInit {
@@ -22,10 +23,11 @@ export class MessageStoreProcessor implements OnModuleInit {
   }
 
   async onModuleInit() {
-    // Subscribe to user messages with tenant context wrapper
-    await this.eventBus.subscribe<AgentMessageUserEvent>(
+    // Validate before the tenant wrapper reads metadata.orgId, so malformed events never set tenant context
+    const userHandler = withTenantContext(this.databaseService, this.handleUserMessage.bind(this))
+    await this.eventBus.subscribe<unknown>(
       'agent.message.user',
-      withTenantContext(this.databaseService, this.handleUserMessage.bind(this)),
+      (rawEvent) => userHandler(this.parseEvent('agent.message.user', AgentMessageUserEventSchema, rawEvent)),
       {
         group: 'message-workers',
         consumer: `message-worker-${process.pid}-user`,
@@ -33,10 +35,11 @@ export class MessageStoreProcessor implements OnModuleInit {
       }
     )
 
-    // Subscribe to complete messages with tenant context wrapper
-    await this.eventBus.subscribe<AgentMessageCompleteEvent>(
+    const completeHandler = withTenantContext(this.databaseService, this.handleCompleteMessage.bind(this))
+    await this.eventBus.subscribe<unknown>(
       'agent.message.complete',
-      withTenantContext(this.databaseService, this.handleCompleteMessage.bind(this)),
+      (rawEvent) =>
+        completeHandler(this.parseEvent('agent.message.complete', AgentMessageCompleteEventSchema, rawEvent)),
       {
         group: 'message-workers',
         consumer: `message-worker-${process.pid}-complete`,
@@ -45,6 +48,20 @@ export class MessageStoreProcessor implements OnModuleInit {
     )
 
     this.logger.log('Subscribed to message events')
+  }
+
+  private parseEvent<T>(
+    eventName: string,
+    schema: { safeParse(data: unknown): { success: true; data: T } | { success: false; error: { message: string } } },
+    rawEvent: unknown
+  ): T {
+    const parseResult = schema.safeParse(rawEvent)
+    if (!parseResult.success) {
+      const message = `Invalid ${eventName} event schema: ${parseResult.error.message}`
+      this.logger.error(new Error(message), 'Event validation failed')
+      throw new Error(message)
+    }
+    return parseResult.data
   }
 
   private async handleUserMessage(event: AgentMessageUserEvent): Promise<void> {
@@ -62,9 +79,25 @@ export class MessageStoreProcessor implements OnModuleInit {
 
       this.logger.log(`Stored user message for session ${event.sessionId}`)
     } catch (error) {
-      this.logger.error(error as Error, 'Failed to store user message')
+      const enrichedError = new WorkerProcessingError(
+        `Failed to store user message: ${error instanceof Error ? error.message : String(error)}`,
+        {
+          processor: 'MessageStoreProcessor',
+          eventType: 'agent.message.user',
+          workflowId: event.workflowId,
+          sessionId: event.sessionId,
+          orgId: event.metadata?.orgId,
+          projectId: event.metadata?.projectId,
+          originalError: error instanceof Error ? error : undefined,
+        }
+      )
+
+      this.logger.error(
+        enrichedError,
+        `Message store failed: eventType=agent.message.user workflowId=${event.workflowId} sessionId=${event.sessionId} orgId=${event.metadata?.orgId} projectId=${event.metadata?.projectId}`
+      )
       // Throw to trigger retry logic in event bus
-      throw error
+      throw enrichedError
     }
   }
 
@@ -83,9 +116,26 @@ export class MessageStoreProcessor implements OnModuleInit {
 
       this.logger.log(`Stored AI message for session ${event.sessionId}`)
     } catch (error) {
-      this.logger.error(error as Error, 'Failed to store AI message')
+      const enrichedError = new WorkerProcessingError(
+        `Failed to store message: ${error instanceof Error ? error.message : String(error)}`,
+        {
+          processor: 'MessageStoreProcessor',
+          eventType: 'agent.message.complete',
+          workflowId: event.workflowId,
+          sessionId: event.sessionId,
+          messageId: event.messageId,
+          orgId: event.metadata?.orgId,
+          projectId: event.metadata?.projectId,
+          originalError: error instanceof Error ? error : undefined,
+        }
+      )
+
+      this.logger.error(
+        enrichedError,
+        `Message store failed: eventType=agent.message.complete workflowId=${event.workflowId} sessionId=${event.sessionId} messageId=${event.messageId} orgId=${event.metadata?.orgId} projectId=${event.metadata?.projectId}`
+      )
       // Throw to trigger retry logic in event bus
-      throw error
+      throw enrichedError
     }
   }
 }

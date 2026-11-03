@@ -19,6 +19,9 @@ export enum EventType {
   USER_JOINED = 'user.joined',
   USER_LEFT = 'user.left',
   USER_TYPING = 'user.typing',
+
+  // Phase transitions
+  PHASE_APPROVED = 'phase.approved',
 }
 
 /**
@@ -82,6 +85,8 @@ export interface AgentToolUseEvent extends BaseEvent {
   }
   metadata: {
     repoPath: string
+    orgId: string
+    projectId: string
   }
 }
 
@@ -96,6 +101,20 @@ export interface ArtifactCreatedEvent extends BaseEvent {
 }
 
 /**
+ * Phase approved event (triggers the next workflow phase)
+ */
+export interface PhaseApprovedEvent extends BaseEvent {
+  type: EventType.PHASE_APPROVED
+  phaseId: string
+  phaseKey: string
+  nextPhaseKey: string
+  metadata: {
+    orgId: string
+    projectId: string
+  }
+}
+
+/**
  * Union type of all events
  */
 export type AgentEvent =
@@ -104,3 +123,4 @@ export type AgentEvent =
   | AgentMessageCompleteEvent
   | AgentToolUseEvent
   | ArtifactCreatedEvent
+  | PhaseApprovedEvent

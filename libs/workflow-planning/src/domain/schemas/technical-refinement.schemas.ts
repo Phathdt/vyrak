@@ -97,3 +97,21 @@ export const GenerateSubTasksResponseSchema = z.object({
 })
 
 export class GenerateSubTasksResponseDto extends createZodDto(GenerateSubTasksResponseSchema) {}
+
+// Sub-Tasks List Response
+export const SubTaskListItemSchema = z.object({
+  id: z.string(),
+  key: z.string(),
+  title: z.string(),
+  description: z.string().nullable(),
+  status: z.string(),
+  executionOrder: z.number(),
+  dependencies: z.array(z.string()),
+})
+
+export const SubTasksListResponseSchema = z.object({
+  tasks: z.array(SubTaskListItemSchema),
+  count: z.number(),
+})
+
+export class SubTasksListResponseDto extends createZodDto(SubTasksListResponseSchema) {}

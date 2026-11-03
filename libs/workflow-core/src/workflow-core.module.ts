@@ -13,10 +13,15 @@ import {
   WORKFLOW_SERVICE,
   SUBTASK_REPOSITORY,
   WORKFLOW_DEPENDENCY_REPOSITORY,
+  WORKFLOW_WORK_ITEM_REPOSITORY,
+  UNIT_OF_WORK,
   WorkflowPhasePrismaRepository,
   WorkflowPrismaRepository,
   WorkflowRepositoryPrismaRepository,
   SubTaskPrismaRepository,
+  WorkflowDependencyPrismaRepository,
+  WorkflowWorkItemPrismaRepository,
+  PrismaUnitOfWork,
 } from './infras'
 
 import type {
@@ -24,12 +29,19 @@ import type {
   IWorkflowPhaseService,
   IWorkflowRepository,
   IWorkflowRepositoryRepository,
+  IUnitOfWork,
 } from './domain'
 import type { IGitRepositoryRepository } from '@vyrak/project'
 
 @Module({
   imports: [DatabaseModule, ProjectModule, CustomConfigModule, ArtifactModule],
   providers: [
+    // Unit of Work
+    {
+      provide: UNIT_OF_WORK,
+      useFactory: (database: DatabaseService) => new PrismaUnitOfWork(database),
+      inject: [DatabaseService],
+    },
     // Repositories (only 3 used ones provided)
     {
       provide: WORKFLOW_REPOSITORY,
@@ -53,11 +65,12 @@ import type { IGitRepositoryRepository } from '@vyrak/project'
     },
     {
       provide: WORKFLOW_DEPENDENCY_REPOSITORY,
-      useFactory: (prisma: DatabaseService) => {
-        // WorkflowDependency uses same Prisma model as SubTask
-        // For now, return SubTaskPrismaRepository which has dependency methods
-        return new SubTaskPrismaRepository(prisma)
-      },
+      useFactory: (prisma: DatabaseService) => new WorkflowDependencyPrismaRepository(prisma),
+      inject: [DatabaseService],
+    },
+    {
+      provide: WORKFLOW_WORK_ITEM_REPOSITORY,
+      useFactory: (prisma: DatabaseService) => new WorkflowWorkItemPrismaRepository(prisma),
       inject: [DatabaseService],
     },
     // Services
@@ -76,9 +89,10 @@ import type { IGitRepositoryRepository } from '@vyrak/project'
       useFactory: (
         workflowRepo: IWorkflowRepository,
         workflowPhaseRepo: IWorkflowPhaseRepository,
-        artifactService: IArtifactService
-      ) => new WorkflowPhaseService(workflowRepo, workflowPhaseRepo, artifactService),
-      inject: [WORKFLOW_REPOSITORY, WORKFLOW_PHASE_REPOSITORY, ARTIFACT_SERVICE],
+        artifactService: IArtifactService,
+        unitOfWork: IUnitOfWork
+      ) => new WorkflowPhaseService(workflowRepo, workflowPhaseRepo, artifactService, unitOfWork),
+      inject: [WORKFLOW_REPOSITORY, WORKFLOW_PHASE_REPOSITORY, ARTIFACT_SERVICE, UNIT_OF_WORK],
     },
     // Generic repository context service
     {
@@ -99,6 +113,8 @@ import type { IGitRepositoryRepository } from '@vyrak/project'
     WORKFLOW_REPOSITORY_REPOSITORY,
     SUBTASK_REPOSITORY,
     WORKFLOW_DEPENDENCY_REPOSITORY,
+    WORKFLOW_WORK_ITEM_REPOSITORY,
+    UNIT_OF_WORK,
     RepositoryContextService,
   ],
 })

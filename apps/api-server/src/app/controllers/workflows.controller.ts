@@ -14,6 +14,7 @@ import {
   UseGuards,
 } from '@nestjs/common'
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
+import { EVENT_BUS, EventType, type IEventBus } from '@vyrak/event-bus'
 import {
   AdvanceWorkflowPhaseResponseDto,
   ApproveWorkflowPhaseDto,
@@ -32,7 +33,7 @@ import {
 } from '@vyrak/workflow-core'
 import { WorkflowPhaseOrchestratorService } from '@vyrak/workflow-execution'
 
-import { AuthGuard } from '../../auth'
+import { AuthGuard, CurrentUser } from '../../auth'
 import { OrganizationMemberGuard } from '../../guards'
 
 // Updated: implementation, code-review, qa are automated
@@ -45,7 +46,8 @@ export class WorkflowsController {
   constructor(
     @Inject(WORKFLOW_SERVICE) private readonly workflowService: IWorkflowService,
     @Inject(WORKFLOW_PHASE_SERVICE) private readonly workflowPhaseService: IWorkflowPhaseService,
-    private readonly phaseOrchestrator: WorkflowPhaseOrchestratorService
+    private readonly phaseOrchestrator: WorkflowPhaseOrchestratorService,
+    @Inject(EVENT_BUS) private readonly eventBus: IEventBus
   ) {}
 
   @Post()
@@ -121,6 +123,47 @@ export class WorkflowsController {
       page: result.page,
       limit: result.limit,
       totalPages: result.totalPages,
+    }
+  }
+
+  @Post(':id/phases/:phaseId/approve')
+  @ApiOperation({
+    summary: 'Approve a phase and publish phase.approved',
+    description:
+      'Completes the given phase (must be the current phase), advances the workflow, and publishes a phase.approved event so the worker can start the next phase.',
+  })
+  @ApiResponse({ status: 200, type: AdvanceWorkflowPhaseResponseDto })
+  async approvePhaseById(
+    @Param('orgId') orgId: string,
+    @Param('projectId') projectId: string,
+    @Param('id') id: string,
+    @Param('phaseId') phaseId: string,
+    @Body() body: ApproveWorkflowPhaseDto,
+    @CurrentUser() userId: string
+  ): Promise<AdvanceWorkflowPhaseResponseDto> {
+    const workflow = await this.workflowService.findById(orgId, id)
+
+    if (!workflow) {
+      throw new NotFoundException('Workflow not found')
+    }
+
+    const result = await this.workflowPhaseService.approvePhase(id, phaseId, userId, body.note)
+
+    await this.eventBus.publish(EventType.PHASE_APPROVED, {
+      type: EventType.PHASE_APPROVED,
+      workflowId: id,
+      phaseId,
+      phaseKey: result.completedPhase.key,
+      nextPhaseKey: result.currentPhaseKey,
+      metadata: { orgId, projectId },
+      timestamp: Date.now(),
+    })
+
+    return {
+      previousPhaseKey: result.previousPhaseKey,
+      currentPhaseKey: result.currentPhaseKey,
+      workflowCompleted: result.workflowCompleted,
+      phases: this.mapPhaseEntities(result.phases),
     }
   }
 

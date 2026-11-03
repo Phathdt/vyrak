@@ -63,6 +63,8 @@ export const AgentToolUseEventSchema = BaseEventSchema.extend({
   }),
   metadata: z.object({
     repoPath: z.string().min(1, 'repoPath cannot be empty'),
+    orgId: z.string().uuid('orgId must be a valid UUID'),
+    projectId: z.string().uuid('projectId must be a valid UUID'),
   }),
 })
 
@@ -77,6 +79,20 @@ export const ArtifactCreatedEventSchema = BaseEventSchema.extend({
 })
 
 /**
+ * Phase approved event schema
+ */
+export const PhaseApprovedEventSchema = BaseEventSchema.extend({
+  type: z.literal(EventType.PHASE_APPROVED),
+  phaseId: z.string().uuid('phaseId must be a valid UUID'),
+  phaseKey: z.string().min(1, 'phaseKey cannot be empty'),
+  nextPhaseKey: z.string().min(1, 'nextPhaseKey cannot be empty'),
+  metadata: z.object({
+    orgId: z.string().uuid('orgId must be a valid UUID'),
+    projectId: z.string().uuid('projectId must be a valid UUID'),
+  }),
+})
+
+/**
  * Union schema for all events (discriminated union)
  */
 export const AgentEventSchema = z.discriminatedUnion('type', [
@@ -85,6 +101,7 @@ export const AgentEventSchema = z.discriminatedUnion('type', [
   AgentMessageCompleteEventSchema,
   AgentToolUseEventSchema,
   ArtifactCreatedEventSchema,
+  PhaseApprovedEventSchema,
 ])
 
 /**
@@ -95,4 +112,5 @@ export type AgentMessageDeltaEventValidated = z.infer<typeof AgentMessageDeltaEv
 export type AgentMessageCompleteEventValidated = z.infer<typeof AgentMessageCompleteEventSchema>
 export type AgentToolUseEventValidated = z.infer<typeof AgentToolUseEventSchema>
 export type ArtifactCreatedEventValidated = z.infer<typeof ArtifactCreatedEventSchema>
+export type PhaseApprovedEventValidated = z.infer<typeof PhaseApprovedEventSchema>
 export type AgentEventValidated = z.infer<typeof AgentEventSchema>

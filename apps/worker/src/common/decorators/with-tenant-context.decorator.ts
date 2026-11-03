@@ -29,7 +29,9 @@ export function withTenantContext<TEvent extends { metadata: TenantContextMetada
     const orgId = event.metadata?.orgId
 
     if (!orgId) {
-      throw new Error('Missing orgId in event metadata. All worker events must include metadata.orgId for tenant isolation.')
+      throw new Error(
+        'Missing orgId in event metadata. All worker events must include metadata.orgId for tenant isolation.'
+      )
     }
 
     // Set tenant context before executing handler

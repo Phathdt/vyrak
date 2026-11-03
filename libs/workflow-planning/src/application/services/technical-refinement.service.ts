@@ -5,15 +5,16 @@ import {
   WorkflowNotFoundError,
   WorkflowStatus,
   RepositoryContextService,
-  ISubTaskRepository,
   IWorkflowDependencyRepository,
   IWorkflowPhaseRepository,
-  SubTaskStatus,
-  SubTaskDependencyType,
-  DependencyGraph,
+  IWorkflowWorkItemRepository,
+  CyclicDependencyError,
+  WorkflowWorkItemType,
 } from '@vyrak/workflow-core'
 
+import { ImplementationPlanNotFoundError } from '../../domain/exceptions'
 import { buildTechnicalRefinementPrompt } from '../../domain/prompts/technical-refinement-agent-prompt'
+import { parseImplementationPlan } from '../../infras/parsers'
 
 import type {
   ITechnicalRefinementService,
@@ -24,6 +25,7 @@ import type {
   TechnicalRefinementSessionResponseDto,
   GenerateArtifactsResponseDto,
   GenerateSubTasksResponseDto,
+  SubTasksListResponseDto,
 } from '../../domain/schemas/technical-refinement.schemas'
 import type { ConversationMessage } from '@vyrak/conversation'
 import type { IConfigService } from '@vyrak/custom-config'
@@ -33,6 +35,52 @@ import type { IWorkflowRepository, IWorkflowRepositoryRepository, WorkflowReposi
 interface Message {
   role: string
   content: string
+}
+
+/**
+ * Returns one cycle (as a list of item ids, first id repeated at the end) or null.
+ * Edges are [dependentId, dependsOnId].
+ */
+function findDependencyCycle(edges: Array<[string, string]>): string[] | null {
+  const adjacency = new Map<string, string[]>()
+  for (const [from, to] of edges) {
+    const list = adjacency.get(from) ?? []
+    list.push(to)
+    adjacency.set(from, list)
+  }
+
+  const state = new Map<string, 'visiting' | 'done'>()
+  const path: string[] = []
+
+  const visit = (node: string): string[] | null => {
+    state.set(node, 'visiting')
+    path.push(node)
+    for (const next of adjacency.get(node) ?? []) {
+      if (state.get(next) === 'visiting') {
+        return [...path.slice(path.indexOf(next)), next]
+      }
+      if (!state.has(next)) {
+        const found = visit(next)
+        if (found) return found
+      }
+    }
+    path.pop()
+    state.set(node, 'done')
+    return null
+  }
+
+  for (const node of adjacency.keys()) {
+    if (!state.has(node)) {
+      const found = visit(node)
+      if (found) return found
+    }
+  }
+  return null
+}
+
+function readExecutionOrder(metadata: Record<string, unknown> | null, fallback: number): number {
+  const value = metadata?.executionOrder
+  return typeof value === 'number' ? value : fallback
 }
 
 export class TechnicalRefinementService implements ITechnicalRefinementService {
@@ -45,7 +93,7 @@ export class TechnicalRefinementService implements ITechnicalRefinementService {
     private readonly gitRepositoryService: IGitRepositoryService,
     private readonly repositoryContextService: RepositoryContextService,
     private readonly artifactService: IArtifactService,
-    private readonly subTaskRepository: ISubTaskRepository,
+    private readonly workItemRepository: IWorkflowWorkItemRepository,
     private readonly workflowDependencyRepository: IWorkflowDependencyRepository,
     private readonly workflowPhaseRepository: IWorkflowPhaseRepository,
     private readonly configService: IConfigService
@@ -285,116 +333,140 @@ You have access to the project repository for scouting existing patterns. Use Re
   async generateSubTasks(workflowId: string, _sessionId: string): Promise<GenerateSubTasksResponseDto> {
     await this.ensureTechnicalRefinementPhase(workflowId)
 
-    // Get workflow
     const workflow = await this.workflowRepository.findById(workflowId)
     if (!workflow) {
       throw new WorkflowNotFoundError(workflowId)
     }
 
-    // Find Implementation Plan artifact
     const artifacts = await this.artifactService.listWorkflowArtifacts(workflowId, {
       type: 'implementation-plan',
     })
 
     if (artifacts.length === 0) {
-      throw new Error('Implementation Plan artifact not found. Generate artifacts first.')
+      throw new ImplementationPlanNotFoundError(workflowId)
     }
 
-    // Download latest Implementation Plan
-    const latestPlan = artifacts.sort((a, b) => b.version - a.version)[0]
+    const latestPlan = [...artifacts].sort((a, b) => b.version - a.version)[0]
     const { content: planContent } = await this.artifactService.downloadArtifact(latestPlan.id)
 
-    // Parse sub-tasks from Implementation Plan
-    const parsedSubTasks = this.parseSubTasksFromPlan(planContent)
-
-    if (parsedSubTasks.length === 0) {
-      return {
-        subTasks: [],
-        count: 0,
-        dependencyCount: 0,
-      }
+    const { tasks: parsedTasks } = parseImplementationPlan(planContent)
+    if (parsedTasks.length === 0) {
+      return { subTasks: [], count: 0, dependencyCount: 0 }
     }
 
-    // Get Technical Refinement phase
     const phases = await this.workflowPhaseRepository.findByWorkflowId(workflowId)
     const techRefinementPhase = phases.find((p: { key: string }) => p.key === 'technical-refinement')
 
-    // Create sub-tasks
-    const createdSubTasks = []
-    const taskKeyToIdMap = new Map<string, string>()
+    // Idempotency: existing work items for this workflow are reused by key, never duplicated.
+    const existingItems = await this.workItemRepository.findByWorkflowId(workflowId)
+    const itemByKey = new Map(existingItems.map((item) => [item.key, item]))
+    const existingDependencies = await this.workflowDependencyRepository.findByWorkflowId(workflowId)
+    const existingEdges = new Set(existingDependencies.map((d) => `${d.dependentItemId}->${d.dependsOnItemId}`))
 
-    for (const parsed of parsedSubTasks) {
-      const subTask = await this.subTaskRepository.create(workflowId, {
-        phaseId: techRefinementPhase?.id || null,
+    const createdItems: Array<{
+      id: string
+      key: string
+      title: string
+      description: string | null
+      dependencies: string[]
+    }> = []
+    for (const parsed of parsedTasks) {
+      if (itemByKey.has(parsed.key)) continue
+
+      const item = await this.workItemRepository.create(workflowId, {
         key: parsed.key,
-        type: 'implementation-task',
+        type: WorkflowWorkItemType.TASK,
         title: parsed.title,
-        description: parsed.description,
-        dependencyType: SubTaskDependencyType.DEPENDENT,
-        executionOrder: parsed.order,
-        sequence: parsed.order,
+        description: parsed.description || null,
+        acceptanceCriteria: parsed.acceptanceCriteria.length ? { items: parsed.acceptanceCriteria } : null,
+        estimate: parsed.estimate ? { value: parsed.estimate } : null,
+        sequence: parsed.executionOrder,
         metadata: {
-          technicalScope: parsed.technicalScope,
-          estimate: parsed.estimate,
+          phaseId: techRefinementPhase?.id ?? null,
+          phaseKey: parsed.phaseKey,
+          phaseTitle: parsed.phaseTitle,
+          taskOrder: parsed.taskOrder,
+          executionOrder: parsed.executionOrder,
+          isParallel: parsed.isParallel,
+          files: parsed.files,
         },
       })
 
-      taskKeyToIdMap.set(parsed.key, subTask.id)
-      createdSubTasks.push({
-        id: subTask.id,
-        key: subTask.key,
-        title: subTask.title,
-        description: subTask.description,
-        dependencies: parsed.dependencies,
+      itemByKey.set(parsed.key, item)
+      createdItems.push({
+        id: item.id,
+        key: item.key,
+        title: item.title,
+        description: item.description,
+        dependencies: parsed.dependencyKeys,
       })
     }
 
-    // Create dependencies
     let dependencyCount = 0
-    for (const parsed of parsedSubTasks) {
-      const dependentTaskId = taskKeyToIdMap.get(parsed.key)
-      if (!dependentTaskId) continue
+    for (const parsed of parsedTasks) {
+      const dependent = itemByKey.get(parsed.key)
+      if (!dependent) continue
 
-      for (const depKey of parsed.dependencies) {
-        const dependsOnTaskId = taskKeyToIdMap.get(depKey)
-        if (!dependsOnTaskId) continue
+      for (const depKey of parsed.dependencyKeys) {
+        const dependsOn = itemByKey.get(depKey)
+        if (!dependsOn) continue
 
-        await this.workflowDependencyRepository.create(workflowId, dependentTaskId, dependsOnTaskId, 'BLOCKS')
+        const edge = `${dependent.id}->${dependsOn.id}`
+        if (existingEdges.has(edge)) continue
+
+        await this.workflowDependencyRepository.create(workflowId, dependent.id, dependsOn.id, 'BLOCKS')
+        existingEdges.add(edge)
         dependencyCount++
       }
     }
 
-    // Validate no cyclic dependencies
-    const allSubTasks = await this.subTaskRepository.findByWorkflowId(workflowId)
     const allDependencies = await this.workflowDependencyRepository.findByWorkflowId(workflowId)
-
-    const cycleCheck = DependencyGraph.detectCycles(
-      allSubTasks,
-      allDependencies.map((d) => ({
-        id: d.id,
-        organizationId: workflow.organizationId,
-        workflowId: d.workflowId,
-        dependentItemId: d.dependentItemId,
-        dependsOnItemId: d.dependsOnItemId,
-        type: d.type,
-        createdAt: d.createdAt,
-      }))
-    )
-
-    if (cycleCheck.hasCycle) {
-      throw new Error(`Cyclic dependency detected: ${cycleCheck.cycle?.join(' -> ')}`)
-    }
-
-    // Update all sub-tasks to PENDING status
-    for (const subTask of createdSubTasks) {
-      await this.subTaskRepository.updateStatus(subTask.id, SubTaskStatus.PENDING)
+    const cycle = findDependencyCycle(allDependencies.map((d) => [d.dependentItemId, d.dependsOnItemId]))
+    if (cycle) {
+      throw new CyclicDependencyError(cycle)
     }
 
     return {
-      subTasks: createdSubTasks,
-      count: createdSubTasks.length,
+      subTasks: createdItems,
+      count: createdItems.length,
       dependencyCount,
     }
+  }
+
+  async listSubTasks(workflowId: string): Promise<SubTasksListResponseDto> {
+    const workflow = await this.workflowRepository.findById(workflowId)
+    if (!workflow) {
+      throw new WorkflowNotFoundError(workflowId)
+    }
+
+    const [items, dependencies] = await Promise.all([
+      this.workItemRepository.findByWorkflowId(workflowId),
+      this.workflowDependencyRepository.findByWorkflowId(workflowId),
+    ])
+
+    const keyById = new Map(items.map((item) => [item.id, item.key]))
+    const dependencyKeysByTaskId = new Map<string, string[]>()
+    for (const dep of dependencies) {
+      const depKey = keyById.get(dep.dependsOnItemId)
+      if (!depKey) continue
+      const existing = dependencyKeysByTaskId.get(dep.dependentItemId) ?? []
+      existing.push(depKey)
+      dependencyKeysByTaskId.set(dep.dependentItemId, existing)
+    }
+
+    const tasks = items
+      .map((item) => ({
+        id: item.id,
+        key: item.key,
+        title: item.title,
+        description: item.description,
+        status: item.status,
+        executionOrder: readExecutionOrder(item.metadata, item.sequence),
+        dependencies: dependencyKeysByTaskId.get(item.id) ?? [],
+      }))
+      .sort((a, b) => a.executionOrder - b.executionOrder)
+
+    return { tasks, count: tasks.length }
   }
 
   // Private helper methods
@@ -481,97 +553,5 @@ You have access to the project repository for scouting existing patterns. Use Re
         role: msg.role,
         content: msg.content,
       }))
-  }
-
-  private parseSubTasksFromPlan(planContent: string): Array<{
-    key: string
-    title: string
-    description: string
-    dependencies: string[]
-    order: number
-    technicalScope: string
-    estimate: string
-  }> {
-    const subTasks: Array<{
-      key: string
-      title: string
-      description: string
-      dependencies: string[]
-      order: number
-      technicalScope: string
-      estimate: string
-    }> = []
-
-    // Parse Implementation Plan markdown to extract tasks
-    // Look for task patterns: "1. [ ] Task title" or "**Task X.Y:**"
-    const lines = planContent.split('\n')
-    let currentPhase = ''
-    let order = 0
-
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim()
-
-      // Detect phase headers: "### Phase N: Title"
-      const phaseMatch = line.match(/^###\s+Phase\s+(\d+):\s+(.+)/)
-      if (phaseMatch) {
-        currentPhase = `phase-${phaseMatch[1]}`
-        continue
-      }
-
-      // Detect tasks: "1. [ ] Task description" or "- [ ] Task description"
-      const taskMatch = line.match(/^(?:\d+\.|[-*])\s+\[\s*\]\s+(.+)/)
-      if (taskMatch) {
-        order++
-        const taskTitle = taskMatch[1].trim()
-
-        // Extract details from following lines
-        let description = ''
-        let estimate = '1h'
-        let files = ''
-        const dependencies: string[] = []
-
-        // Look ahead for details
-        for (let j = i + 1; j < Math.min(i + 10, lines.length); j++) {
-          const detailLine = lines[j].trim()
-          if (detailLine.startsWith('- **') || detailLine.startsWith('  - ')) {
-            if (detailLine.includes('Estimate:') || detailLine.includes('estimate:')) {
-              const estMatch = detailLine.match(/(\d+\.?\d*\s*(?:h|hours?|days?|d))/i)
-              if (estMatch) estimate = estMatch[1]
-            }
-            if (detailLine.includes('File:') || detailLine.includes('Files:')) {
-              files = detailLine
-            }
-            if (detailLine.includes('Details:') || detailLine.includes('Description:')) {
-              description = detailLine.replace(/.*(?:Details|Description):\s*/i, '')
-            }
-            if (detailLine.includes('Dependencies:') || detailLine.includes('Depends on:')) {
-              // Extract task references like "Task 1", "Phase 2"
-              const depMatch = detailLine.match(/(?:Task|Phase)\s+(\d+)/gi)
-              if (depMatch) {
-                dependencies.push(...depMatch.map((m) => m.toLowerCase().replace(/\s+/g, '-')))
-              }
-            }
-          } else if (detailLine.match(/^(?:\d+\.|[-*])\s+\[/) || detailLine.match(/^###/)) {
-            // Stop at next task or phase
-            break
-          }
-        }
-
-        // Generate task key
-        const key = `${currentPhase || 'task'}-${order}`.toLowerCase()
-
-        subTasks.push({
-          key,
-          title: taskTitle,
-          description: description || `${taskTitle} - ${files}`.trim(),
-          dependencies,
-          order,
-          technicalScope: files || 'implementation',
-          estimate,
-        })
-      }
-    }
-
-    return subTasks
   }
 }

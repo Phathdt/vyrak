@@ -4,11 +4,15 @@ import { useMemo, useState } from 'react'
 import { getErrorMessage } from '@/api/client'
 import {
   useWorkflowPlanningControllerGeneratePRDFromMessage,
+  getWorkflowPlanningControllerListSubTasksQueryKey,
+  useWorkflowPlanningControllerGenerateSubTasks,
   useWorkflowPlanningControllerGetTechnicalRefinementSession,
+  useWorkflowPlanningControllerListSubTasks,
 } from '@/api/generated/workflows-planning/workflows-planning'
 import { ChatMarkdown } from '@/components/chat-markdown'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import { SubTasksTable } from '@/components/workflows/sub-tasks-table'
 import { useToast } from '@/hooks/use-toast'
 import { useWebSocketChat } from '@/hooks/use-websocket-chat'
 
@@ -28,7 +32,7 @@ const TECH_REFINEMENT_STARTERS = [
 
 type TechRefinementMessage = {
   id: string
-  role: 'user' | 'assistant' | 'system'
+  role: 'user' | 'assistant' | 'system' | 'event'
   content: string
   timestamp: Date
 }
@@ -155,6 +159,34 @@ export function TechRefinementWorkspace({ orgId, projectId, workflowId, onError 
   const { mutateAsync: saveAsArtifact, isPending: isSavingArtifact } =
     useWorkflowPlanningControllerGeneratePRDFromMessage()
 
+  const { mutateAsync: generateSubTasks, isPending: isGeneratingSubTasks } =
+    useWorkflowPlanningControllerGenerateSubTasks()
+
+  const { data: subTasksData, isLoading: isLoadingSubTasks } = useWorkflowPlanningControllerListSubTasks(
+    orgId,
+    projectId,
+    workflowId,
+    { query: { enabled: true, staleTime: 30000 } }
+  )
+
+  const handleGenerateSubTasks = async () => {
+    onError(null)
+    try {
+      const result = await generateSubTasks({ orgId, projectId, id: workflowId })
+      await queryClient.invalidateQueries({
+        queryKey: getWorkflowPlanningControllerListSubTasksQueryKey(orgId, projectId, workflowId),
+      })
+      toast({
+        title: 'Sub-tasks generated',
+        description: `${result.count} task(s) created, ${result.dependencyCount} dependency link(s).`,
+      })
+    } catch (err) {
+      const errorMsg = getErrorMessage(err) || 'Failed to generate sub-tasks'
+      onError(errorMsg)
+      toast({ variant: 'destructive', title: 'Error', description: errorMsg })
+    }
+  }
+
   // Load session data (previous messages)
   const { data: sessionData } = useWorkflowPlanningControllerGetTechnicalRefinementSession(
     orgId,
@@ -169,7 +201,14 @@ export function TechRefinementWorkspace({ orgId, projectId, workflowId, onError 
   )
 
   // Memoize initial messages to prevent infinite loop
-  const initialMessages = useMemo(() => sessionData?.messages ?? [], [sessionData?.messages])
+  const initialMessages = useMemo(
+    () =>
+      (sessionData?.messages ?? []).map((msg) => ({
+        ...msg,
+        role: msg.role as 'user' | 'assistant' | 'system' | 'event',
+      })),
+    [sessionData?.messages]
+  )
 
   // Use WebSocket for real-time chat with initial messages from API
   const { isConnected, messages, streamingContent, isStreaming, toolActivity, sendMessage } = useWebSocketChat({
@@ -337,6 +376,34 @@ export function TechRefinementWorkspace({ orgId, projectId, workflowId, onError 
           {isStreaming ? 'Sending…' : 'Send'}
         </Button>
       </div>
+
+      <section className='flex flex-col gap-3 rounded-lg border bg-background p-4'>
+        <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+          <div>
+            <h3 className='text-sm font-semibold'>Sub-tasks</h3>
+            <p className='text-xs text-muted-foreground'>
+              Generated from the Implementation Plan artifact, in execution order.
+            </p>
+          </div>
+          <Button
+            type='button'
+            variant='outline'
+            size='sm'
+            onClick={() => void handleGenerateSubTasks()}
+            disabled={isGeneratingSubTasks}
+          >
+            {isGeneratingSubTasks ? (
+              <span className='inline-flex items-center gap-2'>
+                <span className='h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent' />
+                Generating…
+              </span>
+            ) : (
+              'Generate Tasks'
+            )}
+          </Button>
+        </div>
+        <SubTasksTable tasks={subTasksData?.tasks ?? []} isLoading={isLoadingSubTasks} />
+      </section>
     </div>
   )
 }

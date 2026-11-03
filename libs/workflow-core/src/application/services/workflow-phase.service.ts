@@ -14,9 +14,11 @@ import { buildDefinitionSnapshot } from '../../domain/phase-definitions'
 
 import type {
   AdvanceWorkflowPhaseResult,
+  ApprovePhaseResult,
   IWorkflowPhaseRepository,
   IWorkflowPhaseService,
   IWorkflowRepository,
+  IUnitOfWork,
   WorkflowPhaseEntity,
 } from '../../domain'
 import type { IArtifactService } from '@vyrak/artifact'
@@ -33,7 +35,8 @@ export class WorkflowPhaseService implements IWorkflowPhaseService {
   constructor(
     private readonly workflowRepository: IWorkflowRepository,
     private readonly workflowPhaseRepository: IWorkflowPhaseRepository,
-    private readonly artifactService: IArtifactService
+    private readonly artifactService: IArtifactService,
+    private readonly unitOfWork: IUnitOfWork
   ) {}
 
   async listByWorkflowId(workflowId: string): Promise<WorkflowPhaseEntity[]> {
@@ -51,6 +54,34 @@ export class WorkflowPhaseService implements IWorkflowPhaseService {
     })
   }
 
+  async approvePhase(
+    workflowId: string,
+    phaseId: string,
+    approvedById: string,
+    note?: string
+  ): Promise<ApprovePhaseResult> {
+    const ctx = await this.loadCurrentPhaseContext(workflowId)
+
+    const targetPhase = ctx.sortedPhases.find((p) => p.id === phaseId)
+    if (targetPhase?.status === WorkflowPhaseStatus.COMPLETED) {
+      throw new InvalidPhaseApprovalError(
+        `Phase "${targetPhase.key}" is already completed and cannot be approved again`
+      )
+    }
+
+    if (ctx.currentPhase.id !== phaseId) {
+      throw new InvalidPhaseApprovalError('Only the current phase can be approved')
+    }
+
+    const result = await this.approveCurrentPhase(workflowId, approvedById, note)
+    const completedPhase = result.phases.find((p) => p.id === phaseId)
+    if (!completedPhase) {
+      throw new PhaseNotFoundError(phaseId)
+    }
+
+    return { ...result, completedPhase }
+  }
+
   async approveCurrentPhase(
     workflowId: string,
     approvedById: string,
@@ -62,6 +93,10 @@ export class WorkflowPhaseService implements IWorkflowPhaseService {
       ctx.workflow.status === WorkflowStatus.ACTIVE || ctx.workflow.status === WorkflowStatus.WAITING_APPROVAL
     if (!workflowOk) {
       throw new InvalidPhaseApprovalError('Workflow cannot approve a phase in its current status')
+    }
+
+    if (ctx.currentPhase.status === WorkflowPhaseStatus.COMPLETED) {
+      throw new InvalidPhaseApprovalError(`Phase "${ctx.currentKey}" is already completed and cannot be approved again`)
     }
 
     const phaseOk =
@@ -170,40 +205,52 @@ export class WorkflowPhaseService implements IWorkflowPhaseService {
       workflowId: ctx.workflow.id,
     }
 
-    const now = new Date()
-    await this.workflowPhaseRepository.updateStatus(currentPhase.id, WorkflowPhaseStatus.COMPLETED)
-    await this.workflowPhaseRepository.update(currentPhase.id, { completedAt: now })
+    return await this.unitOfWork.runInTransaction(async (tx) => {
+      const now = new Date()
+      await this.workflowPhaseRepository.updateStatus(currentPhase.id, WorkflowPhaseStatus.COMPLETED, tx)
+      await this.workflowPhaseRepository.update(currentPhase.id, { completedAt: now }, tx)
 
-    const nextPhase = sortedPhases[currentIndex + 1]
-    let workflowCompleted = false
-    let newCurrentKey: string | null = null
+      const nextPhase = sortedPhases[currentIndex + 1]
+      let workflowCompleted = false
+      let newCurrentKey: string | null = null
 
-    if (nextPhase) {
-      await this.workflowPhaseRepository.updateStatus(nextPhase.id, WorkflowPhaseStatus.IN_PROGRESS)
-      await this.workflowPhaseRepository.update(nextPhase.id, { startedAt: now })
-      newCurrentKey = nextPhase.key
-      await this.workflowRepository.updateDefinitionContext(workflowId, {
+      if (nextPhase) {
+        await this.workflowPhaseRepository.updateStatus(nextPhase.id, WorkflowPhaseStatus.IN_PROGRESS, tx)
+        await this.workflowPhaseRepository.update(nextPhase.id, { startedAt: now }, tx)
+        newCurrentKey = nextPhase.key
+        await this.workflowRepository.updateDefinitionContext(
+          workflowId,
+          {
+            currentPhaseKey: newCurrentKey,
+            definitionSnapshot:
+              workflow.definitionSnapshot ?? buildDefinitionSnapshot(workflow.type ?? WorkflowType.STORY),
+          },
+          tx
+        )
+        await this.workflowRepository.updateStatus(workflowId, WorkflowStatus.ACTIVE, tx)
+      } else {
+        workflowCompleted = true
+        await this.workflowRepository.updateDefinitionContext(
+          workflowId,
+          {
+            currentPhaseKey: null,
+            definitionSnapshot:
+              workflow.definitionSnapshot ?? buildDefinitionSnapshot(workflow.type ?? WorkflowType.STORY),
+          },
+          tx
+        )
+        await this.workflowRepository.updateStatus(workflowId, WorkflowStatus.COMPLETED, tx)
+      }
+
+      const phases = await this.workflowPhaseRepository.findByWorkflowId(workflowId, tx)
+
+      return {
+        previousPhaseKey: currentKey,
         currentPhaseKey: newCurrentKey,
-        definitionSnapshot: workflow.definitionSnapshot ?? buildDefinitionSnapshot(workflow.type ?? WorkflowType.STORY),
-      })
-      await this.workflowRepository.updateStatus(workflowId, WorkflowStatus.ACTIVE)
-    } else {
-      workflowCompleted = true
-      await this.workflowRepository.updateDefinitionContext(workflowId, {
-        currentPhaseKey: null,
-        definitionSnapshot: workflow.definitionSnapshot ?? buildDefinitionSnapshot(workflow.type ?? WorkflowType.STORY),
-      })
-      await this.workflowRepository.updateStatus(workflowId, WorkflowStatus.COMPLETED)
-    }
-
-    const phases = await this.workflowPhaseRepository.findByWorkflowId(workflowId)
-
-    return {
-      previousPhaseKey: currentKey,
-      currentPhaseKey: newCurrentKey,
-      workflowCompleted,
-      phases,
-    }
+        workflowCompleted,
+        phases,
+      }
+    })
   }
 
   private async loadCurrentPhaseContext(workflowId: string): Promise<PhaseContext> {

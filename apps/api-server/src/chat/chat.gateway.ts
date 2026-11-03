@@ -9,7 +9,7 @@ import {
   ConnectedSocket,
   MessageBody,
 } from '@nestjs/websockets'
-import { IConversationService, CONVERSATION_SERVICE, ConversationPhase, MessageRole } from '@vyrak/conversation'
+import { IConversationService, CONVERSATION_SERVICE, ConversationPhase } from '@vyrak/conversation'
 import { IConfigService, CONFIG_SERVICE } from '@vyrak/custom-config'
 import { EnhancedLogger } from '@vyrak/custom-logger'
 import { DatabaseService } from '@vyrak/database'
@@ -133,7 +133,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async handleSendMessage(@ConnectedSocket() client: Socket, @MessageBody() data: ChatMessageDto): Promise<void> {
     const userId = client.data.userId
     const orgId = client.data.orgId // Get orgId from socket context (set by WsAuthGuard)
-    const { workflowId, message, codeSnippets, projectId, idempotencyKey } = data
+    const { workflowId, message, projectId, idempotencyKey } = data
 
     try {
       // Set tenant context for database operations (WebSocket doesn't use HTTP interceptor)
@@ -167,16 +167,24 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       }
 
       // Map workflow phase key to conversation phase
-      const conversationPhase = this.mapWorkflowPhaseToConversationPhase(workflow.currentPhaseKey)
+      const conversationPhase = this.mapWorkflowPhaseToConversationPhase(workflow.currentPhaseKey || 'planning')
 
       // Get or create session with the current phase (now uses upsert to prevent race conditions)
       const session = await this.conversationService.getOrCreateSession(workflowId, conversationPhase)
 
-      // Format user message for streaming
-      const userContent = this.formatUserMessage(message, codeSnippets)
+      // Save user message to database immediately
+      const userMessage = await this.conversationService.addMessage({
+        sessionId: session.id,
+        role: 'user' as const,
+        content: message,
+        eventId: idempotencyKey, // Use idempotency key for deduplication
+      })
 
-      // Confirm message received (worker will save to DB)
-      client.emit('chat:message_sent', { messageId: idempotencyKey || `temp-${Date.now()}` })
+      // Emit user message saved with real message ID
+      client.emit('chat:user_message_saved', {
+        messageId: userMessage.id,
+        content: message,
+      })
 
       // Stream chat events with real orgId and projectId
       const stream = this.chatService.streamChat({
@@ -187,10 +195,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         orgId, // Real value from DTO
         projectId, // Real value from DTO
         model: this.model,
-        phase: workflow.currentPhaseKey, // Pass current phase for correct system prompt
+        phase: workflow.currentPhaseKey || 'planning', // Pass current phase for correct system prompt
       })
 
       let fullResponse = ''
+      let assistantMessageId: string | null = null
 
       for await (const event of stream) {
         switch (event.type) {
@@ -208,6 +217,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
             break
 
           case 'complete':
+            assistantMessageId = event.messageId
             client.emit('chat:complete', {
               messageId: event.messageId,
               content: event.content,
@@ -220,11 +230,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         }
       }
 
-      // Stream completed - publish event for worker to save message
-      if (fullResponse) {
-        // Generate deterministic messageId for idempotency
-        const messageId = `msg-${workflowId}-${Date.now()}`
-
+      // Stream completed - publish event for worker to save assistant message
+      if (fullResponse && assistantMessageId) {
         this.logger.log(`Stream completed, publishing event for worker to save`, 'ChatGateway')
 
         // Publish message complete event with metadata for worker to save
@@ -232,7 +239,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           type: EventType.AGENT_MESSAGE_COMPLETE,
           workflowId,
           sessionId: session.id,
-          messageId,
+          messageId: assistantMessageId,
           content: fullResponse,
           timestamp: Date.now(),
           metadata: {
@@ -241,13 +248,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           },
         })
 
-        // Emit complete to client (worker will save to DB)
-        client.emit('chat:complete', {
-          messageId,
-          content: fullResponse,
-        })
-
-        this.logger.log(`Emitted chat:complete, worker will save message`, 'ChatGateway')
+        this.logger.log(`Published event for worker to save assistant message`, 'ChatGateway')
       }
     } catch (error) {
       this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Chat send error', 'ChatGateway')
@@ -292,29 +293,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       case 'implementation':
         return ConversationPhase.IMPLEMENTATION
       case 'code-review':
-        return ConversationPhase.CODE_REVIEW
+        return ConversationPhase.REVIEW
       case 'qa':
-        return ConversationPhase.QA
+        return ConversationPhase.TESTING
       default:
         // Default to planning for unknown phases
         return ConversationPhase.PLANNING
     }
-  }
-
-  private formatUserMessage(
-    userMessage: string,
-    codeSnippets?: Array<{ language?: string; code: string; label?: string; path?: string }>
-  ): string {
-    if (!codeSnippets || codeSnippets.length === 0) {
-      return userMessage
-    }
-
-    let formatted = userMessage + '\n\n'
-    for (const snippet of codeSnippets) {
-      const filePath = snippet.path || snippet.label || snippet.language || 'code'
-      formatted += `\n\`\`\`${filePath}\n${snippet.code}\n\`\`\`\n`
-    }
-
-    return formatted
   }
 }

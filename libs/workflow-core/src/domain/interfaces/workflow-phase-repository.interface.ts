@@ -1,12 +1,13 @@
 import type { WorkflowPhaseEntity } from '../entities'
+import type { TransactionContext } from './unit-of-work.interface'
 
 export interface IWorkflowPhaseRepository {
-  findById(id: string): Promise<WorkflowPhaseEntity | null>
-  findByWorkflowId(workflowId: string): Promise<WorkflowPhaseEntity[]>
-  create(workflowId: string, data: CreateWorkflowPhaseData): Promise<WorkflowPhaseEntity>
-  update(id: string, data: UpdateWorkflowPhaseData): Promise<WorkflowPhaseEntity>
-  updateStatus(id: string, status: string): Promise<void>
-  delete(id: string): Promise<void>
+  findById(id: string, tx?: TransactionContext): Promise<WorkflowPhaseEntity | null>
+  findByWorkflowId(workflowId: string, tx?: TransactionContext): Promise<WorkflowPhaseEntity[]>
+  create(workflowId: string, data: CreateWorkflowPhaseData, tx?: TransactionContext): Promise<WorkflowPhaseEntity>
+  update(id: string, data: UpdateWorkflowPhaseData, tx?: TransactionContext): Promise<WorkflowPhaseEntity>
+  updateStatus(id: string, status: string, tx?: TransactionContext): Promise<void>
+  delete(id: string, tx?: TransactionContext): Promise<void>
 }
 
 export interface CreateWorkflowPhaseData {

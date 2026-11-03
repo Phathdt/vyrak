@@ -20,7 +20,7 @@ const PLANNING_STARTERS = [
 
 type PlanningMessage = {
   id: string
-  role: 'user' | 'assistant' | 'system'
+  role: 'user' | 'assistant' | 'system' | 'event'
   content: string
   timestamp: Date
 }

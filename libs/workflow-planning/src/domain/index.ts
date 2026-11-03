@@ -1,4 +1,5 @@
 export * from './di'
+export * from './exceptions'
 export * from './interfaces'
 export * from './prompts'
 export * from './schemas'

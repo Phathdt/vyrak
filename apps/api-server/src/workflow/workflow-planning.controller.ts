@@ -15,6 +15,7 @@ import {
   TechnicalRefinementSessionResponseDto,
   GenerateArtifactsResponseDto,
   GenerateSubTasksResponseDto,
+  SubTasksListResponseDto,
   TECHNICAL_REFINEMENT_SERVICE,
 } from '@vyrak/workflow-planning'
 
@@ -74,9 +75,13 @@ export class WorkflowPlanningController {
   @ApiParam({ name: 'projectId', description: 'Project ID' })
   @ApiParam({ name: 'id', description: 'Workflow ID' })
   @ApiResponse({ status: 200, type: GeneratePRDResponseDto })
-  async generatePRD(@Param('orgId') orgId: string, @Param('id') workflowId: string): Promise<GeneratePRDResponseDto> {
+  async generatePRD(
+    @Param('orgId') orgId: string,
+    @Param('projectId') projectId: string,
+    @Param('id') workflowId: string
+  ): Promise<GeneratePRDResponseDto> {
     // Get planning session
-    const session = await this.planningService.getPlanningSession(workflowId, orgId, '')
+    const session = await this.planningService.getPlanningSession(workflowId, orgId, projectId)
 
     if (!session.sessionId) {
       throw new Error('No planning session found')
@@ -116,6 +121,7 @@ export class WorkflowPlanningController {
   @ApiResponse({ status: 200, type: GeneratePRDResponseDto })
   async generatePRDFromMessage(
     @Param('orgId') orgId: string,
+    @Param('projectId') _projectId: string,
     @Param('id') workflowId: string,
     @Body() body: GeneratePRDFromMessageRequestDto
   ): Promise<GeneratePRDResponseDto> {
@@ -189,10 +195,11 @@ export class WorkflowPlanningController {
   @ApiResponse({ status: 200, type: GenerateArtifactsResponseDto })
   async generateTechnicalArtifacts(
     @Param('orgId') orgId: string,
+    @Param('projectId') projectId: string,
     @Param('id') workflowId: string
   ): Promise<GenerateArtifactsResponseDto> {
     // Get technical refinement session
-    const session = await this.technicalRefinementService.getTechnicalRefinementSession(workflowId, orgId, '')
+    const session = await this.technicalRefinementService.getTechnicalRefinementSession(workflowId, orgId, projectId)
 
     if (!session.sessionId) {
       throw new Error('No technical refinement session found')
@@ -212,15 +219,29 @@ export class WorkflowPlanningController {
   @ApiResponse({ status: 200, type: GenerateSubTasksResponseDto })
   async generateSubTasks(
     @Param('orgId') orgId: string,
+    @Param('projectId') projectId: string,
     @Param('id') workflowId: string
   ): Promise<GenerateSubTasksResponseDto> {
     // Get technical refinement session
-    const session = await this.technicalRefinementService.getTechnicalRefinementSession(workflowId, orgId, '')
+    const session = await this.technicalRefinementService.getTechnicalRefinementSession(workflowId, orgId, projectId)
 
     if (!session.sessionId) {
       throw new Error('No technical refinement session found')
     }
 
     return this.technicalRefinementService.generateSubTasks(workflowId, session.sessionId)
+  }
+
+  @Get('technical-refinement/sub-tasks')
+  @ApiOperation({
+    summary: 'List sub-tasks for the workflow',
+    description: 'Returns sub-tasks in execution order with their dependency keys.',
+  })
+  @ApiParam({ name: 'orgId', description: 'Organization ID' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiParam({ name: 'id', description: 'Workflow ID' })
+  @ApiResponse({ status: 200, type: SubTasksListResponseDto })
+  async listSubTasks(@Param('id') workflowId: string): Promise<SubTasksListResponseDto> {
+    return this.technicalRefinementService.listSubTasks(workflowId)
   }
 }

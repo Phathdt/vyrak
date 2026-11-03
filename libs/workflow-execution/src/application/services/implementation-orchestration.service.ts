@@ -66,10 +66,12 @@ export class ImplementationOrchestrationService implements IImplementationOrches
         throw new Error(`Workflow not found: ${workflowId}`)
       }
 
-      // Load sub-tasks for this phase
-      const allTasks = await this.subTaskRepository.findByPhaseId(phaseId)
+      // Load sub-tasks for this workflow
+      // Note: Tasks are created during Tech Refinement but executed during Implementation
+      // So we query by workflowId instead of phaseId
+      const allTasks = await this.subTaskRepository.findByWorkflowId(workflowId)
       if (allTasks.length === 0) {
-        this.logger.warn(`No sub-tasks found for phase ${phaseId}`)
+        this.logger.warn(`No sub-tasks found for workflow ${workflowId}`)
         return
       }
 

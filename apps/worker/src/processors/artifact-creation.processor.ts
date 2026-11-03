@@ -2,13 +2,14 @@ import { Injectable, Inject, OnModuleInit } from '@nestjs/common'
 import { IArtifactService, ARTIFACT_SERVICE } from '@vyrak/artifact'
 import { EnhancedLogger } from '@vyrak/custom-logger'
 import { DatabaseService } from '@vyrak/database'
-import { IEventBus, EVENT_BUS } from '@vyrak/event-bus'
+import { AgentToolUseEventSchema, IEventBus, EVENT_BUS } from '@vyrak/event-bus'
 import * as fs from 'fs/promises'
 import * as path from 'path'
 
-import type { AgentToolUseEvent } from '@vyrak/event-bus'
-
 import { withTenantContext } from '../common/decorators/with-tenant-context.decorator'
+import { WorkerProcessingError } from '../common/errors/worker-error'
+
+import type { AgentToolUseEvent } from '@vyrak/event-bus'
 
 @Injectable()
 export class ArtifactCreationProcessor implements OnModuleInit {
@@ -24,17 +25,26 @@ export class ArtifactCreationProcessor implements OnModuleInit {
   }
 
   async onModuleInit() {
-    await this.eventBus.subscribe<AgentToolUseEvent>(
-      'agent.tool_use',
-      withTenantContext(this.databaseService, this.handleToolUse.bind(this)),
-      {
-        group: 'artifact-workers',
-        consumer: `artifact-worker-${process.pid}`,
-        maxRetries: 3,
-      }
-    )
+    // Validate before the tenant wrapper reads metadata.orgId, so malformed events never set tenant context
+    const handler = withTenantContext(this.databaseService, this.handleToolUse.bind(this))
+
+    await this.eventBus.subscribe<unknown>('agent.tool_use', (rawEvent) => handler(this.parseToolUseEvent(rawEvent)), {
+      group: 'artifact-workers',
+      consumer: `artifact-worker-${process.pid}`,
+      maxRetries: 3,
+    })
 
     this.logger.log('Subscribed to agent.tool_use events')
+  }
+
+  private parseToolUseEvent(rawEvent: unknown): AgentToolUseEvent {
+    const parseResult = AgentToolUseEventSchema.safeParse(rawEvent)
+    if (!parseResult.success) {
+      const message = `Invalid agent.tool_use event schema: ${parseResult.error.message}`
+      this.logger.error(new Error(message), 'Event validation failed')
+      throw new Error(message)
+    }
+    return parseResult.data
   }
 
   private async handleToolUse(event: AgentToolUseEvent): Promise<void> {
@@ -101,9 +111,27 @@ export class ArtifactCreationProcessor implements OnModuleInit {
         return
       }
 
-      this.logger.error(error as Error, `Failed to create artifact for ${filePath}`)
+      const enrichedError = new WorkerProcessingError(
+        `Failed to create artifact: ${error instanceof Error ? error.message : String(error)}`,
+        {
+          processor: 'ArtifactCreationProcessor',
+          eventType: 'agent.tool_use',
+          workflowId,
+          toolName,
+          filePath,
+          repoPath: metadata.repoPath,
+          orgId: metadata.orgId,
+          projectId: metadata.projectId,
+          originalError: error instanceof Error ? error : undefined,
+        }
+      )
+
+      this.logger.error(
+        enrichedError,
+        `Artifact creation failed: eventType=agent.tool_use workflowId=${workflowId} toolName=${toolName} filePath=${filePath} orgId=${metadata.orgId} projectId=${metadata.projectId}`
+      )
       // Throw to trigger retry logic in event bus
-      throw error
+      throw enrichedError
     }
   }
 

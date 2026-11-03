@@ -7,14 +7,14 @@ import { GIT_REPOSITORY_SERVICE, type IGitRepositoryService, ProjectModule } fro
 import {
   WORKFLOW_REPOSITORY,
   WORKFLOW_REPOSITORY_REPOSITORY,
-  SUBTASK_REPOSITORY,
   WORKFLOW_DEPENDENCY_REPOSITORY,
   WORKFLOW_PHASE_REPOSITORY,
+  WORKFLOW_WORK_ITEM_REPOSITORY,
   WorkflowCoreModule,
   RepositoryContextService,
   type IWorkflowRepository,
   type IWorkflowRepositoryRepository,
-  type ISubTaskRepository,
+  type IWorkflowWorkItemRepository,
   type IWorkflowDependencyRepository,
   type IWorkflowPhaseRepository,
 } from '@vyrak/workflow-core'
@@ -73,7 +73,7 @@ import { WORKFLOW_PLANNING_SERVICE, TECHNICAL_REFINEMENT_SERVICE } from './domai
         gitRepositoryService: IGitRepositoryService,
         repositoryContextService: RepositoryContextService,
         artifactService: IArtifactService,
-        subTaskRepo: ISubTaskRepository,
+        workItemRepo: IWorkflowWorkItemRepository,
         workflowDependencyRepo: IWorkflowDependencyRepository,
         workflowPhaseRepo: IWorkflowPhaseRepository,
         configService
@@ -85,7 +85,7 @@ import { WORKFLOW_PLANNING_SERVICE, TECHNICAL_REFINEMENT_SERVICE } from './domai
           gitRepositoryService,
           repositoryContextService,
           artifactService,
-          subTaskRepo,
+          workItemRepo,
           workflowDependencyRepo,
           workflowPhaseRepo,
           configService
@@ -97,7 +97,7 @@ import { WORKFLOW_PLANNING_SERVICE, TECHNICAL_REFINEMENT_SERVICE } from './domai
         GIT_REPOSITORY_SERVICE,
         RepositoryContextService,
         ARTIFACT_SERVICE,
-        SUBTASK_REPOSITORY,
+        WORKFLOW_WORK_ITEM_REPOSITORY,
         WORKFLOW_DEPENDENCY_REPOSITORY,
         WORKFLOW_PHASE_REPOSITORY,
         CONFIG_SERVICE,

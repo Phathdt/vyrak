@@ -3,7 +3,7 @@ import { io, Socket } from 'socket.io-client'
 
 interface Message {
   id: string
-  role: 'user' | 'assistant'
+  role: 'user' | 'assistant' | 'system' | 'event'
   content: string
   createdAt: string
 }
@@ -81,6 +81,20 @@ export function useWebSocketChat({
     })
 
     // Chat events
+    socket.on('chat:user_message_saved', (data: { messageId: string; content: string }) => {
+      // Replace optimistic message with real message from database
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id.startsWith('temp-') && msg.role === 'user' && msg.content === data.content
+            ? {
+                ...msg,
+                id: data.messageId, // Replace temp ID with real DB ID
+              }
+            : msg
+        )
+      )
+    })
+
     socket.on('chat:message_sent', () => {
       setIsStreaming(true)
       setStreamingContent('')
@@ -144,6 +158,7 @@ export function useWebSocketChat({
     return () => {
       socket.off('connect')
       socket.off('disconnect')
+      socket.off('chat:user_message_saved')
       socket.off('chat:message_sent')
       socket.off('chat:thinking')
       socket.off('chat:delta')

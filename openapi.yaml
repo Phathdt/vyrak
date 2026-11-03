@@ -624,6 +624,48 @@ paths:
                 $ref: '#/components/schemas/PaginatedWorkflowsResponse'
       summary: List workflows with pagination, search, and filtering
       tags: *ref_6
+  /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/phases/{phaseId}/approve:
+    post:
+      description: >-
+        Completes the given phase (must be the current phase), advances the workflow, and publishes a phase.approved
+        event so the worker can start the next phase.
+      operationId: WorkflowsController_approvePhaseById
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: projectId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: phaseId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApproveWorkflowPhaseDto'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdvanceWorkflowPhaseResponseDto'
+      summary: Approve a phase and publish phase.approved
+      tags: *ref_6
   /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/phases/approve:
     post:
       description: Confirms the phase is done, completes it, and starts the next phase (or completes the workflow).
@@ -1351,6 +1393,36 @@ paths:
               schema:
                 $ref: '#/components/schemas/GenerateSubTasksResponseDto'
       summary: Generate sub-tasks from Implementation Plan
+      tags: *ref_8
+  /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/technical-refinement/sub-tasks:
+    get:
+      description: Returns sub-tasks in execution order with their dependency keys.
+      operationId: WorkflowPlanningController_listSubTasks
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: Workflow ID
+          schema:
+            type: string
+        - name: projectId
+          required: true
+          in: path
+          description: Project ID
+          schema: {}
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema: {}
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubTasksListResponseDto'
+      summary: List sub-tasks for the workflow
       tags: *ref_8
   /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/implementation/start:
     post:
@@ -3147,6 +3219,44 @@ components:
         - subTasks
         - count
         - dependencyCount
+    SubTasksListResponseDto:
+      type: object
+      properties:
+        tasks:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              key:
+                type: string
+              title:
+                type: string
+              description:
+                type: string
+                nullable: true
+              status:
+                type: string
+              executionOrder:
+                type: number
+              dependencies:
+                type: array
+                items:
+                  type: string
+            required:
+              - id
+              - key
+              - title
+              - description
+              - status
+              - executionOrder
+              - dependencies
+        count:
+          type: number
+      required:
+        - tasks
+        - count
     StartImplementationResponseDto:
       type: object
       properties:

@@ -4,6 +4,7 @@ import type {
   TechnicalRefinementSessionResponseDto,
   GenerateArtifactsResponseDto,
   GenerateSubTasksResponseDto,
+  SubTasksListResponseDto,
 } from '../schemas/technical-refinement.schemas'
 
 export type TechnicalRefinementChatInput = {
@@ -38,4 +39,9 @@ export interface ITechnicalRefinementService {
    * Generate sub-tasks from Implementation Plan artifact
    */
   generateSubTasks(workflowId: string, sessionId: string): Promise<GenerateSubTasksResponseDto>
+
+  /**
+   * List sub-tasks generated for the workflow's Technical Refinement phase
+   */
+  listSubTasks(workflowId: string): Promise<SubTasksListResponseDto>
 }
