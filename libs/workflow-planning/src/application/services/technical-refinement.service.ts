@@ -1,3 +1,4 @@
+import { AnthropicApiAdapter } from '@vyrak/ai-agent'
 import { IArtifactService } from '@vyrak/artifact'
 import { ConversationPhase, IConversationService, MessageRole } from '@vyrak/conversation'
 import {
@@ -14,7 +15,7 @@ import {
 
 import { ImplementationPlanNotFoundError } from '../../domain/exceptions'
 import { buildTechnicalRefinementPrompt } from '../../domain/prompts/technical-refinement-agent-prompt'
-import { parseImplementationPlan } from '../../infras/parsers'
+import { ParsedImplementationTask } from '../../infras/parsers'
 
 import type {
   ITechnicalRefinementService,
@@ -85,6 +86,7 @@ function readExecutionOrder(metadata: Record<string, unknown> | null, fallback: 
 
 export class TechnicalRefinementService implements ITechnicalRefinementService {
   private readonly model: string
+  private readonly anthropicAdapter: AnthropicApiAdapter
 
   constructor(
     private readonly conversationService: IConversationService,
@@ -103,6 +105,7 @@ export class TechnicalRefinementService implements ITechnicalRefinementService {
       throw new Error('ANTHROPIC__MODEL not configured in .env')
     }
     this.model = anthropicConfig.model
+    this.anthropicAdapter = new AnthropicApiAdapter(configService)
   }
 
   async getTechnicalRefinementSession(
@@ -349,7 +352,8 @@ You have access to the project repository for scouting existing patterns. Use Re
     const latestPlan = [...artifacts].sort((a, b) => b.version - a.version)[0]
     const { content: planContent } = await this.artifactService.downloadArtifact(latestPlan.id)
 
-    const { tasks: parsedTasks } = parseImplementationPlan(planContent)
+    // Use Claude API to parse Implementation Plan intelligently
+    const parsedTasks = await this.parseImplementationPlanWithClaude(planContent)
     if (parsedTasks.length === 0) {
       return { subTasks: [], count: 0, dependencyCount: 0 }
     }
@@ -544,6 +548,74 @@ You have access to the project repository for scouting existing patterns. Use Re
     }
 
     return parts.join('')
+  }
+
+  private async parseImplementationPlanWithClaude(planContent: string): Promise<ParsedImplementationTask[]> {
+    try {
+      const prompt = `Analyze this Implementation Plan and extract ONLY the actionable tasks from Phase sections.
+
+IMPORTANT RULES:
+1. ONLY extract tasks from sections that start with "### Phase N:" or "## Phase N:"
+2. IGNORE all tasks in "Success Criteria", "Acceptance Criteria", or any non-Phase sections
+3. Each task should be a numbered or bulleted checkbox item like "1. [ ] Task title" or "- [ ] Task title"
+4. Extract task metadata: description, acceptance criteria, dependencies, estimate, files
+5. Return as JSON array
+
+Implementation Plan:
+${planContent}
+
+Return JSON in this exact format:
+{
+  "tasks": [
+    {
+      "key": "phase-1-1.1",
+      "title": "Task title",
+      "description": "Task description",
+      "acceptanceCriteria": ["criterion 1", "criterion 2"],
+      "dependencyKeys": ["phase-1-1.2"],
+      "phaseKey": "phase-1",
+      "phaseTitle": "Phase title",
+      "phaseOrder": 1,
+      "taskOrder": 1,
+      "executionOrder": 1,
+      "isParallel": true,
+      "estimate": "2h",
+      "files": ["src/file.ts"]
+    }
+  ]
+}
+
+CRITICAL: Only include tasks from Phase sections. Ignore tasks in Success Criteria, Acceptance, Rollback, or any other non-Phase sections.`
+
+      const jsonResponse = await this.callAnthropicAPI(prompt)
+      return jsonResponse.tasks || []
+    } catch (error) {
+      console.error('Failed to parse Implementation Plan with Claude:', error)
+      // Fallback to regex parser
+      const { parseImplementationPlan } = await import('../../infras/parsers')
+      const { tasks } = parseImplementationPlan(planContent)
+      return tasks
+    }
+  }
+
+  private async callAnthropicAPI(prompt: string): Promise<{ tasks: ParsedImplementationTask[] }> {
+    const response = await this.anthropicAdapter.chat({
+      messages: [
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ],
+      maxTokens: 8192,
+    })
+
+    const content = response.content
+
+    // Extract JSON from markdown code block if present
+    const jsonMatch = content.match(/```(?:json)?\s*\n?([\s\S]+?)\n?```/) || content.match(/(\{[\s\S]+\})/)
+    const jsonText = jsonMatch ? jsonMatch[1] : content
+
+    return JSON.parse(jsonText.trim())
   }
 
   private toAIMessages(messages: ConversationMessage[]): Message[] {

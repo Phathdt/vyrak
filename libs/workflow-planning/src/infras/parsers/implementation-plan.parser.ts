@@ -53,6 +53,7 @@ export function parseImplementationPlan(markdown: string): ParsedImplementationP
   let executionOrder = 0
   let current: ParsedImplementationTask | null = null
   let inAcceptance = false
+  let inPhase = false
 
   const finishCurrent = (): void => {
     current = null
@@ -71,6 +72,14 @@ export function parseImplementationPlan(markdown: string): ParsedImplementationP
       phaseTitle = phaseMatch[2].trim()
       taskOrder = 0
       executionOrder += 1
+      inPhase = true
+      continue
+    }
+
+    // Exit phase when encountering non-phase level 2 headers (e.g., ## Success Criteria)
+    if (/^#{2}\s/.test(trimmed) && !trimmed.match(PHASE_HEADER)) {
+      finishCurrent()
+      inPhase = false
       continue
     }
 
@@ -80,7 +89,7 @@ export function parseImplementationPlan(markdown: string): ParsedImplementationP
     }
 
     const taskMatch = trimmed.match(TASK_LINE)
-    if (taskMatch) {
+    if (taskMatch && inPhase) {
       finishCurrent()
       taskOrder += 1
       executionOrder += 1
