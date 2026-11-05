@@ -13,13 +13,13 @@
     "@vyrak/database": "*",
     "@vyrak/organization": "*",
     "@vyrak/user": "*",
-    "@nestjs/common": "^12.3.2",
-    "@nestjs/core": "^12.3.2",
+    "@nestjs/common": "^12.3.3",
+    "@nestjs/core": "^12.3.3",
     "@nestjs/passport": "^12.0.0",
-    "@nestjs/swagger": "^12.0.5",
+    "@nestjs/swagger": "^12.1.0",
     "@opentelemetry/api": "^1.10.0",
-    "argon2": "^0.45.1",
-    "jose": "^6.2.14",
+    "argon2": "^0.45.2",
+    "jose": "^6.2.15",
     "nestjs-zod": "^5.5.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
@@ -31,6 +31,6 @@
     "@types/node": "~26.6.6",
     "@types/passport-jwt": "^4.0.1",
     "typescript": "~7.0.2",
-    "vitest": "^5.0.5"
+    "vitest": "^5.1.0"
   }
 }

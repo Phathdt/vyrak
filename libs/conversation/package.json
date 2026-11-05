@@ -17,17 +17,17 @@
   },
   "dependencies": {
     "@vyrak/database": "*",
-    "@nestjs/common": "^12.3.2",
-    "@nestjs/core": "^12.3.2",
-    "@nestjs/platform-express": "^12.3.2",
+    "@nestjs/common": "^12.3.3",
+    "@nestjs/core": "^12.3.3",
+    "@nestjs/platform-express": "^12.3.3",
     "@opentelemetry/api": "^1.10.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2"
   },
   "devDependencies": {
-    "@nestjs/testing": "^12.3.2",
+    "@nestjs/testing": "^12.3.3",
     "@types/node": "~26.6.6",
     "typescript": "~7.0.2",
-    "vitest": "^5.0.5"
+    "vitest": "^5.1.0"
   }
 }

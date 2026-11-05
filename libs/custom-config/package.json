@@ -9,7 +9,7 @@
     "dev": "rolldown -c --watch"
   },
   "dependencies": {
-    "@nestjs/common": "^12.3.2",
+    "@nestjs/common": "^12.3.3",
     "@opentelemetry/api": "^1.10.0",
     "js-yaml": "^5.5.0",
     "reflect-metadata": "^0.2.2",
@@ -24,6 +24,6 @@
     "@types/js-yaml": "^4.0.9",
     "@types/node": "~26.6.6",
     "typescript": "~7.0.2",
-    "vitest": "^5.0.5"
+    "vitest": "^5.1.0"
   }
 }
