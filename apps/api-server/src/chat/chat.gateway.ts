@@ -223,7 +223,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
           case 'complete':
             assistantMessageId = event.messageId
-            this.logger.log(`[ChatGateway] Received complete event with messageId: ${assistantMessageId}`, 'ChatGateway')
+            this.logger.log(
+              `[ChatGateway] Received complete event with messageId: ${assistantMessageId}`,
+              'ChatGateway'
+            )
             // Don't emit chat:complete here - we'll emit it after the loop with fullResponse
             break
 

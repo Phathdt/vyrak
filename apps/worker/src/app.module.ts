@@ -25,6 +25,7 @@ import {
 } from '@vyrak/workflow-execution'
 import { ClsModule } from 'nestjs-cls'
 
+import { AppController } from './app.controller'
 import {
   ExampleProcessor,
   WorkflowPhaseRunProcessor,
@@ -81,6 +82,7 @@ import {
       },
     }),
   ],
+  controllers: [AppController],
   providers: [
     ExampleProcessor,
     WorkflowPhaseRunProcessor,

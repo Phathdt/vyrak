@@ -1,18 +1,24 @@
 import { NestFactory } from '@nestjs/core'
+import { CONFIG_SERVICE } from '@vyrak/custom-config'
 import { Logger } from 'nestjs-pino'
 
 import { AppModule } from './app.module'
 
+import type { IConfigService } from '@vyrak/custom-config'
+
 async function bootstrap() {
-  const app = await NestFactory.createApplicationContext(AppModule, {
+  const app = await NestFactory.create(AppModule, {
     bufferLogs: true,
   })
 
   app.useLogger(app.get(Logger))
 
-  await app.init()
+  const configService = app.get<IConfigService>(CONFIG_SERVICE)
+  const port = configService.host.port
+  await app.listen(port)
 
   const logger = app.get(Logger)
+  logger.log(`Worker health endpoint listening on http://localhost:${port}/healthz`)
   logger.log('Worker application started successfully')
   logger.log('Consuming events from Redis Streams...')
 

@@ -1,9 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { randomUUID } from 'node:crypto'
 import { IConversationService, CONVERSATION_SERVICE, MessageRole } from '@vyrak/conversation'
 import { EnhancedLogger } from '@vyrak/custom-logger'
 import { IEventBus, EVENT_BUS, EventType } from '@vyrak/event-bus'
 import { IWorkflowRepository, WORKFLOW_REPOSITORY, RepositoryContextService } from '@vyrak/workflow-core'
+import { randomUUID } from 'node:crypto'
 
 type ChatEvent =
   | { type: 'thinking'; content: string }

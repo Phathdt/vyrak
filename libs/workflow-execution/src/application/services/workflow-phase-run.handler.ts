@@ -26,11 +26,13 @@ export class WorkflowPhaseRunHandler {
     configService: IConfigService,
     enhancedLogger?: EnhancedLogger
   ) {
-    this.logger = enhancedLogger?.with({ context: 'WorkflowPhaseRunHandler' }) ?? ({
-      log: console.log,
-      error: console.error,
-      warn: console.warn,
-    } as any)
+    this.logger =
+      enhancedLogger?.with({ context: 'WorkflowPhaseRunHandler' }) ??
+      ({
+        log: console.log,
+        error: console.error,
+        warn: console.warn,
+      } as unknown as EnhancedLogger)
     this.gitWorktree = new GitWorktreeService(configService)
     this.claudeCode = new ClaudeCodeRunner(configService, aiAgentService)
   }
@@ -89,7 +91,9 @@ export class WorkflowPhaseRunHandler {
       planText,
       workflowId: job.workflowId,
     })
-    this.logger.log(`[Implementation] Claude Code completed: workflowId=${job.workflowId} stopReason=${agentResult.stopReason}`)
+    this.logger.log(
+      `[Implementation] Claude Code completed: workflowId=${job.workflowId} stopReason=${agentResult.stopReason}`
+    )
 
     this.logger.log(`[Implementation] Committing changes: workspacePath=${workspacePath}`)
     const commitSha = await this.commitWorkspaceChanges(workspacePath, job.workflowId)
