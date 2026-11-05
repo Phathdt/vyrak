@@ -16,8 +16,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@vyrak/custom-config": "*",
-    "@vyrak/database": "*",
+    "@vyrak/custom-config": "workspace:*",
+    "@vyrak/database": "workspace:*",
     "@aws-sdk/client-s3": "^3.1162.0",
     "@nestjs/common": "^12.3.3",
     "@nestjs/core": "^12.3.3",

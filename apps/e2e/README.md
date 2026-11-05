@@ -7,7 +7,7 @@ E2E test suite cho dự án Vyrak sử dụng Playwright Test framework.
 ### Prerequisites
 
 - Node.js >= 22
-- Yarn >= 1.22
+- pnpm >= 10
 - PostgreSQL database đang chạy
 - API server và web app đang chạy (hoặc sẽ được tự động start bởi Playwright)
 
@@ -15,13 +15,13 @@ E2E test suite cho dự án Vyrak sử dụng Playwright Test framework.
 
 ```bash
 # Install dependencies
-yarn install
+pnpm install
 
 # Install Playwright browsers (chỉ chromium cho development)
-yarn workspace @vyrak/e2e install:browsers
+pnpm --filter @vyrak/e2e run install:browsers
 
 # Seed test user vào database
-yarn db:seed:test
+pnpm db:seed:test
 ```
 
 ### Environment Variables
@@ -40,14 +40,14 @@ TEST_USER_PASSWORD=Test123456!
 ### Local Development
 
 ```bash
-# Using yarn scripts (recommended)
-yarn test:e2e                                # Run all tests (headless)
-yarn test:e2e:headed                         # Run tests with browser visible
-yarn test:e2e:ui                             # Run tests with UI mode (interactive)
-yarn workspace @vyrak/e2e test:debug         # Run tests with debug mode
-yarn workspace @vyrak/e2e test:chromium      # Run specific browser
-yarn workspace @vyrak/e2e test:firefox
-yarn workspace @vyrak/e2e test:webkit
+# Using pnpm scripts (recommended)
+pnpm test:e2e                                # Run all tests (headless)
+pnpm test:e2e:headed                         # Run tests with browser visible
+pnpm test:e2e:ui                             # Run tests with UI mode (interactive)
+pnpm --filter @vyrak/e2e run test:debug         # Run tests with debug mode
+pnpm --filter @vyrak/e2e run test:chromium      # Run specific browser
+pnpm --filter @vyrak/e2e run test:firefox
+pnpm --filter @vyrak/e2e run test:webkit
 
 # Direct npx commands (from apps/e2e directory)
 npx playwright test                          # Run all tests
@@ -69,7 +69,7 @@ Trong CI, tests sẽ tự động:
 
 ```bash
 # Simulate CI run locally
-CI=true yarn test:e2e
+CI=true pnpm test:e2e
 ```
 
 ## Test Structure
@@ -178,7 +178,7 @@ const uniqueEmail = TestDataFactory.uniqueEmail('test')
 Sau khi run tests, mở HTML report:
 
 ```bash
-yarn workspace @vyrak/e2e test:report
+pnpm --filter @vyrak/e2e run test:report
 ```
 
 Report sẽ mở tại `http://localhost:9323/`
@@ -194,7 +194,7 @@ Trong GitHub Actions, test reports được upload as artifacts:
 ### Debug Mode
 
 ```bash
-yarn workspace @vyrak/e2e test:debug
+pnpm --filter @vyrak/e2e run test:debug
 ```
 
 Playwright Inspector sẽ mở và cho phép:
@@ -225,7 +225,7 @@ npx playwright show-trace test-results/.../trace.zip
 
 1. Verify API server đang chạy: `curl http://localhost:3000/health`
 2. Verify web app đang chạy: `curl http://localhost:5173`
-3. Verify test user exists: `yarn db:seed:test`
+3. Verify test user exists: `pnpm db:seed:test`
 4. Check `.env` file trong `apps/e2e/`
 
 ### Auth State Issues
@@ -234,7 +234,7 @@ Delete saved auth state và run lại:
 
 ```bash
 rm -rf apps/e2e/test-results/.auth/
-yarn test:e2e
+pnpm test:e2e
 ```
 
 ### Timeout Errors
@@ -255,12 +255,12 @@ GitHub Actions workflow: `.github/workflows/e2e.yml`
 
 ```bash
 # Typecheck
-yarn workspace @vyrak/e2e typecheck
+pnpm --filter @vyrak/e2e run typecheck
 
 # List all installed browsers
 npx playwright list
 
 # Update Playwright
-yarn upgrade @playwright/test --latest
-yarn workspace @vyrak/e2e install:browsers
+pnpm update @playwright/test --latest
+pnpm --filter @vyrak/e2e run install:browsers
 ```

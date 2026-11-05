@@ -1,3 +1,4 @@
+import { query } from '@anthropic-ai/claude-agent-sdk'
 import { Inject, Injectable } from '@nestjs/common'
 import { IConversationService, CONVERSATION_SERVICE, MessageRole } from '@vyrak/conversation'
 import { EnhancedLogger } from '@vyrak/custom-logger'
@@ -86,7 +87,6 @@ You have access to the project repository for scouting existing patterns. Use Re
 `
 
       // Stream with Agent SDK
-      const { query } = await import('@anthropic-ai/claude-agent-sdk')
       const pendingFileChanges: Array<{ path: string; toolName: string }> = []
 
       this.logger.log(`[ChatService] Starting Agent SDK query`, 'ChatService')

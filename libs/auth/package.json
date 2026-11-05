@@ -9,10 +9,10 @@
     "dev": "rolldown -c --watch"
   },
   "dependencies": {
-    "@vyrak/custom-config": "*",
-    "@vyrak/database": "*",
-    "@vyrak/organization": "*",
-    "@vyrak/user": "*",
+    "@vyrak/custom-config": "workspace:*",
+    "@vyrak/database": "workspace:*",
+    "@vyrak/organization": "workspace:*",
+    "@vyrak/user": "workspace:*",
     "@nestjs/common": "^12.3.3",
     "@nestjs/core": "^12.3.3",
     "@nestjs/passport": "^12.0.0",

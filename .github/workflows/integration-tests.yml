@@ -41,39 +41,34 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.16.1
+          run_install: false
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "24.16.0"
-
-      - name: Cache dependencies
-        uses: actions/cache@v4
-        id: yarn-cache
-        with:
-          path: |
-            node_modules
-            **/node_modules
-            .yarn/cache
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
+          cache: pnpm
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma Client
-        run: yarn db:generate
+        run: pnpm db:generate
 
       - name: Run database migrations
-        run: yarn db:migrate:deploy
+        run: pnpm db:migrate:deploy
         env:
           DATABASE__URL: postgresql://postgres:postgres@localhost:5432/vyrak_test
 
       - name: Build backend packages (libs + api-server)
-        run: yarn turbo run build --filter='!@apps/web'
+        run: pnpm turbo run build --filter='!@apps/web'
 
       - name: Run integration tests
-        run: yarn test:integration
+        run: pnpm test:integration
         env:
           NODE_ENV: test
           APP_ENV: development

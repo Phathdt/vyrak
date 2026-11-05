@@ -366,7 +366,7 @@ S3__FORCE_PATH_STYLE=true
 **Local Development:**
 
 - Uses Floci (lightweight S3-compatible storage via LocalStack)
-- Setup: `yarn docker:floci && yarn floci:setup`
+- Setup: `pnpm docker:floci && pnpm floci:setup`
 - Access: `aws --endpoint-url=http://localhost:4566 s3 ls s3://vyrak-artifacts`
 
 ### Tech Stack
@@ -421,8 +421,8 @@ The project uses shared base configurations to ensure consistency:
 This project follows a strict type-safe workflow from backend to frontend:
 
 1. **Backend:** Define Zod schemas and NestJS DTOs with OpenAPI decorators
-2. **Generate OpenAPI:** Run `yarn generate:openapi` to create `openapi.yml`
-3. **Generate Hooks:** Run `yarn generate:api` to create React Query hooks with Zod validation
+2. **Generate OpenAPI:** Run `pnpm generate:openapi` to create `openapi.yml`
+3. **Generate Hooks:** Run `pnpm generate:api` to create React Query hooks with Zod validation
 4. **Frontend:** Use generated hooks with full TypeScript inference
 
 **Example:**
@@ -443,35 +443,35 @@ const { mutateAsync } = useProductsControllerCreate();
 
 **Development:**
 
-- `yarn dev` - Start all apps (API on :3000, Web on :5173)
-- `yarn dev:api` / `yarn dev:web` / `yarn dev:worker` - Start individual apps
+- `pnpm dev` - Start all apps (API on :3000, Web on :5173)
+- `pnpm dev:api` / `pnpm dev:web` / `pnpm dev:worker` - Start individual apps
 
 **API Generation:**
 
-- `yarn generate:openapi` - Generate OpenAPI spec from NestJS
-- `yarn generate:api` - Generate React Query hooks from OpenAPI spec
+- `pnpm generate:openapi` - Generate OpenAPI spec from NestJS
+- `pnpm generate:api` - Generate React Query hooks from OpenAPI spec
 
 **Code Generation:**
 
-- `yarn ctix` - Auto-generate index.ts exports for all modules (run after adding/removing files)
+- `pnpm ctix` - Auto-generate index.ts exports for all modules (run after adding/removing files)
 
 **Quality:**
 
-- `yarn lint` - Auto-fix with Oxlint
-- `yarn typecheck` - TypeScript check all packages
-- `yarn test` - Run Vitest tests
-- `yarn test:e2e` - Run E2E tests with Playwright
+- `pnpm lint` - Auto-fix with Oxlint
+- `pnpm typecheck` - TypeScript check all packages
+- `pnpm test` - Run Vitest tests
+- `pnpm test:e2e` - Run E2E tests with Playwright
 
 **Database:**
 
-- `yarn db:generate` - Generate Prisma client
-- `yarn db:migrate` - Run migrations
-- `yarn db:push` - Push schema without migration
+- `pnpm db:generate` - Generate Prisma client
+- `pnpm db:migrate` - Run migrations
+- `pnpm db:push` - Push schema without migration
 
 **Workspace Management:**
 
-- `yarn workspace:list` - List all workspaces
-- `yarn workspace:health --org-id <org> --project-id <project>` - Check workspace health
+- `pnpm workspace:list` - List all workspaces
+- `pnpm workspace:health --org-id <org> --project-id <project>` - Check workspace health
 
 ### Workspace Configuration
 
@@ -523,13 +523,13 @@ For detailed instructions on migrating to worktree mode, see `/docs/workspace-wo
 
 ```bash
 # List all workspaces
-yarn workspace:list
+pnpm workspace:list
 
 # List worktrees for specific org/project
-yarn workspace:list --org-id org-123 --project-id project-456
+pnpm workspace:list --org-id org-123 --project-id project-456
 
 # Check workspace health
-yarn workspace:health --org-id org-123 --project-id project-456
+pnpm workspace:health --org-id org-123 --project-id project-456
 ```
 
 ## Code Conventions
@@ -543,7 +543,7 @@ yarn workspace:health --org-id org-123 --project-id project-456
 ### Module Exports
 
 - **DO NOT manually maintain `index.ts` files** - they are auto-generated
-- Run `yarn ctix` to regenerate all `index.ts` barrel exports after adding/removing files
+- Run `pnpm ctix` to regenerate all `index.ts` barrel exports after adding/removing files
 - The script processes `libs/` (full recursive exports) and `apps/` (subdirectories only)
 - Ignored patterns: `*.spec.ts`, `*.test.ts`, `.{hidden}`, `typechains/`, `factories/`
 - Ignored modules: `contracts`, `database`, `web`
@@ -599,10 +599,10 @@ Oxfmt is configured in `.oxfmtrc.json` with `sortImports` enabled.
 2. **Match existing style** - Follow the project's conventions and patterns
 3. **Follow hexagonal architecture** - Create new business modules in `libs/` following the `libs/product/` pattern
 4. **Controllers and processors belong in apps/** - Only controllers go in `api-server/`, only processors/consumers in `worker/`
-5. **DO NOT manually edit index.ts files** - Run `yarn ctix` to regenerate barrel exports
-6. **Regenerate API** - After changing DTOs/controllers, run `yarn ctix` then `yarn generate:openapi` then `yarn generate:api`
+5. **DO NOT manually edit index.ts files** - Run `pnpm ctix` to regenerate barrel exports
+6. **Regenerate API** - After changing DTOs/controllers, run `pnpm ctix` then `pnpm generate:openapi` then `pnpm generate:api`
 7. **Never write manual React Query hooks** - Use generated hooks from Orval in `apps/web/src/api/generated/`
-8. **Verify types** - Run `yarn typecheck` before claiming completion
+8. **Verify types** - Run `pnpm typecheck` before claiming completion
 9. **Update docs** - Update relevant docs when changing architecture or workflows
 10. **NEVER use @Injectable() in libs/** - Services, repositories, and use cases in `libs/` MUST be plain TypeScript classes without any NestJS decorators. Only `apps/` code (controllers, processors) and `*.module.ts` files can use NestJS decorators
 
@@ -623,9 +623,9 @@ Oxfmt is configured in `.oxfmtrc.json` with `sortImports` enabled.
    - TypeScript: Extend `../../config/tsconfig.lib.json` for libs, `../../config/tsconfig.app.json` for apps
    - See `config/README.md` for detailed documentation
 8. **Run code generation**:
-   - `yarn ctix` - Regenerate index.ts barrel exports
-   - `yarn generate:openapi` - Generate OpenAPI spec
-   - `yarn generate:api` - Generate React Query hooks
+   - `pnpm ctix` - Regenerate index.ts barrel exports
+   - `pnpm generate:openapi` - Generate OpenAPI spec
+   - `pnpm generate:api` - Generate React Query hooks
 9. **Use generated hooks** - NEVER write React Query hooks manually, always use Orval-generated hooks from `apps/web/src/api/generated/`
 10. **Frontend validation** - Add Zod schemas in `lib/schemas/` for form validation only (not for API calls)
 11. **Test endpoints** - Verify API works before integrating frontend
@@ -680,7 +680,7 @@ Oxfmt is configured in `.oxfmtrc.json` with `sortImports` enabled.
 ### Required
 
 - Node.js >= 22.0.0
-- Yarn >= 1.22.0
+- pnpm >= 10
 - Docker & Docker Compose
 
 ### Environment Files
@@ -712,9 +712,9 @@ Tests are split into two categories to optimize CI speed and developer workflow:
 - No database, Redis, or external services required
 - Mock external dependencies
 - Commands:
-  - `yarn test:unit` - Run once
-  - `yarn test:unit:watch` - Watch mode
-  - `yarn test:ci` - CI mode with coverage
+  - `pnpm test:unit` - Run once
+  - `pnpm test:unit:watch` - Watch mode
+  - `pnpm test:ci` - CI mode with coverage
 
 **Integration Tests** (`*.integration.spec.ts`, `*.integration.test.ts`, `**/__tests__/integration/**`):
 
@@ -723,8 +723,8 @@ Tests are split into two categories to optimize CI speed and developer workflow:
 - Use PostgreSQL 17 and Redis 7 Docker containers
 - Each test file gets isolated database instance
 - Commands:
-  - `yarn test:integration` - Run once
-  - `yarn test:integration:watch` - Watch mode
+  - `pnpm test:integration` - Run once
+  - `pnpm test:integration:watch` - Watch mode
 
 ### Writing Tests
 
@@ -799,16 +799,16 @@ describe("ProductRepository Integration", () => {
 
 ```bash
 # Unit tests (fast, no Docker needed)
-yarn test:unit              # Run once
-yarn test:unit:watch        # Watch mode
+pnpm test:unit              # Run once
+pnpm test:unit:watch        # Watch mode
 
 # Integration tests (requires Docker)
-yarn test:integration       # Run once
-yarn test:integration:watch # Watch mode
+pnpm test:integration       # Run once
+pnpm test:integration:watch # Watch mode
 
 # All tests
-yarn test                   # Run everything
-yarn test:watch             # Watch all
+pnpm test                   # Run everything
+pnpm test:watch             # Watch all
 ```
 
 **CI:**
@@ -833,26 +833,26 @@ E2E test suite using **Playwright Test** for critical user flows.
 
 ```bash
 # All tests (headless)
-yarn test:e2e
+pnpm test:e2e
 
 # With browser visible
-yarn test:e2e:headed
+pnpm test:e2e:headed
 
 # Interactive UI mode
-yarn test:e2e:ui
+pnpm test:e2e:ui
 
 # Debug mode
-yarn test:e2e:debug
+pnpm test:e2e:debug
 
 # View reports
-yarn workspace @vyrak/e2e test:report
+pnpm --filter @vyrak/e2e run test:report
 ```
 
 **Setup:**
 
-1. Install Playwright browsers: `yarn workspace @vyrak/e2e install:browsers`
-2. Seed test user: `yarn db:seed:test`
-3. Start dev servers: `yarn dev`
+1. Install Playwright browsers: `pnpm --filter @vyrak/e2e run install:browsers`
+2. Seed test user: `pnpm db:seed:test`
+3. Start dev servers: `pnpm dev`
 4. Run tests
 
 **Architecture:**
@@ -891,7 +891,7 @@ yarn workspace @vyrak/e2e test:report
 
 ### Commits
 
-- Use `yarn commit` for interactive Commitizen
+- Use `pnpm commit` for interactive Commitizen
 - Follow conventional commits: `feat:`, `fix:`, `docs:`, `chore:`
 - Keep commits atomic and focused
 
@@ -906,9 +906,9 @@ yarn workspace @vyrak/e2e test:report
 
 Lefthook manages git hooks with these checks:
 
-- **pre-commit**: Runs `yarn ci:lint` and `yarn ci:format` on staged files
+- **pre-commit**: Runs `pnpm ci:lint` and `pnpm ci:format` on staged files
 - **commit-msg**: Validates commit message format with commitlint
-- **pre-push**: Runs `yarn ci:typecheck` before pushing
+- **pre-push**: Runs `pnpm ci:typecheck` before pushing
 
 To skip hooks temporarily: `LEFTHOOK=0 git commit`
 
@@ -999,10 +999,10 @@ See `docs/workspace-worktree-migration.md` for full configuration options and mi
 
 ```bash
 # List all workspaces
-yarn workspace:list
+pnpm workspace:list
 
 # Check main repo health
-yarn workspace:health --org-id <org> --project-id <project>
+pnpm workspace:health --org-id <org> --project-id <project>
 ```
 
 ### When to Use Each Mode
@@ -1021,9 +1021,9 @@ yarn workspace:health --org-id <org> --project-id <project>
 
 ## Deployment Checklist
 
-- [ ] Run `yarn build` to verify production builds
-- [ ] Run `yarn typecheck` and `yarn lint:ci`
-- [ ] Run database migrations with `yarn db:migrate:deploy`
+- [ ] Run `pnpm build` to verify production builds
+- [ ] Run `pnpm typecheck` and `pnpm lint:ci`
+- [ ] Run database migrations with `pnpm db:migrate:deploy`
 - [ ] Set production environment variables
 - [ ] Configure CORS for production domains
 - [ ] Enable rate limiting and security headers

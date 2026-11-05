@@ -337,7 +337,7 @@ function updatePackageJson(
     // Skip self-reference
     if (dep === moduleName) continue
 
-    importedDeps[dep] = '*'
+    importedDeps[dep] = 'workspace:*'
     if (!currentDeps[dep]) {
       added.push(dep)
     }

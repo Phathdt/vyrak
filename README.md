@@ -140,7 +140,7 @@ graph TB
 ## Prerequisites
 
 - Node.js >= 22.0.0
-- Yarn >= 1.22.0
+- pnpm >= 10
 - Docker & Docker Compose (for PostgreSQL)
 
 ## Getting Started
@@ -153,10 +153,10 @@ git clone <repository-url>
 cd vyrak
 
 # Install dependencies
-yarn install
+pnpm install
 
 # Start PostgreSQL with Docker
-yarn docker:up
+pnpm docker:up
 ```
 
 ### 2. Environment Configuration
@@ -185,13 +185,13 @@ See `.env.example` for complete configuration options.
 
 ```bash
 # Generate Prisma client
-yarn db:generate
+pnpm db:generate
 
 # Run migrations
-yarn db:migrate
+pnpm db:migrate
 
 # (Optional) Open Prisma Studio
-yarn db:studio
+pnpm db:studio
 ```
 
 ### 4. S3 Storage Setup (Floci)
@@ -200,8 +200,8 @@ For local development, Vyrak uses Floci as an S3-compatible storage for workflow
 
 ```bash
 # Start Floci container and create S3 bucket
-yarn docker:floci
-yarn floci:setup
+pnpm docker:floci
+pnpm floci:setup
 ```
 
 This will:
@@ -221,9 +221,9 @@ S3__FORCE_PATH_STYLE=true
 ```
 
 **Available Commands:**
-- `yarn docker:floci` - Start Floci container
-- `yarn floci:setup` - Create S3 bucket (auto-detects AWS CLI or uses Docker)
-- `yarn floci:stop` - Stop Floci container
+- `pnpm docker:floci` - Start Floci container
+- `pnpm floci:setup` - Create S3 bucket (auto-detects AWS CLI or uses Docker)
+- `pnpm floci:stop` - Stop Floci container
 
 **Note:** For production, replace Floci with real AWS S3 and update the credentials in `.env`.
 
@@ -231,77 +231,77 @@ S3__FORCE_PATH_STYLE=true
 
 ```bash
 # Start all applications
-yarn dev
+pnpm dev
 
 # Or start individually
-yarn dev:api      # API server on http://localhost:3000
-yarn dev:web      # Web app on http://localhost:5173
-yarn dev:worker   # Background worker
+pnpm dev:api      # API server on http://localhost:3000
+pnpm dev:web      # Web app on http://localhost:5173
+pnpm dev:worker   # Background worker
 ```
 
 ### 6. Generate API Client
 
 ```bash
 # Generate OpenAPI spec from NestJS
-yarn generate:openapi
+pnpm generate:openapi
 
 # Generate React Query hooks from OpenAPI spec
-yarn generate:api
+pnpm generate:api
 ```
 
 ## Available Scripts
 
 ### Development
 
-- `yarn dev` - Start all apps in development mode
-- `yarn dev:api` - Start API server only
-- `yarn dev:web` - Start web app only
-- `yarn dev:worker` - Start worker only
+- `pnpm dev` - Start all apps in development mode
+- `pnpm dev:api` - Start API server only
+- `pnpm dev:web` - Start web app only
+- `pnpm dev:worker` - Start worker only
 
 ### Build
 
-- `yarn build` - Build all packages
-- `yarn build:prod` - Production build with optimizations
+- `pnpm build` - Build all packages
+- `pnpm build:prod` - Production build with optimizations
 
 ### API Generation
 
-- `yarn generate:openapi` - Generate OpenAPI spec from NestJS controllers
-- `yarn generate:api` - Generate React Query hooks from OpenAPI spec
+- `pnpm generate:openapi` - Generate OpenAPI spec from NestJS controllers
+- `pnpm generate:api` - Generate React Query hooks from OpenAPI spec
 
 ### Testing
 
-- `yarn test` - Run all tests
-- `yarn test:watch` - Run tests in watch mode
-- `yarn test:ci` - Run tests with coverage for CI
+- `pnpm test` - Run all tests
+- `pnpm test:watch` - Run tests in watch mode
+- `pnpm test:ci` - Run tests with coverage for CI
 
 ### Code Quality
 
-- `yarn lint` - Lint and auto-fix with Oxlint
-- `yarn lint:ci` - Lint without fixing (for CI)
-- `yarn typecheck` - Type check all packages
-- `yarn format` - Format code with Prettier
+- `pnpm lint` - Lint and auto-fix with Oxlint
+- `pnpm lint:ci` - Lint without fixing (for CI)
+- `pnpm typecheck` - Type check all packages
+- `pnpm format` - Format code with Prettier
 
 ### Database
 
-- `yarn db:generate` - Generate Prisma client
-- `yarn db:push` - Push schema to database
-- `yarn db:migrate` - Create and run migrations
-- `yarn db:studio` - Open Prisma Studio
+- `pnpm db:generate` - Generate Prisma client
+- `pnpm db:push` - Push schema to database
+- `pnpm db:migrate` - Create and run migrations
+- `pnpm db:studio` - Open Prisma Studio
 
 ### Docker
 
-- `yarn docker:up` - Start all containers (PostgreSQL, Redis, Floci, MailCrab)
-- `yarn docker:down` - Stop all containers
-- `yarn docker:logs` - View container logs
-- `yarn docker:ps` - List running containers
-- `yarn docker:floci` - Start Floci S3 container only
-- `yarn floci:setup` - Create S3 bucket (auto-detects AWS CLI or uses Docker)
-- `yarn floci:stop` - Stop Floci container
+- `pnpm docker:up` - Start all containers (PostgreSQL, Redis, Floci, MailCrab)
+- `pnpm docker:down` - Stop all containers
+- `pnpm docker:logs` - View container logs
+- `pnpm docker:ps` - List running containers
+- `pnpm docker:floci` - Start Floci S3 container only
+- `pnpm floci:setup` - Create S3 bucket (auto-detects AWS CLI or uses Docker)
+- `pnpm floci:stop` - Stop Floci container
 
 ### Workspace Management
 
-- `yarn workspace:list` - List all workspaces
-- `yarn workspace:health --org-id <org> --project-id <project>` - Check workspace health
+- `pnpm workspace:list` - List all workspaces
+- `pnpm workspace:health --org-id <org> --project-id <project>` - Check workspace health
 
 ## Configuration
 
@@ -342,19 +342,29 @@ See `docs/workspace-worktree-migration.md` for detailed configuration and migrat
 
 ## Development Services
 
-When you run `yarn docker:up`, the following services will be available:
+When you run `pnpm docker:up`, the following services will be available:
 
 - **PostgreSQL** - `localhost:5433` - Primary database
 - **Redis** - `localhost:6379` - Cache and session store
-- **Floci** - `localhost:4566` - S3-compatible storage for artifacts (run `yarn floci:setup` to create bucket)
+- **Floci** - `localhost:4566` - S3-compatible storage for artifacts (run `pnpm floci:setup` to create bucket)
 - **MailCrab** - `localhost:1080` - Email testing interface
+
+### Running API and Worker in Docker
+
+`api` and `worker` are behind the `app` profile, so `pnpm docker:up` does not start them. To build and run them:
+
+```bash
+docker compose --profile app up -d --build
+```
+
+Set `JWT__SECRET`, `ANTHROPIC__API_KEY`, `ANTHROPIC__MODEL` and `ANTHROPIC__API_URL` in your shell or a root `.env` file; compose passes them to both containers. The API runs migrations on startup and exposes `/healthz` on port 3000. `pnpm-workspace.yaml` sets `minimumReleaseAge: 0`, so pnpm installs packages regardless of how recently they were published. This applies to local installs, CI and the Docker images.
 
 ### Using Floci (S3 Storage)
 
 Floci provides S3-compatible storage for local development:
 
-1. Start Floci: `yarn docker:floci`
-2. Create bucket: `yarn floci:setup`
+1. Start Floci: `pnpm docker:floci`
+2. Create bucket: `pnpm floci:setup`
 3. Access artifacts at: `http://localhost:4566/vyrak-artifacts`
 
 The setup script automatically reads configuration from `apps/api-server/.env` and uses Docker AWS CLI if local AWS CLI is not available.
@@ -379,8 +389,8 @@ SMTP_FROM=noreply@vyrak.local
 
 ### Git
 
-- `yarn commit` - Interactive commit with Commitizen
-- `yarn prepare` - Setup Lefthook git hooks
+- `pnpm commit` - Interactive commit with Commitizen
+- `pnpm prepare` - Setup Lefthook git hooks
 
 ## Real-time Chat
 
@@ -399,7 +409,7 @@ WebSocket chat requires Redis for pub/sub:
 
 ```bash
 # Start Redis
-yarn docker:up
+pnpm docker:up
 
 # Redis will be available at localhost:6379
 ```
@@ -552,8 +562,8 @@ The UI uses a dark theme with stepped tonal surfaces:
 
 1. Create a feature branch
 2. Make your changes
-3. Run `yarn lint` and `yarn typecheck`
-4. Commit with `yarn commit` (Commitizen)
+3. Run `pnpm lint` and `pnpm typecheck`
+4. Commit with `pnpm commit` (Commitizen)
 5. Submit a pull request
 
 ## License

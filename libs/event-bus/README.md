@@ -29,7 +29,7 @@ libs/event-bus/
 ## Installation
 
 ```bash
-yarn add ioredis
+pnpm add ioredis
 ```
 
 ## Usage

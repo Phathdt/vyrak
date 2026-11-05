@@ -195,8 +195,8 @@ export default createAppConfig({
 
 When modifying base configs:
 
-1. Run `yarn build` to verify all packages still build
-2. Run `yarn typecheck` to verify TypeScript compilation
+1. Run `pnpm build` to verify all packages still build
+2. Run `pnpm typecheck` to verify TypeScript compilation
 3. Update this README if behavior changes
 4. Test with both libs and apps
 

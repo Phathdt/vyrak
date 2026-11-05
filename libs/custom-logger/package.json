@@ -9,7 +9,7 @@
     "dev": "rolldown -c --watch"
   },
   "dependencies": {
-    "@vyrak/custom-config": "*",
+    "@vyrak/custom-config": "workspace:*",
     "@nestjs/common": "^12.3.3",
     "@nestjs/core": "^12.3.3",
     "@opentelemetry/api": "^1.10.0",

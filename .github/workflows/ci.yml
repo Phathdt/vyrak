@@ -15,52 +15,47 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.16.1
+          run_install: false
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "24.16.0"
-
-      - name: Cache dependencies
-        uses: actions/cache@v4
-        id: yarn-cache
-        with:
-          path: |
-            node_modules
-            **/node_modules
-            .yarn/cache
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
+          cache: pnpm
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Check dependencies sync
-        run: yarn sync:deps:ci
+        run: pnpm sync:deps:ci
 
       - name: Generate Prisma Client
-        run: yarn db:generate
+        run: pnpm db:generate
 
       - name: Build backend packages (libs + api-server)
-        run: yarn turbo run build --filter='!@apps/web'
+        run: pnpm turbo run build --filter='!@apps/web'
 
       - name: Generate API client
-        run: yarn generate:api
+        run: pnpm generate:api
 
       - name: Build frontend
-        run: yarn workspace @apps/web build
+        run: pnpm --filter @apps/web build
 
       - name: Check code formatting
-        run: yarn format:check
+        run: pnpm format:check
 
       - name: Lint
-        run: yarn ci:lint
+        run: pnpm ci:lint
 
       - name: Type check
-        run: yarn ci:typecheck
+        run: pnpm ci:typecheck
 
       - name: Run tests with coverage
-        run: yarn test:ci
+        run: pnpm test:ci
         env:
           NODE_ENV: test
           APP_ENV: development

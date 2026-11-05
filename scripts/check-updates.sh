@@ -3,7 +3,7 @@
 # Check for package updates across all workspaces in the monorepo
 # Usage: ./scripts/check-updates.sh [-u] [-i]
 #   -u  Update package.json files (run ncu -u)
-#   -i  Install dependencies after update (yarn install)
+#   -i  Install dependencies after update (pnpm install)
 
 set -e
 
@@ -50,9 +50,9 @@ if [ "$UPDATE_FLAG" = "-u" ]; then
   echo "Package.json files have been updated."
 
   if [ "$INSTALL_FLAG" = true ]; then
-    echo "Running yarn install..."
-    cd "$ROOT_DIR" && yarn install
+    echo "Running pnpm install..."
+    cd "$ROOT_DIR" && pnpm install
   else
-    echo "Run 'yarn install' to install updated dependencies."
+    echo "Run 'pnpm install' to install updated dependencies."
   fi
 fi

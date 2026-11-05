@@ -6,10 +6,10 @@ pre-commit:
   commands:
     lint:
       glob: '*.{js,ts,tsx}'
-      run: yarn ci:lint {staged_files}
+      run: pnpm ci:lint {staged_files}
     format:
       glob: '*.{ts,tsx}'
-      run: yarn ci:format {staged_files}
+      run: pnpm ci:format {staged_files}
     stage-changes:
       run: git add {staged_files}
       stage_fixed: true
@@ -23,6 +23,6 @@ pre-push:
   parallel: true
   commands:
     typecheck:
-      run: yarn ci:typecheck
+      run: pnpm ci:typecheck
     test:
-      run: yarn test:unit
+      run: pnpm test:unit

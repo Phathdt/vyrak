@@ -19,7 +19,7 @@
     "dev": "rolldown -c --watch"
   },
   "dependencies": {
-    "@vyrak/custom-config": "*",
+    "@vyrak/custom-config": "workspace:*",
     "@nestjs/common": "^12.3.3",
     "@nestjs/core": "^12.3.3",
     "@nestjs/platform-express": "^12.3.3",

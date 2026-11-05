@@ -80,7 +80,7 @@ export class CustomConfigService implements IConfigService {
       if (
         fs.existsSync(path.join(currentDir, 'config')) &&
         fs.existsSync(path.join(currentDir, 'package.json')) &&
-        fs.existsSync(path.join(currentDir, 'yarn.lock'))
+        fs.existsSync(path.join(currentDir, 'pnpm-workspace.yaml'))
       ) {
         return currentDir
       }

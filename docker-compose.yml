@@ -68,44 +68,68 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-  # api:
-  #   build:
-  #     context: .
-  #     dockerfile: apps/api-server/Dockerfile
-  #   container_name: vyrak-api
-  #   ports:
-  #     - "3000:3000"
-  #   environment:
-  #     NODE_ENV: production
-  #     PORT: 3000
-  #     DATABASE__URL: postgresql://postgres:postgres@postgres:5432/vyrak
-  #     REDIS_HOST: redis
-  #     REDIS_PORT: 6379
-  #     REDIS_PASSWORD: ""
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_healthy
-  #   restart: unless-stopped
+  # Application services are opt-in: `docker compose --profile app up -d --build`
+  api:
+    profiles: ["app"]
+    build:
+      context: .
+      dockerfile: apps/api-server/Dockerfile
+    container_name: vyrak-api
+    ports:
+      - "3000:3000"
+    environment:
+      APP_ENV: development
+      HOST__PORT: 3000
+      DATABASE__URL: postgresql://postgres:postgres@postgres:5432/vyrak
+      REDIS__URL: redis://redis:6379
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ""
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+      JWT__SECRET: ${JWT__SECRET:-change-me-in-env-file}
+      S3__ENDPOINT: http://floci:4566
+      S3__ACCESS_KEY_ID: test
+      S3__SECRET_ACCESS_KEY: test
+      ANTHROPIC__API_KEY: ${ANTHROPIC__API_KEY:-}
+      ANTHROPIC__MODEL: ${ANTHROPIC__MODEL:-}
+      ANTHROPIC__API_URL: ${ANTHROPIC__API_URL:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
 
-  # worker:
-  #   build:
-  #     context: .
-  #     dockerfile: apps/worker/Dockerfile
-  #   container_name: vyrak-worker
-  #   environment:
-  #     NODE_ENV: production
-  #     DATABASE__URL: postgresql://postgres:postgres@postgres:5432/vyrak
-  #     REDIS_HOST: redis
-  #     REDIS_PORT: 6379
-  #     REDIS_PASSWORD: ""
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_healthy
-  #   restart: unless-stopped
+  worker:
+    profiles: ["app"]
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    container_name: vyrak-worker
+    environment:
+      APP_ENV: development
+      HOST__PORT: 3001
+      DATABASE__URL: postgresql://postgres:postgres@postgres:5432/vyrak
+      REDIS__URL: redis://redis:6379
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ""
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+      JWT__SECRET: ${JWT__SECRET:-change-me-in-env-file}
+      S3__ENDPOINT: http://floci:4566
+      S3__ACCESS_KEY_ID: test
+      S3__SECRET_ACCESS_KEY: test
+      ANTHROPIC__API_KEY: ${ANTHROPIC__API_KEY:-}
+      ANTHROPIC__MODEL: ${ANTHROPIC__MODEL:-}
+      ANTHROPIC__API_URL: ${ANTHROPIC__API_URL:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      api:
+        condition: service_started
+    restart: unless-stopped
 
   # web:
   #   build:

@@ -2,11 +2,7 @@
   "name": "vyrak",
   "version": "1.0.0",
   "private": true,
-  "packageManager": "yarn@1.22.22",
-  "workspaces": [
-    "apps/*",
-    "libs/*"
-  ],
+  "packageManager": "pnpm@12.16.1",
   "scripts": {
     "dev": "turbo run dev",
     "dev:api": "turbo run dev --filter=@apps/api-server",
@@ -18,9 +14,9 @@
     "start:web": "turbo run start --filter=@apps/web",
     "build": "turbo run build",
     "build:prod": "turbo run build:prod",
-    "generate:openapi": "yarn workspace @apps/api-server build && node dist/apps/api-server/generate-openapi.js",
-    "generate:api": "yarn workspace @apps/web generate:api",
-    "generate": "yarn generate:openapi && yarn generate:api && yarn db:generate",
+    "generate:openapi": "pnpm --filter @apps/api-server run build && node dist/apps/api-server/generate-openapi.js",
+    "generate:api": "pnpm --filter @apps/web run generate:api",
+    "generate": "pnpm generate:openapi && pnpm generate:api && pnpm db:generate",
     "test": "vitest run --config vitest.unit.config.mjs",
     "test:unit": "vitest run --config vitest.unit.config.mjs",
     "test:unit:watch": "vitest --config vitest.unit.config.mjs",
@@ -61,14 +57,14 @@
     "sync:deps:dry": "tsx scripts/sync-package-deps.ts --dry-run",
     "sync:deps:strict": "tsx scripts/sync-package-deps.ts --strict --check-versions",
     "sync:deps:ci": "tsx scripts/sync-package-deps.ts --ci",
-    "test:e2e": "yarn workspace @vyrak/e2e test",
-    "test:e2e:headed": "yarn workspace @vyrak/e2e test:headed",
-    "test:e2e:ui": "yarn workspace @vyrak/e2e test:ui",
+    "test:e2e": "pnpm --filter @vyrak/e2e run test",
+    "test:e2e:headed": "pnpm --filter @vyrak/e2e run test:headed",
+    "test:e2e:ui": "pnpm --filter @vyrak/e2e run test:ui",
     "db:seed:test": "tsx prisma/seed-test.ts",
-    "workspace:list": "yarn workspace @apps/api-server cli workspace:list",
-    "workspace:health": "yarn workspace @apps/api-server cli workspace:health",
-    "workspace:clean-stale": "yarn workspace @apps/api-server cli workspace:clean-stale --org-id $ORG_ID --project-id $PROJECT_ID",
-    "workspace:prune": "yarn workspace @apps/api-server cli workspace:prune --org-id $ORG_ID --project-id $PROJECT_ID"
+    "workspace:list": "pnpm --filter @apps/api-server run cli workspace:list",
+    "workspace:health": "pnpm --filter @apps/api-server run cli workspace:health",
+    "workspace:clean-stale": "pnpm --filter @apps/api-server run cli workspace:clean-stale --org-id $ORG_ID --project-id $PROJECT_ID",
+    "workspace:prune": "pnpm --filter @apps/api-server run cli workspace:prune --org-id $ORG_ID --project-id $PROJECT_ID"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.4",
@@ -125,6 +121,6 @@
   },
   "engines": {
     "node": ">=24.16.0",
-    "yarn": ">=1.22.0"
+    "pnpm": ">=10"
   }
 }

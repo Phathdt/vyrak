@@ -113,11 +113,11 @@ function main() {
       console.log(`${name}@${version}`)
     }
   } else if (outputFormat === 'install') {
-    // Output as yarn add command
+    // Output as pnpm add command
     const packages = Object.entries(sortedDeps)
       .map(([name, version]) => `"${name}@${version}"`)
       .join(' ')
-    console.log(`yarn add ${packages}`)
+    console.log(`pnpm add ${packages}`)
   } else if (outputFormat === 'package') {
     // Output as a complete package.json for production install
     const prodPackage = {

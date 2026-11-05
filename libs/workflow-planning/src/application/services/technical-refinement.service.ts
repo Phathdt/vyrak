@@ -1,3 +1,5 @@
+import { query } from '@anthropic-ai/claude-agent-sdk'
+import Anthropic from '@anthropic-ai/sdk'
 import { AnthropicApiAdapter } from '@vyrak/ai-agent'
 import { IArtifactService } from '@vyrak/artifact'
 import { ConversationPhase, IConversationService, MessageRole } from '@vyrak/conversation'
@@ -209,8 +211,6 @@ You have access to the project repository for scouting existing patterns. Use Re
 - Reference real file paths in your ADRs and Implementation Plan
 `
 
-      const { query } = await import('@anthropic-ai/claude-agent-sdk')
-
       aiResponseContent = ''
       for await (const message of query({
         prompt: promptWithHistory,
@@ -227,7 +227,6 @@ You have access to the project repository for scouting existing patterns. Use Re
       }
     } else {
       // Fallback: chat without repo context (not recommended for Technical Refinement)
-      const { default: Anthropic } = await import('@anthropic-ai/sdk')
       const client = new Anthropic({ apiKey: this.configService.anthropic?.apiKey })
 
       const response = await client.messages.create({

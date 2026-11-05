@@ -1,65 +1,75 @@
 # =============================================================================
 # Stage 1: Builder - Build the application
 # =============================================================================
-FROM node:24.16.0-alpine3.21 AS builder
+FROM node:24.16.0-alpine AS builder
 WORKDIR /app
+
+ENV PNPM_HOME=/pnpm \
+  PATH=/pnpm:$PATH \
+  CI=true \
+  LEFTHOOK=0
 
 # Install build dependencies
 RUN apk update && apk add --no-cache gcc musl-dev git
 
-# Copy package files for dependency installation
-COPY package.json yarn.lock ./
-COPY apps/api-server/package.json ./apps/api-server/
-COPY libs/custom-config/package.json ./libs/custom-config/
-COPY libs/custom-logger/package.json ./libs/custom-logger/
-COPY libs/database/package.json ./libs/database/
-COPY libs/shared/package.json ./libs/shared/
+RUN corepack enable && corepack prepare pnpm@12.16.1 --activate
 
-# Install ALL dependencies (including dev) for building
-RUN yarn install --frozen-lockfile
+# Fetch packages into the store using only the lockfile (cached until it changes)
+COPY pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
+  pnpm config set store-dir /pnpm/store --location=global && \
+  pnpm fetch
 
 # Copy source code and configuration
 COPY . .
 
+# Root "prepare" runs lefthook, which needs a git repo (.git is excluded from the context)
+RUN git init -q
+
+# Install workspace dependencies for the api-server (plus root tooling such as turbo)
+RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
+  pnpm install --frozen-lockfile --offline \
+  --filter "@apps/api-server..." --filter .
+
 # Generate Prisma client and build
-RUN yarn prisma generate
-RUN yarn turbo build:prod --filter=@apps/api-server
+RUN pnpm db:generate
+RUN pnpm exec turbo run build:prod --filter=@apps/api-server
 
 # Generate flattened production package.json with all dependencies from app + libs
 RUN node scripts/collect-deps.js api-server package > /tmp/prod-package.json
 
 # =============================================================================
-# Stage 2: Deps - Install and clean production dependencies
+# Stage 2: Deps - Install production dependencies only
 # =============================================================================
-FROM node:24.16.0-alpine3.21 AS deps
+FROM node:24.16.0-alpine AS deps
 WORKDIR /app
 
-# Copy flattened production package.json
+ENV PNPM_HOME=/pnpm \
+  PATH=/pnpm:$PATH \
+  CI=true
+
+RUN corepack enable && corepack prepare pnpm@12.16.1 --activate
+
+# Flattened package.json + the workspace lockfile (keeps resolved versions pinned)
 COPY --from=builder /tmp/prod-package.json ./package.json
-COPY yarn.lock ./
+COPY pnpm-lock.yaml pnpm-workspace.yaml ./
 
-# Install production dependencies
-RUN yarn install --production --ignore-scripts && \
-  yarn cache clean
-
-# Remove unnecessary transitive dependencies that aren't needed at runtime
-RUN rm -rf node_modules/@angular-devkit \
-  node_modules/@schematics \
-  node_modules/@esbuild \
-  node_modules/@swc \
-  node_modules/typescript \
-  node_modules/@types
+RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
+  pnpm config set store-dir /pnpm/store --location=global && \
+  pnpm install --prod --no-frozen-lockfile
 
 # =============================================================================
 # Stage 3: Runtime - Final minimal image
 # =============================================================================
-FROM node:24.16.0-alpine3.21
+FROM node:24.16.0-alpine
 WORKDIR /app
+
+ENV NODE_ENV=production
 
 # Install only essential runtime packages
 RUN apk add --no-cache dumb-init curl
 
-# Copy cleaned production node_modules from deps stage
+# Copy production dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
 
 # Copy the generated Prisma client from builder
@@ -68,15 +78,14 @@ COPY --from=builder /app/libs/database/src/generated ./libs/database/src/generat
 # Copy built application
 COPY --from=builder /app/dist ./dist
 
-# Copy built libs to node_modules/@vyrak for proper module resolution
-RUN mkdir -p /app/node_modules/@vyrak && \
-  cp -r /app/dist/libs/* /app/node_modules/@vyrak/
-
 # Copy tsconfig.json for tsconfig-paths to resolve path aliases at runtime
 COPY --from=builder /app/tsconfig.json ./tsconfig.json
 
 # Create symlink for path resolution
 RUN ln -s /app/dist /dist
+
+# YAML configuration files read by CustomConfigService (APP_ENV selects the file)
+COPY --from=builder /app/config ./config
 
 # Copy Prisma schema and config (required for migrations)
 COPY --from=builder /app/prisma ./prisma

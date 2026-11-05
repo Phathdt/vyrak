@@ -256,4 +256,4 @@ The test utils are re-exported from the main package.
 
 ### TypeScript Error: Module has no exported member
 
-Run `yarn ctix` to regenerate barrel exports.
+Run `pnpm ctix` to regenerate barrel exports.

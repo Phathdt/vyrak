@@ -1,0 +1,17 @@
+packages:
+  - apps/*
+  - libs/*
+
+allowBuilds:
+  "@prisma/engines": true
+  prisma: true
+  argon2: true
+  esbuild: true
+  lefthook: true
+  msgpackr-extract: true
+  "@scarf/scarf": false
+  cpu-features: false
+  protobufjs: false
+  ssh2: false
+
+minimumReleaseAge: 0

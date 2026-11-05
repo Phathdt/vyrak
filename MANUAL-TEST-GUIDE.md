@@ -15,7 +15,7 @@
 ```bash
 # Watch worker output for phase transition events
 cd /home/phathdt/Data/Dev/vyrak
-# Worker logs should be visible in the terminal where you ran `yarn dev:worker`
+# Worker logs should be visible in the terminal where you ran `pnpm dev:worker`
 ```
 
 **Terminal 2: Monitor Redis Streams**

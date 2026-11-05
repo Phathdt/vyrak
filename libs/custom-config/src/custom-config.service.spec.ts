@@ -52,7 +52,7 @@ describe('CustomConfigService', () => {
     // Mock fs.existsSync to return true for project root checks
     vi.mocked(fs.existsSync).mockImplementation((filePath: string | Buffer) => {
       const pathStr = typeof filePath === 'string' ? filePath : filePath.toString()
-      if (pathStr.includes('config') || pathStr.includes('package.json') || pathStr.includes('yarn.lock')) {
+      if (pathStr.includes('config') || pathStr.includes('package.json') || pathStr.includes('pnpm-workspace.yaml')) {
         return true
       }
       return false
