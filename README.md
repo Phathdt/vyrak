@@ -351,13 +351,13 @@ When you run `pnpm docker:up`, the following services will be available:
 
 ### Running API and Worker in Docker
 
-`api` and `worker` are behind the `app` profile, so `pnpm docker:up` does not start them. To build and run them:
+`migrate`, `api` and `worker` are behind the `app` profile, so `pnpm docker:up` does not start them. To build and run them:
 
 ```bash
 docker compose --profile app up -d --build
 ```
 
-Set `JWT__SECRET`, `ANTHROPIC__API_KEY`, `ANTHROPIC__MODEL` and `ANTHROPIC__API_URL` in your shell or a root `.env` file; compose passes them to both containers. The API runs migrations on startup and exposes `/healthz` on port 3000. `pnpm-workspace.yaml` sets `minimumReleaseAge: 0`, so pnpm installs packages regardless of how recently they were published. This applies to local installs, CI and the Docker images.
+Set `JWT__SECRET`, `ANTHROPIC__API_KEY`, `ANTHROPIC__MODEL` and `ANTHROPIC__API_URL` in your shell or a root `.env` file; compose passes them to both containers. The `migrate` service (`prisma/Dockerfile`) runs `prisma migrate deploy` once and exits; `api` starts only after it completes successfully. In other environments, run the same image as a one-off job (for example a Kubernetes Job or a pre-deploy step) before rolling out the API. The API exposes `/healthz` on port 3000. `pnpm-workspace.yaml` sets `minimumReleaseAge: 0`, so pnpm installs packages regardless of how recently they were published. This applies to local installs, CI and the Docker images.
 
 ### Using Floci (S3 Storage)
 

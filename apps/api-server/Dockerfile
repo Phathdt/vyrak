@@ -35,8 +35,15 @@ RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
 RUN pnpm db:generate
 RUN pnpm exec turbo run build:prod --filter=@apps/api-server
 
+# Source maps are never loaded at runtime (no --enable-source-maps)
+RUN find dist -type f -name '*.map' -delete
+
 # Generate flattened production package.json with all dependencies from app + libs
 RUN node scripts/collect-deps.js api-server package > /tmp/prod-package.json
+
+# Drop packages that are not needed at runtime: testcontainers is test-only, and the Prisma CLI
+# lives in the separate migrate image (prisma/Dockerfile)
+RUN node -e "const fs=require('fs');const f='/tmp/prod-package.json';const p=JSON.parse(fs.readFileSync(f,'utf8'));for(const d of ['@testcontainers/postgresql','prisma'])delete p.dependencies[d];fs.writeFileSync(f,JSON.stringify(p,null,2))"
 
 # =============================================================================
 # Stage 2: Deps - Install production dependencies only
@@ -57,6 +64,20 @@ COPY pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
   pnpm config set store-dir /pnpm/store --location=global && \
   pnpm install --prod --no-frozen-lockfile
+
+# The lockfile lists the Prisma CLI as an optional dependency of @prisma/client, so it is installed even though
+# the api only needs the client runtime. The CLI lives in the migrate image (prisma/Dockerfile), so remove it
+# together with the packages only it pulls in.
+RUN cd /app/node_modules/.pnpm && \
+  rm -rf prisma@* @prisma+studio-core@* @prisma+dev@* @prisma+engines@* @prisma+config@* && \
+  rm -rf @electric-sql+pglite* react@* react-dom@* elkjs@* typescript@* && \
+  find . -type f -name 'query_compiler_*_bg.*' \
+  \( -name '*sqlite*' -o -name '*mysql*' -o -name '*sqlserver*' -o -name '*cockroachdb*' \) -delete
+
+# Drop files that are never read at runtime
+RUN find /app/node_modules -type f \
+  \( -name '*.map' -o -name '*.md' -o -name '*.markdown' -o -name '*.d.ts' -o -name '*.d.cts' -o -name '*.d.mts' -o -name '*.tsbuildinfo' \) \
+  -delete
 
 # =============================================================================
 # Stage 3: Runtime - Final minimal image
@@ -87,13 +108,7 @@ RUN ln -s /app/dist /dist
 # YAML configuration files read by CustomConfigService (APP_ENV selects the file)
 COPY --from=builder /app/config ./config
 
-# Copy Prisma schema and config (required for migrations)
-COPY --from=builder /app/prisma ./prisma
-
-# Copy entrypoint script
-COPY apps/api-server/run.sh ./run.sh
-RUN chmod +x /app/run.sh
-
 EXPOSE 3000
 
-ENTRYPOINT ["dumb-init", "sh", "/app/run.sh"]
+# Migrations run in the separate migrate image (prisma/Dockerfile)
+ENTRYPOINT ["dumb-init", "node", "/app/dist/apps/api-server/main.js"]

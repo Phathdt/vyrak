@@ -69,6 +69,19 @@ services:
     restart: unless-stopped
 
   # Application services are opt-in: `docker compose --profile app up -d --build`
+  migrate:
+    profiles: ["app"]
+    build:
+      context: .
+      dockerfile: prisma/Dockerfile
+    container_name: vyrak-migrate
+    environment:
+      DATABASE__URL: postgresql://postgres:postgres@postgres:5432/vyrak
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
   api:
     profiles: ["app"]
     build:
@@ -98,6 +111,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     restart: unless-stopped
 
   worker:

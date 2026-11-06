@@ -35,8 +35,14 @@ RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
 RUN pnpm db:generate
 RUN pnpm exec turbo run build:prod --filter=@apps/worker
 
+# Source maps are never loaded at runtime (no --enable-source-maps)
+RUN find dist -type f -name '*.map' -delete
+
 # Generate flattened production package.json with all dependencies from app + libs
 RUN node scripts/collect-deps.js worker package > /tmp/prod-package.json
+
+# The worker never runs migrations (prisma CLI) and never loads test helpers (testcontainers)
+RUN node -e "const fs=require('fs');const f='/tmp/prod-package.json';const p=JSON.parse(fs.readFileSync(f,'utf8'));for(const d of ['prisma','@testcontainers/postgresql'])delete p.dependencies[d];fs.writeFileSync(f,JSON.stringify(p,null,2))"
 
 # =============================================================================
 # Stage 2: Deps - Install production dependencies only
@@ -57,6 +63,11 @@ COPY pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
   pnpm config set store-dir /pnpm/store --location=global && \
   pnpm install --prod --no-frozen-lockfile
+
+# Drop files that are never read at runtime
+RUN find /app/node_modules -type f \
+  \( -name '*.map' -o -name '*.md' -o -name '*.markdown' -o -name '*.d.ts' -o -name '*.d.cts' -o -name '*.d.mts' -o -name '*.tsbuildinfo' \) \
+  -delete
 
 # =============================================================================
 # Stage 3: Runtime - Final minimal image
@@ -86,8 +97,5 @@ RUN ln -s /app/dist /dist
 
 # YAML configuration files read by CustomConfigService (APP_ENV selects the file)
 COPY --from=builder /app/config ./config
-
-# Copy Prisma schema and config (required for migrations)
-COPY --from=builder /app/prisma ./prisma
 
 CMD ["dumb-init", "node", "dist/apps/worker/main.js"]
