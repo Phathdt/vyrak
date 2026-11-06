@@ -82,6 +82,22 @@ describe('OctokitTokenGenerator', () => {
       })
     })
 
+    it('should prefer privateKeyPath over privateKey when both are set', () => {
+      const keyPath = join(tempDir, 'preferred.pem')
+      const keyContent = '-----BEGIN RSA PRIVATE KEY-----\nfrom-file\n-----END RSA PRIVATE KEY-----'
+      writeFileSync(keyPath, keyContent, 'utf-8')
+
+      mockConfigService.git!.githubApp!.privateKey = 'inline-key-should-not-be-used'
+      mockConfigService.git!.githubApp!.privateKeyPath = keyPath
+
+      new OctokitTokenGenerator(mockConfigService)
+
+      expect(mockCreateAppAuth).toHaveBeenCalledWith({
+        appId: 123456,
+        privateKey: keyContent,
+      })
+    })
+
     it('should throw GitHubAppConfigError when appId is missing', () => {
       mockConfigService.git!.githubApp!.appId = undefined
 

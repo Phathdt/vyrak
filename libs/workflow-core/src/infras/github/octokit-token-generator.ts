@@ -21,11 +21,9 @@ export class OctokitTokenGenerator implements IGitHubAppTokenGenerator {
       throw new GitHubAppConfigError('GitHub App configuration is incomplete: appId and installationId are required')
     }
 
-    // Load private key from direct value or file path
+    // Load private key: file path takes precedence over inline value
     let privateKey: string
-    if (githubApp.privateKey) {
-      privateKey = githubApp.privateKey
-    } else if (githubApp.privateKeyPath) {
+    if (githubApp.privateKeyPath) {
       try {
         privateKey = readFileSync(githubApp.privateKeyPath, 'utf-8')
       } catch (error) {
@@ -33,6 +31,8 @@ export class OctokitTokenGenerator implements IGitHubAppTokenGenerator {
           `Failed to read private key from ${githubApp.privateKeyPath}: ${error instanceof Error ? error.message : String(error)}`
         )
       }
+    } else if (githubApp.privateKey) {
+      privateKey = githubApp.privateKey
     } else {
       throw new GitHubAppConfigError('GitHub App configuration is incomplete: privateKey or privateKeyPath is required')
     }
