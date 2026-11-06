@@ -4,6 +4,7 @@ import path from 'node:path'
 
 import { InvalidRepositoryReferenceError, RepositoryCacheError } from '../../domain/exceptions/workflow.exceptions'
 
+import type { IGitHubAuthService } from '../../domain/interfaces/github-auth.interface'
 import type { EnsureRepoInput, IRepoCacheService, RunGitOptions } from '../../domain/interfaces/repo-cache.interface'
 import type { IConfigService } from '@vyrak/custom-config'
 
@@ -73,7 +74,7 @@ async function pathExists(candidate: string): Promise<boolean> {
  * Keeps one git clone per repository on the local disk of the current process host.
  * First call clones, later calls fetch. Concurrent calls for the same repository are serialized.
  *
- * The git token is sent only as a per-command `http.extraHeader` for https remotes.
+ * The GitHub App installation token is sent only as a per-command `http.extraHeader` for https remotes.
  * It is never put into a URL, `.git/config`, logs or error messages.
  * Plain TypeScript class, wired by a factory in the module.
  */
@@ -83,6 +84,7 @@ export class RepoCacheService implements IRepoCacheService {
 
   constructor(
     private readonly configService: IConfigService,
+    private readonly githubAuthService?: IGitHubAuthService,
     options: RepoCacheServiceOptions = {}
   ) {
     this.exec = options.exec ?? defaultExec
@@ -108,7 +110,7 @@ export class RepoCacheService implements IRepoCacheService {
   }
 
   async runGit(args: string[], options: RunGitOptions = {}): Promise<string> {
-    const authArgs = this.buildAuthArgs(options.remoteUrl)
+    const authArgs = await this.buildAuthArgs(options.remoteUrl)
     const env: NodeJS.ProcessEnv = { ...process.env, GIT_TERMINAL_PROMPT: '0', LC_ALL: 'C' }
 
     try {
@@ -191,9 +193,7 @@ export class RepoCacheService implements IRepoCacheService {
     }
   }
 
-  private buildAuthArgs(remoteUrl?: string): string[] {
-    // TODO: GitHub App authentication will be implemented in Phase 4
-    // For now, return empty array (public repos only)
+  private async buildAuthArgs(remoteUrl?: string): Promise<string[]> {
     if (!remoteUrl) {
       return []
     }
@@ -208,13 +208,29 @@ export class RepoCacheService implements IRepoCacheService {
       return []
     }
 
-    return []
+    // GitHub App authentication (required)
+    if (!this.githubAuthService) {
+      throw new RepositoryCacheError('GitHub App authentication not configured')
+    }
+
+    const installationId = this.configService.git?.githubApp?.installationId
+    if (!installationId) {
+      throw new RepositoryCacheError('GitHub App installation ID not configured')
+    }
+
+    try {
+      const token = await this.githubAuthService.getToken(installationId)
+      return ['-c', `http.extraHeader=Authorization: Basic ${this.encodeBasicCredential(token)}`]
+    } catch (error) {
+      throw new RepositoryCacheError(
+        `GitHub App authentication failed: ${error instanceof Error ? error.message : String(error)}`
+      )
+    }
   }
 
-  // TODO: Will be used in Phase 4 for GitHub App authentication
-  // private encodeBasicCredential(token: string): string {
-  //   return Buffer.from(`x-access-token:${token}`).toString('base64')
-  // }
+  private encodeBasicCredential(token: string): string {
+    return Buffer.from(`x-access-token:${token}`).toString('base64')
+  }
 
   private async clone(input: EnsureRepoInput, repoPath: string): Promise<void> {
     await mkdir(path.dirname(repoPath), { recursive: true })
@@ -249,7 +265,10 @@ export class RepoCacheService implements IRepoCacheService {
 
   private redact(text: string): string {
     let result = text.replace(/Authorization:\s*Basic\s+\S+/gi, 'Authorization: Basic ***')
-    // TODO: Add GitHub App token redaction (ghs_*) in Phase 4
+
+    // Redact GitHub App tokens (ghs_xxx format)
+    result = result.replace(/ghs_[A-Za-z0-9_]+/g, 'ghs_***')
+
     return result
   }
 

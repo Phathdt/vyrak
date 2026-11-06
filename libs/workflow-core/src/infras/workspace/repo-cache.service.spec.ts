@@ -3,17 +3,19 @@ import { access, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promise
 import os from 'node:os'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { InvalidRepositoryReferenceError, RepositoryCacheError } from '../../domain/exceptions/workflow.exceptions'
 import { RepoCacheService, type GitExecOptions, type GitExecResult, type GitExecutor } from './repo-cache.service'
 
+import type { IGitHubAuthService } from '../../domain/interfaces/github-auth.interface'
 import type { IConfigService } from '@vyrak/custom-config'
 
 const ORG_ID = '11111111-1111-4111-8111-111111111111'
 const PROJECT_ID = '22222222-2222-4222-8222-222222222222'
-const TOKEN = 'ghp_super_secret_token_value'
-const TOKEN_HEADER_VALUE = Buffer.from(`x-access-token:${TOKEN}`).toString('base64')
+const GITHUB_APP_TOKEN = 'ghs_super_secret_github_app_token'
+const INSTALLATION_ID = 12345678
+const TOKEN_HEADER_VALUE = Buffer.from(`x-access-token:${GITHUB_APP_TOKEN}`).toString('base64')
 
 type RecordedCall = { args: string[]; cwd?: string }
 
@@ -36,7 +38,11 @@ function recordingExecutor(calls: RecordedCall[], delegate: GitExecutor = runRea
   }
 }
 
-function createConfig(options: { mainReposPath: string; token?: string; autoFetch?: boolean }): IConfigService {
+function createConfig(options: {
+  mainReposPath: string
+  autoFetch?: boolean
+  installationId?: number
+}): IConfigService {
   return {
     workspace: {
       mode: 'worktree',
@@ -51,8 +57,19 @@ function createConfig(options: { mainReposPath: string; token?: string; autoFetc
         autoCleanupBranch: true,
       },
     },
-    git: { token: options.token ?? '', userName: 'vyrak-bot', userEmail: 'vyrak-bot@users.noreply.github.com' },
+    git: {
+      token: '',
+      userName: 'vyrak-bot',
+      userEmail: 'vyrak-bot@users.noreply.github.com',
+      githubApp: options.installationId ? { installationId: options.installationId } : undefined,
+    },
   } as unknown as IConfigService
+}
+
+function createMockGitHubAuthService(token: string = GITHUB_APP_TOKEN): IGitHubAuthService {
+  return {
+    getToken: vi.fn().mockResolvedValue(token),
+  }
 }
 
 function git(args: string[], cwd?: string): string {
@@ -112,7 +129,7 @@ describe('RepoCacheService', () => {
 
   it('clones on the first call and only fetches on the second', async () => {
     const calls: RecordedCall[] = []
-    const service = new RepoCacheService(createConfig({ mainReposPath }), {
+    const service = new RepoCacheService(createConfig({ mainReposPath }), createMockGitHubAuthService(), {
       exec: recordingExecutor(calls),
       log: () => undefined,
     })
@@ -127,7 +144,9 @@ describe('RepoCacheService', () => {
   })
 
   it('picks up new upstream commits on fetch', async () => {
-    const service = new RepoCacheService(createConfig({ mainReposPath }), { log: () => undefined })
+    const service = new RepoCacheService(createConfig({ mainReposPath }), createMockGitHubAuthService(), {
+      log: () => undefined,
+    })
     const repoPath = await service.ensureRepo(input())
 
     const seedPath = path.join(tmpRoot, 'seed')
@@ -144,10 +163,14 @@ describe('RepoCacheService', () => {
 
   it('skips fetch when autoFetch is disabled', async () => {
     const calls: RecordedCall[] = []
-    const service = new RepoCacheService(createConfig({ mainReposPath, autoFetch: false }), {
-      exec: recordingExecutor(calls),
-      log: () => undefined,
-    })
+    const service = new RepoCacheService(
+      createConfig({ mainReposPath, autoFetch: false }),
+      createMockGitHubAuthService(),
+      {
+        exec: recordingExecutor(calls),
+        log: () => undefined,
+      }
+    )
 
     await service.ensureRepo(input())
     await service.ensureRepo(input())
@@ -157,7 +180,7 @@ describe('RepoCacheService', () => {
 
   it('clones only once for concurrent calls on the same repository', async () => {
     const calls: RecordedCall[] = []
-    const service = new RepoCacheService(createConfig({ mainReposPath }), {
+    const service = new RepoCacheService(createConfig({ mainReposPath }), createMockGitHubAuthService(), {
       exec: recordingExecutor(calls),
       log: () => undefined,
     })
@@ -188,7 +211,10 @@ describe('RepoCacheService', () => {
         running -= 1
       }
     }
-    const service = new RepoCacheService(createConfig({ mainReposPath }), { exec, log: () => undefined })
+    const service = new RepoCacheService(createConfig({ mainReposPath }), createMockGitHubAuthService(), {
+      exec,
+      log: () => undefined,
+    })
 
     await Promise.all([service.ensureRepo(input()), service.ensureRepo(input()), service.ensureRepo(input())])
 
@@ -196,7 +222,9 @@ describe('RepoCacheService', () => {
   })
 
   it('keeps serving later calls after an earlier call for the same repository failed', async () => {
-    const service = new RepoCacheService(createConfig({ mainReposPath }), { log: () => undefined })
+    const service = new RepoCacheService(createConfig({ mainReposPath }), createMockGitHubAuthService(), {
+      log: () => undefined,
+    })
 
     await expect(service.ensureRepo(input({ branch: 'does-not-exist' }))).rejects.toBeInstanceOf(RepositoryCacheError)
     const repoPath = await service.ensureRepo(input())
@@ -205,13 +233,17 @@ describe('RepoCacheService', () => {
   })
 
   it.each(['../evil', '..', '.', 'a/b', 'a b', '', 'name;rm'])('rejects repoName %j', async (repoName) => {
-    const service = new RepoCacheService(createConfig({ mainReposPath }), { log: () => undefined })
+    const service = new RepoCacheService(createConfig({ mainReposPath }), createMockGitHubAuthService(), {
+      log: () => undefined,
+    })
 
     await expect(service.ensureRepo(input({ repoName }))).rejects.toBeInstanceOf(InvalidRepositoryReferenceError)
   })
 
   it('rejects organization and project ids that traverse directories', async () => {
-    const service = new RepoCacheService(createConfig({ mainReposPath }), { log: () => undefined })
+    const service = new RepoCacheService(createConfig({ mainReposPath }), createMockGitHubAuthService(), {
+      log: () => undefined,
+    })
 
     await expect(service.ensureRepo({ ...input(), organizationId: '../x' })).rejects.toBeInstanceOf(
       InvalidRepositoryReferenceError
@@ -230,7 +262,7 @@ describe('RepoCacheService', () => {
     ['not a url', 'just-a-name'],
   ])('rejects url: %s', async (_label, url) => {
     const calls: RecordedCall[] = []
-    const service = new RepoCacheService(createConfig({ mainReposPath }), {
+    const service = new RepoCacheService(createConfig({ mainReposPath }), createMockGitHubAuthService(), {
       exec: recordingExecutor(calls),
       log: () => undefined,
     })
@@ -240,20 +272,25 @@ describe('RepoCacheService', () => {
   })
 
   it.each(['--orphan', 'a..b', 'main;ls', 'feat branch'])('rejects branch %j', async (branch) => {
-    const service = new RepoCacheService(createConfig({ mainReposPath }), { log: () => undefined })
+    const service = new RepoCacheService(createConfig({ mainReposPath }), createMockGitHubAuthService(), {
+      log: () => undefined,
+    })
 
     await expect(service.ensureRepo(input({ branch }))).rejects.toBeInstanceOf(InvalidRepositoryReferenceError)
   })
 
   it('rejects file urls outside local and test environments', async () => {
     process.env.APP_ENV = 'production'
-    const service = new RepoCacheService(createConfig({ mainReposPath }), { log: () => undefined })
+    const service = new RepoCacheService(createConfig({ mainReposPath }), createMockGitHubAuthService(), {
+      log: () => undefined,
+    })
 
     await expect(service.ensureRepo(input())).rejects.toBeInstanceOf(InvalidRepositoryReferenceError)
   })
 
-  it('sends the token as a per-command header for https and never writes it to .git/config', async () => {
+  it('sends the GitHub App token as a per-command header for https and never writes it to .git/config', async () => {
     const calls: RecordedCall[] = []
+    const mockAuth = createMockGitHubAuthService()
     // Stand-in for the network: redirect the https remote to the local bare repo and keep every other argument,
     // including the Authorization header, exactly as the service produced it.
     const httpsUrl = 'https://git.example.com/acme/app.git'
@@ -262,7 +299,7 @@ describe('RepoCacheService', () => {
         args.map((arg) => (arg === httpsUrl ? bareRepoUrl : arg)),
         options
       )
-    const service = new RepoCacheService(createConfig({ mainReposPath, token: TOKEN }), {
+    const service = new RepoCacheService(createConfig({ mainReposPath, installationId: INSTALLATION_ID }), mockAuth, {
       exec: recordingExecutor(calls, redirectToBareRepo),
       log: () => undefined,
     })
@@ -270,19 +307,20 @@ describe('RepoCacheService', () => {
     const repoPath = await service.ensureRepo(input({ url: httpsUrl }))
     await service.ensureRepo(input({ url: httpsUrl }))
 
+    expect(mockAuth.getToken).toHaveBeenCalledWith(INSTALLATION_ID)
     for (const call of calls) {
       expect(call.args).toContain(`http.extraHeader=Authorization: Basic ${TOKEN_HEADER_VALUE}`)
-      expect(call.args.filter((arg) => arg.includes(TOKEN))).toHaveLength(0)
+      expect(call.args.filter((arg) => arg.includes(GITHUB_APP_TOKEN))).toHaveLength(0)
       expect(call.args.some((arg) => arg.startsWith('https://') && arg.includes('@'))).toBe(false)
     }
 
     const gitConfig = await readFile(path.join(repoPath, '.git', 'config'), 'utf8')
-    expect(gitConfig).not.toContain(TOKEN)
+    expect(gitConfig).not.toContain(GITHUB_APP_TOKEN)
     expect(gitConfig).not.toContain(TOKEN_HEADER_VALUE)
     expect(gitConfig.toLowerCase()).not.toContain('extraheader')
   })
 
-  it('omits the Authorization header when no token is configured', async () => {
+  it('throws error when GitHub App authentication is not configured for https remotes', async () => {
     const calls: RecordedCall[] = []
     const httpsUrl = 'https://git.example.com/acme/app.git'
     const redirectToBareRepo: GitExecutor = (args, options) =>
@@ -290,22 +328,26 @@ describe('RepoCacheService', () => {
         args.map((arg) => (arg === httpsUrl ? bareRepoUrl : arg)),
         options
       )
-    const service = new RepoCacheService(createConfig({ mainReposPath }), {
+    const service = new RepoCacheService(createConfig({ mainReposPath }), createMockGitHubAuthService(), {
       exec: recordingExecutor(calls, redirectToBareRepo),
       log: () => undefined,
     })
 
-    await service.ensureRepo(input({ url: httpsUrl }))
-
-    expect(calls[0].args.some((arg) => arg.includes('extraHeader'))).toBe(false)
+    await expect(service.ensureRepo(input({ url: httpsUrl }))).rejects.toThrow(
+      'GitHub App installation ID not configured'
+    )
   })
 
   it('does not send the token to non-https remotes', async () => {
     const calls: RecordedCall[] = []
-    const service = new RepoCacheService(createConfig({ mainReposPath, token: TOKEN }), {
-      exec: recordingExecutor(calls),
-      log: () => undefined,
-    })
+    const service = new RepoCacheService(
+      createConfig({ mainReposPath, installationId: INSTALLATION_ID }),
+      createMockGitHubAuthService(),
+      {
+        exec: recordingExecutor(calls),
+        log: () => undefined,
+      }
+    )
 
     await service.ensureRepo(input())
 
@@ -317,13 +359,17 @@ describe('RepoCacheService', () => {
       const target = args[args.length - 1]
       await writeFile(path.join(path.dirname(target), 'marker'), 'x').catch(() => undefined)
       throw Object.assign(new Error('Command failed'), {
-        stderr: `fatal: unable to access: Authorization: Basic ${TOKEN_HEADER_VALUE} token=${TOKEN}`,
+        stderr: `fatal: unable to access: Authorization: Basic ${TOKEN_HEADER_VALUE} token=${GITHUB_APP_TOKEN}`,
       })
     }
-    const service = new RepoCacheService(createConfig({ mainReposPath, token: TOKEN }), {
-      exec: failingExec,
-      log: () => undefined,
-    })
+    const service = new RepoCacheService(
+      createConfig({ mainReposPath, installationId: INSTALLATION_ID }),
+      createMockGitHubAuthService(),
+      {
+        exec: failingExec,
+        log: () => undefined,
+      }
+    )
     const expectedPath = path.join(mainReposPath, ORG_ID, PROJECT_ID, 'app')
 
     const error = await service
@@ -333,14 +379,16 @@ describe('RepoCacheService', () => {
 
     expect(error).toBeInstanceOf(RepositoryCacheError)
     const message = (error as Error).message
-    expect(message).not.toContain(TOKEN)
+    expect(message).not.toContain(GITHUB_APP_TOKEN)
     expect(message).not.toContain(TOKEN_HEADER_VALUE)
     expect(message).toContain('Failed to clone')
     await expect(access(expectedPath)).rejects.toThrow()
   })
 
   it('replaces the leftover of an interrupted clone', async () => {
-    const service = new RepoCacheService(createConfig({ mainReposPath }), { log: () => undefined })
+    const service = new RepoCacheService(createConfig({ mainReposPath }), createMockGitHubAuthService(), {
+      log: () => undefined,
+    })
     const expectedPath = path.join(mainReposPath, ORG_ID, PROJECT_ID, 'app')
     await mkdir(expectedPath, { recursive: true })
     await writeFile(path.join(expectedPath, 'partial.tmp'), 'partial')
@@ -353,12 +401,16 @@ describe('RepoCacheService', () => {
 
   it('runGit reports failures without leaking the token', async () => {
     const exec: GitExecutor = async () => {
-      throw Object.assign(new Error('boom'), { stderr: `denied for ${TOKEN}` })
+      throw Object.assign(new Error('boom'), { stderr: `denied for ${GITHUB_APP_TOKEN}` })
     }
-    const service = new RepoCacheService(createConfig({ mainReposPath, token: TOKEN }), {
-      exec,
-      log: () => undefined,
-    })
+    const service = new RepoCacheService(
+      createConfig({ mainReposPath, installationId: INSTALLATION_ID }),
+      createMockGitHubAuthService(),
+      {
+        exec,
+        log: () => undefined,
+      }
+    )
 
     const error = await service
       .runGit(['push', 'origin', 'main'], { cwd: tmpRoot, remoteUrl: 'https://git.example.com/acme/app.git' })
@@ -366,6 +418,6 @@ describe('RepoCacheService', () => {
       .catch((e: unknown) => e)
 
     expect(error).toBeInstanceOf(RepositoryCacheError)
-    expect((error as Error).message).not.toContain(TOKEN)
+    expect((error as Error).message).not.toContain(GITHUB_APP_TOKEN)
   })
 })

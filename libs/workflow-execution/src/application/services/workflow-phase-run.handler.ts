@@ -13,7 +13,7 @@ import { GitWorktreeService } from '../../infras/workspace/git-worktree.service'
 import type { PhaseExecutionMeta, WorkflowPhaseRunJob } from '../../domain/schemas/phase-execution.schemas'
 import type { IAIAgentService } from '@vyrak/ai-agent'
 import type { IConfigService } from '@vyrak/custom-config'
-import type { IRepoCacheService, RepositoryReference } from '@vyrak/workflow-core'
+import type { IGitHubAuthService, IRepoCacheService, RepositoryReference } from '@vyrak/workflow-core'
 
 type WorkflowRunContext = {
   projectId: string
@@ -34,7 +34,8 @@ export class WorkflowPhaseRunHandler {
     aiAgentService: IAIAgentService,
     private readonly configService: IConfigService,
     enhancedLogger?: EnhancedLogger,
-    repoCache?: IRepoCacheService
+    repoCache?: IRepoCacheService,
+    private readonly githubAuthService?: IGitHubAuthService
   ) {
     this.logger =
       enhancedLogger?.with({ context: 'WorkflowPhaseRunHandler' }) ??
@@ -43,7 +44,7 @@ export class WorkflowPhaseRunHandler {
         error: console.error,
         warn: console.warn,
       } as unknown as EnhancedLogger)
-    this.repoCache = repoCache ?? new RepoCacheService(configService)
+    this.repoCache = repoCache ?? new RepoCacheService(configService, githubAuthService)
     this.gitWorktree = new GitWorktreeService(configService, this.repoCache)
     this.claudeCode = new ClaudeCodeRunner(configService, aiAgentService)
   }
@@ -358,12 +359,23 @@ ${implementationLog.slice(0, 2000)}
 ---
 *This PR was automatically created by Vyrak workflow automation.*`
 
+      // Get GitHub App token
+      let token: string | undefined
+      const installationId = this.configService.git?.githubApp?.installationId
+      if (this.githubAuthService && installationId) {
+        try {
+          token = await this.githubAuthService.getToken(installationId)
+        } catch (error) {
+          this.logger.warn(`Failed to get GitHub App token: ${error instanceof Error ? error.message : String(error)}`)
+          // Continue without token; gh CLI might fail but we log it
+        }
+      }
+
       // Create PR using gh CLI
-      // TODO: GitHub App token will be used in Phase 5
       const { stdout } = await execFileAsync(
         'gh',
         ['pr', 'create', '--title', title, '--body', body, '--base', baseBranch, '--head', branch],
-        { cwd: workspacePath, env: process.env }
+        { cwd: workspacePath, env: token ? { ...process.env, GH_TOKEN: token } : process.env }
       )
 
       // Extract PR URL from output
@@ -376,9 +388,10 @@ ${implementationLog.slice(0, 2000)}
 
       return { url, number }
     } catch (error) {
-      // Log but don't fail - user can create PR manually
       const message = error instanceof Error ? error.message : String(error)
-      this.logger.error(`Failed to create PR: ${message}`)
+      // Redact GitHub App tokens (ghs_) from error messages
+      const redacted = message.replace(/ghs_[A-Za-z0-9_]+/g, 'ghs_***')
+      this.logger.error(`Failed to create PR: ${redacted}`)
       return {}
     }
   }
