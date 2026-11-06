@@ -177,7 +177,8 @@ export class CustomConfigService implements IConfigService {
     for (const [field, envKey] of envFields) {
       const envValue = process.env[envKey]
       if (envValue !== undefined) {
-        githubApp[field] = envValue
+        // Unescape literal \n to actual newlines for privateKey from env
+        githubApp[field] = field === 'privateKey' ? envValue.replace(/\\n/g, '\n') : envValue
       } else if (githubApp[field] === 'replace_me') {
         delete githubApp[field]
       }

@@ -44,6 +44,12 @@ export class WorkflowPhaseRunHandler {
         error: console.error,
         warn: console.warn,
       } as unknown as EnhancedLogger)
+
+    // GitHub auth service is required for RepoCacheService
+    if (!githubAuthService) {
+      throw new Error('WorkflowPhaseRunHandler requires githubAuthService')
+    }
+
     this.repoCache = repoCache ?? new RepoCacheService(configService, githubAuthService)
     this.gitWorktree = new GitWorktreeService(configService, this.repoCache)
     this.claudeCode = new ClaudeCodeRunner(configService, aiAgentService)
@@ -366,8 +372,11 @@ ${implementationLog.slice(0, 2000)}
         try {
           token = await this.githubAuthService.getToken(installationId)
         } catch (error) {
-          this.logger.warn(`Failed to get GitHub App token: ${error instanceof Error ? error.message : String(error)}`)
-          // Continue without token; gh CLI might fail but we log it
+          const message = error instanceof Error ? error.message : String(error)
+          // Redact GitHub App tokens (ghs_) from error messages
+          const redacted = message.replace(/ghs_[A-Za-z0-9_-]+/g, 'ghs_***')
+          this.logger.error(`Failed to get GitHub App token: ${redacted}`)
+          return {}
         }
       }
 

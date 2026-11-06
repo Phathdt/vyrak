@@ -84,7 +84,7 @@ export class RepoCacheService implements IRepoCacheService {
 
   constructor(
     private readonly configService: IConfigService,
-    private readonly githubAuthService?: IGitHubAuthService,
+    private readonly githubAuthService: IGitHubAuthService,
     options: RepoCacheServiceOptions = {}
   ) {
     this.exec = options.exec ?? defaultExec

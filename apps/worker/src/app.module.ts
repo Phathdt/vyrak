@@ -11,6 +11,8 @@ import { DatabaseModule, DatabaseService } from '@vyrak/database'
 import { EventBusModule } from '@vyrak/event-bus'
 import {
   IWorkflowRepository,
+  IGitHubAuthService,
+  GITHUB_AUTH_SERVICE,
   RepositoryContextService,
   SubTaskPrismaRepository,
   WORKFLOW_REPOSITORY,
@@ -129,6 +131,7 @@ import { socketEmitterProvider } from './realtime/socket-emitter.provider'
         aiAgentService: IAIAgentService,
         configService: IConfigService,
         logger: EnhancedLogger,
+        githubAuthService: IGitHubAuthService,
         repositoryContext: RepositoryContextService
       ) =>
         new ImplementationOrchestrationService(
@@ -139,6 +142,7 @@ import { socketEmitterProvider } from './realtime/socket-emitter.provider'
           aiAgentService,
           configService,
           logger,
+          githubAuthService,
           3,
           repositoryContext
         ),
@@ -148,6 +152,7 @@ import { socketEmitterProvider } from './realtime/socket-emitter.provider'
         AI_AGENT_SERVICE,
         CONFIG_SERVICE,
         EnhancedLogger,
+        GITHUB_AUTH_SERVICE,
         RepositoryContextService,
       ],
     },

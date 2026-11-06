@@ -21,6 +21,7 @@ import type { IArtifactService } from '@vyrak/artifact'
 import type { IConfigService } from '@vyrak/custom-config'
 import type { EnhancedLogger } from '@vyrak/custom-logger'
 import type {
+  IGitHubAuthService,
   IRepoCacheService,
   ISubTaskRepository,
   IWorkflowDependencyRepository,
@@ -48,9 +49,10 @@ export class ImplementationOrchestrationService implements IImplementationOrches
     aiAgentService: IAIAgentService,
     private readonly configService: IConfigService,
     private readonly logger: EnhancedLogger,
+    githubAuthService: IGitHubAuthService,
     maxConcurrency: number = 3,
     private readonly repositoryContext?: RepositoryContextService,
-    repoCache: IRepoCacheService = new RepoCacheService(configService)
+    repoCache: IRepoCacheService = new RepoCacheService(configService, githubAuthService)
   ) {
     this.parallelExecutor = new ParallelExecutor(maxConcurrency)
     this.gitWorktreeService = new GitWorktreeService(configService, repoCache)
