@@ -3,6 +3,7 @@ import * as yaml from 'js-yaml'
 import * as path from 'path'
 
 import { BootstrapLogger } from './bootstrap-logger'
+import { GitConfigSchema } from './configs/git.config'
 import { camelToSnakeCase, convertToCamelCase } from './utils'
 
 import type {
@@ -115,7 +116,11 @@ export class CustomConfigService implements IConfigService {
 
       this._config = convertToCamelCase(rawConfig) as AppConfig
       this.overrideWithEnv(this._config as unknown as Record<string, unknown>)
+      this.normalizeGitAppConfig()
       this.normalizeOptionalAnthropicConfig()
+      if (this._config.git) {
+        this._config.git = GitConfigSchema.parse(this._config.git)
+      }
 
       BootstrapLogger.log(`Configuration loaded successfully from ${path.basename(configPath)} (APP_ENV=${env})`)
     } catch (error) {
@@ -143,6 +148,42 @@ export class CustomConfigService implements IConfigService {
         }
       }
     }
+  }
+
+  /**
+   * Apply GIT__GITHUB_APP__* env overrides to the git config.
+   *
+   * `overrideWithEnv()` only visits keys that already exist in the YAML, so a
+   * credential declared solely via the environment (for example PRIVATE_KEY_PATH
+   * in development.yaml, where the YAML key is commented out) would be silently
+   * dropped. This pass applies every GitHub App field independently so that any
+   * of them can come from the environment, and clears `replace_me` placeholders
+   * so they are never mistaken for real credentials.
+   */
+  private normalizeGitAppConfig(): void {
+    const git = this._config.git
+    if (!git) {
+      return
+    }
+
+    const githubApp = (git.githubApp ?? {}) as Record<string, unknown>
+    const envFields: Array<[string, string]> = [
+      ['appId', 'GIT__GITHUB_APP__APP_ID'],
+      ['installationId', 'GIT__GITHUB_APP__INSTALLATION_ID'],
+      ['privateKey', 'GIT__GITHUB_APP__PRIVATE_KEY'],
+      ['privateKeyPath', 'GIT__GITHUB_APP__PRIVATE_KEY_PATH'],
+    ]
+
+    for (const [field, envKey] of envFields) {
+      const envValue = process.env[envKey]
+      if (envValue !== undefined) {
+        githubApp[field] = envValue
+      } else if (githubApp[field] === 'replace_me') {
+        delete githubApp[field]
+      }
+    }
+
+    git.githubApp = githubApp as typeof git.githubApp
   }
 
   /** Normalize optional Anthropic fields after env overrides. */
@@ -284,6 +325,29 @@ export class CustomConfigService implements IConfigService {
 
       if (isPlaceholder(anthropic.model)) {
         errors.push('anthropic.model must be configured')
+      }
+    }
+
+    // Validate GitHub App git config (skip if not configured)
+    const gitApp = this._config.git?.githubApp
+    if (
+      gitApp?.appId !== undefined ||
+      gitApp?.installationId !== undefined ||
+      gitApp?.privateKey !== undefined ||
+      gitApp?.privateKeyPath !== undefined
+    ) {
+      if (isPlaceholder(gitApp.appId)) {
+        errors.push('git.githubApp.appId must be configured (set GIT__GITHUB_APP__APP_ID)')
+      }
+      if (isPlaceholder(gitApp.installationId)) {
+        errors.push('git.githubApp.installationId must be configured (set GIT__GITHUB_APP__INSTALLATION_ID)')
+      }
+      const hasPK = gitApp.privateKey && !isPlaceholder(gitApp.privateKey)
+      const hasPKPath = gitApp.privateKeyPath && !isPlaceholder(gitApp.privateKeyPath)
+      if (!hasPK && !hasPKPath) {
+        errors.push(
+          'git.githubApp.privateKey or privateKeyPath must be configured (set GIT__GITHUB_APP__PRIVATE_KEY or GIT__GITHUB_APP__PRIVATE_KEY_PATH)'
+        )
       }
     }
 
