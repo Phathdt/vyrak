@@ -267,7 +267,7 @@ export class RepoCacheService implements IRepoCacheService {
     let result = text.replace(/Authorization:\s*Basic\s+\S+/gi, 'Authorization: Basic ***')
 
     // Redact GitHub App tokens (ghs_xxx format)
-    result = result.replace(/ghs_[A-Za-z0-9_]+/g, 'ghs_***')
+    result = result.replace(/ghs_[A-Za-z0-9_-]+/g, 'ghs_***')
 
     return result
   }

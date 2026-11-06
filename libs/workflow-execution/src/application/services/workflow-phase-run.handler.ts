@@ -390,7 +390,7 @@ ${implementationLog.slice(0, 2000)}
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       // Redact GitHub App tokens (ghs_) from error messages
-      const redacted = message.replace(/ghs_[A-Za-z0-9_]+/g, 'ghs_***')
+      const redacted = message.replace(/ghs_[A-Za-z0-9_-]+/g, 'ghs_***')
       this.logger.error(`Failed to create PR: ${redacted}`)
       return {}
     }
