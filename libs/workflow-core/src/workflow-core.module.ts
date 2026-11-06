@@ -41,9 +41,9 @@ import type {
   IUnitOfWork,
 } from './domain'
 import type {
+  IGitHubAuthService,
   IGitHubAppTokenCache,
   IGitHubAppTokenGenerator,
-  IGitHubAuthService,
 } from './domain/interfaces/github-auth.interface'
 import type { IRepoCacheService } from './domain/interfaces/repo-cache.interface'
 import type { IConfigService } from '@vyrak/custom-config'
