@@ -42,7 +42,11 @@ export function createMockConfigService(overrides?: Partial<IConfigService>): IC
       forcePathStyle: true,
     },
     git: {
-      token: '',
+      githubApp: {
+        appId: 123456,
+        installationId: 789012,
+        privateKey: 'mock-private-key',
+      },
       userName: 'vyrak-bot',
       userEmail: 'vyrak-bot@users.noreply.github.com',
     },

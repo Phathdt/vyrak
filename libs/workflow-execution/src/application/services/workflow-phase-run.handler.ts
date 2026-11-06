@@ -358,12 +358,12 @@ ${implementationLog.slice(0, 2000)}
 ---
 *This PR was automatically created by Vyrak workflow automation.*`
 
-      // Create PR using gh CLI; the token goes through the environment of this single command only
-      const token = this.configService.git?.token
+      // Create PR using gh CLI
+      // TODO: GitHub App token will be used in Phase 5
       const { stdout } = await execFileAsync(
         'gh',
         ['pr', 'create', '--title', title, '--body', body, '--base', baseBranch, '--head', branch],
-        { cwd: workspacePath, env: token ? { ...process.env, GH_TOKEN: token } : process.env }
+        { cwd: workspacePath, env: process.env }
       )
 
       // Extract PR URL from output
@@ -377,9 +377,8 @@ ${implementationLog.slice(0, 2000)}
       return { url, number }
     } catch (error) {
       // Log but don't fail - user can create PR manually
-      const token = this.configService.git?.token
       const message = error instanceof Error ? error.message : String(error)
-      this.logger.error(`Failed to create PR: ${token ? message.split(token).join('***') : message}`)
+      this.logger.error(`Failed to create PR: ${message}`)
       return {}
     }
   }

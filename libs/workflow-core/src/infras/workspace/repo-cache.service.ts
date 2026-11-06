@@ -192,8 +192,9 @@ export class RepoCacheService implements IRepoCacheService {
   }
 
   private buildAuthArgs(remoteUrl?: string): string[] {
-    const token = this.configService.git?.token
-    if (!token || !remoteUrl) {
+    // TODO: GitHub App authentication will be implemented in Phase 4
+    // For now, return empty array (public repos only)
+    if (!remoteUrl) {
       return []
     }
 
@@ -207,12 +208,13 @@ export class RepoCacheService implements IRepoCacheService {
       return []
     }
 
-    return ['-c', `http.extraHeader=Authorization: Basic ${this.encodeBasicCredential(token)}`]
+    return []
   }
 
-  private encodeBasicCredential(token: string): string {
-    return Buffer.from(`x-access-token:${token}`).toString('base64')
-  }
+  // TODO: Will be used in Phase 4 for GitHub App authentication
+  // private encodeBasicCredential(token: string): string {
+  //   return Buffer.from(`x-access-token:${token}`).toString('base64')
+  // }
 
   private async clone(input: EnsureRepoInput, repoPath: string): Promise<void> {
     await mkdir(path.dirname(repoPath), { recursive: true })
@@ -247,10 +249,7 @@ export class RepoCacheService implements IRepoCacheService {
 
   private redact(text: string): string {
     let result = text.replace(/Authorization:\s*Basic\s+\S+/gi, 'Authorization: Basic ***')
-    const token = this.configService.git?.token
-    if (token) {
-      result = result.split(token).join('***').split(this.encodeBasicCredential(token)).join('***')
-    }
+    // TODO: Add GitHub App token redaction (ghs_*) in Phase 4
     return result
   }
 
