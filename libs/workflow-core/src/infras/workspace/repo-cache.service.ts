@@ -170,7 +170,7 @@ export class RepoCacheService implements IRepoCacheService {
     }
 
     if (parsed.username || parsed.password) {
-      throw new InvalidRepositoryReferenceError('url must not embed credentials; configure GIT__TOKEN instead')
+      throw new InvalidRepositoryReferenceError('url must not embed credentials; configure GitHub App instead')
     }
 
     if (parsed.protocol === 'https:') {

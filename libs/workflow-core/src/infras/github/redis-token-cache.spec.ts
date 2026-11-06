@@ -1,5 +1,5 @@
 import RedisMock from 'ioredis-mock'
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 import { GitHubTokenCacheError } from '../../domain/exceptions/github-auth.exceptions'
 import { RedisTokenCache } from './redis-token-cache'
@@ -92,6 +92,27 @@ describe('RedisTokenCache', () => {
 
       const directGet = await redis.get(`github-app:token:${installationId}`)
       expect(directGet).toBe(token)
+    })
+  })
+
+  describe('onModuleDestroy', () => {
+    it('should quit the Redis connection', async () => {
+      const quit = vi.fn().mockResolvedValue('OK')
+      const mockRedis = { quit } as any
+      const destroyCache = new RedisTokenCache(mockRedis)
+
+      await destroyCache.onModuleDestroy()
+
+      expect(quit).toHaveBeenCalledOnce()
+    })
+
+    it('should not throw when the connection is already closed', async () => {
+      const mockRedis = {
+        quit: vi.fn().mockRejectedValue(new Error('Connection already closed')),
+      } as any
+      const destroyCache = new RedisTokenCache(mockRedis)
+
+      await expect(destroyCache.onModuleDestroy()).resolves.toBeUndefined()
     })
   })
 })

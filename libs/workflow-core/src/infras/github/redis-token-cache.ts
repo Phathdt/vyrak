@@ -1,6 +1,7 @@
 import { GitHubTokenCacheError } from '../../domain/exceptions/github-auth.exceptions'
 
 import type { IGitHubAppTokenCache } from '../../domain/interfaces/github-auth.interface'
+import type { OnModuleDestroy } from '@nestjs/common'
 import type { Redis } from 'ioredis'
 
 /**
@@ -11,7 +12,7 @@ import type { Redis } from 'ioredis'
  *
  * Plain TypeScript class (no @Injectable()) registered via DI in WorkflowCoreModule.
  */
-export class RedisTokenCache implements IGitHubAppTokenCache {
+export class RedisTokenCache implements IGitHubAppTokenCache, OnModuleDestroy {
   private readonly keyPrefix = 'github-app:token:'
 
   constructor(private readonly redis: Redis) {}
@@ -35,6 +36,17 @@ export class RedisTokenCache implements IGitHubAppTokenCache {
       throw new GitHubTokenCacheError(
         `Failed to set token in cache: ${error instanceof Error ? error.message : String(error)}`
       )
+    }
+  }
+
+  /**
+   * NestJS lifecycle hook - close the Redis connection on module destroy.
+   */
+  async onModuleDestroy(): Promise<void> {
+    try {
+      await this.redis.quit()
+    } catch {
+      // Connection may already be closed or never opened; nothing to clean up.
     }
   }
 }

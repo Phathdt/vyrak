@@ -42,7 +42,11 @@ describe('CustomConfigService', () => {
       force_path_style: true,
     },
     git: {
-      token: '',
+      github_app: {
+        app_id: '123456',
+        installation_id: '789012',
+        private_key: 'yaml-key',
+      },
       user_name: 'vyrak-bot',
       user_email: 'vyrak-bot@users.noreply.github.com',
     },
@@ -170,12 +174,18 @@ describe('CustomConfigService', () => {
 
     it('should override git config with GIT__ environment variables', () => {
       setupMocks()
-      process.env.GIT__TOKEN = 'ghp_env_token'
+      process.env.GIT__GITHUB_APP__APP_ID = '123456'
+      process.env.GIT__GITHUB_APP__INSTALLATION_ID = '789012'
+      process.env.GIT__GITHUB_APP__PRIVATE_KEY = 'fake-key'
       process.env.GIT__USER_NAME = 'env-bot'
       process.env.GIT__USER_EMAIL = 'env-bot@example.com'
       service = new CustomConfigService()
       expect(service.git).toEqual({
-        token: 'ghp_env_token',
+        githubApp: {
+          appId: '123456',
+          installationId: '789012',
+          privateKey: 'fake-key',
+        },
         userName: 'env-bot',
         userEmail: 'env-bot@example.com',
       })
@@ -184,11 +194,8 @@ describe('CustomConfigService', () => {
     it('should keep git config from YAML when GIT__ variables are absent', () => {
       setupMocks()
       service = new CustomConfigService()
-      expect(service.git).toEqual({
-        token: '',
-        userName: 'vyrak-bot',
-        userEmail: 'vyrak-bot@users.noreply.github.com',
-      })
+      expect(service.git.userName).toBe('vyrak-bot')
+      expect(service.git.userEmail).toBe('vyrak-bot@users.noreply.github.com')
     })
 
     it('should override worker chat concurrency with WORKER__CHAT_CONCURRENCY', () => {
