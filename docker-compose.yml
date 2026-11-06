@@ -95,9 +95,6 @@ services:
       HOST__PORT: 3000
       DATABASE__URL: postgresql://postgres:postgres@postgres:5432/vyrak
       REDIS__URL: redis://redis:6379
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ""
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
       JWT__SECRET: ${JWT__SECRET:-change-me-in-env-file}
       S3__ENDPOINT: http://floci:4566
@@ -126,9 +123,6 @@ services:
       HOST__PORT: 3001
       DATABASE__URL: postgresql://postgres:postgres@postgres:5432/vyrak
       REDIS__URL: redis://redis:6379
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ""
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
       JWT__SECRET: ${JWT__SECRET:-change-me-in-env-file}
       S3__ENDPOINT: http://floci:4566
@@ -137,6 +131,17 @@ services:
       ANTHROPIC__API_KEY: ${ANTHROPIC__API_KEY:-}
       ANTHROPIC__MODEL: ${ANTHROPIC__MODEL:-}
       ANTHROPIC__API_URL: ${ANTHROPIC__API_URL:-}
+      GIT__TOKEN: ${GIT__TOKEN:-}
+      GIT__USER_NAME: ${GIT__USER_NAME:-vyrak-bot}
+      GIT__USER_EMAIL: ${GIT__USER_EMAIL:-vyrak-bot@users.noreply.github.com}
+      MAIN_REPOS_PATH: /var/vyrak/repos
+      WORKSPACES_PATH: /var/vyrak/workspaces
+    # Lets ANTHROPIC__API_URL point at a proxy running on the host, e.g. http://host.docker.internal:20128
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    # Stands in for a pod emptyDir: remove this volume to simulate a fresh worker with an empty disk.
+    volumes:
+      - worker-repos:/var/vyrak
     depends_on:
       postgres:
         condition: service_healthy
@@ -159,3 +164,4 @@ services:
 
 volumes:
   floci-data:
+  worker-repos:

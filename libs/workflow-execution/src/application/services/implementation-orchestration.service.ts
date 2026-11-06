@@ -1,4 +1,4 @@
-import { DependencyGraph, SubTaskStatus } from '@vyrak/workflow-core'
+import { DependencyGraph, RepoCacheService, SubTaskStatus } from '@vyrak/workflow-core'
 import { mkdir } from 'node:fs/promises'
 import path from 'node:path'
 
@@ -21,9 +21,11 @@ import type { IArtifactService } from '@vyrak/artifact'
 import type { IConfigService } from '@vyrak/custom-config'
 import type { EnhancedLogger } from '@vyrak/custom-logger'
 import type {
+  IRepoCacheService,
   ISubTaskRepository,
   IWorkflowDependencyRepository,
   IWorkflowRepository,
+  RepositoryContextService,
   SubTaskEntity,
   WorkflowEntity,
 } from '@vyrak/workflow-core'
@@ -46,10 +48,12 @@ export class ImplementationOrchestrationService implements IImplementationOrches
     aiAgentService: IAIAgentService,
     private readonly configService: IConfigService,
     private readonly logger: EnhancedLogger,
-    maxConcurrency: number = 3
+    maxConcurrency: number = 3,
+    private readonly repositoryContext?: RepositoryContextService,
+    repoCache: IRepoCacheService = new RepoCacheService(configService)
   ) {
     this.parallelExecutor = new ParallelExecutor(maxConcurrency)
-    this.gitWorktreeService = new GitWorktreeService(configService)
+    this.gitWorktreeService = new GitWorktreeService(configService, repoCache)
     this.implementationRunner = new ImplementationAgentRunner(aiAgentService)
   }
 
@@ -315,13 +319,21 @@ export class ImplementationOrchestrationService implements IImplementationOrches
       const workspaceMode = this.configService.workspace?.mode || 'clone'
 
       if (workspaceMode === 'worktree') {
+        if (!this.repositoryContext) {
+          throw new Error('RepositoryContextService is required to prepare a worktree')
+        }
+        const repository = await this.repositoryContext.resolveRepository(task.workflowId)
+        if (!repository) {
+          throw new Error(`Workflow ${task.workflowId} has no linked repository`)
+        }
+
         // Use git worktree for isolation
         const input: WorktreePrepareInput = {
           organizationId: task.organizationId,
           projectId: workflow.projectId || '',
           workflowId: task.workflowId,
-          repositoryName: workflow.title,
           phaseKey: task.key,
+          repository,
         }
 
         const worktreeResult = await this.gitWorktreeService.prepareWorktree(input)

@@ -1,18 +1,20 @@
-import { execFile } from 'node:child_process'
-import { access, mkdir } from 'node:fs/promises'
+import { access, mkdir, rm } from 'node:fs/promises'
 import path from 'node:path'
-import { promisify } from 'node:util'
 
 import type { IConfigService } from '@vyrak/custom-config'
-
-const execFileAsync = promisify(execFile)
+import type { IRepoCacheService, RepositoryReference } from '@vyrak/workflow-core'
 
 export type WorktreePrepareInput = {
   organizationId: string
   projectId: string
   workflowId: string
-  repositoryName?: string
   phaseKey: string
+  repository: RepositoryReference
+}
+
+export type ReviewWorktreePrepareInput = WorktreePrepareInput & {
+  /** Branch that the implementation run pushed to the remote. */
+  branch: string
 }
 
 export type WorktreePrepareResult = {
@@ -30,37 +32,19 @@ async function pathExists(candidate: string): Promise<boolean> {
   }
 }
 
-async function isGitRepo(dir: string): Promise<boolean> {
-  return pathExists(path.join(dir, '.git'))
+function isMissingRemoteRef(error: unknown): boolean {
+  return error instanceof Error && error.message.includes("couldn't find remote ref")
 }
 
+/**
+ * Creates and removes git worktrees on top of the local repository cache.
+ * Plain TypeScript class, no framework decorators.
+ */
 export class GitWorktreeService {
-  constructor(private readonly configService: IConfigService) {}
-
-  async resolveMainRepoRoot(input: WorktreePrepareInput): Promise<string | null> {
-    const mainReposPath = this.configService.workspace?.mainReposPath
-    if (!mainReposPath) {
-      return null
-    }
-
-    const candidates = [
-      input.repositoryName
-        ? path.join(mainReposPath, input.organizationId, input.projectId, input.repositoryName)
-        : null,
-      path.join(mainReposPath, input.organizationId, input.projectId),
-      path.join(mainReposPath, input.projectId),
-      input.repositoryName ? path.join(mainReposPath, input.repositoryName) : null,
-      mainReposPath,
-    ].filter(Boolean) as string[]
-
-    for (const candidate of candidates) {
-      if (await isGitRepo(candidate)) {
-        return candidate
-      }
-    }
-
-    return null
-  }
+  constructor(
+    private readonly configService: IConfigService,
+    private readonly repoCache: IRepoCacheService
+  ) {}
 
   buildBranchName(workflowId: string, phaseKey: string): string {
     const prefix = this.configService.workspace?.worktree?.branchPrefix ?? 'workflow/'
@@ -68,40 +52,83 @@ export class GitWorktreeService {
     return `${prefix}${slug}/${phaseKey}`.replace(/\/+/g, '/')
   }
 
+  /**
+   * Make sure the repository is cloned and up to date, then create a worktree on a new
+   * workflow branch that starts from the repository's configured branch.
+   */
   async prepareWorktree(input: WorktreePrepareInput): Promise<WorktreePrepareResult> {
-    const mainRepoRoot = await this.resolveMainRepoRoot(input)
-    if (!mainRepoRoot) {
-      throw new Error(
-        'No git main repository found under MAIN_REPOS_PATH. Clone the linked repo before running implementation.'
-      )
-    }
-
-    const workspacesPath = this.configService.workspace?.workspacesPath ?? '/tmp/vyrak-workspaces'
-    const workspacePath = path.join(
-      workspacesPath,
-      input.organizationId,
-      input.projectId,
-      input.workflowId,
-      input.phaseKey
-    )
-    await mkdir(path.dirname(workspacePath), { recursive: true })
-
+    const mainRepoRoot = await this.ensureMainRepo(input.repository)
+    const workspacePath = this.buildWorkspacePath(input)
     const branch = this.buildBranchName(input.workflowId, input.phaseKey)
-    const baseBranch = this.configService.workspace?.worktree?.baseBranch ?? 'main'
-    const autoFetch = this.configService.workspace?.worktree?.autoFetch !== false
+    const baseBranch = input.repository.branch || this.configService.workspace?.worktree?.baseBranch || 'main'
 
-    if (autoFetch) {
-      await execFileAsync('git', ['fetch', 'origin', baseBranch], { cwd: mainRepoRoot }).catch(() => undefined)
-    }
-
-    if (await pathExists(workspacePath)) {
-      await execFileAsync('git', ['worktree', 'remove', '--force', workspacePath], { cwd: mainRepoRoot }).catch(
-        () => undefined
-      )
-    }
-
-    await execFileAsync('git', ['worktree', 'add', '-B', branch, workspacePath, baseBranch], { cwd: mainRepoRoot })
+    await this.discardWorktree(mainRepoRoot, workspacePath)
+    await this.repoCache.runGit(['worktree', 'add', '-B', branch, workspacePath, `origin/${baseBranch}`], {
+      cwd: mainRepoRoot,
+    })
 
     return { workspacePath, branch, mainRepoRoot }
+  }
+
+  /**
+   * Create a detached worktree of a branch that an earlier run pushed to the remote.
+   * Returns null when the remote does not have that branch (nothing was pushed).
+   */
+  async prepareReviewWorktree(input: ReviewWorktreePrepareInput): Promise<WorktreePrepareResult | null> {
+    const mainRepoRoot = await this.ensureMainRepo(input.repository)
+
+    try {
+      await this.repoCache.runGit(['fetch', 'origin', input.branch], {
+        cwd: mainRepoRoot,
+        remoteUrl: input.repository.url,
+      })
+    } catch (error) {
+      if (isMissingRemoteRef(error)) {
+        return null
+      }
+      throw error
+    }
+
+    const workspacePath = this.buildWorkspacePath(input)
+    await this.discardWorktree(mainRepoRoot, workspacePath)
+    await this.repoCache.runGit(['worktree', 'add', '--detach', workspacePath, `origin/${input.branch}`], {
+      cwd: mainRepoRoot,
+    })
+
+    return { workspacePath, branch: input.branch, mainRepoRoot }
+  }
+
+  /** Remove a worktree directory and its registration so the disk of the host does not fill up. */
+  async removeWorktree(mainRepoRoot: string, workspacePath: string): Promise<void> {
+    await this.repoCache.runGit(['worktree', 'remove', '--force', workspacePath], { cwd: mainRepoRoot })
+  }
+
+  private ensureMainRepo(repository: RepositoryReference): Promise<string> {
+    return this.repoCache.ensureRepo({
+      organizationId: repository.organizationId,
+      projectId: repository.projectId,
+      repoName: repository.name,
+      url: repository.url,
+      branch: repository.branch,
+    })
+  }
+
+  private buildWorkspacePath(input: WorktreePrepareInput): string {
+    const workspacesPath = this.configService.workspace?.workspacesPath ?? '/tmp/vyrak-workspaces'
+    return path.join(workspacesPath, input.organizationId, input.projectId, input.workflowId, input.phaseKey)
+  }
+
+  /**
+   * Clear a previous worktree at the same path (a retried job, or a pod that restarted and lost the directory)
+   * so that `git worktree add` does not fail on stale registrations.
+   */
+  private async discardWorktree(mainRepoRoot: string, workspacePath: string): Promise<void> {
+    await mkdir(path.dirname(workspacePath), { recursive: true })
+
+    if (await pathExists(workspacePath)) {
+      await this.removeWorktree(mainRepoRoot, workspacePath).catch(() => undefined)
+      await rm(workspacePath, { recursive: true, force: true })
+    }
+    await this.repoCache.runGit(['worktree', 'prune'], { cwd: mainRepoRoot })
   }
 }

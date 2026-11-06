@@ -77,11 +77,20 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Install only essential runtime packages
-RUN apk add --no-cache dumb-init
+# Runtime packages: git and gh clone, push and open PRs on an empty disk (no token is baked in)
+RUN apk add --no-cache dumb-init git github-cli ca-certificates
+
+# Writable locations for the repo cache and per-run worktrees (mount a volume here)
+RUN mkdir -p /var/vyrak/repos /var/vyrak/workspaces && chown -R node:node /var/vyrak
 
 # Copy production dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
+
+# The SDK is bundled into main.js, so it looks for its native claude binary package next to the top-level
+# packages. pnpm only links that optional package inside the SDK's own store folder, so expose it here.
+RUN for p in /app/node_modules/.pnpm/@anthropic-ai+claude-agent-sdk-linux-*/node_modules/@anthropic-ai/claude-agent-sdk-linux-*; do \
+  ln -s "$p" /app/node_modules/@anthropic-ai/; \
+  done
 
 # Copy the generated Prisma client from builder
 COPY --from=builder /app/libs/database/src/generated ./libs/database/src/generated
@@ -97,5 +106,7 @@ RUN ln -s /app/dist /dist
 
 # YAML configuration files read by CustomConfigService (APP_ENV selects the file)
 COPY --from=builder /app/config ./config
+
+USER node
 
 CMD ["dumb-init", "node", "dist/apps/worker/main.js"]

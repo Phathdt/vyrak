@@ -1,4 +1,6 @@
+import type { GitConfig } from './configs/git.config'
 import type { S3Config } from './configs/s3.config'
+import type { WorkerConfig } from './configs/worker.config'
 import type { WorkspaceConfig } from './workspace.config'
 
 export interface DatabaseConfig {
@@ -52,6 +54,8 @@ export interface AppConfig {
   agentRuntime: AgentRuntimeConfig
   jwt: JwtConfig
   s3: S3Config
+  git: GitConfig
+  worker: WorkerConfig
   anthropic?: AnthropicConfig
   frontendUrl: string
   [key: string]: unknown
@@ -102,6 +106,8 @@ export interface IConfigService {
   readonly agentRuntime: AgentRuntimeConfig
   readonly jwt: JwtConfig
   readonly s3: S3Config
+  readonly git: GitConfig
+  readonly worker: WorkerConfig
   readonly anthropic?: AnthropicConfig
   readonly frontendUrl: string
 }

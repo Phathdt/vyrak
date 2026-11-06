@@ -3,7 +3,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 import { ClaudeAgentSdkAdapter } from './claude-agent-sdk.adapter'
 
-import type { AgentRequest } from '../../../domain'
+import type { AgentRequest } from '@vyrak/ai-agent'
 import type { AnthropicConfig, IConfigService } from '@vyrak/custom-config'
 import type { Mock } from 'vitest'
 
@@ -357,6 +357,146 @@ describe('ClaudeAgentSdkAdapter', () => {
       const args = mockQuery.mock.calls[0][0] as { prompt: string }
       expect(args.prompt).toBe('')
       expect(chunks).toEqual(['chunk'])
+    })
+  })
+
+  describe('stream()', () => {
+    let adapter: ClaudeAgentSdkAdapter
+
+    const assistantMessage = (...content: unknown[]) => ({ type: 'assistant', message: { content } })
+
+    const streamRequest = {
+      prompt: 'system\n\nUser message',
+      workingDirectory: '/repos/acme/app',
+      allowedTools: ['Read', 'Write'],
+      maxTurns: 7,
+    }
+
+    async function collect(request = streamRequest) {
+      const events = []
+      for await (const event of adapter.stream(request)) {
+        events.push(event)
+      }
+      return events
+    }
+
+    beforeEach(() => {
+      adapter = new ClaudeAgentSdkAdapter(configWith({ model: 'claude-worker-model' }))
+    })
+
+    it('should map thinking, text and tool_use blocks to events in order', async () => {
+      mockQuery.mockReturnValue(
+        messagesOf([
+          assistantMessage({ type: 'thinking', thinking: 'hmm' }, { type: 'text', text: 'Hello ' }),
+          assistantMessage({ type: 'tool_use', name: 'Write', input: { file_path: 'docs/prd.md' } }),
+          assistantMessage({ type: 'text', text: 'world' }),
+          successResult('Hello world'),
+        ])
+      )
+
+      const events = await collect()
+
+      expect(events).toEqual([
+        { type: 'thinking', content: '🤔 Thinking...' },
+        { type: 'delta', content: 'Hello ' },
+        { type: 'tool', name: 'Write', input: { file_path: 'docs/prd.md' } },
+        { type: 'delta', content: 'world' },
+        { type: 'complete', content: 'Hello world' },
+      ])
+    })
+
+    it('should pass the configured model, prompt, working directory, tools and max turns to the SDK', async () => {
+      mockQuery.mockReturnValue(messagesOf([]))
+
+      await collect()
+
+      expect(mockQuery).toHaveBeenCalledWith({
+        prompt: 'system\n\nUser message',
+        options: {
+          model: 'claude-worker-model',
+          env: expect.any(Object),
+          cwd: '/repos/acme/app',
+          allowedTools: ['Read', 'Write'],
+          maxTurns: 7,
+        },
+      })
+    })
+
+    it('should hand an x-api-key credential to the claude subprocess through its environment', async () => {
+      mockQuery.mockReturnValue(messagesOf([]))
+      adapter = new ClaudeAgentSdkAdapter(
+        configWith({ apiKey: 'key-1', authScheme: 'x-api-key', apiUrl: 'http://proxy.internal:20128' })
+      )
+
+      await collect()
+
+      const env = mockQuery.mock.calls[0][0].options.env
+      expect(env.ANTHROPIC_API_KEY).toBe('key-1')
+      expect(env.ANTHROPIC_BASE_URL).toBe('http://proxy.internal:20128')
+    })
+
+    it('should send a bearer credential as ANTHROPIC_AUTH_TOKEN and drop ANTHROPIC_API_KEY', async () => {
+      mockQuery.mockReturnValue(messagesOf([]))
+      adapter = new ClaudeAgentSdkAdapter(configWith({ apiKey: 'key-2', authScheme: 'bearer' }))
+
+      await collect()
+
+      const env = mockQuery.mock.calls[0][0].options.env
+      expect(env.ANTHROPIC_AUTH_TOKEN).toBe('key-2')
+      expect(env.ANTHROPIC_API_KEY).toBeUndefined()
+    })
+
+    it('should default to no tools and 20 turns when the request omits them', async () => {
+      mockQuery.mockReturnValue(messagesOf([]))
+
+      await collect({ prompt: 'p', workingDirectory: '/repo' } as typeof streamRequest)
+
+      const options = mockQuery.mock.calls[0][0].options
+      expect(options.allowedTools).toEqual([])
+      expect(options.maxTurns).toBe(20)
+    })
+
+    it('should not emit complete when no text was produced', async () => {
+      mockQuery.mockReturnValue(
+        messagesOf([assistantMessage({ type: 'thinking', thinking: 'hmm' }), successResult('')])
+      )
+
+      const events = await collect()
+
+      expect(events).toEqual([{ type: 'thinking', content: '🤔 Thinking...' }])
+    })
+
+    it('should ignore empty blocks, non-assistant messages and tool_use blocks without a name', async () => {
+      mockQuery.mockReturnValue(
+        messagesOf([
+          { type: 'system', message: { content: [{ type: 'text', text: 'ignored' }] } },
+          assistantMessage({ type: 'text', text: '' }, { type: 'thinking', thinking: '' }, { type: 'tool_use' }),
+          { type: 'assistant', message: { content: 'not an array' } },
+        ])
+      )
+
+      const events = await collect()
+
+      expect(events).toEqual([])
+    })
+
+    it('should propagate SDK errors after the events already produced', async () => {
+      mockQuery.mockReturnValue({
+        [Symbol.asyncIterator]: async function* () {
+          yield assistantMessage({ type: 'text', text: 'partial' })
+          throw new Error('query failed')
+        },
+      })
+
+      const received: unknown[] = []
+      const consume = async () => {
+        for await (const event of adapter.stream(streamRequest)) {
+          received.push(event)
+        }
+      }
+
+      await expect(consume()).rejects.toThrow('query failed')
+      expect(received).toEqual([{ type: 'delta', content: 'partial' }])
     })
   })
 

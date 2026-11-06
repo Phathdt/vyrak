@@ -1,9 +1,11 @@
 import { ConversationPhase, IConversationService, MessageRole } from '@vyrak/conversation'
 import { EnhancedLogger } from '@vyrak/custom-logger'
 import { DatabaseService } from '@vyrak/database'
+import { RepoCacheService } from '@vyrak/workflow-core'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 
+import { WorkspacePreparationError } from '../../domain/exceptions/orchestration.exceptions'
 import { PhaseExecutionStatus, PhaseRunType } from '../../domain/schemas/phase-execution.schemas'
 import { ClaudeCodeRunner } from '../../infras/agent/claude-code.runner'
 import { GitWorktreeService } from '../../infras/workspace/git-worktree.service'
@@ -11,6 +13,12 @@ import { GitWorktreeService } from '../../infras/workspace/git-worktree.service'
 import type { PhaseExecutionMeta, WorkflowPhaseRunJob } from '../../domain/schemas/phase-execution.schemas'
 import type { IAIAgentService } from '@vyrak/ai-agent'
 import type { IConfigService } from '@vyrak/custom-config'
+import type { IRepoCacheService, RepositoryReference } from '@vyrak/workflow-core'
+
+type WorkflowRunContext = {
+  projectId: string
+  repository: RepositoryReference
+}
 
 const execFileAsync = promisify(execFile)
 
@@ -18,13 +26,15 @@ export class WorkflowPhaseRunHandler {
   private readonly gitWorktree: GitWorktreeService
   private readonly claudeCode: ClaudeCodeRunner
   private readonly logger: EnhancedLogger
+  private readonly repoCache: IRepoCacheService
 
   constructor(
     private readonly databaseService: DatabaseService,
     private readonly conversationService: IConversationService,
     aiAgentService: IAIAgentService,
-    configService: IConfigService,
-    enhancedLogger?: EnhancedLogger
+    private readonly configService: IConfigService,
+    enhancedLogger?: EnhancedLogger,
+    repoCache?: IRepoCacheService
   ) {
     this.logger =
       enhancedLogger?.with({ context: 'WorkflowPhaseRunHandler' }) ??
@@ -33,7 +43,8 @@ export class WorkflowPhaseRunHandler {
         error: console.error,
         warn: console.warn,
       } as unknown as EnhancedLogger)
-    this.gitWorktree = new GitWorktreeService(configService)
+    this.repoCache = repoCache ?? new RepoCacheService(configService)
+    this.gitWorktree = new GitWorktreeService(configService, this.repoCache)
     this.claudeCode = new ClaudeCodeRunner(configService, aiAgentService)
   }
 
@@ -76,12 +87,12 @@ export class WorkflowPhaseRunHandler {
     const planText = await this.buildPlanningTranscript(job.workflowId)
 
     this.logger.log(`[Implementation] Preparing worktree: projectId=${context.projectId} phaseKey=${job.phaseKey}`)
-    const { workspacePath, branch } = await this.gitWorktree.prepareWorktree({
+    const { workspacePath, branch, mainRepoRoot } = await this.gitWorktree.prepareWorktree({
       organizationId: job.organizationId,
       projectId: context.projectId,
       workflowId: job.workflowId,
-      repositoryName: context.repositoryName,
       phaseKey: job.phaseKey,
+      repository: context.repository,
     })
     this.logger.log(`[Implementation] Worktree ready: branch=${branch} workspace=${workspacePath}`)
 
@@ -107,7 +118,7 @@ export class WorkflowPhaseRunHandler {
     let pushSuccess = false
     if (commitSha) {
       this.logger.log(`[Implementation] Pushing branch: branch=${branch}`)
-      pushSuccess = await this.pushBranch(workspacePath, branch)
+      pushSuccess = await this.pushBranch(workspacePath, branch, context.repository.url)
       if (pushSuccess) {
         this.logger.log(`[Implementation] Branch pushed successfully: branch=${branch}`)
       } else {
@@ -120,7 +131,13 @@ export class WorkflowPhaseRunHandler {
     let pullRequestNumber: number | undefined
     if (pushSuccess) {
       this.logger.log(`[Implementation] Creating pull request: branch=${branch}`)
-      const prResult = await this.createPullRequest(workspacePath, branch, job.workflowId, agentResult.content)
+      const prResult = await this.createPullRequest(
+        workspacePath,
+        branch,
+        context.repository.branch,
+        job.workflowId,
+        agentResult.content
+      )
       pullRequestUrl = prResult.url
       pullRequestNumber = prResult.number
       if (pullRequestUrl) {
@@ -130,6 +147,9 @@ export class WorkflowPhaseRunHandler {
       }
     }
 
+    // Once the branch is on the remote the local worktree is no longer needed.
+    const workspaceRemoved = pushSuccess ? await this.cleanupWorktreeOnSuccess(mainRepoRoot, workspacePath) : false
+
     this.logger.log(`[Implementation] Finishing phase run: workflowId=${job.workflowId} status=AWAITING_USER`)
     await this.finishPhaseRun(
       job,
@@ -137,7 +157,7 @@ export class WorkflowPhaseRunHandler {
         status: PhaseExecutionStatus.AWAITING_USER,
         runType: PhaseRunType.IMPLEMENTATION,
         branch,
-        workspacePath,
+        workspacePath: workspaceRemoved ? undefined : workspacePath,
         pullRequestUrl,
         pullRequestNumber,
         finishedAt: new Date().toISOString(),
@@ -157,14 +177,29 @@ export class WorkflowPhaseRunHandler {
     })
     const implOutput = (implPhase?.output ?? {}) as { execution?: PhaseExecutionMeta }
     const branch = implOutput.execution?.branch ?? 'unknown'
-    const workspacePath = implOutput.execution?.workspacePath
 
-    if (workspacePath && branch !== 'unknown') {
+    // The implementation may have run on another host, so review checks out the pushed branch itself.
+    let worktree: Awaited<ReturnType<GitWorktreeService['prepareReviewWorktree']>> = null
+    if (branch !== 'unknown') {
+      const context = await this.loadWorkflowContext(job)
+      worktree = await this.gitWorktree.prepareReviewWorktree({
+        organizationId: job.organizationId,
+        projectId: context.projectId,
+        workflowId: job.workflowId,
+        phaseKey: job.phaseKey,
+        repository: context.repository,
+        branch,
+      })
+    }
+
+    if (worktree) {
       const result = await this.claudeCode.runReview({
-        workspacePath,
+        workspacePath: worktree.workspacePath,
         branch,
         workflowId: job.workflowId,
       })
+
+      const workspaceRemoved = await this.cleanupWorktreeOnSuccess(worktree.mainRepoRoot, worktree.workspacePath)
 
       await this.finishPhaseRun(
         job,
@@ -172,7 +207,7 @@ export class WorkflowPhaseRunHandler {
           status: PhaseExecutionStatus.AWAITING_USER,
           runType: PhaseRunType.REVIEW,
           branch,
-          workspacePath,
+          workspacePath: workspaceRemoved ? undefined : worktree.workspacePath,
           finishedAt: new Date().toISOString(),
         },
         { reviewSummary: result.content.slice(0, 12_000) }
@@ -180,7 +215,7 @@ export class WorkflowPhaseRunHandler {
       return
     }
 
-    const reviewSummary = `Review skipped: no implementation workspace metadata for branch \`${branch}\`.`
+    const reviewSummary = `Review skipped: branch \`${branch}\` was not pushed, so there is nothing to review.`
     await this.finishPhaseRun(
       job,
       {
@@ -205,10 +240,7 @@ export class WorkflowPhaseRunHandler {
     )
   }
 
-  private async loadWorkflowContext(job: WorkflowPhaseRunJob): Promise<{
-    projectId: string
-    repositoryName?: string
-  }> {
+  private async loadWorkflowContext(job: WorkflowPhaseRunJob): Promise<WorkflowRunContext> {
     const workflow = await this.databaseService.client.workflow.findFirst({
       where: { id: job.workflowId, organizationId: job.organizationId },
     })
@@ -219,41 +251,80 @@ export class WorkflowPhaseRunHandler {
     const link = await this.databaseService.client.workflowRepository.findFirst({
       where: { workflowId: job.workflowId, organizationId: job.organizationId },
     })
-
-    let repositoryName: string | undefined
-    if (link) {
-      const repo = await this.databaseService.client.gitRepository.findFirst({
-        where: { id: link.repositoryId, organizationId: job.organizationId },
-      })
-      repositoryName = repo?.name
+    if (!link) {
+      throw new WorkspacePreparationError('Workflow has no linked repository')
     }
 
-    return { projectId: workflow.projectId, repositoryName }
+    const repo = await this.databaseService.client.gitRepository.findFirst({
+      where: { id: link.repositoryId, organizationId: job.organizationId },
+    })
+    if (!repo) {
+      throw new WorkspacePreparationError(`Linked repository not found: ${link.repositoryId}`)
+    }
+
+    return {
+      projectId: workflow.projectId,
+      repository: {
+        organizationId: repo.organizationId,
+        projectId: repo.projectId,
+        name: repo.name,
+        url: repo.url,
+        branch: repo.branch,
+      },
+    }
   }
 
   private async commitWorkspaceChanges(workspacePath: string, workflowId: string): Promise<string | null> {
     try {
-      const { stdout: status } = await execFileAsync('git', ['status', '--porcelain'], { cwd: workspacePath })
+      const status = await this.repoCache.runGit(['status', '--porcelain'], { cwd: workspacePath })
       if (!status.trim()) {
         return null
       }
-      await execFileAsync('git', ['add', '-A'], { cwd: workspacePath })
-      const message = `feat(workflow): implementation for ${workflowId.slice(0, 8)}`
-      await execFileAsync('git', ['commit', '-m', message], { cwd: workspacePath })
-      const { stdout: sha } = await execFileAsync('git', ['rev-parse', 'HEAD'], { cwd: workspacePath })
+      const identity = this.configService.git
+      await this.repoCache.runGit(['add', '-A'], { cwd: workspacePath })
+      await this.repoCache.runGit(
+        [
+          '-c',
+          `user.name=${identity.userName}`,
+          '-c',
+          `user.email=${identity.userEmail}`,
+          'commit',
+          '-m',
+          `feat(workflow): implementation for ${workflowId.slice(0, 8)}`,
+        ],
+        { cwd: workspacePath }
+      )
+      const sha = await this.repoCache.runGit(['rev-parse', 'HEAD'], { cwd: workspacePath })
       return sha.trim()
-    } catch {
+    } catch (error) {
+      this.logger.warn(`[Implementation] Commit failed: ${error instanceof Error ? error.message : String(error)}`)
       return null
     }
   }
 
-  private async pushBranch(workspacePath: string, branch: string): Promise<boolean> {
+  private async pushBranch(workspacePath: string, branch: string, remoteUrl: string): Promise<boolean> {
     try {
-      await execFileAsync('git', ['push', '-u', 'origin', branch], { cwd: workspacePath })
+      await this.repoCache.runGit(['push', '-u', 'origin', branch], { cwd: workspacePath, remoteUrl })
       return true
     } catch (error) {
       // Log but don't fail - user can push manually
-      console.error('Failed to push branch:', error)
+      this.logger.error(`Failed to push branch: ${error instanceof Error ? error.message : String(error)}`)
+      return false
+    }
+  }
+
+  /** Remove the worktree after a successful run when configured. Returns true when the directory is gone. */
+  private async cleanupWorktreeOnSuccess(mainRepoRoot: string, workspacePath: string): Promise<boolean> {
+    if (this.configService.workspace?.cleanupOnSuccess !== true) {
+      return false
+    }
+    try {
+      await this.gitWorktree.removeWorktree(mainRepoRoot, workspacePath)
+      return true
+    } catch (error) {
+      this.logger.warn(
+        `[Workspace] Failed to remove worktree ${workspacePath}: ${error instanceof Error ? error.message : String(error)}`
+      )
       return false
     }
   }
@@ -261,6 +332,7 @@ export class WorkflowPhaseRunHandler {
   private async createPullRequest(
     workspacePath: string,
     branch: string,
+    baseBranch: string,
     workflowId: string,
     implementationLog: string
   ): Promise<{ url?: string; number?: number }> {
@@ -286,11 +358,12 @@ ${implementationLog.slice(0, 2000)}
 ---
 *This PR was automatically created by Vyrak workflow automation.*`
 
-      // Create PR using gh CLI
+      // Create PR using gh CLI; the token goes through the environment of this single command only
+      const token = this.configService.git?.token
       const { stdout } = await execFileAsync(
         'gh',
-        ['pr', 'create', '--title', title, '--body', body, '--base', 'main', '--head', branch],
-        { cwd: workspacePath }
+        ['pr', 'create', '--title', title, '--body', body, '--base', baseBranch, '--head', branch],
+        { cwd: workspacePath, env: token ? { ...process.env, GH_TOKEN: token } : process.env }
       )
 
       // Extract PR URL from output
@@ -304,7 +377,9 @@ ${implementationLog.slice(0, 2000)}
       return { url, number }
     } catch (error) {
       // Log but don't fail - user can create PR manually
-      console.error('Failed to create PR:', error)
+      const token = this.configService.git?.token
+      const message = error instanceof Error ? error.message : String(error)
+      this.logger.error(`Failed to create PR: ${token ? message.split(token).join('***') : message}`)
       return {}
     }
   }

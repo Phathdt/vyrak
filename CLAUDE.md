@@ -17,6 +17,7 @@ sequenceDiagram
     participant Browser
     participant API as API Server<br/>(NestJS)
     participant WS as WebSocket Gateway<br/>(Socket.IO)
+    participant Q as BullMQ<br/>(chat-turn queue)
     participant AI as Agent SDK<br/>(Claude)
     participant EB as Event Bus<br/>(Redis Streams)
     participant Worker as Background Worker
@@ -35,17 +36,20 @@ sequenceDiagram
     Browser->>WS: chat:join {workflowId}
     WS->>WS: Join room: workflow:{id}
     Browser->>WS: chat:send {message}
-    WS->>AI: Stream request
-    
+    WS->>DB: Save user message
+    WS->>Q: Enqueue chat-turn job (socketId)
+    Q->>Worker: ChatTurnProcessor picks up job
+
     loop Real-time Streaming
-        AI-->>WS: Delta chunk
+        Worker->>AI: Stream request (repo cloned on worker disk)
+        AI-->>Worker: Delta chunk
+        Worker-->>WS: redis-emitter to socketId (Redis Pub/Sub)
         WS-->>Browser: chat:delta {content}
-        WS->>EB: Publish event: agent.message.delta
+        Worker->>EB: Publish event: agent.message.delta
     end
-    
-    AI-->>WS: Complete
-    WS-->>Browser: chat:complete {messageId}
-    WS->>EB: Publish event: agent.message.complete
+
+    Worker-->>Browser: chat:complete {messageId} (via emitter)
+    Worker->>EB: Publish event: agent.message.complete
 
     Note over Browser,S3: Background Processing (Async)
     EB->>Worker: Consume events
@@ -65,13 +69,15 @@ sequenceDiagram
 
 **Pattern 1: Real-time Chat (Synchronous)**
 ```
-User Message → WebSocket Gateway → Agent SDK (streaming) → Browser
-                     ↓
-                Event Bus (async publish)
+User Message → WebSocket Gateway → BullMQ (chat-turn) → Worker → Agent SDK (streaming)
+                                                           ↓
+Browser ← WebSocket Gateway ← Redis Pub/Sub ← redis-emitter ┘
+                                                           ↓
+                                              Event Bus (async publish)
 ```
-- **Latency:** < 100ms first chunk
-- **Response:** Streaming (real-time)
+- **Response:** Streaming (real-time), only to the socket that sent the message
 - **Use case:** Interactive chat
+- **Note:** The api-server never calls the Agent SDK. If the worker is down, the job waits in the queue and the client receives `chat:error` once it is older than 120s.
 
 **Pattern 2: Background Processing (Asynchronous)**
 ```
@@ -89,10 +95,13 @@ Browser → API Server → Database → Browser
 - **Response:** JSON
 - **Use case:** CRUD operations
 
-### Redis Dual Role
+### Redis Roles
 
-1. **Redis Pub/Sub** - WebSocket scaling across instances
+1. **Redis Pub/Sub** - WebSocket scaling across api instances, and delivery of worker chat events to the browser (`@socket.io/redis-emitter`, namespace `/chat`)
 2. **Redis Streams** - Event Bus for Workers
+3. **BullMQ** - Job queues (`chat-turn`, `workflow-execution`) between api-server and worker
+
+BullMQ, the Socket.IO adapter, the worker emitter and the event bus all connect through `redis.url` (`REDIS__URL`).
 
 ### Monorepo Structure
 
@@ -492,7 +501,9 @@ Vyrak supports two workspace modes for workflow execution:
 
 **Configuration:**
 
-Set workspace mode via environment variables in `apps/api-server/.env`:
+The worker runs every Agent SDK call and owns the repo cache. On first use it clones each repository onto its own disk
+under `MAIN_REPOS_PATH` (`{orgId}/{projectId}/{repoName}`), then fetches on later runs. The api-server does not read
+`MAIN_REPOS_PATH` or run `git`. Set these variables in `apps/worker/.env` (or the worker container environment):
 
 ```bash
 # Workspace mode: 'clone' (default) or 'worktree'
@@ -513,6 +524,11 @@ WORKTREE_BASE_BRANCH=main
 WORKTREE_BRANCH_PREFIX=workflow/
 WORKTREE_AUTO_FETCH=true
 WORKTREE_AUTO_CLEANUP_BRANCH=true
+
+# Git access for clone, push and `gh pr create` (worker only; leave empty for public repos)
+GIT__TOKEN=
+GIT__USER_NAME=vyrak-bot
+GIT__USER_EMAIL=vyrak-bot@users.noreply.github.com
 ```
 
 **Migration Guide:**
@@ -981,7 +997,9 @@ Vyrak supports two workspace modes for workflow execution:
 
 ### Configuration
 
-Set workspace mode via environment variables in `apps/api-server/.env`:
+The worker runs every Agent SDK call and owns the repo cache. On first use it clones each repository onto its own disk
+under `MAIN_REPOS_PATH` (`{orgId}/{projectId}/{repoName}`), then fetches on later runs. The api-server does not read
+`MAIN_REPOS_PATH` or run `git`. Set these variables in `apps/worker/.env` (or the worker container environment):
 
 ```bash
 # Workspace mode: 'clone' (default) or 'worktree' (production)
@@ -991,7 +1009,14 @@ WORKSPACE_MODE=clone
 MAIN_REPOS_PATH=/var/vyrak/repos
 WORKTREE_AUTO_FETCH=true
 WORKTREE_AUTO_CLEANUP_BRANCH=true
+
+# Git access for clone, push and `gh pr create` (worker only; leave empty for public repos)
+GIT__TOKEN=
+GIT__USER_NAME=vyrak-bot
+GIT__USER_EMAIL=vyrak-bot@users.noreply.github.com
 ```
+
+`GIT__TOKEN` is passed to each git command through `http.extraHeader` and is never written to `.git/config`.
 
 See `docs/workspace-worktree-migration.md` for full configuration options and migration guide.
 

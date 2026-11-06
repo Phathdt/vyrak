@@ -10,14 +10,12 @@ import {
   MessageBody,
 } from '@nestjs/websockets'
 import { IConversationService, CONVERSATION_SERVICE, ConversationPhase } from '@vyrak/conversation'
-import { IConfigService, CONFIG_SERVICE } from '@vyrak/custom-config'
 import { EnhancedLogger } from '@vyrak/custom-logger'
 import { DatabaseService } from '@vyrak/database'
-import { IEventBus, EVENT_BUS, EventType } from '@vyrak/event-bus'
 import { IWorkflowRepository, WORKFLOW_REPOSITORY } from '@vyrak/workflow-core'
 import { Server as SocketIOServer, Socket } from 'socket.io'
 
-import { ChatService } from './chat.service'
+import { BullChatTurnPublisher } from './chat-turn.publisher'
 import { ChatMessageDto } from './dto/chat-message.dto'
 import { JoinWorkflowDto } from './dto/join-workflow.dto'
 import { TypingEventDto } from './dto/typing-event.dto'
@@ -53,23 +51,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server!: SocketIOServer
 
-  private readonly model: string
-
   constructor(
-    private readonly chatService: ChatService,
+    private readonly chatTurnPublisher: BullChatTurnPublisher,
     @Inject(CONVERSATION_SERVICE) private readonly conversationService: IConversationService,
-    @Inject(EVENT_BUS) private readonly eventBus: IEventBus,
-    @Inject(CONFIG_SERVICE) private readonly configService: IConfigService,
     @Inject(WORKFLOW_REPOSITORY) private readonly workflowRepository: IWorkflowRepository,
     private readonly databaseService: DatabaseService,
     private readonly logger: EnhancedLogger
-  ) {
-    const anthropicConfig = this.configService.anthropic
-    if (!anthropicConfig?.model) {
-      throw new Error('ANTHROPIC__MODEL not configured in .env')
-    }
-    this.model = anthropicConfig.model
-  }
+  ) {}
 
   async handleConnection(client: Socket): Promise<void> {
     try {
@@ -105,7 +93,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.databaseService.setTenantContext(orgId)
 
       // Check access
-      const hasAccess = await this.chatService.checkWorkflowAccess(workflowId, userId)
+      const hasAccess = await this.checkWorkflowAccess(workflowId, userId)
 
       if (!hasAccess) {
         client.emit('error', { message: 'Access denied' })
@@ -153,7 +141,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       }
 
       // Check access
-      const hasAccess = await this.chatService.checkWorkflowAccess(workflowId, userId)
+      const hasAccess = await this.checkWorkflowAccess(workflowId, userId)
       if (!hasAccess) {
         client.emit('chat:error', { message: 'Access denied' })
         return
@@ -186,92 +174,20 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         content: message,
       })
 
-      // Stream chat events with real orgId and projectId
-      const stream = this.chatService.streamChat({
+      // The worker runs the agent and streams chat:* events back to this socket through Redis
+      await this.chatTurnPublisher.enqueueChatTurn({
+        socketId: client.id,
         workflowId,
         sessionId: session.id,
         userId,
+        orgId,
+        projectId,
+        phase: workflow.currentPhaseKey || 'planning',
         message,
-        orgId, // Real value from DTO
-        projectId, // Real value from DTO
-        model: this.model,
-        phase: workflow.currentPhaseKey || 'planning', // Pass current phase for correct system prompt
+        enqueuedAt: Date.now(),
       })
 
-      let fullResponse = ''
-      let assistantMessageId: string | null = null
-
-      this.logger.log(`[ChatGateway] Starting stream processing`, 'ChatGateway')
-
-      for await (const event of stream) {
-        this.logger.log(`[ChatGateway] Stream event type: ${event.type}`, 'ChatGateway')
-
-        switch (event.type) {
-          case 'thinking':
-            client.emit('chat:thinking', { content: event.content })
-            break
-
-          case 'delta':
-            fullResponse += event.content
-            client.emit('chat:delta', { content: event.content })
-            this.logger.log(`[ChatGateway] Accumulated response length: ${fullResponse.length}`, 'ChatGateway')
-            break
-
-          case 'tool':
-            client.emit('chat:tool', { name: event.name, input: event.input })
-            break
-
-          case 'complete':
-            assistantMessageId = event.messageId
-            this.logger.log(
-              `[ChatGateway] Received complete event with messageId: ${assistantMessageId}`,
-              'ChatGateway'
-            )
-            // Don't emit chat:complete here - we'll emit it after the loop with fullResponse
-            break
-
-          case 'error':
-            client.emit('chat:error', { message: event.message })
-            break
-        }
-      }
-
-      this.logger.log(
-        `[ChatGateway] Stream loop finished. fullResponse length: ${fullResponse.length}, assistantMessageId: ${assistantMessageId}`,
-        'ChatGateway'
-      )
-
-      // Stream completed - emit complete event and publish to worker
-      if (fullResponse && assistantMessageId) {
-        // Emit complete to client with full accumulated response
-        client.emit('chat:complete', {
-          messageId: assistantMessageId,
-          content: fullResponse,
-        })
-
-        this.logger.log(`Stream completed, publishing event for worker to save`, 'ChatGateway')
-
-        // Publish message complete event with metadata for worker to save
-        await this.eventBus.publish(EventType.AGENT_MESSAGE_COMPLETE, {
-          type: EventType.AGENT_MESSAGE_COMPLETE,
-          workflowId,
-          sessionId: session.id,
-          messageId: assistantMessageId,
-          content: fullResponse,
-          timestamp: Date.now(),
-          metadata: {
-            orgId, // Include orgId for worker tenant context
-            projectId, // Include projectId
-          },
-        })
-
-        this.logger.log(`Published event for worker to save assistant message`, 'ChatGateway')
-      } else {
-        this.logger.warn(
-          `[ChatGateway] Skipping publish - fullResponse: ${fullResponse.length} chars, assistantMessageId: ${assistantMessageId}`,
-          'ChatGateway'
-        )
-      }
+      this.logger.log(`Chat turn enqueued for workflow ${workflowId}`, 'ChatGateway')
     } catch (error) {
       this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Chat send error', 'ChatGateway')
       client.emit('chat:error', {
@@ -321,6 +237,28 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       default:
         // Default to planning for unknown phases
         return ConversationPhase.PLANNING
+    }
+  }
+
+  private async checkWorkflowAccess(workflowId: string, userId: string): Promise<boolean> {
+    try {
+      const workflow = await this.workflowRepository.findById(workflowId)
+
+      if (!workflow) {
+        this.logger.warn(`Workflow not found: ${workflowId}`, 'ChatGateway')
+        return false
+      }
+
+      // TODO: replace with an organization/project membership check
+      this.logger.log(
+        `Access check for user ${userId} on workflow ${workflowId}: ${workflow.organizationId}`,
+        'ChatGateway'
+      )
+
+      return true
+    } catch (error) {
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Check access error', 'ChatGateway')
+      return false
     }
   }
 }

@@ -19,6 +19,15 @@ s3:
   secret_access_key: replace_me
   force_path_style: true
 
+git:
+  token: ''
+  user_name: vyrak-bot
+  user_email: vyrak-bot@users.noreply.github.com
+
+worker:
+  chat_concurrency: 5
+  execution_concurrency: 1
+
 log:
   level: info
   enable_json_format: false

@@ -168,16 +168,20 @@ cp .env.example .env
 # Update the following required variables in .env:
 # - MAIN_REPOS_PATH: Path to main git repository for worktree mode
 # - DATABASE__URL: PostgreSQL connection string
-# - REDIS_URL: Redis connection string
+# - REDIS__URL: Redis connection string (used by BullMQ, Socket.IO and the event bus)
+# - GIT__TOKEN (worker only): token the worker uses to clone, push and open PRs; empty for public repos
 ```
 
 **Important Environment Variables:**
 
 - `WORKSPACE_MODE`: Must be set to `worktree` (only mode supported)
-- `MAIN_REPOS_PATH`: **Required** - Path where the primary git repository is located
+- `MAIN_REPOS_PATH`: **Required** - Worker disk path where repositories are cloned automatically on first use
 - `WORKSPACES_PATH`: Path for temporary worktrees (default: `/tmp/vyrak-workspaces`)
 - `WORKSPACE_CLEANUP_ON_SUCCESS`: Auto-cleanup worktrees after success (default: `true`)
 - `WORKSPACE_CLEANUP_ON_FAILURE`: Auto-cleanup worktrees after failure (default: `false`)
+- `GIT__TOKEN`: Worker only. Used for clone, fetch, push and `gh pr create`; never written to `.git/config`
+- `GIT__USER_NAME` / `GIT__USER_EMAIL`: Worker only. Commit identity (default: `vyrak-bot`)
+- `WORKER__CHAT_CONCURRENCY` / `WORKER__EXECUTION_CONCURRENCY`: Parallel chat turns (default 5) and phase runs (default 1) per worker process
 
 See `.env.example` for complete configuration options.
 

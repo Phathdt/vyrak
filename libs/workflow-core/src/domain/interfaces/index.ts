@@ -1,3 +1,4 @@
+export * from './repo-cache.interface'
 export * from './subtask-repository.interface'
 export * from './unit-of-work.interface'
 export * from './workflow-approval-repository.interface'

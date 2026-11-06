@@ -1,13 +1,10 @@
 import { Controller, Get, Inject, Param, Post, UseGuards } from '@nestjs/common'
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger'
-import { IWorkflowPhaseRepository, WORKFLOW_PHASE_REPOSITORY } from '@vyrak/workflow-core'
+import { WORKFLOW_PHASE_REPOSITORY, type IWorkflowPhaseRepository } from '@vyrak/workflow-core'
 import {
-  IMPLEMENTATION_ORCHESTRATION_SERVICE,
-  CODE_REVIEW_SERVICE,
-  QA_VERIFICATION_SERVICE,
-  type IImplementationOrchestrationService,
-  type ICodeReviewService,
-  type IQAVerificationService,
+  WORKFLOW_EXECUTION_QUERY_SERVICE,
+  WorkflowPhaseOrchestratorService,
+  type IWorkflowExecutionQueryService,
 } from '@vyrak/workflow-execution'
 
 import { AuthGuard } from '../auth'
@@ -15,9 +12,9 @@ import { OrganizationMemberGuard } from '../guards'
 import {
   StartImplementationResponseDto,
   ImplementationStatusResponseDto,
-  RetryTaskResponseDto,
   StartCodeReviewResponseDto,
   CodeReviewReportResponseDto,
+  StartQAResponseDto,
   QAVerificationResponseDto,
 } from './workflow-execution.dto'
 
@@ -26,12 +23,9 @@ import {
 @UseGuards(AuthGuard, OrganizationMemberGuard)
 export class WorkflowExecutionController {
   constructor(
-    @Inject(IMPLEMENTATION_ORCHESTRATION_SERVICE)
-    private readonly orchestrationService: IImplementationOrchestrationService,
-    @Inject(CODE_REVIEW_SERVICE)
-    private readonly codeReviewService: ICodeReviewService,
-    @Inject(QA_VERIFICATION_SERVICE)
-    private readonly qaVerificationService: IQAVerificationService,
+    private readonly phaseOrchestrator: WorkflowPhaseOrchestratorService,
+    @Inject(WORKFLOW_EXECUTION_QUERY_SERVICE)
+    private readonly executionQuery: IWorkflowExecutionQueryService,
     @Inject(WORKFLOW_PHASE_REPOSITORY) private readonly phaseRepository: IWorkflowPhaseRepository
   ) {}
 
@@ -39,7 +33,7 @@ export class WorkflowExecutionController {
   @ApiOperation({
     summary: 'Start implementation phase execution',
     description:
-      'Begins orchestrating sub-task execution with parallel/sequential dependency handling. Independent tasks execute in parallel (max 3 concurrent).',
+      'Enqueues the implementation phase run for the worker and returns immediately. Progress is available from implementation/status.',
   })
   @ApiParam({ name: 'orgId', description: 'Organization ID' })
   @ApiParam({ name: 'projectId', description: 'Project ID' })
@@ -50,28 +44,16 @@ export class WorkflowExecutionController {
     @Param('projectId') _projectId: string,
     @Param('id') workflowId: string
   ): Promise<StartImplementationResponseDto> {
-    // Find implementation phase
-    const phases = await this.phaseRepository.findByWorkflowId(workflowId)
-    const implementationPhase = phases.find((p) => p.key === 'implementation')
+    const phaseId = await this.findPhaseId(workflowId, 'implementation', 'Implementation')
 
-    if (!implementationPhase) {
-      throw new Error('Implementation phase not found')
-    }
-
-    // Get initial status to count tasks
-    const initialStatus = await this.orchestrationService.getStatus(workflowId, implementationPhase.id)
-
-    // Start orchestration (async - does not block)
-    // In production, this should be queued as a background job
-    this.orchestrationService.startImplementation(workflowId, implementationPhase.id).catch((_error) => {
-      console.error('Implementation orchestration failed:', _error)
-    })
+    await this.phaseOrchestrator.startAutomationForPhase(workflowId, 'implementation')
+    const status = await this.executionQuery.getImplementationStatus(workflowId, phaseId)
 
     return {
-      message: 'Implementation orchestration started',
+      message: 'Implementation job queued',
       workflowId,
-      phaseId: implementationPhase.id,
-      totalTasks: initialStatus.totalTasks,
+      phaseId,
+      totalTasks: status.totalTasks,
     }
   }
 
@@ -89,15 +71,9 @@ export class WorkflowExecutionController {
     @Param('projectId') _projectId: string,
     @Param('id') workflowId: string
   ): Promise<ImplementationStatusResponseDto> {
-    // Find implementation phase
-    const phases = await this.phaseRepository.findByWorkflowId(workflowId)
-    const implementationPhase = phases.find((p) => p.key === 'implementation')
+    const phaseId = await this.findPhaseId(workflowId, 'implementation', 'Implementation')
 
-    if (!implementationPhase) {
-      throw new Error('Implementation phase not found')
-    }
-
-    const status = await this.orchestrationService.getStatus(workflowId, implementationPhase.id)
+    const status = await this.executionQuery.getImplementationStatus(workflowId, phaseId)
 
     return {
       workflowId: status.workflowId,
@@ -120,38 +96,11 @@ export class WorkflowExecutionController {
     }
   }
 
-  @Post('implementation/retry/:taskId')
-  @ApiOperation({
-    summary: 'Retry a specific failed task',
-    description: 'Resets task status to READY and re-executes it.',
-  })
-  @ApiParam({ name: 'orgId', description: 'Organization ID' })
-  @ApiParam({ name: 'projectId', description: 'Project ID' })
-  @ApiParam({ name: 'id', description: 'Workflow ID' })
-  @ApiParam({ name: 'taskId', description: 'Sub-task ID to retry' })
-  @ApiResponse({ status: 200, type: RetryTaskResponseDto })
-  async retryTask(
-    @Param('orgId') _orgId: string,
-    @Param('projectId') _projectId: string,
-    @Param('id') _workflowId: string,
-    @Param('taskId') taskId: string
-  ): Promise<RetryTaskResponseDto> {
-    const result = await this.orchestrationService.retryTask(taskId)
-
-    return {
-      message: 'Task retry completed',
-      taskId: result.taskId,
-      status: result.status,
-      artifactId: result.artifactId,
-      error: result.error,
-    }
-  }
-
   @Post('code-review/start')
   @ApiOperation({
     summary: 'Start code review phase execution',
     description:
-      'Runs automated code review agent to analyze implementation changes for quality, security, performance, and requirements compliance.',
+      'Enqueues the code review phase run for the worker and returns immediately. The result is available from code-review/report.',
   })
   @ApiParam({ name: 'orgId', description: 'Organization ID' })
   @ApiParam({ name: 'projectId', description: 'Project ID' })
@@ -162,24 +111,14 @@ export class WorkflowExecutionController {
     @Param('projectId') _projectId: string,
     @Param('id') workflowId: string
   ): Promise<StartCodeReviewResponseDto> {
-    // Find code review phase
-    const phases = await this.phaseRepository.findByWorkflowId(workflowId)
-    const codeReviewPhase = phases.find((p) => p.key === 'code-review')
+    const phaseId = await this.findPhaseId(workflowId, 'code-review', 'Code Review')
 
-    if (!codeReviewPhase) {
-      throw new Error('Code Review phase not found')
-    }
-
-    // Start code review (async - does not block)
-    // In production, this should be queued as a background job
-    this.codeReviewService.startCodeReview(workflowId, codeReviewPhase.id).catch((_error) => {
-      console.error('Code review failed:', _error)
-    })
+    await this.phaseOrchestrator.startAutomationForPhase(workflowId, 'code-review')
 
     return {
-      message: 'Code review started',
+      message: 'Code review job queued',
       workflowId,
-      phaseId: codeReviewPhase.id,
+      phaseId,
     }
   }
 
@@ -197,15 +136,9 @@ export class WorkflowExecutionController {
     @Param('projectId') _projectId: string,
     @Param('id') workflowId: string
   ): Promise<CodeReviewReportResponseDto> {
-    // Find code review phase
-    const phases = await this.phaseRepository.findByWorkflowId(workflowId)
-    const codeReviewPhase = phases.find((p) => p.key === 'code-review')
+    const phaseId = await this.findPhaseId(workflowId, 'code-review', 'Code Review')
 
-    if (!codeReviewPhase) {
-      throw new Error('Code Review phase not found')
-    }
-
-    const report = await this.codeReviewService.getReport(workflowId, codeReviewPhase.id)
+    const report = await this.executionQuery.getCodeReviewReport(workflowId, phaseId)
 
     if (!report) {
       throw new Error('Code review report not found')
@@ -240,41 +173,22 @@ export class WorkflowExecutionController {
   @ApiOperation({
     summary: 'Start QA verification',
     description:
-      'Runs automated QA verification against PRD acceptance criteria. Tests implementation, verifies edge cases, and generates a QA report.',
+      'Enqueues the QA phase run for the worker and returns immediately with status RUNNING. The result is available from qa/report.',
   })
   @ApiParam({ name: 'orgId', description: 'Organization ID' })
   @ApiParam({ name: 'projectId', description: 'Project ID' })
   @ApiParam({ name: 'id', description: 'Workflow ID' })
-  @ApiResponse({ status: 200, type: QAVerificationResponseDto })
+  @ApiResponse({ status: 200, type: StartQAResponseDto })
   async startQA(
     @Param('orgId') _orgId: string,
     @Param('projectId') _projectId: string,
     @Param('id') workflowId: string
-  ): Promise<QAVerificationResponseDto> {
-    // Find QA phase
-    const phases = await this.phaseRepository.findByWorkflowId(workflowId)
-    const qaPhase = phases.find((p) => p.key === 'qa')
+  ): Promise<StartQAResponseDto> {
+    await this.findPhaseId(workflowId, 'qa', 'QA')
 
-    if (!qaPhase) {
-      throw new Error('QA phase not found')
-    }
+    await this.phaseOrchestrator.startAutomationForPhase(workflowId, 'qa')
 
-    // Start QA verification (synchronous for now - returns result)
-    const result = await this.qaVerificationService.startQA(workflowId, qaPhase.id)
-
-    return {
-      workflowId: result.workflowId,
-      phaseId: result.phaseId,
-      reportArtifactId: result.reportArtifactId,
-      criteriaResults: result.criteriaResults.map((criterion) => ({
-        criterion: criterion.criterion,
-        status: criterion.status,
-        details: criterion.details,
-        errorMessage: criterion.errorMessage,
-      })),
-      overallStatus: result.overallStatus,
-      executedAt: result.executedAt.toISOString(),
-    }
+    return { status: 'RUNNING' }
   }
 
   @Get('qa/report')
@@ -291,15 +205,9 @@ export class WorkflowExecutionController {
     @Param('projectId') _projectId: string,
     @Param('id') workflowId: string
   ): Promise<QAVerificationResponseDto> {
-    // Find QA phase
-    const phases = await this.phaseRepository.findByWorkflowId(workflowId)
-    const qaPhase = phases.find((p) => p.key === 'qa')
+    const phaseId = await this.findPhaseId(workflowId, 'qa', 'QA')
 
-    if (!qaPhase) {
-      throw new Error('QA phase not found')
-    }
-
-    const report = await this.qaVerificationService.getQAReport(workflowId, qaPhase.id)
+    const report = await this.executionQuery.getQAReport(workflowId, phaseId)
 
     if (!report) {
       throw new Error('QA report not found')
@@ -318,5 +226,16 @@ export class WorkflowExecutionController {
       overallStatus: report.overallStatus,
       executedAt: report.executedAt.toISOString(),
     }
+  }
+
+  private async findPhaseId(workflowId: string, phaseKey: string, label: string): Promise<string> {
+    const phases = await this.phaseRepository.findByWorkflowId(workflowId)
+    const phase = phases.find((p) => p.key === phaseKey)
+
+    if (!phase) {
+      throw new Error(`${label} phase not found`)
+    }
+
+    return phase.id
   }
 }

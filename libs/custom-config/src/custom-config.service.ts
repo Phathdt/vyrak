@@ -16,7 +16,9 @@ import type {
   LogConfig,
   RedisConfig,
 } from './config.interface'
+import type { GitConfig } from './configs/git.config'
 import type { S3Config } from './configs/s3.config'
+import type { WorkerConfig } from './configs/worker.config'
 import type { WorkspaceConfig } from './workspace.config'
 
 export class CustomConfigService implements IConfigService {
@@ -338,6 +340,14 @@ export class CustomConfigService implements IConfigService {
 
   get s3(): S3Config {
     return this._config.s3
+  }
+
+  get git(): GitConfig {
+    return this._config.git
+  }
+
+  get worker(): WorkerConfig {
+    return this._config.worker
   }
 
   get anthropic(): AnthropicConfig | undefined {

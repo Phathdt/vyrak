@@ -3,13 +3,10 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 import { WorkflowPlanningService } from './workflow-planning.service'
 
-import type { IAIAgentService } from '@vyrak/ai-agent'
 import type { IArtifactService } from '@vyrak/artifact'
 import type { IConversationService } from '@vyrak/conversation'
-import type { IConfigService } from '@vyrak/custom-config'
 import type { IGitRepositoryService } from '@vyrak/project'
 import type { IWorkflowRepository, IWorkflowRepositoryRepository } from '@vyrak/workflow-core'
-import type { RepositoryContextService } from '@vyrak/workflow-core'
 
 describe('WorkflowPlanningService - generatePRDArtifact', () => {
   let service: WorkflowPlanningService
@@ -29,18 +26,12 @@ describe('WorkflowPlanningService - generatePRDArtifact', () => {
       uploadArtifact: vi.fn(),
     }
 
-    const mockConfigService = {
-      anthropic: { model: 'claude-3-5-sonnet-20241022' },
-    } as IConfigService
-
     service = new WorkflowPlanningService(
       mockConversationService,
-      {} as IAIAgentService,
       {} as IWorkflowRepository,
       {} as IWorkflowRepositoryRepository,
       {} as IGitRepositoryService,
-      mockArtifactService as any,
-      {} as any // workflowPhaseRepository
+      mockArtifactService as any
     )
   })
 

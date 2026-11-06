@@ -1,13 +1,13 @@
 import { BullModule } from '@nestjs/bullmq'
 import { CacheModule } from '@nestjs/cache-manager'
 import { Module } from '@nestjs/common'
-import { ConfigModule, ConfigService } from '@nestjs/config'
+import { ConfigModule } from '@nestjs/config'
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core'
 import { ScheduleModule } from '@nestjs/schedule'
 import { ThrottlerModule } from '@nestjs/throttler'
 import { ArtifactModule } from '@vyrak/artifact'
 import { AuthModule } from '@vyrak/auth'
-import { CustomConfigModule } from '@vyrak/custom-config'
+import { CONFIG_SERVICE, CustomConfigModule, IConfigService, parseRedisUrl } from '@vyrak/custom-config'
 import { CustomLoggerModule } from '@vyrak/custom-logger'
 import { DatabaseModule } from '@vyrak/database'
 import { EventBusModule } from '@vyrak/event-bus'
@@ -59,13 +59,9 @@ import {
       },
     ]),
     BullModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        connection: {
-          host: configService.get<string>('REDIS_HOST', 'localhost'),
-          port: configService.get<number>('REDIS_PORT', 6379),
-          password: configService.get<string>('REDIS_PASSWORD'),
-        },
+      inject: [CONFIG_SERVICE],
+      useFactory: (configService: IConfigService) => ({
+        connection: parseRedisUrl(configService.redis.url),
       }),
     }),
     BullModule.registerQueue({

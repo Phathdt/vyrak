@@ -1,45 +1,20 @@
 import { ArtifactEntity, IArtifactService } from '@vyrak/artifact'
 import { ConversationPhase, IConversationService, MessageRole } from '@vyrak/conversation'
-import {
-  InvalidPlanningStateError,
-  WorkflowNotFoundError,
-  WorkflowStatus,
-  IWorkflowPhaseRepository,
-} from '@vyrak/workflow-core'
+import { InvalidPlanningStateError, WorkflowNotFoundError, WorkflowStatus } from '@vyrak/workflow-core'
 
-import { PlanningPromptBuilder } from '../utils/planning-prompt-builder'
-
-import type {
-  IWorkflowPlanningService,
-  PlanningChatInput,
-} from '../../domain/interfaces/workflow-planning-service.interface'
-import type {
-  PlanningChatResponseDto,
-  PlanningSessionResponseDto,
-} from '../../domain/schemas/workflow-planning.schemas'
-import type { IAIAgentPort, Message } from '@vyrak/ai-agent'
-import type { ConversationMessage } from '@vyrak/conversation'
+import type { IWorkflowPlanningService } from '../../domain/interfaces/workflow-planning-service.interface'
+import type { PlanningSessionResponseDto } from '../../domain/schemas/workflow-planning.schemas'
 import type { IGitRepositoryService } from '@vyrak/project'
 import type { IWorkflowRepository, IWorkflowRepositoryRepository, WorkflowRepositoryEntity } from '@vyrak/workflow-core'
 
 export class WorkflowPlanningService implements IWorkflowPlanningService {
-  private readonly promptBuilder: PlanningPromptBuilder
-
   constructor(
     private readonly conversationService: IConversationService,
-    private readonly aiAgentPort: IAIAgentPort,
     private readonly workflowRepository: IWorkflowRepository,
     private readonly workflowRepositoryRepository: IWorkflowRepositoryRepository,
     private readonly gitRepositoryService: IGitRepositoryService,
-    private readonly artifactService: IArtifactService,
-    private readonly workflowPhaseRepository: IWorkflowPhaseRepository
-  ) {
-    this.promptBuilder = new PlanningPromptBuilder(
-      conversationService,
-      workflowRepositoryRepository,
-      gitRepositoryService
-    )
-  }
+    private readonly artifactService: IArtifactService
+  ) {}
 
   async getPlanningSession(
     workflowId: string,
@@ -73,69 +48,6 @@ export class WorkflowPlanningService implements IWorkflowPlanningService {
       })),
       messageCount: messages.length,
       repositories,
-    }
-  }
-
-  async chat(input: PlanningChatInput): Promise<PlanningChatResponseDto> {
-    const workflow = await this.ensurePlanningPhase(input.workflowId)
-
-    const session = await this.conversationService.getOrCreateSession(input.workflowId, ConversationPhase.PLANNING)
-
-    // Format user message with code snippets if provided
-    const userContent = this.formatUserMessage(input.userMessage, input.codeSnippets)
-
-    await this.conversationService.addMessage({
-      sessionId: session.id,
-      role: MessageRole.USER,
-      content: userContent,
-    })
-
-    const messages = await this.conversationService.getMessages(session.id)
-    const aiMessages = this.toAIMessages(messages)
-    const systemPrompt = await this.buildPlanningSystemPrompt(workflow, input.organizationId, input.projectId)
-
-    // Use API SDK (no tools) to prevent technical contamination
-    const aiResponse = await this.aiAgentPort.chat({
-      messages: aiMessages,
-      systemPrompt,
-      temperature: 0.3,
-      maxTokens: 4096,
-    })
-
-    await this.conversationService.addMessage({
-      sessionId: session.id,
-      role: MessageRole.ASSISTANT,
-      content: aiResponse.content,
-    })
-
-    const messageCount = await this.conversationService.getMessageCount(session.id)
-
-    // Auto-detect and save artifact if present in NEW response only
-    let artifactCreated = false
-    let artifactId: string | undefined
-
-    // Check if artifact already exists in database
-    const existingArtifacts = await this.artifactService.listWorkflowArtifacts(input.workflowId)
-    const hasPRDArtifact = existingArtifacts.some((a: ArtifactEntity) => a.type === 'prd')
-
-    if (!hasPRDArtifact && this.containsArtifactTag(aiResponse.content)) {
-      const phases = await this.workflowPhaseRepository.findByWorkflowId(input.workflowId)
-      const planningPhase = phases.find((p) => p.key === 'planning')
-
-      if (planningPhase) {
-        const artifact = await this.generatePRDArtifact(input.workflowId, session.id, planningPhase.id)
-        artifactCreated = true
-        artifactId = artifact.id
-      }
-    }
-
-    return {
-      sessionId: session.id,
-      aiMessage: aiResponse.content,
-      messageCount,
-      repoFilesLoaded: [],
-      artifactCreated,
-      artifactId,
     }
   }
 
@@ -180,37 +92,6 @@ export class WorkflowPlanningService implements IWorkflowPlanningService {
       }))
   }
 
-  private formatUserMessage(userMessage: string, codeSnippets: PlanningChatInput['codeSnippets']): string {
-    const parts: string[] = [userMessage.trim()]
-
-    if (codeSnippets?.length) {
-      parts.push('\n\n--- Attached snippets ---')
-      for (const snippet of codeSnippets) {
-        const title = snippet.path ?? snippet.label ?? 'snippet'
-        parts.push(`\n### ${title}\n\`\`\`\n${snippet.content}\n\`\`\``)
-      }
-    }
-
-    return parts.join('')
-  }
-
-  private async buildPlanningSystemPrompt(
-    workflow: NonNullable<Awaited<ReturnType<IWorkflowRepository['findById']>>>,
-    organizationId: string,
-    projectId: string
-  ): Promise<string> {
-    return this.promptBuilder.build(workflow, organizationId, projectId)
-  }
-
-  private toAIMessages(messages: ConversationMessage[]): Message[] {
-    return messages
-      .filter((msg) => msg.role === MessageRole.USER || msg.role === MessageRole.ASSISTANT)
-      .map((msg) => ({
-        role: msg.role as 'user' | 'assistant',
-        content: msg.content,
-      }))
-  }
-
   async generatePRDArtifact(workflowId: string, sessionId: string, phaseId: string): Promise<ArtifactEntity> {
     // Get conversation history
     const messages = await this.conversationService.getMessages(sessionId)
@@ -248,13 +129,6 @@ export class WorkflowPlanningService implements IWorkflowPlanningService {
     )
 
     return artifact
-  }
-
-  /**
-   * Check if response contains artifact tag
-   */
-  private containsArtifactTag(text: string): boolean {
-    return text.includes('<artifact') && text.includes('</artifact>')
   }
 
   async generatePRDArtifactFromMessage(

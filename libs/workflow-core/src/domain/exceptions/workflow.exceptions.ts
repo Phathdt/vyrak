@@ -112,3 +112,22 @@ export class SessionError extends WorkflowDomainError {
     super(message)
   }
 }
+
+/**
+ * Thrown when a repository reference (url, branch, name or path segment) is rejected before any git command runs
+ */
+export class InvalidRepositoryReferenceError extends WorkflowDomainError {
+  constructor(public readonly reason: string) {
+    super(`Invalid repository reference: ${reason}`)
+  }
+}
+
+/**
+ * Thrown when cloning, fetching or otherwise running git for the local repository cache fails.
+ * The message never contains git credentials.
+ */
+export class RepositoryCacheError extends WorkflowDomainError {
+  constructor(message: string) {
+    super(message)
+  }
+}

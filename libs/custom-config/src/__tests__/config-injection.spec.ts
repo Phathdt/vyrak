@@ -40,6 +40,8 @@ describe('IConfigService Injection Pattern', () => {
         secretAccessKey: 'test',
         forcePathStyle: true,
       },
+      git: { token: '', userName: 'vyrak-bot', userEmail: 'vyrak-bot@users.noreply.github.com' },
+      worker: { chatConcurrency: 5, executionConcurrency: 1 },
       anthropic: {
         apiKey: 'test-key',
         model: 'claude-3-5-sonnet-20241022',

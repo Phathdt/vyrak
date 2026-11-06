@@ -23,7 +23,7 @@ Vyrak uses **worktree mode exclusively** for workspace isolation. Git worktree c
 
 ### Environment Variables
 
-Add these to your `apps/api-server/.env`:
+Add these to the worker environment (`apps/worker/.env`, or the worker container). The api-server does not read them:
 
 ```bash
 # Workspace mode: only 'worktree' supported (fast, production-ready)
@@ -44,6 +44,11 @@ WORKTREE_BASE_BRANCH=main
 WORKTREE_BRANCH_PREFIX=workflow/
 WORKTREE_AUTO_FETCH=true
 WORKTREE_AUTO_CLEANUP_BRANCH=true
+
+# Git access for clone, push and `gh pr create` (leave empty for public repos)
+GIT__TOKEN=
+GIT__USER_NAME=vyrak-bot
+GIT__USER_EMAIL=vyrak-bot@users.noreply.github.com
 ```
 
 ### Configuration Options
@@ -59,6 +64,8 @@ WORKTREE_AUTO_CLEANUP_BRANCH=true
 | `WORKTREE_BRANCH_PREFIX` | `workflow/` | Prefix for worktree branches |
 | `WORKTREE_AUTO_FETCH` | `true` | Auto-fetch main repo before creating worktree |
 | `WORKTREE_AUTO_CLEANUP_BRANCH` | `true` | Delete branch when cleaning up worktree |
+| `GIT__TOKEN` | empty | Token used for clone, fetch, push and `gh pr create`; sent per command, never stored in `.git/config` |
+| `GIT__USER_NAME` / `GIT__USER_EMAIL` | `vyrak-bot` | Commit identity used by the worker |
 
 ## Setup Steps
 
@@ -69,14 +76,17 @@ WORKTREE_AUTO_CLEANUP_BRANCH=true
 #### 1. Update environment variables
 
 ```bash
-# apps/api-server/.env
+# apps/worker/.env
 WORKSPACE_MODE=worktree
 MAIN_REPOS_PATH=/var/vyrak/repos
 WORKTREE_AUTO_FETCH=true
 WORKTREE_AUTO_CLEANUP_BRANCH=true
 ```
 
-#### 2. Create main repos directory
+#### 2. Provide a writable repos directory
+
+The worker clones each repository itself on first use and fetches on later runs, so no manual clone is needed.
+It only needs a writable `MAIN_REPOS_PATH`. On a pod or container this is a per-instance disk (for example an `emptyDir`), not a shared volume.
 
 ```bash
 sudo mkdir -p /var/vyrak/repos
@@ -94,7 +104,7 @@ yarn deploy:staging
 
 ```bash
 # Check workspace creation time
-kubectl logs -f api-server | grep "workspace created"
+kubectl logs -f worker | grep "workspace created"
 
 # Check disk usage
 du -sh /var/vyrak/repos/*

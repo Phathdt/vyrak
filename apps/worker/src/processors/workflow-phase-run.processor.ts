@@ -11,11 +11,12 @@ import { Job } from 'bullmq'
 
 import { withTenantContext } from '../common/decorators/with-tenant-context.decorator'
 
+import type { OnApplicationBootstrap } from '@nestjs/common'
 import type { IConfigService } from '@vyrak/custom-config'
 import type { WorkflowPhaseRunJob } from '@vyrak/workflow-core'
 
 @Processor('workflow-execution')
-export class WorkflowPhaseRunProcessor extends WorkerHost {
+export class WorkflowPhaseRunProcessor extends WorkerHost implements OnApplicationBootstrap {
   private readonly handler: WorkflowPhaseRunHandler
   private readonly wrappedHandler: (job: WorkflowPhaseRunJob) => Promise<void>
   private readonly logger: EnhancedLogger
@@ -27,7 +28,7 @@ export class WorkflowPhaseRunProcessor extends WorkerHost {
     @Inject(AI_AGENT_SERVICE)
     aiAgentService: IAIAgentService,
     @Inject(CONFIG_SERVICE)
-    configService: IConfigService,
+    private readonly configService: IConfigService,
     enhancedLogger: EnhancedLogger
   ) {
     super()
@@ -38,6 +39,12 @@ export class WorkflowPhaseRunProcessor extends WorkerHost {
     this.wrappedHandler = withTenantContext(databaseService, this.handler.handle.bind(this.handler))
 
     this.logger.log('WorkflowPhaseRunProcessor initialized')
+  }
+
+  /** Concurrency comes from config, which the static @Processor options cannot read. */
+  onApplicationBootstrap(): void {
+    this.worker.concurrency = this.configService.worker.executionConcurrency
+    this.logger.log(`Workflow phase run concurrency: ${this.configService.worker.executionConcurrency}`)
   }
 
   async process(job: Job): Promise<void> {

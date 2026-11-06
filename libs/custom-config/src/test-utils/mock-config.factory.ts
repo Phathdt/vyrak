@@ -41,6 +41,15 @@ export function createMockConfigService(overrides?: Partial<IConfigService>): IC
       secretAccessKey: 'test-secret-key',
       forcePathStyle: true,
     },
+    git: {
+      token: '',
+      userName: 'vyrak-bot',
+      userEmail: 'vyrak-bot@users.noreply.github.com',
+    },
+    worker: {
+      chatConcurrency: 5,
+      executionConcurrency: 1,
+    },
     workspace: {
       mode: 'worktree',
       workspacesPath: '/tmp/test-workspaces',
@@ -76,6 +85,8 @@ export function createMockConfigService(overrides?: Partial<IConfigService>): IC
     anthropic: overrides?.anthropic ? { ...defaultConfig.anthropic, ...overrides.anthropic } : defaultConfig.anthropic,
     agentRuntime: { ...defaultConfig.agentRuntime, ...overrides?.agentRuntime },
     s3: { ...defaultConfig.s3, ...overrides?.s3 },
+    git: { ...defaultConfig.git, ...overrides?.git },
+    worker: { ...defaultConfig.worker, ...overrides?.worker },
     workspace: {
       ...defaultConfig.workspace,
       ...overrides?.workspace,

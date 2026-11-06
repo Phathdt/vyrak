@@ -1,3 +1,4 @@
+import { BullModule } from '@nestjs/bullmq'
 import { Module } from '@nestjs/common'
 import { ThrottlerModule } from '@nestjs/throttler'
 import { AuthModule } from '@vyrak/auth'
@@ -7,9 +8,10 @@ import { CustomLoggerModule } from '@vyrak/custom-logger'
 import { DatabaseModule } from '@vyrak/database'
 import { EventBusModule } from '@vyrak/event-bus'
 import { WorkflowCoreModule } from '@vyrak/workflow-core'
+import { CHAT_TURN_QUEUE } from '@vyrak/workflow-planning'
 
+import { BullChatTurnPublisher } from './chat-turn.publisher'
 import { ChatGateway } from './chat.gateway'
-import { ChatService } from './chat.service'
 import { WsAuthGuard } from './guards/ws-auth.guard'
 
 @Module({
@@ -20,6 +22,7 @@ import { WsAuthGuard } from './guards/ws-auth.guard'
     EventBusModule,
     ConversationModule,
     WorkflowCoreModule,
+    BullModule.registerQueue({ name: CHAT_TURN_QUEUE }),
     AuthModule, // Import AuthModule to provide JWT_PROVIDER for WsAuthGuard
     ThrottlerModule.forRoot([
       {
@@ -28,6 +31,6 @@ import { WsAuthGuard } from './guards/ws-auth.guard'
       },
     ]),
   ],
-  providers: [ChatGateway, ChatService, WsAuthGuard],
+  providers: [ChatGateway, BullChatTurnPublisher, WsAuthGuard],
 })
 export class ChatModule {}

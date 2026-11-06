@@ -24,6 +24,14 @@ describe('DisabledAiAgentAdapter', () => {
     })
   })
 
+  describe('stream', () => {
+    it('should throw configuration error', async () => {
+      const generator = adapter.stream({ prompt: 'test', workingDirectory: '/repo' })
+
+      await expect(generator.next()).rejects.toThrow(ERROR_MESSAGE)
+    })
+  })
+
   describe('classifyWorkflow', () => {
     it('should throw configuration error', async () => {
       await expect(adapter.classifyWorkflow(mockRequest)).rejects.toThrow(ERROR_MESSAGE)

@@ -9,8 +9,8 @@ import type { IWorkflowPhaseRepository, IWorkflowRepository } from '@vyrak/workf
 
 const PHASE_RUN_TYPE: Record<string, PhaseRunType> = {
   implementation: PhaseRunType.IMPLEMENTATION,
-  review: PhaseRunType.REVIEW,
-  qc: PhaseRunType.QA,
+  'code-review': PhaseRunType.REVIEW,
+  qa: PhaseRunType.QA,
 }
 
 export class WorkflowPhaseOrchestratorService {

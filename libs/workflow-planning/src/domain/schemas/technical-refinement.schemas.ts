@@ -1,36 +1,6 @@
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
-// Code snippet for technical refinement chat
-export const CodeSnippetSchema = z.object({
-  label: z.string().optional(),
-  path: z.string().optional(),
-  content: z.string(),
-})
-
-// Technical Refinement Chat Request
-export const TechnicalRefinementChatRequestSchema = z.object({
-  userMessage: z.string().min(1, 'Message is required'),
-  codeSnippets: z.array(CodeSnippetSchema).optional(),
-})
-
-export class TechnicalRefinementChatRequestDto extends createZodDto(TechnicalRefinementChatRequestSchema) {}
-
-// Technical Refinement Chat Response
-export const TechnicalRefinementChatResponseSchema = z.object({
-  sessionId: z.string(),
-  aiMessage: z.string(),
-  messageCount: z.number(),
-  repoFilesLoaded: z.array(
-    z.object({
-      path: z.string(),
-      bytes: z.number(),
-    })
-  ),
-})
-
-export class TechnicalRefinementChatResponseDto extends createZodDto(TechnicalRefinementChatResponseSchema) {}
-
 // Technical Refinement Session Response
 export const TechnicalRefinementSessionResponseSchema = z.object({
   sessionId: z.string().nullable(),

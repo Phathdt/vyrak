@@ -15,6 +15,7 @@ import {
   WORKFLOW_DEPENDENCY_REPOSITORY,
   WORKFLOW_WORK_ITEM_REPOSITORY,
   UNIT_OF_WORK,
+  REPO_CACHE_SERVICE,
   WorkflowPhasePrismaRepository,
   WorkflowPrismaRepository,
   WorkflowRepositoryPrismaRepository,
@@ -23,6 +24,7 @@ import {
   WorkflowWorkItemPrismaRepository,
   PrismaUnitOfWork,
 } from './infras'
+import { RepoCacheService } from './infras/workspace/repo-cache.service'
 
 import type {
   IWorkflowPhaseRepository,
@@ -31,6 +33,8 @@ import type {
   IWorkflowRepositoryRepository,
   IUnitOfWork,
 } from './domain'
+import type { IRepoCacheService } from './domain/interfaces/repo-cache.interface'
+import type { IConfigService } from '@vyrak/custom-config'
 import type { IGitRepositoryRepository } from '@vyrak/project'
 
 @Module({
@@ -94,15 +98,21 @@ import type { IGitRepositoryRepository } from '@vyrak/project'
       ) => new WorkflowPhaseService(workflowRepo, workflowPhaseRepo, artifactService, unitOfWork),
       inject: [WORKFLOW_REPOSITORY, WORKFLOW_PHASE_REPOSITORY, ARTIFACT_SERVICE, UNIT_OF_WORK],
     },
+    // Local clone cache (one clone per repository on this host)
+    {
+      provide: REPO_CACHE_SERVICE,
+      useFactory: (configService: IConfigService) => new RepoCacheService(configService),
+      inject: [CONFIG_SERVICE],
+    },
     // Generic repository context service
     {
       provide: RepositoryContextService,
       useFactory: (
         workflowRepoRepo: IWorkflowRepositoryRepository,
         gitRepoRepo: IGitRepositoryRepository,
-        configService
-      ) => new RepositoryContextService(workflowRepoRepo, gitRepoRepo, configService),
-      inject: [WORKFLOW_REPOSITORY_REPOSITORY, GIT_REPOSITORY_REPOSITORY, CONFIG_SERVICE],
+        repoCache: IRepoCacheService
+      ) => new RepositoryContextService(workflowRepoRepo, gitRepoRepo, repoCache),
+      inject: [WORKFLOW_REPOSITORY_REPOSITORY, GIT_REPOSITORY_REPOSITORY, REPO_CACHE_SERVICE],
     },
   ],
   exports: [
@@ -115,6 +125,7 @@ import type { IGitRepositoryRepository } from '@vyrak/project'
     WORKFLOW_DEPENDENCY_REPOSITORY,
     WORKFLOW_WORK_ITEM_REPOSITORY,
     UNIT_OF_WORK,
+    REPO_CACHE_SERVICE,
     RepositoryContextService,
   ],
 })

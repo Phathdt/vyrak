@@ -14,7 +14,7 @@ export const StartImplementationResponseSchema = z.object({
 })
 
 export class StartImplementationResponseDto extends createZodDto(StartImplementationResponseSchema) {
-  @ApiProperty({ example: 'Implementation orchestration started', description: 'Status message' })
+  @ApiProperty({ example: 'Implementation job queued', description: 'Status message' })
   message!: string
 
   @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000', description: 'Workflow ID' })
@@ -115,36 +115,6 @@ export class ImplementationStatusResponseDto extends createZodDto(Implementation
   tasks!: SubTaskStatusDto[]
 }
 
-// Retry Task Response
-export const RetryTaskResponseSchema = z.object({
-  message: z.string(),
-  taskId: z.string().uuid(),
-  status: z.enum(['completed', 'failed']),
-  artifactId: z.string().uuid().optional(),
-  error: z.string().optional(),
-})
-
-export class RetryTaskResponseDto extends createZodDto(RetryTaskResponseSchema) {
-  @ApiProperty({ example: 'Task retry initiated', description: 'Status message' })
-  message!: string
-
-  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174002', description: 'Task ID' })
-  taskId!: string
-
-  @ApiProperty({ enum: ['completed', 'failed'], example: 'completed', description: 'Execution result status' })
-  status!: 'completed' | 'failed'
-
-  @ApiProperty({
-    example: '123e4567-e89b-12d3-a456-426614174003',
-    required: false,
-    description: 'Generated artifact ID',
-  })
-  artifactId?: string
-
-  @ApiProperty({ example: 'Task execution failed: timeout', required: false, description: 'Error message if failed' })
-  error?: string
-}
-
 // Code Review DTOs
 
 // Start Code Review Response
@@ -155,7 +125,7 @@ export const StartCodeReviewResponseSchema = z.object({
 })
 
 export class StartCodeReviewResponseDto extends createZodDto(StartCodeReviewResponseSchema) {
-  @ApiProperty({ example: 'Code review started', description: 'Status message' })
+  @ApiProperty({ example: 'Code review job queued', description: 'Status message' })
   message!: string
 
   @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000', description: 'Workflow ID' })
@@ -281,6 +251,16 @@ export class CodeReviewReportResponseDto extends createZodDto(CodeReviewReportRe
 
 // Start QA Request - no body needed
 export class StartQARequestDto {}
+
+// Start QA Response
+export const StartQAResponseSchema = z.object({
+  status: z.enum(['RUNNING']),
+})
+
+export class StartQAResponseDto extends createZodDto(StartQAResponseSchema) {
+  @ApiProperty({ enum: ['RUNNING'], example: 'RUNNING', description: 'QA run has been queued for the worker' })
+  status!: 'RUNNING'
+}
 
 // QA Verification Response
 export const CriterionResultSchema = z.object({

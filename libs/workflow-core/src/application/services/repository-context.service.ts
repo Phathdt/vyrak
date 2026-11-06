@@ -1,67 +1,62 @@
-import { access } from 'node:fs/promises'
-
 import type { IWorkflowRepositoryRepository } from '../../domain/interfaces'
-import type { IConfigService } from '@vyrak/custom-config'
+import type { IRepoCacheService, RepositoryReference } from '../../domain/interfaces/repo-cache.interface'
 import type { IGitRepositoryRepository } from '@vyrak/project'
 
 /**
  * Generic service to resolve repository paths for workflow phases.
  * Used by brainstorming, planning, and other phases that need repository context.
+ * The repository is cloned (or fetched) on this host on demand.
  */
 export class RepositoryContextService {
   constructor(
     private readonly workflowRepositoryRepository: IWorkflowRepositoryRepository,
     private readonly gitRepositoryRepository: IGitRepositoryRepository,
-    private readonly configService: IConfigService
+    private readonly repoCache: IRepoCacheService
   ) {}
 
   /**
-   * Resolve local repository path for a workflow.
-   * Returns the first accessible repository path, or null if none found.
+   * Find the first repository linked to a workflow.
+   *
+   * @param workflowId - Workflow ID
+   * @returns Repository reference or null when the workflow has no linked repository
+   */
+  async resolveRepository(workflowId: string): Promise<RepositoryReference | null> {
+    const workflowRepos = await this.workflowRepositoryRepository.findByWorkflowId(workflowId)
+    if (workflowRepos.length === 0) {
+      return null
+    }
+
+    const gitRepo = await this.gitRepositoryRepository.findById(workflowRepos[0].repositoryId)
+    if (!gitRepo) {
+      return null
+    }
+
+    return {
+      organizationId: gitRepo.organizationId,
+      projectId: gitRepo.projectId,
+      name: gitRepo.name,
+      url: gitRepo.url,
+      branch: gitRepo.branch,
+    }
+  }
+
+  /**
+   * Resolve local repository path for a workflow, cloning or fetching it first.
+   * Returns null when there is no repository context (no linked repository, or clone/fetch failed).
    *
    * @param workflowId - Workflow ID
    * @returns Local repository path or null
    */
   async resolveRepositoryPath(workflowId: string): Promise<string | null> {
     try {
-      // 1. Get workflow repositories
-      const workflowRepos = await this.workflowRepositoryRepository.findByWorkflowId(workflowId)
-      if (workflowRepos.length === 0) {
+      const repository = await this.resolveRepository(workflowId)
+      if (!repository) {
         return null
       }
-
-      // 2. Get first GitRepository detail
-      const firstRepoId = workflowRepos[0].repositoryId
-      const gitRepo = await this.gitRepositoryRepository.findById(firstRepoId)
-      if (!gitRepo) {
-        return null
-      }
-
-      // 3. Build local path from MAIN_REPOS_PATH + repo name
-      const mainReposPath = this.configService.workspace?.mainReposPath
-      if (!mainReposPath) {
-        return null
-      }
-
-      // Path candidates (first match wins)
-      const candidates = [
-        `${mainReposPath}/${gitRepo.name}`,
-        `${mainReposPath}/${gitRepo.organizationId}/${gitRepo.projectId}/${gitRepo.name}`,
-      ]
-
-      // Return first existing directory
-      for (const path of candidates) {
-        try {
-          await access(path)
-          return path
-        } catch {
-          // Continue to next candidate
-        }
-      }
-
-      return null
-    } catch {
-      // If any error occurs, fallback to no repo context
+      return await this.ensureLocalClone(repository)
+    } catch (error) {
+      // Callers continue without repository context; keep the cause visible.
+      console.warn(`[RepositoryContext] Repository unavailable for workflow ${workflowId}: ${describe(error)}`)
       return null
     }
   }
@@ -76,40 +71,45 @@ export class RepositoryContextService {
   async resolveAllRepositoryPaths(workflowId: string): Promise<string[]> {
     try {
       const workflowRepos = await this.workflowRepositoryRepository.findByWorkflowId(workflowId)
-      if (workflowRepos.length === 0) {
-        return []
-      }
-
-      const mainReposPath = this.configService.workspace?.mainReposPath
-      if (!mainReposPath) {
-        return []
-      }
-
       const paths: string[] = []
 
       for (const workflowRepo of workflowRepos) {
         const gitRepo = await this.gitRepositoryRepository.findById(workflowRepo.repositoryId)
         if (!gitRepo) continue
 
-        const candidates = [
-          `${mainReposPath}/${gitRepo.name}`,
-          `${mainReposPath}/${gitRepo.organizationId}/${gitRepo.projectId}/${gitRepo.name}`,
-        ]
-
-        for (const path of candidates) {
-          try {
-            await access(path)
-            paths.push(path)
-            break
-          } catch {
-            // Continue to next candidate
-          }
+        try {
+          paths.push(
+            await this.ensureLocalClone({
+              organizationId: gitRepo.organizationId,
+              projectId: gitRepo.projectId,
+              name: gitRepo.name,
+              url: gitRepo.url,
+              branch: gitRepo.branch,
+            })
+          )
+        } catch (error) {
+          console.warn(`[RepositoryContext] Skipping repository ${gitRepo.name}: ${describe(error)}`)
         }
       }
 
       return paths
-    } catch {
+    } catch (error) {
+      console.warn(`[RepositoryContext] Repositories unavailable for workflow ${workflowId}: ${describe(error)}`)
       return []
     }
   }
+
+  private ensureLocalClone(repository: RepositoryReference): Promise<string> {
+    return this.repoCache.ensureRepo({
+      organizationId: repository.organizationId,
+      projectId: repository.projectId,
+      repoName: repository.name,
+      url: repository.url,
+      branch: repository.branch,
+    })
+  }
+}
+
+function describe(error: unknown): string {
+  return error instanceof Error ? error.message : String(error)
 }

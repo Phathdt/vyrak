@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { camelToSnakeCase, convertToCamelCase, snakeToCamelCase } from './utils'
+import { camelToSnakeCase, convertToCamelCase, parseRedisUrl, snakeToCamelCase } from './utils'
 
 describe('camelToSnakeCase', () => {
   it('should convert camelCase to snake_case', () => {
@@ -165,6 +165,33 @@ describe('convertToCamelCase', () => {
           enableNotifications: true,
         },
       },
+    })
+  })
+})
+
+describe('parseRedisUrl', () => {
+  it('should read host and port from the url', () => {
+    expect(parseRedisUrl('redis://cache.internal:6380')).toEqual({ host: 'cache.internal', port: 6380 })
+  })
+
+  it('should default to port 6379 when the url has no port', () => {
+    expect(parseRedisUrl('redis://cache.internal')).toEqual({ host: 'cache.internal', port: 6379 })
+  })
+
+  it('should read the database index from the url path', () => {
+    expect(parseRedisUrl('redis://cache.internal:6379/2')).toEqual({ host: 'cache.internal', port: 6379, db: 2 })
+  })
+
+  it('should enable tls for rediss urls', () => {
+    expect(parseRedisUrl('rediss://cache.internal:6380')).toEqual({ host: 'cache.internal', port: 6380, tls: {} })
+  })
+
+  it('should decode credentials from the url', () => {
+    expect(parseRedisUrl('redis://user:pa%40ss@cache.internal:6379')).toEqual({
+      host: 'cache.internal',
+      port: 6379,
+      username: 'user',
+      password: 'pa@ss',
     })
   })
 })

@@ -9,17 +9,6 @@ paths:
           description: ''
       tags:
         - App
-  /health:
-    get:
-      operationId: AppController_health
-      parameters: []
-      responses:
-        '200':
-          description: ''
-      summary: Health check endpoint
-      tags:
-        - App
-        - health
   /api/auth/login:
     post:
       operationId: AuthController_login
@@ -40,7 +29,7 @@ paths:
         '401':
           description: Invalid credentials
       summary: Login with email and password
-      tags: &ref_0
+      tags:
         - auth
   /api/auth/me:
     get:
@@ -58,7 +47,8 @@ paths:
       security:
         - bearer: []
       summary: Get current user with organizations
-      tags: *ref_0
+      tags:
+        - auth
   /api/organizations:
     post:
       operationId: OrganizationsController_create
@@ -76,10 +66,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/OrganizationResponse'
-      security: &ref_1
+      security:
         - bearer: []
       summary: Create new organization
-      tags: &ref_2
+      tags:
         - organizations
     get:
       operationId: OrganizationsController_findAll
@@ -93,9 +83,11 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/OrganizationResponse'
-      security: *ref_1
+      security:
+        - bearer: []
       summary: List all organizations for current user
-      tags: *ref_2
+      tags:
+        - organizations
   /api/organizations/{id}:
     get:
       operationId: OrganizationsController_findOne
@@ -112,9 +104,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/OrganizationResponse'
-      security: *ref_1
+      security:
+        - bearer: []
       summary: Get organization details
-      tags: *ref_2
+      tags:
+        - organizations
     patch:
       operationId: OrganizationsController_update
       parameters:
@@ -136,9 +130,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/OrganizationResponse'
-      security: *ref_1
+      security:
+        - bearer: []
       summary: Update organization (admin/owner only)
-      tags: *ref_2
+      tags:
+        - organizations
   /api/organizations/{id}/members:
     get:
       operationId: OrganizationsController_listMembers
@@ -157,9 +153,11 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/MemberResponse'
-      security: *ref_1
+      security:
+        - bearer: []
       summary: List organization members
-      tags: *ref_2
+      tags:
+        - organizations
   /api/organizations/{id}/members/{memberId}:
     patch:
       operationId: OrganizationsController_updateMemberRole
@@ -187,9 +185,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MemberResponse'
-      security: *ref_1
+      security:
+        - bearer: []
       summary: Update member role (owner/admin only)
-      tags: *ref_2
+      tags:
+        - organizations
     delete:
       operationId: OrganizationsController_removeMember
       parameters:
@@ -206,9 +206,11 @@ paths:
       responses:
         '200':
           description: ''
-      security: *ref_1
+      security:
+        - bearer: []
       summary: Remove member (owner/admin only)
-      tags: *ref_2
+      tags:
+        - organizations
   /api/organizations/{id}/invitations:
     post:
       operationId: OrganizationsController_inviteMember
@@ -231,9 +233,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/InvitationResponse'
-      security: *ref_1
+      security:
+        - bearer: []
       summary: Invite member to organization (admin/owner only)
-      tags: *ref_2
+      tags:
+        - organizations
     get:
       operationId: OrganizationsController_listInvitations
       parameters:
@@ -251,9 +255,11 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/InvitationResponse'
-      security: *ref_1
+      security:
+        - bearer: []
       summary: List pending invitations (admin/owner only)
-      tags: *ref_2
+      tags:
+        - organizations
   /api/invitations/pending:
     get:
       operationId: InvitationsController_listUserInvitations
@@ -267,10 +273,10 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/InvitationResponse'
-      security: &ref_3
+      security:
         - bearer: []
       summary: List user pending invitations
-      tags: &ref_4
+      tags:
         - invitations
   /api/invitations/{id}/accept:
     post:
@@ -288,9 +294,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/InvitationResponse'
-      security: *ref_3
+      security:
+        - bearer: []
       summary: Accept invitation
-      tags: *ref_4
+      tags:
+        - invitations
   /api/invitations/{id}/reject:
     post:
       operationId: InvitationsController_reject
@@ -303,9 +311,11 @@ paths:
       responses:
         '200':
           description: ''
-      security: *ref_3
+      security:
+        - bearer: []
       summary: Reject invitation
-      tags: *ref_4
+      tags:
+        - invitations
   /api/organizations/{orgId}/projects:
     post:
       operationId: ProjectsController_create
@@ -331,7 +341,7 @@ paths:
         '400':
           description: Bad request - slug already exists
       summary: Create a new project
-      tags: &ref_5
+      tags:
         - Projects
     get:
       operationId: ProjectsController_findAll
@@ -399,7 +409,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedProjectsResponse'
       summary: List projects with pagination, search, and sorting
-      tags: *ref_5
+      tags:
+        - Projects
   /api/organizations/{orgId}/projects/{id}:
     get:
       operationId: ProjectsController_findOne
@@ -424,7 +435,8 @@ paths:
         '404':
           description: Project not found
       summary: Get project by ID
-      tags: *ref_5
+      tags:
+        - Projects
     patch:
       operationId: ProjectsController_update
       parameters:
@@ -454,7 +466,8 @@ paths:
         '404':
           description: Project not found
       summary: Update project
-      tags: *ref_5
+      tags:
+        - Projects
     delete:
       operationId: ProjectsController_remove
       parameters:
@@ -476,7 +489,8 @@ paths:
         '404':
           description: Project not found
       summary: Delete project
-      tags: *ref_5
+      tags:
+        - Projects
   /api/organizations/{orgId}/projects/{projectId}/repositories:
     get:
       operationId: RepositoriesController_findAll
@@ -533,7 +547,7 @@ paths:
         '400':
           description: Bad request - at least one repository required
       summary: Create a new workflow
-      tags: &ref_6
+      tags:
         - Workflows
     get:
       operationId: WorkflowsController_findAll
@@ -623,7 +637,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedWorkflowsResponse'
       summary: List workflows with pagination, search, and filtering
-      tags: *ref_6
+      tags:
+        - Workflows
   /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/phases/{phaseId}/approve:
     post:
       description: >-
@@ -665,7 +680,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/AdvanceWorkflowPhaseResponseDto'
       summary: Approve a phase and publish phase.approved
-      tags: *ref_6
+      tags:
+        - Workflows
   /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/phases/approve:
     post:
       description: Confirms the phase is done, completes it, and starts the next phase (or completes the workflow).
@@ -700,7 +716,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/AdvanceWorkflowPhaseResponseDto'
       summary: Approve the current phase (human gate)
-      tags: *ref_6
+      tags:
+        - Workflows
   /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/phases/send-back:
     post:
       operationId: WorkflowsController_sendBackPhase
@@ -734,7 +751,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/AdvanceWorkflowPhaseResponseDto'
       summary: Send workflow back to an earlier phase (Review/QC → Implementation)
-      tags: *ref_6
+      tags:
+        - Workflows
   /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/phases:
     get:
       operationId: WorkflowsController_listPhases
@@ -764,7 +782,8 @@ paths:
         '404':
           description: Workflow not found
       summary: List workflow phases
-      tags: *ref_6
+      tags:
+        - Workflows
   /api/organizations/{orgId}/projects/{projectId}/workflows/{id}:
     get:
       operationId: WorkflowsController_findOne
@@ -794,7 +813,8 @@ paths:
         '404':
           description: Workflow not found
       summary: Get workflow by ID
-      tags: *ref_6
+      tags:
+        - Workflows
     patch:
       operationId: WorkflowsController_update
       parameters:
@@ -831,7 +851,8 @@ paths:
         '404':
           description: Workflow not found
       summary: Update workflow
-      tags: *ref_6
+      tags:
+        - Workflows
     delete:
       operationId: WorkflowsController_remove
       parameters:
@@ -858,7 +879,8 @@ paths:
         '404':
           description: Workflow not found
       summary: Delete workflow
-      tags: *ref_6
+      tags:
+        - Workflows
   /api/organizations/{orgId}/workflows/{workflowId}/artifacts:
     get:
       operationId: ArtifactsController_list
@@ -910,7 +932,7 @@ paths:
         '403':
           description: Not a member of this organization
       summary: List artifacts for a workflow
-      tags: &ref_7
+      tags:
         - Artifacts
     post:
       operationId: ArtifactsController_upload
@@ -945,7 +967,8 @@ paths:
         '403':
           description: Not a member of this organization
       summary: Upload an artifact for a workflow
-      tags: *ref_7
+      tags:
+        - Artifacts
   /api/organizations/{orgId}/workflows/{workflowId}/artifacts/{artifactId}:
     get:
       operationId: ArtifactsController_findOne
@@ -978,7 +1001,8 @@ paths:
         '404':
           description: Artifact not found
       summary: Get artifact metadata
-      tags: *ref_7
+      tags:
+        - Artifacts
   /api/organizations/{orgId}/workflows/{workflowId}/artifacts/{artifactId}/content:
     get:
       operationId: ArtifactsController_getContent
@@ -1011,7 +1035,8 @@ paths:
         '404':
           description: Artifact not found
       summary: Get artifact metadata with markdown content
-      tags: *ref_7
+      tags:
+        - Artifacts
   /api/organizations/{orgId}/workflows/{workflowId}/artifacts/{artifactId}/request-approval:
     post:
       operationId: ArtifactsController_requestApproval
@@ -1052,7 +1077,8 @@ paths:
         '404':
           description: Artifact not found
       summary: Request approval for an artifact
-      tags: *ref_7
+      tags:
+        - Artifacts
   /api/organizations/{orgId}/workflows/{workflowId}/artifacts/{artifactId}/approve:
     post:
       operationId: ArtifactsController_approve
@@ -1093,7 +1119,8 @@ paths:
         '404':
           description: Artifact not found
       summary: Approve an artifact
-      tags: *ref_7
+      tags:
+        - Artifacts
   /api/organizations/{orgId}/workflows/{workflowId}/artifacts/{artifactId}/reject:
     post:
       operationId: ArtifactsController_reject
@@ -1134,7 +1161,8 @@ paths:
         '404':
           description: Artifact not found
       summary: Reject an artifact
-      tags: *ref_7
+      tags:
+        - Artifacts
   /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/planning/session:
     get:
       operationId: WorkflowPlanningController_getPlanningSession
@@ -1162,43 +1190,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PlanningSessionResponseDto'
       summary: Get technical planning conversation for the Planning phase
-      tags: &ref_8
+      tags:
         - Workflows - Planning
-  /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/planning/chat:
-    post:
-      description: Architecture and implementation planning with optional repo file paths and pasted code snippets.
-      operationId: WorkflowPlanningController_planningChat
-      parameters:
-        - name: orgId
-          required: true
-          in: path
-          schema:
-            type: string
-        - name: projectId
-          required: true
-          in: path
-          schema:
-            type: string
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PlanningChatRequestDto'
-      responses:
-        '200':
-          description: ''
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlanningChatResponseDto'
-      summary: Discuss technical plan with AI (Planning phase)
-      tags: *ref_8
   /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/planning/generate-prd:
     post:
       description: Extracts PRD artifact from conversation history and saves it to storage. Sets status to PENDING_APPROVAL.
@@ -1230,7 +1223,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/GeneratePRDResponseDto'
       summary: Generate PRD artifact from planning conversation
-      tags: *ref_8
+      tags:
+        - Workflows - Planning
   /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/planning/generate-prd-from-message:
     post:
       description: Extracts PRD artifact from a specific message containing <artifact> tags and saves it to storage.
@@ -1268,7 +1262,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/GeneratePRDResponseDto'
       summary: Generate PRD artifact from a specific message
-      tags: *ref_8
+      tags:
+        - Workflows - Planning
   /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/technical-refinement/session:
     get:
       operationId: WorkflowPlanningController_getTechnicalRefinementSession
@@ -1296,44 +1291,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/TechnicalRefinementSessionResponseDto'
       summary: Get Technical Refinement conversation session
-      tags: *ref_8
-  /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/technical-refinement/chat:
-    post:
-      description: >-
-        Generate ADRs, ARD, and Implementation Plans with repository scouting. Agent has access to PRD from Planning
-        phase.
-      operationId: WorkflowPlanningController_technicalRefinementChat
-      parameters:
-        - name: orgId
-          required: true
-          in: path
-          schema:
-            type: string
-        - name: projectId
-          required: true
-          in: path
-          schema:
-            type: string
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TechnicalRefinementChatRequestDto'
-      responses:
-        '200':
-          description: ''
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TechnicalRefinementChatResponseDto'
-      summary: Chat with Technical Refinement Agent
-      tags: *ref_8
+      tags:
+        - Workflows - Planning
   /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/technical-refinement/generate-artifacts:
     post:
       description: Parses conversation history and creates artifacts in DRAFT status.
@@ -1365,7 +1324,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/GenerateArtifactsResponseDto'
       summary: Generate technical artifacts (ADR, ARD, Implementation Plan)
-      tags: *ref_8
+      tags:
+        - Workflows - Planning
   /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/technical-refinement/generate-subtasks:
     post:
       description: Parses Implementation Plan artifact and creates sub-tasks with dependencies.
@@ -1397,7 +1357,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/GenerateSubTasksResponseDto'
       summary: Generate sub-tasks from Implementation Plan
-      tags: *ref_8
+      tags:
+        - Workflows - Planning
   /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/technical-refinement/sub-tasks:
     get:
       description: Returns sub-tasks in execution order with their dependency keys.
@@ -1427,12 +1388,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/SubTasksListResponseDto'
       summary: List sub-tasks for the workflow
-      tags: *ref_8
+      tags:
+        - Workflows - Planning
   /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/implementation/start:
     post:
       description: >-
-        Begins orchestrating sub-task execution with parallel/sequential dependency handling. Independent tasks execute
-        in parallel (max 3 concurrent).
+        Enqueues the implementation phase run for the worker and returns immediately. Progress is available from
+        implementation/status.
       operationId: WorkflowExecutionController_startImplementation
       parameters:
         - name: orgId
@@ -1461,7 +1423,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/StartImplementationResponseDto'
       summary: Start implementation phase execution
-      tags: &ref_9
+      tags:
         - Workflows - Execution
   /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/implementation/status:
     get:
@@ -1494,50 +1456,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/ImplementationStatusResponseDto'
       summary: Get implementation orchestration status
-      tags: *ref_9
-  /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/implementation/retry/{taskId}:
-    post:
-      description: Resets task status to READY and re-executes it.
-      operationId: WorkflowExecutionController_retryTask
-      parameters:
-        - name: orgId
-          required: true
-          in: path
-          description: Organization ID
-          schema:
-            type: string
-        - name: projectId
-          required: true
-          in: path
-          description: Project ID
-          schema:
-            type: string
-        - name: id
-          required: true
-          in: path
-          description: Workflow ID
-          schema:
-            type: string
-        - name: taskId
-          required: true
-          in: path
-          description: Sub-task ID to retry
-          schema:
-            type: string
-      responses:
-        '200':
-          description: ''
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RetryTaskResponseDto'
-      summary: Retry a specific failed task
-      tags: *ref_9
+      tags:
+        - Workflows - Execution
   /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/code-review/start:
     post:
       description: >-
-        Runs automated code review agent to analyze implementation changes for quality, security, performance, and
-        requirements compliance.
+        Enqueues the code review phase run for the worker and returns immediately. The result is available from
+        code-review/report.
       operationId: WorkflowExecutionController_startCodeReview
       parameters:
         - name: orgId
@@ -1566,7 +1491,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/StartCodeReviewResponseDto'
       summary: Start code review phase execution
-      tags: *ref_9
+      tags:
+        - Workflows - Execution
   /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/code-review/report:
     get:
       description: Returns the code review report with findings categorized by severity.
@@ -1598,12 +1524,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/CodeReviewReportResponseDto'
       summary: Get code review report
-      tags: *ref_9
+      tags:
+        - Workflows - Execution
   /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/qa/start:
     post:
       description: >-
-        Runs automated QA verification against PRD acceptance criteria. Tests implementation, verifies edge cases, and
-        generates a QA report.
+        Enqueues the QA phase run for the worker and returns immediately with status RUNNING. The result is available
+        from qa/report.
       operationId: WorkflowExecutionController_startQA
       parameters:
         - name: orgId
@@ -1630,9 +1557,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/QAVerificationResponseDto'
+                $ref: '#/components/schemas/StartQAResponseDto'
       summary: Start QA verification
-      tags: *ref_9
+      tags:
+        - Workflows - Execution
   /api/organizations/{orgId}/projects/{projectId}/workflows/{id}/qa/report:
     get:
       description: Returns the QA verification report with acceptance criteria results and overall status.
@@ -1664,7 +1592,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/QAVerificationResponseDto'
       summary: Get QA verification report
-      tags: *ref_9
+      tags:
+        - Workflows - Execution
 info:
   title: Vyrak API
   description: Vyrak API documentation
@@ -2569,7 +2498,7 @@ components:
           example: prd
         type:
           type: string
-          enum: &ref_10
+          enum: &ref_0
             - prd
             - adr
             - ard
@@ -2603,7 +2532,7 @@ components:
           nullable: true
         approvalStatus:
           type: string
-          enum: &ref_11
+          enum: &ref_1
             - DRAFT
             - PENDING_APPROVAL
             - APPROVED
@@ -2728,7 +2657,7 @@ components:
           example: prd
         type:
           type: string
-          enum: *ref_10
+          enum: *ref_0
           example: prd
         title:
           type: string
@@ -2758,7 +2687,7 @@ components:
           nullable: true
         approvalStatus:
           type: string
-          enum: *ref_11
+          enum: *ref_1
           example: DRAFT
         approvedById:
           type: string
@@ -2914,90 +2843,6 @@ components:
         - messages
         - messageCount
         - repositories
-    PlanningCodeSnippetDto:
-      type: object
-      properties:
-        path:
-          type: string
-          maxLength: 500
-          example: libs/product/src/product.service.ts
-        label:
-          type: string
-          maxLength: 200
-          example: Product module service
-        content:
-          type: string
-          minLength: 1
-          maxLength: 24000
-          description: File or snippet content for the AI to analyze
-      required:
-        - content
-    PlanningChatRequestDto:
-      type: object
-      properties:
-        userMessage:
-          type: string
-          minLength: 1
-          maxLength: 16000
-          example: How should we add inventory tables given our existing product module?
-        codeSnippets:
-          maxItems: 5
-          items:
-            type: object
-            properties:
-              path:
-                type: string
-                maxLength: 500
-              label:
-                type: string
-                maxLength: 200
-              content:
-                type: string
-                minLength: 1
-                maxLength: 24000
-            required:
-              - content
-          type: array
-        repoPaths:
-          maxItems: 8
-          items:
-            type: string
-            minLength: 1
-            maxLength: 500
-          description: Repo-relative paths to read from the local main repo checkout (when available)
-          example:
-            - libs/product/src/application/services/product.service.ts
-          type: array
-      required:
-        - userMessage
-    PlanningChatResponseDto:
-      type: object
-      properties:
-        sessionId:
-          type: string
-          format: uuid
-          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
-        aiMessage:
-          type: string
-        messageCount:
-          type: integer
-          minimum: 0
-          maximum: 9007199254740991
-        repoFilesLoaded:
-          type: array
-          items:
-            type: object
-        artifactCreated:
-          type: boolean
-        artifactId:
-          type: string
-          format: uuid
-          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
-      required:
-        - sessionId
-        - aiMessage
-        - messageCount
-        - repoFilesLoaded
     GeneratePRDResponseDto:
       type: object
       properties:
@@ -3107,53 +2952,6 @@ components:
         - messageCount
         - repositories
         - prdArtifact
-    TechnicalRefinementChatRequestDto:
-      type: object
-      properties:
-        userMessage:
-          type: string
-          minLength: 1
-        codeSnippets:
-          type: array
-          items:
-            type: object
-            properties:
-              label:
-                type: string
-              path:
-                type: string
-              content:
-                type: string
-            required:
-              - content
-      required:
-        - userMessage
-    TechnicalRefinementChatResponseDto:
-      type: object
-      properties:
-        sessionId:
-          type: string
-        aiMessage:
-          type: string
-        messageCount:
-          type: number
-        repoFilesLoaded:
-          type: array
-          items:
-            type: object
-            properties:
-              path:
-                type: string
-              bytes:
-                type: number
-            required:
-              - path
-              - bytes
-      required:
-        - sessionId
-        - aiMessage
-        - messageCount
-        - repoFilesLoaded
     GenerateArtifactsResponseDto:
       type: object
       properties:
@@ -3266,7 +3064,7 @@ components:
       properties:
         message:
           type: string
-          example: Implementation orchestration started
+          example: Implementation job queued
           description: Status message
         workflowId:
           type: string
@@ -3454,46 +3252,12 @@ components:
         - pendingTasks
         - readyTasks
         - tasks
-    RetryTaskResponseDto:
-      type: object
-      properties:
-        message:
-          type: string
-          example: Task retry initiated
-          description: Status message
-        taskId:
-          type: string
-          format: uuid
-          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
-          example: 123e4567-e89b-12d3-a456-426614174002
-          description: Task ID
-        status:
-          type: string
-          enum:
-            - completed
-            - failed
-          example: completed
-          description: Execution result status
-        artifactId:
-          type: string
-          format: uuid
-          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
-          example: 123e4567-e89b-12d3-a456-426614174003
-          description: Generated artifact ID
-        error:
-          type: string
-          example: 'Task execution failed: timeout'
-          description: Error message if failed
-      required:
-        - message
-        - taskId
-        - status
     StartCodeReviewResponseDto:
       type: object
       properties:
         message:
           type: string
-          example: Code review started
+          example: Code review job queued
           description: Status message
         workflowId:
           type: string
@@ -3728,6 +3492,17 @@ components:
         - findings
         - summary
         - completedAt
+    StartQAResponseDto:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - RUNNING
+          example: RUNNING
+          description: QA run has been queued for the worker
+      required:
+        - status
     CriterionResultDto:
       type: object
       properties:

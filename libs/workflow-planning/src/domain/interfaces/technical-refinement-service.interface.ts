@@ -1,19 +1,9 @@
 import type {
-  TechnicalRefinementChatRequestDto,
-  TechnicalRefinementChatResponseDto,
   TechnicalRefinementSessionResponseDto,
   GenerateArtifactsResponseDto,
   GenerateSubTasksResponseDto,
   SubTasksListResponseDto,
 } from '../schemas/technical-refinement.schemas'
-
-export type TechnicalRefinementChatInput = {
-  workflowId: string
-  organizationId: string
-  projectId: string
-  userMessage: string
-  codeSnippets?: TechnicalRefinementChatRequestDto['codeSnippets']
-}
 
 export interface ITechnicalRefinementService {
   /**
@@ -24,11 +14,6 @@ export interface ITechnicalRefinementService {
     organizationId: string,
     projectId: string
   ): Promise<TechnicalRefinementSessionResponseDto>
-
-  /**
-   * Chat with Technical Refinement Agent with repository scouting enabled
-   */
-  chatTechnicalRefinement(input: TechnicalRefinementChatInput): Promise<TechnicalRefinementChatResponseDto>
 
   /**
    * Generate technical artifacts (ADR, ARD, Implementation Plan) from conversation

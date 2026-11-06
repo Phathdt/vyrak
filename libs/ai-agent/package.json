@@ -17,7 +17,6 @@
   },
   "dependencies": {
     "@vyrak/custom-config": "workspace:*",
-    "@anthropic-ai/claude-agent-sdk": "^0.3.318",
     "@anthropic-ai/sdk": "^1.5.0",
     "@nestjs/common": "^12.3.3",
     "@nestjs/core": "^12.3.3",

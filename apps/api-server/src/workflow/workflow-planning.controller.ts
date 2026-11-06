@@ -3,15 +3,11 @@ import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { IWorkflowPhaseRepository, WORKFLOW_PHASE_REPOSITORY } from '@vyrak/workflow-core'
 import {
   IWorkflowPlanningService,
-  PlanningChatRequestDto,
-  PlanningChatResponseDto,
   PlanningSessionResponseDto,
   GeneratePRDResponseDto,
   GeneratePRDFromMessageRequestDto,
   WORKFLOW_PLANNING_SERVICE,
   ITechnicalRefinementService,
-  TechnicalRefinementChatRequestDto,
-  TechnicalRefinementChatResponseDto,
   TechnicalRefinementSessionResponseDto,
   GenerateArtifactsResponseDto,
   GenerateSubTasksResponseDto,
@@ -41,28 +37,6 @@ export class WorkflowPlanningController {
     @Param('id') workflowId: string
   ): Promise<PlanningSessionResponseDto> {
     return this.planningService.getPlanningSession(workflowId, orgId, projectId)
-  }
-
-  @Post('planning/chat')
-  @ApiOperation({
-    summary: 'Discuss technical plan with AI (Planning phase)',
-    description: 'Architecture and implementation planning with optional repo file paths and pasted code snippets.',
-  })
-  @ApiResponse({ status: 200, type: PlanningChatResponseDto })
-  async planningChat(
-    @Param('orgId') orgId: string,
-    @Param('projectId') projectId: string,
-    @Param('id') workflowId: string,
-    @Body() body: PlanningChatRequestDto
-  ): Promise<PlanningChatResponseDto> {
-    return this.planningService.chat({
-      workflowId,
-      organizationId: orgId,
-      projectId,
-      userMessage: body.userMessage,
-      codeSnippets: body.codeSnippets,
-      repoPaths: body.repoPaths,
-    })
   }
 
   @Post('planning/generate-prd')
@@ -160,28 +134,6 @@ export class WorkflowPlanningController {
     @Param('id') workflowId: string
   ): Promise<TechnicalRefinementSessionResponseDto> {
     return this.technicalRefinementService.getTechnicalRefinementSession(workflowId, orgId, projectId)
-  }
-
-  @Post('technical-refinement/chat')
-  @ApiOperation({
-    summary: 'Chat with Technical Refinement Agent',
-    description:
-      'Generate ADRs, ARD, and Implementation Plans with repository scouting. Agent has access to PRD from Planning phase.',
-  })
-  @ApiResponse({ status: 200, type: TechnicalRefinementChatResponseDto })
-  async technicalRefinementChat(
-    @Param('orgId') orgId: string,
-    @Param('projectId') projectId: string,
-    @Param('id') workflowId: string,
-    @Body() body: TechnicalRefinementChatRequestDto
-  ): Promise<TechnicalRefinementChatResponseDto> {
-    return this.technicalRefinementService.chatTechnicalRefinement({
-      workflowId,
-      organizationId: orgId,
-      projectId,
-      userMessage: body.userMessage,
-      codeSnippets: body.codeSnippets,
-    })
   }
 
   @Post('technical-refinement/generate-artifacts')

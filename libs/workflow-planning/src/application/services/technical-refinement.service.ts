@@ -1,5 +1,3 @@
-import { query } from '@anthropic-ai/claude-agent-sdk'
-import Anthropic from '@anthropic-ai/sdk'
 import { AnthropicApiAdapter } from '@vyrak/ai-agent'
 import { IArtifactService } from '@vyrak/artifact'
 import { ConversationPhase, IConversationService, MessageRole } from '@vyrak/conversation'
@@ -7,7 +5,6 @@ import {
   InvalidPlanningStateError,
   WorkflowNotFoundError,
   WorkflowStatus,
-  RepositoryContextService,
   IWorkflowDependencyRepository,
   IWorkflowPhaseRepository,
   IWorkflowWorkItemRepository,
@@ -16,29 +13,18 @@ import {
 } from '@vyrak/workflow-core'
 
 import { ImplementationPlanNotFoundError } from '../../domain/exceptions'
-import { buildTechnicalRefinementPrompt } from '../../domain/prompts/technical-refinement-agent-prompt'
 import { ParsedImplementationTask } from '../../infras/parsers'
 
+import type { ITechnicalRefinementService } from '../../domain/interfaces/technical-refinement-service.interface'
 import type {
-  ITechnicalRefinementService,
-  TechnicalRefinementChatInput,
-} from '../../domain/interfaces/technical-refinement-service.interface'
-import type {
-  TechnicalRefinementChatResponseDto,
   TechnicalRefinementSessionResponseDto,
   GenerateArtifactsResponseDto,
   GenerateSubTasksResponseDto,
   SubTasksListResponseDto,
 } from '../../domain/schemas/technical-refinement.schemas'
-import type { ConversationMessage } from '@vyrak/conversation'
 import type { IConfigService } from '@vyrak/custom-config'
 import type { IGitRepositoryService } from '@vyrak/project'
 import type { IWorkflowRepository, IWorkflowRepositoryRepository, WorkflowRepositoryEntity } from '@vyrak/workflow-core'
-
-interface Message {
-  role: string
-  content: string
-}
 
 /**
  * Returns one cycle (as a list of item ids, first id repeated at the end) or null.
@@ -87,7 +73,6 @@ function readExecutionOrder(metadata: Record<string, unknown> | null, fallback: 
 }
 
 export class TechnicalRefinementService implements ITechnicalRefinementService {
-  private readonly model: string
   private readonly anthropicAdapter: AnthropicApiAdapter
 
   constructor(
@@ -95,7 +80,6 @@ export class TechnicalRefinementService implements ITechnicalRefinementService {
     private readonly workflowRepository: IWorkflowRepository,
     private readonly workflowRepositoryRepository: IWorkflowRepositoryRepository,
     private readonly gitRepositoryService: IGitRepositoryService,
-    private readonly repositoryContextService: RepositoryContextService,
     private readonly artifactService: IArtifactService,
     private readonly workItemRepository: IWorkflowWorkItemRepository,
     private readonly workflowDependencyRepository: IWorkflowDependencyRepository,
@@ -106,7 +90,6 @@ export class TechnicalRefinementService implements ITechnicalRefinementService {
     if (!anthropicConfig?.model) {
       throw new Error('ANTHROPIC__MODEL not configured in .env')
     }
-    this.model = anthropicConfig.model
     this.anthropicAdapter = new AnthropicApiAdapter(configService)
   }
 
@@ -147,117 +130,6 @@ export class TechnicalRefinementService implements ITechnicalRefinementService {
       messageCount: messages.length,
       repositories,
       prdArtifact,
-    }
-  }
-
-  async chatTechnicalRefinement(input: TechnicalRefinementChatInput): Promise<TechnicalRefinementChatResponseDto> {
-    const workflow = await this.ensureTechnicalRefinementPhase(input.workflowId)
-
-    const session = await this.conversationService.getOrCreateSession(
-      input.workflowId,
-      ConversationPhase.TECHNICAL_REFINEMENT
-    )
-
-    // Format user message with code snippets if provided
-    const userContent = this.formatUserMessage(input.userMessage, input.codeSnippets)
-
-    await this.conversationService.addMessage({
-      sessionId: session.id,
-      role: MessageRole.USER,
-      content: userContent,
-    })
-
-    const messages = await this.conversationService.getMessages(session.id)
-    const aiMessages = this.toAIMessages(messages)
-
-    // Load PRD artifact content
-    const prdArtifact = await this.loadPRDArtifact(input.workflowId)
-    const prdContent = prdArtifact?.content || ''
-
-    // Build system prompt with PRD context
-    const repositories = await this.loadLinkedRepositories(input.organizationId, input.projectId, workflow.id)
-    const systemPrompt = buildTechnicalRefinementPrompt({
-      workflowTitle: workflow.title,
-      workflowType: workflow.type || 'STORY',
-      prdArtifact: prdContent,
-      repositories: repositories.map((r) => ({
-        name: r.name,
-        url: r.url,
-        branch: r.branch,
-      })),
-    })
-
-    // Use generic repository context service
-    const repoPath = await this.repositoryContextService.resolveRepositoryPath(input.workflowId)
-
-    let aiResponseContent: string
-
-    if (repoPath) {
-      // Use Agent SDK with repository context for scouting
-      const conversationContext = aiMessages.map((m) => `${m.role}: ${m.content}`).join('\n\n')
-
-      const promptWithHistory = `${systemPrompt}
-
-Previous conversation:
-${conversationContext}
-
-User's latest message: ${input.userMessage}
-
-You have access to the project repository for scouting existing patterns. Use Read, Glob, and Grep tools to:
-- Analyze existing code patterns and architecture
-- Identify reusable components and similar implementations
-- Understand current module structure
-- Make informed architectural decisions based on actual code
-- Reference real file paths in your ADRs and Implementation Plan
-`
-
-      aiResponseContent = ''
-      for await (const message of query({
-        prompt: promptWithHistory,
-        options: {
-          model: this.model,
-          allowedTools: ['Read', 'Glob', 'Grep'],
-          maxTurns: 15, // Allow more turns for scouting
-          cwd: repoPath,
-        },
-      })) {
-        if (message.type === 'result' && message.subtype === 'success' && !message.is_error) {
-          aiResponseContent = message.result
-        }
-      }
-    } else {
-      // Fallback: chat without repo context (not recommended for Technical Refinement)
-      const client = new Anthropic({ apiKey: this.configService.anthropic?.apiKey })
-
-      const response = await client.messages.create({
-        model: this.model,
-        max_tokens: 8192,
-        system: systemPrompt,
-        messages: aiMessages.map((m) => ({
-          role: m.role as 'user' | 'assistant',
-          content: m.content,
-        })),
-      })
-
-      aiResponseContent = response.content
-        .filter((block) => block.type === 'text')
-        .map((block) => ('text' in block ? block.text : ''))
-        .join('\n')
-    }
-
-    await this.conversationService.addMessage({
-      sessionId: session.id,
-      role: MessageRole.ASSISTANT,
-      content: aiResponseContent,
-    })
-
-    const messageCount = await this.conversationService.getMessageCount(session.id)
-
-    return {
-      sessionId: session.id,
-      aiMessage: aiResponseContent,
-      messageCount,
-      repoFilesLoaded: repoPath ? [{ path: repoPath, bytes: 0 }] : [],
     }
   }
 
@@ -535,20 +407,6 @@ You have access to the project repository for scouting existing patterns. Use Re
     }
   }
 
-  private formatUserMessage(userMessage: string, codeSnippets: TechnicalRefinementChatInput['codeSnippets']): string {
-    const parts: string[] = [userMessage.trim()]
-
-    if (codeSnippets?.length) {
-      parts.push('\n\n--- Attached snippets ---')
-      for (const snippet of codeSnippets) {
-        const title = snippet.path ?? snippet.label ?? 'snippet'
-        parts.push(`\n### ${title}\n\`\`\`\n${snippet.content}\n\`\`\``)
-      }
-    }
-
-    return parts.join('')
-  }
-
   private async parseImplementationPlanWithClaude(planContent: string): Promise<ParsedImplementationTask[]> {
     try {
       const prompt = `Analyze this Implementation Plan and extract Phases as sub-tasks.
@@ -640,14 +498,5 @@ CRITICAL: Extract PHASES as tasks, not individual checkbox items. One Phase = On
     const jsonText = jsonMatch ? jsonMatch[1] : content
 
     return JSON.parse(jsonText.trim())
-  }
-
-  private toAIMessages(messages: ConversationMessage[]): Message[] {
-    return messages
-      .filter((msg) => msg.role === MessageRole.USER || msg.role === MessageRole.ASSISTANT)
-      .map((msg) => ({
-        role: msg.role,
-        content: msg.content,
-      }))
   }
 }

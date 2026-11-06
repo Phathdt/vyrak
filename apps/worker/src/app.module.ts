@@ -1,15 +1,19 @@
 import { BullModule } from '@nestjs/bullmq'
 import { Module } from '@nestjs/common'
-import { ConfigModule, ConfigService } from '@nestjs/config'
-import { AI_AGENT_SERVICE, AIAgentModule, IAIAgentService } from '@vyrak/ai-agent'
+import { ConfigModule } from '@nestjs/config'
+import { AI_AGENT_SERVICE, AI_AGENT_STREAM_PORT, IAgentStreamPort, IAIAgentService } from '@vyrak/ai-agent'
+import { AIAgentSdkModule } from '@vyrak/ai-agent-sdk'
 import { ARTIFACT_SERVICE, ArtifactModule, IArtifactService } from '@vyrak/artifact'
-import { ConversationModule } from '@vyrak/conversation'
-import { CONFIG_SERVICE, CustomConfigModule, IConfigService } from '@vyrak/custom-config'
+import { CONVERSATION_SERVICE, ConversationModule, IConversationService } from '@vyrak/conversation'
+import { CONFIG_SERVICE, CustomConfigModule, IConfigService, parseRedisUrl } from '@vyrak/custom-config'
 import { CustomLoggerModule, EnhancedLogger } from '@vyrak/custom-logger'
 import { DatabaseModule, DatabaseService } from '@vyrak/database'
 import { EventBusModule } from '@vyrak/event-bus'
 import {
+  IWorkflowRepository,
+  RepositoryContextService,
   SubTaskPrismaRepository,
+  WORKFLOW_REPOSITORY,
   WorkflowCoreModule,
   WorkflowDependencyPrismaRepository,
   WorkflowPhasePrismaRepository,
@@ -23,16 +27,19 @@ import {
   QA_VERIFICATION_SERVICE,
   QAVerificationService,
 } from '@vyrak/workflow-execution'
+import { CHAT_TURN_QUEUE, CHAT_TURN_SERVICE, ChatTurnService } from '@vyrak/workflow-planning'
 import { ClsModule } from 'nestjs-cls'
 
 import { AppController } from './app.controller'
 import {
+  ChatTurnProcessor,
   ExampleProcessor,
   WorkflowPhaseRunProcessor,
   ArtifactCreationProcessor,
   MessageStoreProcessor,
   PhaseTransitionProcessor,
 } from './processors'
+import { socketEmitterProvider } from './realtime/socket-emitter.provider'
 
 // TODO: WorkflowExecutionProcessor temporarily disabled
 // Epic 3 only implements agent integration (AgentStepExecutor)
@@ -50,24 +57,30 @@ import {
     EventBusModule,
     ArtifactModule,
     ConversationModule,
-    AIAgentModule,
+    AIAgentSdkModule,
     WorkflowCoreModule,
     ClsModule.forRoot({
       global: true,
       middleware: { mount: false },
     }),
     BullModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        connection: {
-          host: configService.get<string>('REDIS_HOST', 'localhost'),
-          port: configService.get<number>('REDIS_PORT', 6379),
-          password: configService.get<string>('REDIS_PASSWORD'),
-        },
+      inject: [CONFIG_SERVICE],
+      useFactory: (configService: IConfigService) => ({
+        connection: parseRedisUrl(configService.redis.url),
       }),
     }),
     BullModule.registerQueue({
       name: 'example',
+    }),
+    // Separate queue so long implementation jobs never block chat. attempts: 1 because a retried
+    // turn would stream a second answer after part of the first was already delivered.
+    BullModule.registerQueue({
+      name: CHAT_TURN_QUEUE,
+      defaultJobOptions: {
+        attempts: 1,
+        removeOnComplete: true,
+        removeOnFail: 100,
+      },
     }),
     BullModule.registerQueue({
       name: 'workflow-execution',
@@ -85,6 +98,25 @@ import {
   controllers: [AppController],
   providers: [
     ExampleProcessor,
+    ChatTurnProcessor,
+    socketEmitterProvider,
+    {
+      provide: CHAT_TURN_SERVICE,
+      useFactory: (
+        agentStream: IAgentStreamPort,
+        conversationService: IConversationService,
+        workflowRepository: IWorkflowRepository,
+        repositoryContext: RepositoryContextService,
+        logger: EnhancedLogger
+      ) => new ChatTurnService(agentStream, conversationService, workflowRepository, repositoryContext, logger),
+      inject: [
+        AI_AGENT_STREAM_PORT,
+        CONVERSATION_SERVICE,
+        WORKFLOW_REPOSITORY,
+        RepositoryContextService,
+        EnhancedLogger,
+      ],
+    },
     WorkflowPhaseRunProcessor,
     ArtifactCreationProcessor,
     MessageStoreProcessor,
@@ -96,7 +128,8 @@ import {
         artifactService: IArtifactService,
         aiAgentService: IAIAgentService,
         configService: IConfigService,
-        logger: EnhancedLogger
+        logger: EnhancedLogger,
+        repositoryContext: RepositoryContextService
       ) =>
         new ImplementationOrchestrationService(
           new SubTaskPrismaRepository(databaseService),
@@ -106,9 +139,17 @@ import {
           aiAgentService,
           configService,
           logger,
-          3
+          3,
+          repositoryContext
         ),
-      inject: [DatabaseService, ARTIFACT_SERVICE, AI_AGENT_SERVICE, CONFIG_SERVICE, EnhancedLogger],
+      inject: [
+        DatabaseService,
+        ARTIFACT_SERVICE,
+        AI_AGENT_SERVICE,
+        CONFIG_SERVICE,
+        EnhancedLogger,
+        RepositoryContextService,
+      ],
     },
     {
       provide: CODE_REVIEW_SERVICE,

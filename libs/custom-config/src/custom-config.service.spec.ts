@@ -41,6 +41,15 @@ describe('CustomConfigService', () => {
       secret_access_key: 'test',
       force_path_style: true,
     },
+    git: {
+      token: '',
+      user_name: 'vyrak-bot',
+      user_email: 'vyrak-bot@users.noreply.github.com',
+    },
+    worker: {
+      chat_concurrency: 5,
+      execution_concurrency: 1,
+    },
     workspace: {
       mode: 'worktree',
       workspaces_path: '/tmp/workspaces',
@@ -73,7 +82,7 @@ describe('CustomConfigService', () => {
     vi.resetAllMocks()
     // Clear all env vars that match our pattern
     Object.keys(process.env).forEach((key) => {
-      if (key.match(/^(HOST|DATABASE|REDIS|LOG|ALLOWED)/)) {
+      if (key.match(/^(HOST|DATABASE|REDIS|LOG|ALLOWED|GIT|WORKER)/)) {
         delete process.env[key]
       }
     })
@@ -84,7 +93,7 @@ describe('CustomConfigService', () => {
   afterEach(() => {
     delete process.env.APP_ENV
     Object.keys(process.env).forEach((key) => {
-      if (key.match(/^(HOST|DATABASE|REDIS|LOG|ALLOWED)/)) {
+      if (key.match(/^(HOST|DATABASE|REDIS|LOG|ALLOWED|GIT|WORKER)/)) {
         delete process.env[key]
       }
     })
@@ -157,6 +166,49 @@ describe('CustomConfigService', () => {
       service = new CustomConfigService()
       expect(service.host.port).toBe(5000)
       expect(typeof service.host.port).toBe('number')
+    })
+
+    it('should override git config with GIT__ environment variables', () => {
+      setupMocks()
+      process.env.GIT__TOKEN = 'ghp_env_token'
+      process.env.GIT__USER_NAME = 'env-bot'
+      process.env.GIT__USER_EMAIL = 'env-bot@example.com'
+      service = new CustomConfigService()
+      expect(service.git).toEqual({
+        token: 'ghp_env_token',
+        userName: 'env-bot',
+        userEmail: 'env-bot@example.com',
+      })
+    })
+
+    it('should keep git config from YAML when GIT__ variables are absent', () => {
+      setupMocks()
+      service = new CustomConfigService()
+      expect(service.git).toEqual({
+        token: '',
+        userName: 'vyrak-bot',
+        userEmail: 'vyrak-bot@users.noreply.github.com',
+      })
+    })
+
+    it('should override worker chat concurrency with WORKER__CHAT_CONCURRENCY', () => {
+      setupMocks()
+      process.env.WORKER__CHAT_CONCURRENCY = '8'
+      service = new CustomConfigService()
+      expect(service.worker.chatConcurrency).toBe(8)
+    })
+
+    it('should keep worker chat concurrency from YAML when WORKER__ variables are absent', () => {
+      setupMocks()
+      service = new CustomConfigService()
+      expect(service.worker).toEqual({ chatConcurrency: 5, executionConcurrency: 1 })
+    })
+
+    it('should override worker execution concurrency with WORKER__EXECUTION_CONCURRENCY', () => {
+      setupMocks()
+      process.env.WORKER__EXECUTION_CONCURRENCY = '2'
+      service = new CustomConfigService()
+      expect(service.worker.executionConcurrency).toBe(2)
     })
 
     it('should accept FRONTEND__URL alias for top-level frontendUrl', () => {

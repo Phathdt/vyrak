@@ -1,6 +1,14 @@
 import { query } from '@anthropic-ai/claude-agent-sdk'
 
-import type { AgentRequest, AgentResponse, IAIAgentPort, WorkflowClassification } from '../../../domain'
+import type {
+  AgentRequest,
+  AgentResponse,
+  AgentStreamRequest,
+  ChatEvent,
+  IAgentStreamPort,
+  IAIAgentPort,
+  WorkflowClassification,
+} from '@vyrak/ai-agent'
 import type { IConfigService } from '@vyrak/custom-config'
 
 type StreamEventMessage = {
@@ -20,14 +28,26 @@ type ResultMessage = {
 
 type AgentMessage = StreamEventMessage | ResultMessage | { type: string }
 
+type AssistantBlock = {
+  type?: string
+  thinking?: string
+  text?: string
+  name?: string
+  input?: unknown
+}
+
+const THINKING_PLACEHOLDER = '🤔 Thinking...'
+const DEFAULT_STREAM_MAX_TURNS = 20
+
 /**
  * Claude Agent SDK Adapter
  *
  * Uses the official @anthropic-ai/claude-agent-sdk with native tool support.
  * Spawns claude CLI subprocess with access to local filesystem via cwd.
  */
-export class ClaudeAgentSdkAdapter implements IAIAgentPort {
+export class ClaudeAgentSdkAdapter implements IAIAgentPort, IAgentStreamPort {
   private model: string
+  private readonly env: Record<string, string | undefined>
 
   constructor(private readonly configService: IConfigService) {
     const anthropic = this.configService.anthropic
@@ -38,6 +58,14 @@ export class ClaudeAgentSdkAdapter implements IAIAgentPort {
     }
 
     this.model = anthropic.model
+    // The claude subprocess reads its credentials from the environment, not from our config.
+    this.env = {
+      ...process.env,
+      ...(anthropic.authScheme === 'bearer'
+        ? { ANTHROPIC_AUTH_TOKEN: anthropic.apiKey, ANTHROPIC_API_KEY: undefined }
+        : { ANTHROPIC_API_KEY: anthropic.apiKey }),
+      ...(anthropic.apiUrl ? { ANTHROPIC_BASE_URL: anthropic.apiUrl } : {}),
+    }
   }
 
   async chat(request: AgentRequest): Promise<AgentResponse> {
@@ -51,6 +79,7 @@ export class ClaudeAgentSdkAdapter implements IAIAgentPort {
       prompt: this.buildPrompt(request, userMessage),
       options: {
         model: this.model,
+        env: this.env,
         cwd: request.workingDirectory,
         allowedTools: request.allowedTools || [],
         maxTurns: request.maxTurns || 8, // Default 8, can be overridden per request
@@ -94,6 +123,7 @@ export class ClaudeAgentSdkAdapter implements IAIAgentPort {
       prompt: this.buildPrompt(request, userMessage),
       options: {
         model: this.model,
+        env: this.env,
         cwd: request.workingDirectory,
         allowedTools: request.allowedTools || [],
         maxTurns: request.maxTurns || 8, // Default 8, can be overridden per request
@@ -111,6 +141,50 @@ export class ClaudeAgentSdkAdapter implements IAIAgentPort {
       if (msg.type === 'stream_event' && 'delta' in msg && msg.delta?.type === 'text_delta') {
         yield msg.delta.text
       }
+    }
+  }
+
+  /**
+   * Stream one chat turn as thinking/delta/tool events, followed by a single
+   * `complete` event holding the accumulated text when the agent wrote any.
+   * SDK failures propagate to the caller.
+   */
+  async *stream(request: AgentStreamRequest): AsyncGenerator<ChatEvent, void, unknown> {
+    let fullResponse = ''
+
+    for await (const message of query({
+      prompt: request.prompt,
+      options: {
+        model: this.model,
+        env: this.env,
+        cwd: request.workingDirectory,
+        allowedTools: request.allowedTools ?? [],
+        maxTurns: request.maxTurns ?? DEFAULT_STREAM_MAX_TURNS,
+      },
+    })) {
+      const content = (message as { type: string; message?: { content?: unknown } }).message?.content
+      if (message.type !== 'assistant' || !Array.isArray(content)) {
+        continue
+      }
+
+      for (const block of content as AssistantBlock[]) {
+        if (block.type === 'thinking' && block.thinking) {
+          yield { type: 'thinking', content: THINKING_PLACEHOLDER }
+        }
+
+        if (block.type === 'text' && block.text) {
+          fullResponse += block.text
+          yield { type: 'delta', content: block.text }
+        }
+
+        if (block.type === 'tool_use' && block.name) {
+          yield { type: 'tool', name: block.name, input: block.input }
+        }
+      }
+    }
+
+    if (fullResponse) {
+      yield { type: 'complete', content: fullResponse }
     }
   }
 
@@ -151,6 +225,7 @@ Return ONLY valid JSON:
       prompt: fullPrompt,
       options: {
         model: this.model,
+        env: this.env,
         allowedTools: [],
         maxTurns: 1,
       },
