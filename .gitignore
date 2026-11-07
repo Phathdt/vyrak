@@ -60,7 +60,10 @@ logs.txt
 .claude
 .opencode
 docs
-!openapi.yaml
+!docs/e2e-ci-setup.md
+!docs/workspace-isolation.md
+!docs/workspace-worktree-migration.md
+!docs/github-app-setup.md
 AGENTS.md
 release-manifest.json
 

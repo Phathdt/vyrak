@@ -525,8 +525,11 @@ WORKTREE_BRANCH_PREFIX=workflow/
 WORKTREE_AUTO_FETCH=true
 WORKTREE_AUTO_CLEANUP_BRANCH=true
 
-# Git access for clone, push and `gh pr create` (worker only; leave empty for public repos)
-GIT__TOKEN=
+# Git access for clone, push and `gh pr create` (worker only)
+# See docs/github-app-setup.md for GitHub App setup instructions
+GIT__GITHUB_APP__APP_ID=
+GIT__GITHUB_APP__INSTALLATION_ID=
+GIT__GITHUB_APP__PRIVATE_KEY=
 GIT__USER_NAME=vyrak-bot
 GIT__USER_EMAIL=vyrak-bot@users.noreply.github.com
 ```
@@ -1010,15 +1013,16 @@ MAIN_REPOS_PATH=/var/vyrak/repos
 WORKTREE_AUTO_FETCH=true
 WORKTREE_AUTO_CLEANUP_BRANCH=true
 
-# Git access for clone, push and `gh pr create` (worker only; leave empty for public repos)
-GIT__TOKEN=
+# Git access for clone, push and `gh pr create` (worker only)
+# See docs/github-app-setup.md for GitHub App setup instructions
+GIT__GITHUB_APP__APP_ID=
+GIT__GITHUB_APP__INSTALLATION_ID=
+GIT__GITHUB_APP__PRIVATE_KEY=
 GIT__USER_NAME=vyrak-bot
 GIT__USER_EMAIL=vyrak-bot@users.noreply.github.com
 ```
 
-`GIT__TOKEN` is passed to each git command through `http.extraHeader` and is never written to `.git/config`.
-
-See `docs/workspace-worktree-migration.md` for full configuration options and migration guide.
+See `docs/github-app-setup.md` for GitHub App configuration and `docs/workspace-worktree-migration.md` for full workspace options.
 
 ### CLI Commands
 

@@ -45,8 +45,11 @@ WORKTREE_BRANCH_PREFIX=workflow/
 WORKTREE_AUTO_FETCH=true
 WORKTREE_AUTO_CLEANUP_BRANCH=true
 
-# Git access for clone, push and `gh pr create` (leave empty for public repos)
-GIT__TOKEN=
+# Git access for clone, push and `gh pr create`
+# See docs/github-app-setup.md for GitHub App configuration
+GIT__GITHUB_APP__APP_ID=
+GIT__GITHUB_APP__INSTALLATION_ID=
+GIT__GITHUB_APP__PRIVATE_KEY=
 GIT__USER_NAME=vyrak-bot
 GIT__USER_EMAIL=vyrak-bot@users.noreply.github.com
 ```
@@ -64,7 +67,7 @@ GIT__USER_EMAIL=vyrak-bot@users.noreply.github.com
 | `WORKTREE_BRANCH_PREFIX` | `workflow/` | Prefix for worktree branches |
 | `WORKTREE_AUTO_FETCH` | `true` | Auto-fetch main repo before creating worktree |
 | `WORKTREE_AUTO_CLEANUP_BRANCH` | `true` | Delete branch when cleaning up worktree |
-| `GIT__TOKEN` | empty | Token used for clone, fetch, push and `gh pr create`; sent per command, never stored in `.git/config` |
+| `GIT__GITHUB_APP__*` | required | GitHub App credentials for authentication (see [GitHub App Setup](./github-app-setup.md)) |
 | `GIT__USER_NAME` / `GIT__USER_EMAIL` | `vyrak-bot` | Commit identity used by the worker |
 
 ## Setup Steps

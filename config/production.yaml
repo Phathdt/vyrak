@@ -8,7 +8,11 @@ redis:
   url: replace_me
 
 git:
-  token: ''
+  github_app:
+    app_id: replace_me
+    installation_id: replace_me
+    # private_key: replace_me
+    private_key_path: /var/secrets/github-app.pem
   user_name: vyrak-bot
   user_email: vyrak-bot@users.noreply.github.com
 

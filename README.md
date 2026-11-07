@@ -169,7 +169,7 @@ cp .env.example .env
 # - MAIN_REPOS_PATH: Path to main git repository for worktree mode
 # - DATABASE__URL: PostgreSQL connection string
 # - REDIS__URL: Redis connection string (used by BullMQ, Socket.IO and the event bus)
-# - GIT__TOKEN (worker only): token the worker uses to clone, push and open PRs; empty for public repos
+# - GIT__GITHUB_APP__APP_ID, GIT__GITHUB_APP__INSTALLATION_ID, GIT__GITHUB_APP__PRIVATE_KEY (worker only): GitHub App credentials used to clone, push and open PRs
 ```
 
 **Important Environment Variables:**
@@ -179,7 +179,7 @@ cp .env.example .env
 - `WORKSPACES_PATH`: Path for temporary worktrees (default: `/tmp/vyrak-workspaces`)
 - `WORKSPACE_CLEANUP_ON_SUCCESS`: Auto-cleanup worktrees after success (default: `true`)
 - `WORKSPACE_CLEANUP_ON_FAILURE`: Auto-cleanup worktrees after failure (default: `false`)
-- `GIT__TOKEN`: Worker only. Used for clone, fetch, push and `gh pr create`; never written to `.git/config`
+- `GIT__GITHUB_APP__*`: Worker only. GitHub App credentials (`APP_ID`, `INSTALLATION_ID`, `PRIVATE_KEY` or `PRIVATE_KEY_PATH`) used for clone, fetch, push and `gh pr create`; never written to `.git/config`. See `docs/github-app-setup.md`
 - `GIT__USER_NAME` / `GIT__USER_EMAIL`: Worker only. Commit identity (default: `vyrak-bot`)
 - `WORKER__CHAT_CONCURRENCY` / `WORKER__EXECUTION_CONCURRENCY`: Parallel chat turns (default 5) and phase runs (default 1) per worker process
 
