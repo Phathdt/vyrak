@@ -1,4 +1,27 @@
 import { ApiProperty } from '@nestjs/swagger'
+import { createZodDto } from 'nestjs-zod'
+import { z } from 'zod'
+
+// Create Repository DTO
+export const CreateGitRepositorySchema = z.object({
+  url: z.string().min(1, 'Repository URL is required').max(500, 'URL too long'),
+  branch: z.string().min(1).max(100).optional(),
+})
+
+export class CreateGitRepositoryDto extends createZodDto(CreateGitRepositorySchema) {
+  @ApiProperty({
+    example: 'https://github.com/acme/backend-api',
+    description: 'GitHub repository URL (HTTPS, SSH, or owner/repo format)',
+  })
+  url: string
+
+  @ApiProperty({
+    example: 'main',
+    description: 'Branch name (defaults to repository default branch if not specified)',
+    required: false,
+  })
+  branch?: string
+}
 
 export class GitRepositoryResponse {
   @ApiProperty({ example: 'uuid-here', description: 'Repository ID' })

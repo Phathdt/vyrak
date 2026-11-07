@@ -45,6 +45,7 @@ export class DomainExceptionFilter implements ExceptionFilter {
       case 'MessageNotFoundError':
       case 'ArtifactNotFoundError':
       case 'ArtifactContentNotFoundError':
+      case 'GitHubRepositoryNotFoundError':
         return {
           status: HttpStatus.NOT_FOUND,
           message: errorMessage,
@@ -64,8 +65,23 @@ export class DomainExceptionFilter implements ExceptionFilter {
       case 'InvitationEmailMismatchError':
       case 'InvalidPhaseApprovalError':
       case 'InvalidPhaseSendBackError':
+      case 'RepositoryAccessDeniedError':
         return {
           status: HttpStatus.FORBIDDEN,
+          message: errorMessage,
+        }
+
+      // 409 Conflict
+      case 'RepositoryAlreadyConnectedError':
+        return {
+          status: HttpStatus.CONFLICT,
+          message: errorMessage,
+        }
+
+      // 400 Bad Request - Domain validation errors
+      case 'InvalidRepositoryUrlError':
+        return {
+          status: HttpStatus.BAD_REQUEST,
           message: errorMessage,
         }
 

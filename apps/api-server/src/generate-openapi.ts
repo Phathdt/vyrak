@@ -63,6 +63,9 @@ function bootstrapEnvForOpenApiGeneration(): void {
     WORKSPACE__MAIN_REPOS_PATH: '/tmp/vyrak-openapi',
     WORKSPACE__WORKSPACES_PATH: '/tmp/vyrak-workspaces',
     FRONTEND_URL: 'http://localhost:5173',
+    GIT__GITHUB_APP__APP_ID: '123456',
+    GIT__GITHUB_APP__INSTALLATION_ID: '789012',
+    GIT__GITHUB_APP__PRIVATE_KEY: '-----BEGIN RSA PRIVATE KEY-----\nplaceholder\n-----END RSA PRIVATE KEY-----',
   }
 
   for (const [key, value] of Object.entries(defaults)) {
