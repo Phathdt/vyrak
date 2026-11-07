@@ -16,6 +16,7 @@ import {
   RepositoryContextService,
   SubTaskPrismaRepository,
   WORKFLOW_REPOSITORY,
+  GitHubAuthModule,
   WorkflowCoreModule,
   WorkflowDependencyPrismaRepository,
   WorkflowPhasePrismaRepository,
@@ -61,6 +62,7 @@ import { socketEmitterProvider } from './realtime/socket-emitter.provider'
     ConversationModule,
     AIAgentSdkModule,
     WorkflowCoreModule,
+    GitHubAuthModule,
     ClsModule.forRoot({
       global: true,
       middleware: { mount: false },

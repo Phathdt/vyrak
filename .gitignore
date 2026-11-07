@@ -60,9 +60,6 @@ logs.txt
 .claude
 .opencode
 docs
-!openapi.yaml
-!docs/
-docs/*
 !docs/e2e-ci-setup.md
 !docs/workspace-isolation.md
 !docs/workspace-worktree-migration.md

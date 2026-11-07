@@ -4,7 +4,12 @@ import { ConversationModule } from '@vyrak/conversation'
 import { CustomConfigModule } from '@vyrak/custom-config'
 import { EnhancedLogger } from '@vyrak/custom-logger'
 import { DatabaseModule } from '@vyrak/database'
-import { RepositoryContextService, SUBTASK_REPOSITORY, WorkflowCoreModule } from '@vyrak/workflow-core'
+import {
+  RepositoryContextService,
+  SUBTASK_REPOSITORY,
+  GitHubAuthModule,
+  WorkflowCoreModule,
+} from '@vyrak/workflow-core'
 
 import { WorkflowExecutionQueryService } from './application/services/workflow-execution-query.service'
 import { CODE_ANALYSIS_SERVICE, SOURCE_CODE_SCOUT, WORKFLOW_EXECUTION_QUERY_SERVICE } from './infras/di/di'
@@ -19,7 +24,14 @@ import type { ISubTaskRepository } from '@vyrak/workflow-core'
 // WorkflowPhaseRunHandler is exported as a class for manual instantiation by worker
 
 @Module({
-  imports: [WorkflowCoreModule, ConversationModule, CustomConfigModule, DatabaseModule, ArtifactModule],
+  imports: [
+    WorkflowCoreModule,
+    GitHubAuthModule,
+    ConversationModule,
+    CustomConfigModule,
+    DatabaseModule,
+    ArtifactModule,
+  ],
   providers: [
     // Code Analysis Service - plain TypeScript class
     {
