@@ -9,14 +9,12 @@ import { CONFIG_SERVICE, CustomConfigModule, IConfigService, parseRedisUrl } fro
 import { CustomLoggerModule, EnhancedLogger } from '@vyrak/custom-logger'
 import { DatabaseModule, DatabaseService } from '@vyrak/database'
 import { EventBusModule } from '@vyrak/event-bus'
+import { GITHUB_AUTH_SERVICE, GitHubAuthModule, type IGitHubAuthService } from '@vyrak/github-auth'
 import {
   IWorkflowRepository,
-  IGitHubAuthService,
-  GITHUB_AUTH_SERVICE,
   RepositoryContextService,
   SubTaskPrismaRepository,
   WORKFLOW_REPOSITORY,
-  GitHubAuthModule,
   WorkflowCoreModule,
   WorkflowDependencyPrismaRepository,
   WorkflowPhasePrismaRepository,

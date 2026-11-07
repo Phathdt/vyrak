@@ -1,16 +1,17 @@
-import type { IWorkflowRepositoryRepository } from '../../domain/interfaces'
-import type { IRepoCacheService, RepositoryReference } from '../../domain/interfaces/repo-cache.interface'
-import type { IGitRepositoryRepository } from '@vyrak/project'
+import type { WorkflowRepositoryResolver } from './workflow-repository-resolver.service'
+import type { IRepoCacheService, RepositoryReference } from '@vyrak/repository'
 
 /**
- * Generic service to resolve repository paths for workflow phases.
+ * Service to resolve repository paths for workflow phases (worker-only).
  * Used by brainstorming, planning, and other phases that need repository context.
  * The repository is cloned (or fetched) on this host on demand.
+ *
+ * NOTE: This service requires IRepoCacheService and is only available in the worker.
+ * For api-server, use WorkflowRepositoryResolver instead (metadata-only queries).
  */
 export class RepositoryContextService {
   constructor(
-    private readonly workflowRepositoryRepository: IWorkflowRepositoryRepository,
-    private readonly gitRepositoryRepository: IGitRepositoryRepository,
+    private readonly repositoryResolver: WorkflowRepositoryResolver,
     private readonly repoCache: IRepoCacheService
   ) {}
 
@@ -21,23 +22,7 @@ export class RepositoryContextService {
    * @returns Repository reference or null when the workflow has no linked repository
    */
   async resolveRepository(workflowId: string): Promise<RepositoryReference | null> {
-    const workflowRepos = await this.workflowRepositoryRepository.findByWorkflowId(workflowId)
-    if (workflowRepos.length === 0) {
-      return null
-    }
-
-    const gitRepo = await this.gitRepositoryRepository.findById(workflowRepos[0].repositoryId)
-    if (!gitRepo) {
-      return null
-    }
-
-    return {
-      organizationId: gitRepo.organizationId,
-      projectId: gitRepo.projectId,
-      name: gitRepo.name,
-      url: gitRepo.url,
-      branch: gitRepo.branch,
-    }
+    return this.repositoryResolver.resolveRepository(workflowId)
   }
 
   /**
@@ -49,7 +34,7 @@ export class RepositoryContextService {
    */
   async resolveRepositoryPath(workflowId: string): Promise<string | null> {
     try {
-      const repository = await this.resolveRepository(workflowId)
+      const repository = await this.repositoryResolver.resolveRepository(workflowId)
       if (!repository) {
         return null
       }
@@ -70,25 +55,14 @@ export class RepositoryContextService {
    */
   async resolveAllRepositoryPaths(workflowId: string): Promise<string[]> {
     try {
-      const workflowRepos = await this.workflowRepositoryRepository.findByWorkflowId(workflowId)
+      const repositories = await this.repositoryResolver.resolveAllRepositories(workflowId)
       const paths: string[] = []
 
-      for (const workflowRepo of workflowRepos) {
-        const gitRepo = await this.gitRepositoryRepository.findById(workflowRepo.repositoryId)
-        if (!gitRepo) continue
-
+      for (const repository of repositories) {
         try {
-          paths.push(
-            await this.ensureLocalClone({
-              organizationId: gitRepo.organizationId,
-              projectId: gitRepo.projectId,
-              name: gitRepo.name,
-              url: gitRepo.url,
-              branch: gitRepo.branch,
-            })
-          )
+          paths.push(await this.ensureLocalClone(repository))
         } catch (error) {
-          console.warn(`[RepositoryContext] Skipping repository ${gitRepo.name}: ${describe(error)}`)
+          console.warn(`[RepositoryContext] Skipping repository ${repository.name}: ${describe(error)}`)
         }
       }
 

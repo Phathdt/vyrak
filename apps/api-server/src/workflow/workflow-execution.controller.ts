@@ -3,8 +3,9 @@ import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { WORKFLOW_PHASE_REPOSITORY, type IWorkflowPhaseRepository } from '@vyrak/workflow-core'
 import {
   WORKFLOW_EXECUTION_QUERY_SERVICE,
-  WorkflowPhaseOrchestratorService,
+  WORKFLOW_PHASE_ORCHESTRATOR,
   type IWorkflowExecutionQueryService,
+  type IWorkflowPhaseOrchestrator,
 } from '@vyrak/workflow-execution'
 
 import { AuthGuard } from '../auth'
@@ -23,7 +24,7 @@ import {
 @UseGuards(AuthGuard, OrganizationMemberGuard)
 export class WorkflowExecutionController {
   constructor(
-    private readonly phaseOrchestrator: WorkflowPhaseOrchestratorService,
+    @Inject(WORKFLOW_PHASE_ORCHESTRATOR) private readonly phaseOrchestrator: IWorkflowPhaseOrchestrator,
     @Inject(WORKFLOW_EXECUTION_QUERY_SERVICE)
     private readonly executionQuery: IWorkflowExecutionQueryService,
     @Inject(WORKFLOW_PHASE_REPOSITORY) private readonly phaseRepository: IWorkflowPhaseRepository

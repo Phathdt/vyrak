@@ -41,7 +41,7 @@ export function ProjectsPage() {
     data: projectsData,
     isLoading,
     refetch,
-  } = useProjectsControllerFindAll(orgId!, undefined, {
+  } = useProjectsControllerFindAll(orgId!, {
     query: {
       enabled: !!orgId,
     },

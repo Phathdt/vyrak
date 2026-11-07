@@ -12,7 +12,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common'
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
+import { ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger'
 import {
   CreateProjectDto,
   IProjectService,
@@ -33,6 +33,8 @@ export class ProjectsController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new project' })
+  @ApiBody({ type: CreateProjectDto })
+  @ApiParam({ name: 'orgId', description: 'Organization ID' })
   @ApiResponse({
     status: 201,
     description: 'Project created successfully',
@@ -56,6 +58,7 @@ export class ProjectsController {
 
   @Get()
   @ApiOperation({ summary: 'List projects with pagination, search, and sorting' })
+  @ApiParam({ name: 'orgId', description: 'Organization ID' })
   @ApiResponse({
     status: 200,
     description: 'Projects retrieved successfully',
@@ -87,6 +90,8 @@ export class ProjectsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get project by ID' })
+  @ApiParam({ name: 'orgId', description: 'Organization ID' })
+  @ApiParam({ name: 'id', description: 'Project ID' })
   @ApiResponse({
     status: 200,
     description: 'Project retrieved successfully',
@@ -110,6 +115,9 @@ export class ProjectsController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update project' })
+  @ApiBody({ type: CreateProjectDto })
+  @ApiParam({ name: 'orgId', description: 'Organization ID' })
+  @ApiParam({ name: 'id', description: 'Project ID' })
   @ApiResponse({
     status: 200,
     description: 'Project updated successfully',
@@ -138,6 +146,8 @@ export class ProjectsController {
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete project' })
+  @ApiParam({ name: 'orgId', description: 'Organization ID' })
+  @ApiParam({ name: 'id', description: 'Project ID' })
   @ApiResponse({ status: 204, description: 'Project deleted successfully' })
   @ApiResponse({ status: 404, description: 'Project not found' })
   @ApiResponse({ status: 400, description: 'Cannot delete project with active workflow runs' })

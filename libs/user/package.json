@@ -18,9 +18,7 @@
   "dependencies": {
     "@vyrak/database": "workspace:*",
     "@nestjs/common": "^12.3.3",
-    "@opentelemetry/api": "^1.10.0",
-    "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.2"
+    "@opentelemetry/api": "^1.10.0"
   },
   "devDependencies": {
     "@types/node": "~26.6.6",

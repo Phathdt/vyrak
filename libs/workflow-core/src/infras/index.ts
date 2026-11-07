@@ -1,5 +1,4 @@
 export * from './di'
-export * from './github'
 export * from './repositories'
 export * from './unit-of-work'
 export * from './workspace'

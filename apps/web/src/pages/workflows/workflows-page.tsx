@@ -39,19 +39,17 @@ export function WorkflowsPage() {
     data: workflowsData,
     isLoading,
     refetch,
-  } = useWorkflowsControllerFindAll(
-    orgId!,
-    projectId!,
-    {
-      page: 1,
-      limit: 20,
+  } = useWorkflowsControllerFindAll(orgId!, projectId!, {
+    query: {
+      enabled: !!orgId && !!projectId,
     },
-    {
-      query: {
-        enabled: !!orgId && !!projectId,
+    request: {
+      params: {
+        page: 1,
+        limit: 20,
       },
-    }
-  )
+    },
+  })
 
   const { mutateAsync: createWorkflow, isPending } = useWorkflowsControllerCreate()
 

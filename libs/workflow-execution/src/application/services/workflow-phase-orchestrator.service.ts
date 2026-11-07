@@ -3,6 +3,7 @@ import { WorkflowNotFoundError } from '@vyrak/workflow-core'
 
 import { PhaseExecutionStatus, PhaseRunType } from '../../domain/schemas/phase-execution.schemas'
 
+import type { IWorkflowPhaseOrchestrator } from '../../domain/interfaces/workflow-phase-orchestrator.interface'
 import type { IWorkflowPhaseRunPublisher } from '../../domain/interfaces/workflow-phase-run-publisher.interface'
 import type { PhaseExecutionMeta, WorkflowPhaseRunJob } from '../../domain/schemas/phase-execution.schemas'
 import type { IWorkflowPhaseRepository, IWorkflowRepository } from '@vyrak/workflow-core'
@@ -13,7 +14,7 @@ const PHASE_RUN_TYPE: Record<string, PhaseRunType> = {
   qa: PhaseRunType.QA,
 }
 
-export class WorkflowPhaseOrchestratorService {
+export class WorkflowPhaseOrchestratorService implements IWorkflowPhaseOrchestrator {
   constructor(
     private readonly workflowRepository: IWorkflowRepository,
     private readonly workflowPhaseRepository: IWorkflowPhaseRepository,

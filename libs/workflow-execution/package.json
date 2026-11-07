@@ -21,10 +21,9 @@
     "@vyrak/custom-config": "workspace:*",
     "@vyrak/custom-logger": "workspace:*",
     "@vyrak/database": "workspace:*",
+    "@vyrak/github-auth": "workspace:*",
     "@vyrak/workflow-core": "workspace:*",
     "@nestjs/common": "^12.3.3",
-    "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.2",
     "zod": "^4.6.7"
   },
   "devDependencies": {

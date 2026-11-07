@@ -13,7 +13,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common'
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
+import { ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { EVENT_BUS, EventType, type IEventBus } from '@vyrak/event-bus'
 import {
   AdvanceWorkflowPhaseResponseDto,
@@ -31,7 +31,7 @@ import {
   WorkflowPhaseResponseDto,
   WorkflowResponse,
 } from '@vyrak/workflow-core'
-import { WorkflowPhaseOrchestratorService } from '@vyrak/workflow-execution'
+import { IWorkflowPhaseOrchestrator, WORKFLOW_PHASE_ORCHESTRATOR } from '@vyrak/workflow-execution'
 
 import { AuthGuard, CurrentUser } from '../../auth'
 import { OrganizationMemberGuard } from '../../guards'
@@ -46,12 +46,15 @@ export class WorkflowsController {
   constructor(
     @Inject(WORKFLOW_SERVICE) private readonly workflowService: IWorkflowService,
     @Inject(WORKFLOW_PHASE_SERVICE) private readonly workflowPhaseService: IWorkflowPhaseService,
-    private readonly phaseOrchestrator: WorkflowPhaseOrchestratorService,
+    @Inject(WORKFLOW_PHASE_ORCHESTRATOR) private readonly phaseOrchestrator: IWorkflowPhaseOrchestrator,
     @Inject(EVENT_BUS) private readonly eventBus: IEventBus
   ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new workflow' })
+  @ApiParam({ name: 'orgId', description: 'Organization ID' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiBody({ type: CreateWorkflowDto })
   @ApiResponse({
     status: 201,
     description: 'Workflow created successfully',
@@ -86,6 +89,8 @@ export class WorkflowsController {
 
   @Get()
   @ApiOperation({ summary: 'List workflows with pagination, search, and filtering' })
+  @ApiParam({ name: 'orgId', description: 'Organization ID' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
   @ApiResponse({
     status: 200,
     description: 'Workflows retrieved successfully',
@@ -132,6 +137,11 @@ export class WorkflowsController {
     description:
       'Completes the given phase (must be the current phase), advances the workflow, and publishes a phase.approved event so the worker can start the next phase.',
   })
+  @ApiParam({ name: 'orgId', description: 'Organization ID' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiParam({ name: 'id', description: 'Workflow ID' })
+  @ApiParam({ name: 'phaseId', description: 'Phase ID' })
+  @ApiBody({ type: ApproveWorkflowPhaseDto })
   @ApiResponse({ status: 200, type: AdvanceWorkflowPhaseResponseDto })
   async approvePhaseById(
     @Param('orgId') orgId: string,
@@ -172,6 +182,10 @@ export class WorkflowsController {
     summary: 'Approve the current phase (human gate)',
     description: 'Confirms the phase is done, completes it, and starts the next phase (or completes the workflow).',
   })
+  @ApiBody({ type: ApproveWorkflowPhaseDto })
+  @ApiParam({ name: 'orgId', description: 'Organization ID' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiParam({ name: 'id', description: 'Workflow ID' })
   @ApiResponse({ status: 200, type: AdvanceWorkflowPhaseResponseDto })
   async approvePhase(
     @Param('orgId') orgId: string,
@@ -210,6 +224,10 @@ export class WorkflowsController {
   @ApiOperation({
     summary: 'Send workflow back to an earlier phase (Review/QC → Implementation)',
   })
+  @ApiBody({ type: SendBackPhaseDto })
+  @ApiParam({ name: 'orgId', description: 'Organization ID' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiParam({ name: 'id', description: 'Workflow ID' })
   @ApiResponse({ status: 200, type: AdvanceWorkflowPhaseResponseDto })
   async sendBackPhase(
     @Param('orgId') orgId: string,
@@ -270,6 +288,9 @@ export class WorkflowsController {
 
   @Get(':id/phases')
   @ApiOperation({ summary: 'List workflow phases' })
+  @ApiParam({ name: 'orgId', description: 'Organization ID' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiParam({ name: 'id', description: 'Workflow ID' })
   @ApiResponse({
     status: 200,
     description: 'Workflow phases retrieved successfully',
@@ -296,6 +317,9 @@ export class WorkflowsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get workflow by ID' })
+  @ApiParam({ name: 'orgId', description: 'Organization ID' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiParam({ name: 'id', description: 'Workflow ID' })
   @ApiResponse({
     status: 200,
     description: 'Workflow retrieved successfully',
@@ -334,6 +358,10 @@ export class WorkflowsController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update workflow' })
+  @ApiBody({ type: UpdateWorkflowDto })
+  @ApiParam({ name: 'orgId', description: 'Organization ID' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiParam({ name: 'id', description: 'Workflow ID' })
   @ApiResponse({
     status: 200,
     description: 'Workflow updated successfully',
@@ -377,6 +405,9 @@ export class WorkflowsController {
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete workflow' })
+  @ApiParam({ name: 'orgId', description: 'Organization ID' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiParam({ name: 'id', description: 'Workflow ID' })
   @ApiResponse({ status: 204, description: 'Workflow deleted successfully' })
   @ApiResponse({ status: 404, description: 'Workflow not found' })
   @ApiResponse({ status: 400, description: 'Only DRAFT workflows can be deleted' })

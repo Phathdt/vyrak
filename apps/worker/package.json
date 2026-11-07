@@ -10,12 +10,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@nestjs/bullmq": "^12.0.0",
-    "@nestjs/common": "^12.3.3",
-    "@nestjs/config": "^12.1.0",
-    "@nestjs/core": "^12.3.3",
-    "@nestjs/platform-express": "^12.3.3",
-    "@socket.io/redis-emitter": "^5.1.0",
     "@vyrak/ai-agent": "workspace:*",
     "@vyrak/ai-agent-sdk": "workspace:*",
     "@vyrak/artifact": "workspace:*",
@@ -24,25 +18,28 @@
     "@vyrak/custom-logger": "workspace:*",
     "@vyrak/database": "workspace:*",
     "@vyrak/event-bus": "workspace:*",
+    "@vyrak/github-auth": "workspace:*",
     "@vyrak/workflow-core": "workspace:*",
     "@vyrak/workflow-execution": "workspace:*",
     "@vyrak/workflow-planning": "workspace:*",
+    "@nestjs/bullmq": "^12.0.0",
+    "@nestjs/common": "^12.3.3",
+    "@nestjs/config": "^12.1.0",
+    "@nestjs/core": "^12.3.3",
+    "@socket.io/redis-emitter": "^5.1.0",
     "bullmq": "^6.7.0",
     "ioredis": "^6.0.0",
     "nestjs-cls": "^7.0.2",
     "nestjs-pino": "^5.3.1",
     "pg": "8.23.1",
-    "pino": "^10.4.0",
-    "pino-http": "^11.0.0",
-    "redis": "^6.3.1",
-    "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.2"
+    "redis": "^6.3.1"
   },
   "devDependencies": {
     "@nestjs/cli": "^12.0.11",
     "@nestjs/schematics": "^12.0.12",
     "@nestjs/testing": "^12.3.3",
     "@types/node": "~26.6.6",
-    "typescript": "~7.0.2"
+    "typescript": "~7.0.2",
+    "vitest": "^5.1.0"
   }
 }

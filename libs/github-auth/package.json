@@ -1,0 +1,31 @@
+{
+  "name": "@vyrak/github-auth",
+  "version": "0.0.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc && rolldown --config rolldown.config.mjs",
+    "dev": "tsc && rolldown --config rolldown.config.mjs --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@vyrak/custom-config": "workspace:*",
+    "@nestjs/common": "^12.3.3",
+    "@octokit/auth-app": "^7.1.3",
+    "ioredis": "^6.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "~26.6.6",
+    "ioredis-mock": "^8.9.0",
+    "rolldown": "^1.3.0",
+    "typescript": "~7.0.2",
+    "vitest": "^5.1.0"
+  }
+}

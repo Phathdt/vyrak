@@ -20,8 +20,8 @@ import type { IAIAgentService } from '@vyrak/ai-agent'
 import type { IArtifactService } from '@vyrak/artifact'
 import type { IConfigService } from '@vyrak/custom-config'
 import type { EnhancedLogger } from '@vyrak/custom-logger'
+import type { IGitHubAuthService } from '@vyrak/github-auth'
 import type {
-  IGitHubAuthService,
   IRepoCacheService,
   ISubTaskRepository,
   IWorkflowDependencyRepository,

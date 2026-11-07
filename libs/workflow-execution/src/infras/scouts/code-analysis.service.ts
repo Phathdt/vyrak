@@ -1,63 +1,15 @@
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
-/**
- * Result of code analysis
- */
-export interface CodeAnalysisResult {
-  filePath: string
-  imports: ImportInfo[]
-  exports: ExportInfo[]
-  functions: FunctionInfo[]
-  classes: ClassInfo[]
-  dependencies: string[]
-}
-
-/**
- * Import information
- */
-export interface ImportInfo {
-  source: string
-  names: string[]
-  isDefault: boolean
-}
-
-/**
- * Export information
- */
-export interface ExportInfo {
-  name: string
-  type: 'function' | 'class' | 'const' | 'type' | 'interface' | 'default'
-}
-
-/**
- * Function information
- */
-export interface FunctionInfo {
-  name: string
-  isAsync: boolean
-  isExported: boolean
-  parameters: string[]
-}
-
-/**
- * Class information
- */
-export interface ClassInfo {
-  name: string
-  isExported: boolean
-  methods: string[]
-  properties: string[]
-}
-
-/**
- * Module dependency information
- */
-export interface ModuleDependency {
-  from: string
-  to: string
-  type: 'import' | 'export'
-}
+import type {
+  ClassInfo,
+  CodeAnalysisResult,
+  ExportInfo,
+  FunctionInfo,
+  ICodeAnalysisService,
+  ImportInfo,
+  ModuleDependency,
+} from '../../domain/interfaces/code-analysis.interface'
 
 /**
  * Code analysis service for parsing TypeScript/JavaScript files
@@ -65,7 +17,7 @@ export interface ModuleDependency {
  *
  * NO @Injectable() decorator - plain TypeScript class
  */
-export class CodeAnalysisService {
+export class CodeAnalysisService implements ICodeAnalysisService {
   /**
    * Analyze a TypeScript/JavaScript file
    * @param repoPath - Repository base path

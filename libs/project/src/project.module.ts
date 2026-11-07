@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common'
 import { DatabaseModule, DatabaseService } from '@vyrak/database'
-import { GitHubAuthModule, GITHUB_AUTH_SERVICE, type IGitHubAuthService } from '@vyrak/workflow-core'
+import { GITHUB_AUTH_SERVICE, GitHubAuthModule, type IGitHubAuthService } from '@vyrak/github-auth'
 
 import { GitRepositoryService, GitRepositoryValidationService, ProjectService } from './application'
 import {
@@ -13,6 +13,11 @@ import {
   ProjectPrismaRepository,
 } from './infras'
 
+/**
+ * Project domain module.
+ *
+ * Imports GitHubAuthModule to access GITHUB_AUTH_SERVICE for repository validation.
+ */
 @Module({
   imports: [DatabaseModule, GitHubAuthModule],
   providers: [

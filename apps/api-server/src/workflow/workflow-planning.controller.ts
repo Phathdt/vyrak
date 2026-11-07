@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Inject, Param, Post, UseGuards } from '@nestjs/common'
-import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger'
+import { ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { IWorkflowPhaseRepository, WORKFLOW_PHASE_REPOSITORY } from '@vyrak/workflow-core'
 import {
   IWorkflowPlanningService,
@@ -30,6 +30,9 @@ export class WorkflowPlanningController {
 
   @Get('planning/session')
   @ApiOperation({ summary: 'Get technical planning conversation for the Planning phase' })
+  @ApiParam({ name: 'orgId', description: 'Organization ID' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiParam({ name: 'id', description: 'Workflow ID' })
   @ApiResponse({ status: 200, type: PlanningSessionResponseDto })
   async getPlanningSession(
     @Param('orgId') orgId: string,
@@ -89,6 +92,7 @@ export class WorkflowPlanningController {
     summary: 'Generate PRD artifact from a specific message',
     description: 'Extracts PRD artifact from a specific message containing <artifact> tags and saves it to storage.',
   })
+  @ApiBody({ type: GeneratePRDFromMessageRequestDto })
   @ApiParam({ name: 'orgId', description: 'Organization ID' })
   @ApiParam({ name: 'projectId', description: 'Project ID' })
   @ApiParam({ name: 'id', description: 'Workflow ID' })
@@ -127,6 +131,9 @@ export class WorkflowPlanningController {
 
   @Get('technical-refinement/session')
   @ApiOperation({ summary: 'Get Technical Refinement conversation session' })
+  @ApiParam({ name: 'orgId', description: 'Organization ID' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiParam({ name: 'id', description: 'Workflow ID' })
   @ApiResponse({ status: 200, type: TechnicalRefinementSessionResponseDto })
   async getTechnicalRefinementSession(
     @Param('orgId') orgId: string,

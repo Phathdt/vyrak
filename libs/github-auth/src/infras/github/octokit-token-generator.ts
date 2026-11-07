@@ -3,13 +3,13 @@ import { readFileSync } from 'node:fs'
 
 import { GitHubAppConfigError, GitHubTokenGenerationError } from '../../domain/exceptions/github-auth.exceptions'
 
-import type { IGitHubAppTokenGenerator } from '../../domain/interfaces/github-auth.interface'
+import type { IGitHubAppTokenGenerator } from '../../domain/interfaces'
 import type { IConfigService } from '@vyrak/custom-config'
 
 /**
  * GitHub App installation access token generator using @octokit/auth-app.
  *
- * Plain TypeScript class (no @Injectable()) registered via DI in WorkflowCoreModule.
+ * Plain TypeScript class (no @Injectable()) registered via DI in GitHubAuthModule.
  */
 export class OctokitTokenGenerator implements IGitHubAppTokenGenerator {
   private readonly auth: ReturnType<typeof createAppAuth>

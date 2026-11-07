@@ -1,6 +1,6 @@
 import { GitHubTokenCacheError } from '../../domain/exceptions/github-auth.exceptions'
 
-import type { IGitHubAppTokenCache } from '../../domain/interfaces/github-auth.interface'
+import type { IGitHubAppTokenCache } from '../../domain/interfaces'
 import type { OnModuleDestroy } from '@nestjs/common'
 import type { Redis } from 'ioredis'
 
@@ -10,7 +10,7 @@ import type { Redis } from 'ioredis'
  * Cache key format: `github-app:token:{installationId}`
  * TTL: 50 minutes (3000 seconds) - buffer before 1-hour token expiry
  *
- * Plain TypeScript class (no @Injectable()) registered via DI in WorkflowCoreModule.
+ * Plain TypeScript class (no @Injectable()) registered via DI in GitHubAuthModule.
  */
 export class RedisTokenCache implements IGitHubAppTokenCache, OnModuleDestroy {
   private readonly keyPrefix = 'github-app:token:'

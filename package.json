@@ -14,7 +14,7 @@
     "start:web": "turbo run start --filter=@apps/web",
     "build": "turbo run build",
     "build:prod": "turbo run build:prod",
-    "generate:openapi": "pnpm --filter @apps/api-server run build && node dist/apps/api-server/generate-openapi.js",
+    "generate:openapi": "pnpm --filter @apps/api-server run generate:openapi",
     "generate:api": "pnpm --filter @apps/web run generate:api",
     "generate": "pnpm generate:openapi && pnpm generate:api && pnpm db:generate",
     "test": "vitest run --config vitest.unit.config.mjs",

@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Inject, Param, Post, Query, UseGuards } from '@nestjs/common'
-import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger'
+import { ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger'
 import {
   ARTIFACT_SERVICE,
   ApproveArtifactDto,
@@ -46,6 +46,7 @@ export class ArtifactsController {
   @ApiOperation({ summary: 'Upload an artifact for a workflow' })
   @ApiParam({ name: 'orgId', description: 'Organization ID', type: String })
   @ApiParam({ name: 'workflowId', description: 'Workflow ID', type: String })
+  @ApiBody({ type: CreateArtifactDto })
   @ApiResponse({ status: 201, description: 'Artifact uploaded successfully', type: ArtifactResponse })
   @ApiResponse({ status: 400, description: 'Invalid artifact payload' })
   @ApiResponse({ status: 403, description: 'Not a member of this organization' })
@@ -104,6 +105,7 @@ export class ArtifactsController {
   @ApiParam({ name: 'orgId', description: 'Organization ID', type: String })
   @ApiParam({ name: 'workflowId', description: 'Workflow ID', type: String })
   @ApiParam({ name: 'artifactId', description: 'Artifact ID', type: String })
+  @ApiBody({ type: RequestApprovalDto })
   @ApiResponse({ status: 200, description: 'Approval requested successfully', type: ArtifactResponse })
   @ApiResponse({ status: 400, description: 'Invalid state transition' })
   @ApiResponse({ status: 404, description: 'Artifact not found' })
@@ -121,6 +123,7 @@ export class ArtifactsController {
   @ApiParam({ name: 'orgId', description: 'Organization ID', type: String })
   @ApiParam({ name: 'workflowId', description: 'Workflow ID', type: String })
   @ApiParam({ name: 'artifactId', description: 'Artifact ID', type: String })
+  @ApiBody({ type: ApproveArtifactDto })
   @ApiResponse({ status: 200, description: 'Artifact approved successfully', type: ArtifactResponse })
   @ApiResponse({ status: 400, description: 'Artifact not pending approval' })
   @ApiResponse({ status: 404, description: 'Artifact not found' })
@@ -135,6 +138,7 @@ export class ArtifactsController {
   @ApiParam({ name: 'orgId', description: 'Organization ID', type: String })
   @ApiParam({ name: 'workflowId', description: 'Workflow ID', type: String })
   @ApiParam({ name: 'artifactId', description: 'Artifact ID', type: String })
+  @ApiBody({ type: RejectArtifactDto })
   @ApiResponse({ status: 200, description: 'Artifact rejected successfully', type: ArtifactResponse })
   @ApiResponse({ status: 400, description: 'Artifact not pending approval' })
   @ApiResponse({ status: 404, description: 'Artifact not found' })

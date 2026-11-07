@@ -4,6 +4,7 @@ import { WorkflowExecutionController } from './workflow-execution.controller'
 
 vi.mock('@vyrak/workflow-execution', () => ({
   WORKFLOW_EXECUTION_QUERY_SERVICE: Symbol('WORKFLOW_EXECUTION_QUERY_SERVICE'),
+  WORKFLOW_PHASE_ORCHESTRATOR: Symbol('WORKFLOW_PHASE_ORCHESTRATOR'),
   WorkflowPhaseOrchestratorService: class WorkflowPhaseOrchestratorService {},
 }))
 

@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, Inject, Param, Patch, Post, UseGuards } from '@nestjs/common'
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger'
 import {
   CreateOrganizationDto,
   INVITATION_SERVICE,
@@ -31,6 +31,7 @@ export class OrganizationsController {
 
   @Post()
   @ApiOperation({ summary: 'Create new organization' })
+  @ApiBody({ type: CreateOrganizationDto })
   @ApiResponse({ status: 201, type: OrganizationResponse })
   create(@CurrentUser() userId: string, @Body() dto: CreateOrganizationDto) {
     return this.organizationsService.create(userId, dto)
@@ -48,6 +49,7 @@ export class OrganizationsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get organization details' })
+  @ApiParam({ name: 'id', description: 'Organization ID' })
   @ApiResponse({ status: 200, type: OrganizationResponse })
   findOne(@Param('id') id: string, @CurrentUser() userId: string) {
     return this.organizationsService.findOne(id, userId)
@@ -55,6 +57,8 @@ export class OrganizationsController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update organization (admin/owner only)' })
+  @ApiBody({ type: UpdateOrganizationDto })
+  @ApiParam({ name: 'id', description: 'Organization ID' })
   @ApiResponse({ status: 200, type: OrganizationResponse })
   update(@Param('id') id: string, @CurrentUser() userId: string, @Body() dto: UpdateOrganizationDto) {
     return this.organizationsService.update(id, userId, dto)
@@ -64,6 +68,7 @@ export class OrganizationsController {
 
   @Get(':id/members')
   @ApiOperation({ summary: 'List organization members' })
+  @ApiParam({ name: 'id', description: 'Organization ID' })
   @ApiResponse({ status: 200, type: [MemberResponse] })
   listMembers(@Param('id') id: string, @CurrentUser() userId: string) {
     return this.membersService.list(id, userId)
@@ -71,6 +76,9 @@ export class OrganizationsController {
 
   @Patch(':id/members/:memberId')
   @ApiOperation({ summary: 'Update member role (owner/admin only)' })
+  @ApiBody({ type: UpdateMemberRoleDto })
+  @ApiParam({ name: 'id', description: 'Organization ID' })
+  @ApiParam({ name: 'memberId', description: 'Member ID' })
   @ApiResponse({ status: 200, type: MemberResponse })
   updateMemberRole(
     @Param('id') id: string,
@@ -83,6 +91,8 @@ export class OrganizationsController {
 
   @Delete(':id/members/:memberId')
   @ApiOperation({ summary: 'Remove member (owner/admin only)' })
+  @ApiParam({ name: 'id', description: 'Organization ID' })
+  @ApiParam({ name: 'memberId', description: 'Member ID' })
   @ApiResponse({ status: 200 })
   async removeMember(@Param('id') id: string, @Param('memberId') memberId: string, @CurrentUser() userId: string) {
     await this.membersService.remove(id, memberId, userId)
@@ -93,6 +103,8 @@ export class OrganizationsController {
 
   @Post(':id/invitations')
   @ApiOperation({ summary: 'Invite member to organization (admin/owner only)' })
+  @ApiBody({ type: InviteMemberDto })
+  @ApiParam({ name: 'id', description: 'Organization ID' })
   @ApiResponse({ status: 201, type: InvitationResponse })
   inviteMember(@Param('id') id: string, @CurrentUser() userId: string, @Body() dto: InviteMemberDto) {
     return this.invitationsService.invite(id, userId, dto)
@@ -100,6 +112,7 @@ export class OrganizationsController {
 
   @Get(':id/invitations')
   @ApiOperation({ summary: 'List pending invitations (admin/owner only)' })
+  @ApiParam({ name: 'id', description: 'Organization ID' })
   @ApiResponse({ status: 200, type: [InvitationResponse] })
   listInvitations(@Param('id') id: string, @CurrentUser() userId: string) {
     return this.invitationsService.listForOrganization(id, userId)

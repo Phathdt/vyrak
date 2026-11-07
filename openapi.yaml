@@ -95,8 +95,8 @@ paths:
         - name: id
           required: true
           in: path
-          schema:
-            type: string
+          description: Organization ID
+          schema: {}
       responses:
         '200':
           description: ''
@@ -115,8 +115,8 @@ paths:
         - name: id
           required: true
           in: path
-          schema:
-            type: string
+          description: Organization ID
+          schema: {}
       requestBody:
         required: true
         content:
@@ -142,8 +142,8 @@ paths:
         - name: id
           required: true
           in: path
-          schema:
-            type: string
+          description: Organization ID
+          schema: {}
       responses:
         '200':
           description: ''
@@ -162,16 +162,16 @@ paths:
     patch:
       operationId: OrganizationsController_updateMemberRole
       parameters:
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
         - name: memberId
           required: true
           in: path
-          schema:
-            type: string
+          description: Member ID
+          schema: {}
+        - name: id
+          required: true
+          in: path
+          description: Organization ID
+          schema: {}
       requestBody:
         required: true
         content:
@@ -193,16 +193,16 @@ paths:
     delete:
       operationId: OrganizationsController_removeMember
       parameters:
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
         - name: memberId
           required: true
           in: path
-          schema:
-            type: string
+          description: Member ID
+          schema: {}
+        - name: id
+          required: true
+          in: path
+          description: Organization ID
+          schema: {}
       responses:
         '200':
           description: ''
@@ -218,8 +218,8 @@ paths:
         - name: id
           required: true
           in: path
-          schema:
-            type: string
+          description: Organization ID
+          schema: {}
       requestBody:
         required: true
         content:
@@ -244,8 +244,8 @@ paths:
         - name: id
           required: true
           in: path
-          schema:
-            type: string
+          description: Organization ID
+          schema: {}
       responses:
         '200':
           description: ''
@@ -285,8 +285,8 @@ paths:
         - name: id
           required: true
           in: path
-          schema:
-            type: string
+          description: Invitation ID
+          schema: {}
       responses:
         '200':
           description: ''
@@ -306,8 +306,8 @@ paths:
         - name: id
           required: true
           in: path
-          schema:
-            type: string
+          description: Invitation ID
+          schema: {}
       responses:
         '200':
           description: ''
@@ -323,8 +323,8 @@ paths:
         - name: orgId
           required: true
           in: path
-          schema:
-            type: string
+          description: Organization ID
+          schema: {}
       requestBody:
         required: true
         content:
@@ -349,58 +349,8 @@ paths:
         - name: orgId
           required: true
           in: path
-          schema:
-            type: string
-        - name: page
-          required: false
-          in: query
-          description: Page number
-          schema:
-            minimum: 1
-            maximum: 9007199254740991
-            default: 1
-            example: 1
-            type: integer
-        - name: limit
-          required: false
-          in: query
-          description: Items per page
-          schema:
-            minimum: 1
-            maximum: 100
-            default: 10
-            example: 10
-            type: integer
-        - name: search
-          required: false
-          in: query
-          description: Search by name or slug
-          schema:
-            example: my project
-            type: string
-        - name: sort
-          required: false
-          in: query
-          description: Sort field
-          schema:
-            default: createdAt
-            example: createdAt
-            type: string
-            enum:
-              - name
-              - createdAt
-              - updatedAt
-        - name: order
-          required: false
-          in: query
-          description: Sort order
-          schema:
-            default: desc
-            example: desc
-            type: string
-            enum:
-              - asc
-              - desc
+          description: Organization ID
+          schema: {}
       responses:
         '200':
           description: Projects retrieved successfully
@@ -415,16 +365,16 @@ paths:
     get:
       operationId: ProjectsController_findOne
       parameters:
-        - name: orgId
-          required: true
-          in: path
-          schema:
-            type: string
         - name: id
           required: true
           in: path
-          schema:
-            type: string
+          description: Project ID
+          schema: {}
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema: {}
       responses:
         '200':
           description: Project retrieved successfully
@@ -440,16 +390,16 @@ paths:
     patch:
       operationId: ProjectsController_update
       parameters:
-        - name: orgId
-          required: true
-          in: path
-          schema:
-            type: string
         - name: id
           required: true
           in: path
-          schema:
-            type: string
+          description: Project ID
+          schema: {}
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema: {}
       requestBody:
         required: true
         content:
@@ -471,16 +421,16 @@ paths:
     delete:
       operationId: ProjectsController_remove
       parameters:
-        - name: orgId
-          required: true
-          in: path
-          schema:
-            type: string
         - name: id
           required: true
           in: path
-          schema:
-            type: string
+          description: Project ID
+          schema: {}
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema: {}
       responses:
         '204':
           description: Project deleted successfully
@@ -495,16 +445,16 @@ paths:
     get:
       operationId: RepositoriesController_findAll
       parameters:
-        - name: orgId
-          required: true
-          in: path
-          schema:
-            type: string
         - name: projectId
           required: true
           in: path
-          schema:
-            type: string
+          description: Project ID
+          schema: {}
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema: {}
       responses:
         '200':
           description: Repositories retrieved successfully
@@ -520,22 +470,22 @@ paths:
     post:
       operationId: RepositoriesController_create
       parameters:
-        - name: orgId
-          required: true
-          in: path
-          schema:
-            type: string
         - name: projectId
           required: true
           in: path
-          schema:
-            type: string
+          description: Project ID
+          schema: {}
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema: {}
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: string
+              $ref: '#/components/schemas/CreateGitRepositoryDto'
       responses:
         '201':
           description: Repository connected successfully
@@ -558,21 +508,21 @@ paths:
     delete:
       operationId: RepositoriesController_delete
       parameters:
-        - name: orgId
-          required: true
-          in: path
-          schema:
-            type: string
-        - name: projectId
-          required: true
-          in: path
-          schema:
-            type: string
         - name: repoId
           required: true
           in: path
-          schema:
-            type: string
+          description: Repository ID
+          schema: {}
+        - name: projectId
+          required: true
+          in: path
+          description: Project ID
+          schema: {}
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema: {}
       responses:
         '204':
           description: Repository disconnected successfully
@@ -585,16 +535,16 @@ paths:
     post:
       operationId: WorkflowsController_create
       parameters:
-        - name: orgId
-          required: true
-          in: path
-          schema:
-            type: string
         - name: projectId
           required: true
           in: path
-          schema:
-            type: string
+          description: Project ID
+          schema: {}
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema: {}
       requestBody:
         required: true
         content:
@@ -616,83 +566,16 @@ paths:
     get:
       operationId: WorkflowsController_findAll
       parameters:
-        - name: orgId
-          required: true
-          in: path
-          schema:
-            type: string
         - name: projectId
           required: true
           in: path
-          schema:
-            type: string
-        - name: page
-          required: false
-          in: query
-          schema:
-            minimum: 1
-            maximum: 9007199254740991
-            default: 1
-            type: integer
-        - name: limit
-          required: false
-          in: query
-          schema:
-            minimum: 1
-            maximum: 100
-            default: 10
-            type: integer
-        - name: search
-          required: false
-          in: query
-          schema:
-            type: string
-        - name: type
-          required: false
-          in: query
-          schema:
-            type: string
-            enum:
-              - HOTFIX
-              - STORY
-              - EPIC
-        - name: status
-          required: false
-          in: query
-          schema:
-            type: string
-            enum:
-              - DRAFT
-              - ACTIVE
-              - WAITING_APPROVAL
-              - COMPLETED
-              - FAILED
-              - CANCELLED
-        - name: createdById
-          required: false
-          in: query
-          schema:
-            type: string
-        - name: sort
-          required: false
-          in: query
-          schema:
-            default: createdAt
-            type: string
-            enum:
-              - title
-              - createdAt
-              - updatedAt
-              - startedAt
-        - name: order
-          required: false
-          in: query
-          schema:
-            default: desc
-            type: string
-            enum:
-              - asc
-              - desc
+          description: Project ID
+          schema: {}
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema: {}
       responses:
         '200':
           description: Workflows retrieved successfully
@@ -710,26 +593,26 @@ paths:
         event so the worker can start the next phase.
       operationId: WorkflowsController_approvePhaseById
       parameters:
-        - name: orgId
-          required: true
-          in: path
-          schema:
-            type: string
-        - name: projectId
-          required: true
-          in: path
-          schema:
-            type: string
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
         - name: phaseId
           required: true
           in: path
-          schema:
-            type: string
+          description: Phase ID
+          schema: {}
+        - name: id
+          required: true
+          in: path
+          description: Workflow ID
+          schema: {}
+        - name: projectId
+          required: true
+          in: path
+          description: Project ID
+          schema: {}
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema: {}
       requestBody:
         required: true
         content:
@@ -751,21 +634,21 @@ paths:
       description: Confirms the phase is done, completes it, and starts the next phase (or completes the workflow).
       operationId: WorkflowsController_approvePhase
       parameters:
-        - name: orgId
-          required: true
-          in: path
-          schema:
-            type: string
-        - name: projectId
-          required: true
-          in: path
-          schema:
-            type: string
         - name: id
           required: true
           in: path
-          schema:
-            type: string
+          description: Workflow ID
+          schema: {}
+        - name: projectId
+          required: true
+          in: path
+          description: Project ID
+          schema: {}
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema: {}
       requestBody:
         required: true
         content:
@@ -786,21 +669,21 @@ paths:
     post:
       operationId: WorkflowsController_sendBackPhase
       parameters:
-        - name: orgId
-          required: true
-          in: path
-          schema:
-            type: string
-        - name: projectId
-          required: true
-          in: path
-          schema:
-            type: string
         - name: id
           required: true
           in: path
-          schema:
-            type: string
+          description: Workflow ID
+          schema: {}
+        - name: projectId
+          required: true
+          in: path
+          description: Project ID
+          schema: {}
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema: {}
       requestBody:
         required: true
         content:
@@ -821,21 +704,21 @@ paths:
     get:
       operationId: WorkflowsController_listPhases
       parameters:
-        - name: orgId
-          required: true
-          in: path
-          schema:
-            type: string
-        - name: projectId
-          required: true
-          in: path
-          schema:
-            type: string
         - name: id
           required: true
           in: path
-          schema:
-            type: string
+          description: Workflow ID
+          schema: {}
+        - name: projectId
+          required: true
+          in: path
+          description: Project ID
+          schema: {}
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema: {}
       responses:
         '200':
           description: Workflow phases retrieved successfully
@@ -852,21 +735,21 @@ paths:
     get:
       operationId: WorkflowsController_findOne
       parameters:
-        - name: orgId
-          required: true
-          in: path
-          schema:
-            type: string
-        - name: projectId
-          required: true
-          in: path
-          schema:
-            type: string
         - name: id
           required: true
           in: path
-          schema:
-            type: string
+          description: Workflow ID
+          schema: {}
+        - name: projectId
+          required: true
+          in: path
+          description: Project ID
+          schema: {}
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema: {}
       responses:
         '200':
           description: Workflow retrieved successfully
@@ -882,21 +765,21 @@ paths:
     patch:
       operationId: WorkflowsController_update
       parameters:
-        - name: orgId
-          required: true
-          in: path
-          schema:
-            type: string
-        - name: projectId
-          required: true
-          in: path
-          schema:
-            type: string
         - name: id
           required: true
           in: path
-          schema:
-            type: string
+          description: Workflow ID
+          schema: {}
+        - name: projectId
+          required: true
+          in: path
+          description: Project ID
+          schema: {}
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema: {}
       requestBody:
         required: true
         content:
@@ -920,21 +803,21 @@ paths:
     delete:
       operationId: WorkflowsController_remove
       parameters:
-        - name: orgId
-          required: true
-          in: path
-          schema:
-            type: string
-        - name: projectId
-          required: true
-          in: path
-          schema:
-            type: string
         - name: id
           required: true
           in: path
-          schema:
-            type: string
+          description: Workflow ID
+          schema: {}
+        - name: projectId
+          required: true
+          in: path
+          description: Project ID
+          schema: {}
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema: {}
       responses:
         '204':
           description: Workflow deleted successfully
@@ -955,31 +838,6 @@ paths:
           description: Workflow ID
           schema:
             type: string
-        - name: type
-          required: false
-          in: query
-          schema:
-            type: string
-            enum:
-              - prd
-              - adr
-              - ard
-              - implementation-plan
-        - name: key
-          required: false
-          in: query
-          schema:
-            type: string
-        - name: approvalStatus
-          required: false
-          in: query
-          schema:
-            type: string
-            enum:
-              - DRAFT
-              - PENDING_APPROVAL
-              - APPROVED
-              - REJECTED
         - name: orgId
           required: true
           in: path
@@ -1231,21 +1089,21 @@ paths:
     get:
       operationId: WorkflowPlanningController_getPlanningSession
       parameters:
-        - name: orgId
-          required: true
-          in: path
-          schema:
-            type: string
-        - name: projectId
-          required: true
-          in: path
-          schema:
-            type: string
         - name: id
           required: true
           in: path
-          schema:
-            type: string
+          description: Workflow ID
+          schema: {}
+        - name: projectId
+          required: true
+          in: path
+          description: Project ID
+          schema: {}
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema: {}
       responses:
         '200':
           description: ''
@@ -1261,24 +1119,21 @@ paths:
       description: Extracts PRD artifact from conversation history and saves it to storage. Sets status to PENDING_APPROVAL.
       operationId: WorkflowPlanningController_generatePRD
       parameters:
-        - name: orgId
-          required: true
-          in: path
-          description: Organization ID
-          schema:
-            type: string
-        - name: projectId
-          required: true
-          in: path
-          description: Project ID
-          schema:
-            type: string
         - name: id
           required: true
           in: path
           description: Workflow ID
-          schema:
-            type: string
+          schema: {}
+        - name: projectId
+          required: true
+          in: path
+          description: Project ID
+          schema: {}
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema: {}
       responses:
         '200':
           description: ''
@@ -1294,24 +1149,21 @@ paths:
       description: Extracts PRD artifact from a specific message containing <artifact> tags and saves it to storage.
       operationId: WorkflowPlanningController_generatePRDFromMessage
       parameters:
-        - name: orgId
-          required: true
-          in: path
-          description: Organization ID
-          schema:
-            type: string
-        - name: projectId
-          required: true
-          in: path
-          description: Project ID
-          schema:
-            type: string
         - name: id
           required: true
           in: path
           description: Workflow ID
-          schema:
-            type: string
+          schema: {}
+        - name: projectId
+          required: true
+          in: path
+          description: Project ID
+          schema: {}
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema: {}
       requestBody:
         required: true
         content:
@@ -1332,21 +1184,21 @@ paths:
     get:
       operationId: WorkflowPlanningController_getTechnicalRefinementSession
       parameters:
-        - name: orgId
-          required: true
-          in: path
-          schema:
-            type: string
-        - name: projectId
-          required: true
-          in: path
-          schema:
-            type: string
         - name: id
           required: true
           in: path
-          schema:
-            type: string
+          description: Workflow ID
+          schema: {}
+        - name: projectId
+          required: true
+          in: path
+          description: Project ID
+          schema: {}
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema: {}
       responses:
         '200':
           description: ''
@@ -1362,24 +1214,21 @@ paths:
       description: Parses conversation history and creates artifacts in DRAFT status.
       operationId: WorkflowPlanningController_generateTechnicalArtifacts
       parameters:
-        - name: orgId
-          required: true
-          in: path
-          description: Organization ID
-          schema:
-            type: string
-        - name: projectId
-          required: true
-          in: path
-          description: Project ID
-          schema:
-            type: string
         - name: id
           required: true
           in: path
           description: Workflow ID
-          schema:
-            type: string
+          schema: {}
+        - name: projectId
+          required: true
+          in: path
+          description: Project ID
+          schema: {}
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema: {}
       responses:
         '200':
           description: ''
@@ -1395,24 +1244,21 @@ paths:
       description: Parses Implementation Plan artifact and creates sub-tasks with dependencies.
       operationId: WorkflowPlanningController_generateSubTasks
       parameters:
-        - name: orgId
-          required: true
-          in: path
-          description: Organization ID
-          schema:
-            type: string
-        - name: projectId
-          required: true
-          in: path
-          description: Project ID
-          schema:
-            type: string
         - name: id
           required: true
           in: path
           description: Workflow ID
-          schema:
-            type: string
+          schema: {}
+        - name: projectId
+          required: true
+          in: path
+          description: Project ID
+          schema: {}
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema: {}
       responses:
         '200':
           description: ''
@@ -1432,8 +1278,7 @@ paths:
           required: true
           in: path
           description: Workflow ID
-          schema:
-            type: string
+          schema: {}
         - name: projectId
           required: true
           in: path
@@ -1461,24 +1306,21 @@ paths:
         implementation/status.
       operationId: WorkflowExecutionController_startImplementation
       parameters:
-        - name: orgId
-          required: true
-          in: path
-          description: Organization ID
-          schema:
-            type: string
-        - name: projectId
-          required: true
-          in: path
-          description: Project ID
-          schema:
-            type: string
         - name: id
           required: true
           in: path
           description: Workflow ID
-          schema:
-            type: string
+          schema: {}
+        - name: projectId
+          required: true
+          in: path
+          description: Project ID
+          schema: {}
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema: {}
       responses:
         '200':
           description: ''
@@ -1494,24 +1336,21 @@ paths:
       description: Returns current status of all sub-tasks including completion progress.
       operationId: WorkflowExecutionController_getImplementationStatus
       parameters:
-        - name: orgId
-          required: true
-          in: path
-          description: Organization ID
-          schema:
-            type: string
-        - name: projectId
-          required: true
-          in: path
-          description: Project ID
-          schema:
-            type: string
         - name: id
           required: true
           in: path
           description: Workflow ID
-          schema:
-            type: string
+          schema: {}
+        - name: projectId
+          required: true
+          in: path
+          description: Project ID
+          schema: {}
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema: {}
       responses:
         '200':
           description: ''
@@ -1529,24 +1368,21 @@ paths:
         code-review/report.
       operationId: WorkflowExecutionController_startCodeReview
       parameters:
-        - name: orgId
-          required: true
-          in: path
-          description: Organization ID
-          schema:
-            type: string
-        - name: projectId
-          required: true
-          in: path
-          description: Project ID
-          schema:
-            type: string
         - name: id
           required: true
           in: path
           description: Workflow ID
-          schema:
-            type: string
+          schema: {}
+        - name: projectId
+          required: true
+          in: path
+          description: Project ID
+          schema: {}
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema: {}
       responses:
         '200':
           description: ''
@@ -1562,24 +1398,21 @@ paths:
       description: Returns the code review report with findings categorized by severity.
       operationId: WorkflowExecutionController_getCodeReviewReport
       parameters:
-        - name: orgId
-          required: true
-          in: path
-          description: Organization ID
-          schema:
-            type: string
-        - name: projectId
-          required: true
-          in: path
-          description: Project ID
-          schema:
-            type: string
         - name: id
           required: true
           in: path
           description: Workflow ID
-          schema:
-            type: string
+          schema: {}
+        - name: projectId
+          required: true
+          in: path
+          description: Project ID
+          schema: {}
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema: {}
       responses:
         '200':
           description: ''
@@ -1597,24 +1430,21 @@ paths:
         from qa/report.
       operationId: WorkflowExecutionController_startQA
       parameters:
-        - name: orgId
-          required: true
-          in: path
-          description: Organization ID
-          schema:
-            type: string
-        - name: projectId
-          required: true
-          in: path
-          description: Project ID
-          schema:
-            type: string
         - name: id
           required: true
           in: path
           description: Workflow ID
-          schema:
-            type: string
+          schema: {}
+        - name: projectId
+          required: true
+          in: path
+          description: Project ID
+          schema: {}
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema: {}
       responses:
         '200':
           description: ''
@@ -1630,24 +1460,21 @@ paths:
       description: Returns the QA verification report with acceptance criteria results and overall status.
       operationId: WorkflowExecutionController_getQAReport
       parameters:
-        - name: orgId
-          required: true
-          in: path
-          description: Organization ID
-          schema:
-            type: string
-        - name: projectId
-          required: true
-          in: path
-          description: Project ID
-          schema:
-            type: string
         - name: id
           required: true
           in: path
           description: Workflow ID
-          schema:
-            type: string
+          schema: {}
+        - name: projectId
+          required: true
+          in: path
+          description: Project ID
+          schema: {}
+        - name: orgId
+          required: true
+          in: path
+          description: Organization ID
+          schema: {}
       responses:
         '200':
           description: ''
@@ -2170,6 +1997,23 @@ components:
             $ref: '#/components/schemas/GitRepositoryResponse'
       required:
         - items
+    CreateGitRepositoryDto:
+      type: object
+      properties:
+        url:
+          type: string
+          minLength: 1
+          maxLength: 500
+          example: https://github.com/acme/backend-api
+          description: GitHub repository URL (HTTPS, SSH, or owner/repo format)
+        branch:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: main
+          description: Branch name (defaults to repository default branch if not specified)
+      required:
+        - url
     CreateWorkflowDto:
       type: object
       properties:

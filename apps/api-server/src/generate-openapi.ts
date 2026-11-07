@@ -9,8 +9,7 @@
  * How it works:
  * 1. Set SKIP_DB_CONNECTION=true to prevent DatabaseService from connecting
  * 2. Set placeholder DATABASE__URL to bypass Prisma client initialization check
- * 3. Create NestJS app (controllers will be instantiated with their dependencies,
- *    but no actual database operations will occur)
+ * 3. Create NestJS app with Express platform
  * 4. Extract OpenAPI metadata from controller decorators using SwaggerModule
  * 5. cleanupOpenApiDoc resolves nestjs-zod schemas into proper OpenAPI definitions
  * 6. Write the specification to openapi.yml
@@ -18,9 +17,10 @@
  * This approach allows CI/CD to generate API docs without database setup,
  * while keeping all service implementations intact (no mocking needed).
  *
- * Usage: node --import @swc-node/register/esm-register src/generate-openapi.ts
+ * Usage: tsx src/generate-openapi.ts
  */
 import { NestFactory } from '@nestjs/core'
+import { NestExpressApplication } from '@nestjs/platform-express'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { config as loadDotenv } from 'dotenv'
 import { dump as yamlDump } from 'js-yaml'
@@ -28,7 +28,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import './load-env'
-import { AppModule } from './app'
+import { AppOpenApiModule } from './app/app-openapi.module'
 
 function findProjectRoot(): string {
   let currentDir = process.cwd()
@@ -50,6 +50,7 @@ function bootstrapEnvForOpenApiGeneration(): void {
   }
 
   process.env.SKIP_DB_CONNECTION = 'true'
+  process.env.SKIP_WEBSOCKET = 'true' // Skip WebSocket gateway during OpenAPI generation
 
   const defaults: Record<string, string> = {
     DATABASE__URL: 'postgresql://localhost:5432/placeholder',
@@ -140,9 +141,12 @@ async function generateOpenApiSpec() {
   console.log('[OpenAPI] DATABASE__URL:', process.env.DATABASE__URL ? 'SET' : 'NOT SET')
 
   console.log('[OpenAPI] Creating NestJS app...')
-  const app = await NestFactory.create(AppModule, {
-    logger: ['error', 'warn', 'log'], // Enable more logging
+  const app = await NestFactory.create<NestExpressApplication>(AppOpenApiModule, {
+    logger: ['error', 'warn'], // Reduce logging noise
   })
+
+  // Initialize the app to setup HttpAdapterHost for ClsModule
+  await app.init()
 
   console.log('[OpenAPI] Building Swagger configuration...')
   const config = new DocumentBuilder()

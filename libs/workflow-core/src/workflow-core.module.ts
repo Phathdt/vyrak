@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common'
 import { ARTIFACT_SERVICE, ArtifactModule, type IArtifactService } from '@vyrak/artifact'
 import { DatabaseModule, DatabaseService } from '@vyrak/database'
+import { GIT_REPOSITORY_REPOSITORY, ProjectModule, type IGitRepositoryRepository } from '@vyrak/project'
+import { RepositoryModule } from '@vyrak/repository'
 
-import { WorkflowPhaseService, WorkflowService } from './application'
+import { WorkflowPhaseService, WorkflowRepositoryResolver, WorkflowService } from './application'
 import {
   WORKFLOW_PHASE_REPOSITORY,
   WORKFLOW_PHASE_SERVICE,
@@ -37,7 +39,7 @@ import type {
  * For git operations, import GitHubAuthModule separately.
  */
 @Module({
-  imports: [DatabaseModule, ArtifactModule],
+  imports: [DatabaseModule, ProjectModule, ArtifactModule, RepositoryModule],
   providers: [
     // Unit of Work
     {
@@ -78,6 +80,12 @@ import type {
     },
     // Domain Services
     {
+      provide: WorkflowRepositoryResolver,
+      useFactory: (workflowRepoRepo: IWorkflowRepositoryRepository, gitRepoRepo: IGitRepositoryRepository) =>
+        new WorkflowRepositoryResolver(workflowRepoRepo, gitRepoRepo),
+      inject: [WORKFLOW_REPOSITORY_REPOSITORY, GIT_REPOSITORY_REPOSITORY],
+    },
+    {
       provide: WORKFLOW_SERVICE,
       useFactory: (
         workflowRepo: IWorkflowRepository,
@@ -99,6 +107,7 @@ import type {
     },
   ],
   exports: [
+    WorkflowRepositoryResolver,
     WORKFLOW_SERVICE,
     WORKFLOW_PHASE_SERVICE,
     WORKFLOW_REPOSITORY,

@@ -11,6 +11,7 @@ import { CONFIG_SERVICE, CustomConfigModule, IConfigService, parseRedisUrl } fro
 import { CustomLoggerModule } from '@vyrak/custom-logger'
 import { DatabaseModule } from '@vyrak/database'
 import { EventBusModule } from '@vyrak/event-bus'
+import { GitHubAuthModule } from '@vyrak/github-auth'
 import { OrganizationModule } from '@vyrak/organization'
 import { ProjectModule } from '@vyrak/project'
 import { UserModule } from '@vyrak/user'
@@ -72,6 +73,7 @@ import {
     AuthModule,
     UserModule,
     OrganizationModule,
+    GitHubAuthModule,
     ProjectModule,
     ArtifactModule,
     WorkflowCoreModule,

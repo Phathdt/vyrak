@@ -3,7 +3,7 @@ import { Octokit } from '@octokit/rest'
 import { GitHubRepositoryNotFoundError, RepositoryAccessDeniedError } from '../../domain/exceptions'
 import { GitHubUrlParser } from '../utils/github-url-parser'
 
-import type { IGitHubAuthService } from '@vyrak/workflow-core'
+import type { IGitHubAuthService } from '@vyrak/github-auth'
 
 /**
  * Metadata returned from GitHub API validation.

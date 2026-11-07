@@ -1,4 +1,3 @@
-export * from './github-auth.interface'
 export * from './repo-cache.interface'
 export * from './subtask-repository.interface'
 export * from './unit-of-work.interface'

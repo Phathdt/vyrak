@@ -15,7 +15,7 @@ export function ProjectDetailPage() {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<TabValue>('overview')
 
-  const { data: project, isLoading } = useProjectsControllerFindOne(orgId!, projectId!, undefined, {
+  const { data: project, isLoading } = useProjectsControllerFindOne(orgId!, projectId!, {
     query: {
       enabled: !!orgId && !!projectId,
     },
@@ -99,7 +99,7 @@ export function ProjectDetailPage() {
               </div>
               <div>
                 <dt className='text-sm font-medium text-muted-foreground'>Workflows</dt>
-                <dd className='mt-1'>{project.stats?.workflowCount || 0} total</dd>
+                <dd className='mt-1'>{project.stats?.workflowRunCount || 0} total</dd>
               </div>
             </dl>
           </div>

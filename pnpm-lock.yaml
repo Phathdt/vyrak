@@ -302,9 +302,6 @@ importers:
 
   apps/api-server:
     dependencies:
-      '@anthropic-ai/sdk':
-        specifier: ^1.5.0
-        version: 1.5.0(zod@4.6.7)
       '@nestjs/bullmq':
         specifier: ^12.0.0
         version: 12.0.0(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/core@12.3.3)(bullmq@6.7.0(ioredis@6.0.0(supports-color@7.2.0))(pg@8.23.1)(redis@6.3.1(@opentelemetry/api@1.10.0)))
@@ -347,9 +344,6 @@ importers:
       '@socket.io/redis-adapter':
         specifier: ^8.3.0
         version: 8.3.0(socket.io-adapter@2.5.8(supports-color@7.2.0))(supports-color@7.2.0)
-      '@vyrak/ai-agent':
-        specifier: workspace:*
-        version: link:../../libs/ai-agent
       '@vyrak/artifact':
         specifier: workspace:*
         version: link:../../libs/artifact
@@ -371,6 +365,9 @@ importers:
       '@vyrak/event-bus':
         specifier: workspace:*
         version: link:../../libs/event-bus
+      '@vyrak/github-auth':
+        specifier: workspace:*
+        version: link:../../libs/github-auth
       '@vyrak/organization':
         specifier: workspace:*
         version: link:../../libs/organization
@@ -419,33 +416,18 @@ importers:
       nestjs-zod:
         specifier: ^5.5.0
         version: 5.5.0(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/swagger@12.1.0(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/core@12.3.3)(reflect-metadata@0.2.2)(typescript@7.0.2))(rxjs@7.8.2)(zod@4.6.7)
-      passport:
-        specifier: ^0.7.0
-        version: 0.7.0
       pg:
         specifier: 8.23.1
         version: 8.23.1
-      pino:
-        specifier: ^10.4.0
-        version: 10.4.0
-      pino-http:
-        specifier: ^11.0.0
-        version: 11.0.0
       redis:
         specifier: ^6.3.1
         version: 6.3.1(@opentelemetry/api@1.10.0)
-      reflect-metadata:
-        specifier: ^0.2.2
-        version: 0.2.2
       rxjs:
         specifier: ^7.8.2
         version: 7.8.2
       socket.io:
         specifier: ^4.8.4
         version: 4.8.4(supports-color@7.2.0)
-      socket.io-adapter:
-        specifier: ^2.5.8
-        version: 2.5.8(supports-color@7.2.0)
       uuid:
         specifier: ^14.0.3
         version: 14.0.3
@@ -655,9 +637,6 @@ importers:
       '@nestjs/core':
         specifier: ^12.3.3
         version: 12.3.3(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/platform-express@12.3.3)(@nestjs/websockets@12.3.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      '@nestjs/platform-express':
-        specifier: ^12.3.3
-        version: 12.3.3(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/core@12.3.3)(supports-color@7.2.0)
       '@socket.io/redis-emitter':
         specifier: ^5.1.0
         version: 5.1.0(supports-color@7.2.0)
@@ -685,6 +664,9 @@ importers:
       '@vyrak/event-bus':
         specifier: workspace:*
         version: link:../../libs/event-bus
+      '@vyrak/github-auth':
+        specifier: workspace:*
+        version: link:../../libs/github-auth
       '@vyrak/workflow-core':
         specifier: workspace:*
         version: link:../../libs/workflow-core
@@ -709,21 +691,9 @@ importers:
       pg:
         specifier: 8.23.1
         version: 8.23.1
-      pino:
-        specifier: ^10.4.0
-        version: 10.4.0
-      pino-http:
-        specifier: ^11.0.0
-        version: 11.0.0
       redis:
         specifier: ^6.3.1
         version: 6.3.1(@opentelemetry/api@1.10.0)
-      reflect-metadata:
-        specifier: ^0.2.2
-        version: 0.2.2
-      rxjs:
-        specifier: ^7.8.2
-        version: 7.8.2
     devDependencies:
       '@nestjs/cli':
         specifier: ^12.0.11
@@ -740,6 +710,9 @@ importers:
       typescript:
         specifier: ~7.0.2
         version: 7.0.2
+      vitest:
+        specifier: ^5.1.0
+        version: 5.1.0(@opentelemetry/api@1.10.0)(@types/node@26.6.6)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(happy-dom@21.0.4)(jsdom@31.0.0(@noble/hashes@1.8.0))(msw@3.0.3(@types/node@26.6.6)(supports-color@7.2.0)(typescript@7.0.2)(vite@8.3.6(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)))(vite@8.3.6(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
 
   libs/ai-agent:
     dependencies:
@@ -749,27 +722,12 @@ importers:
       '@nestjs/common':
         specifier: ^12.3.3
         version: 12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0)
-      '@nestjs/core':
-        specifier: ^12.3.3
-        version: 12.3.3(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/platform-express@12.3.3)(@nestjs/websockets@12.3.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      '@nestjs/platform-express':
-        specifier: ^12.3.3
-        version: 12.3.3(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/core@12.3.3)(supports-color@7.2.0)
       '@opentelemetry/api':
         specifier: ^1.10.0
         version: 1.10.0
       '@vyrak/custom-config':
         specifier: workspace:*
         version: link:../custom-config
-      reflect-metadata:
-        specifier: ^0.2.2
-        version: 0.2.2
-      rxjs:
-        specifier: ^7.8.2
-        version: 7.8.2
-      zod:
-        specifier: ^4.6.7
-        version: 4.6.7
     devDependencies:
       '@nestjs/testing':
         specifier: ^12.3.3
@@ -792,12 +750,6 @@ importers:
       '@nestjs/common':
         specifier: ^12.3.3
         version: 12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0)
-      '@nestjs/core':
-        specifier: ^12.3.3
-        version: 12.3.3(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/platform-express@12.3.3)(@nestjs/websockets@12.3.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      '@nestjs/platform-express':
-        specifier: ^12.3.3
-        version: 12.3.3(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/core@12.3.3)(supports-color@7.2.0)
       '@opentelemetry/api':
         specifier: ^1.10.0
         version: 1.10.0
@@ -807,15 +759,6 @@ importers:
       '@vyrak/custom-config':
         specifier: workspace:*
         version: link:../custom-config
-      reflect-metadata:
-        specifier: ^0.2.2
-        version: 0.2.2
-      rxjs:
-        specifier: ^7.8.2
-        version: 7.8.2
-      zod:
-        specifier: ^4.6.7
-        version: 4.6.7
     devDependencies:
       '@nestjs/testing':
         specifier: ^12.3.3
@@ -838,9 +781,6 @@ importers:
       '@nestjs/common':
         specifier: ^12.3.3
         version: 12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0)
-      '@nestjs/core':
-        specifier: ^12.3.3
-        version: 12.3.3(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/platform-express@12.3.3)(@nestjs/websockets@12.3.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@nestjs/swagger':
         specifier: ^12.1.0
         version: 12.1.0(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/core@12.3.3)(reflect-metadata@0.2.2)(typescript@7.0.2)
@@ -856,12 +796,6 @@ importers:
       nestjs-zod:
         specifier: ^5.5.0
         version: 5.5.0(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/swagger@12.1.0(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/core@12.3.3)(reflect-metadata@0.2.2)(typescript@7.0.2))(rxjs@7.8.2)(zod@4.6.7)
-      reflect-metadata:
-        specifier: ^0.2.2
-        version: 0.2.2
-      rxjs:
-        specifier: ^7.8.2
-        version: 7.8.2
       zod:
         specifier: ^4.6.7
         version: 4.6.7
@@ -887,9 +821,6 @@ importers:
       '@nestjs/common':
         specifier: ^12.3.3
         version: 12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0)
-      '@nestjs/core':
-        specifier: ^12.3.3
-        version: 12.3.3(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/platform-express@12.3.3)(@nestjs/websockets@12.3.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@nestjs/passport':
         specifier: ^12.0.0
         version: 12.0.0(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(passport@0.7.0)
@@ -920,18 +851,9 @@ importers:
       nestjs-zod:
         specifier: ^5.5.0
         version: 5.5.0(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/swagger@12.1.0(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/core@12.3.3)(reflect-metadata@0.2.2)(typescript@7.0.2))(rxjs@7.8.2)(zod@4.6.7)
-      passport:
-        specifier: ^0.7.0
-        version: 0.7.0
       passport-jwt:
         specifier: ^4.0.1
         version: 4.0.1
-      reflect-metadata:
-        specifier: ^0.2.2
-        version: 0.2.2
-      rxjs:
-        specifier: ^7.8.2
-        version: 7.8.2
       zod:
         specifier: ^4.6.7
         version: 4.6.7
@@ -954,24 +876,12 @@ importers:
       '@nestjs/common':
         specifier: ^12.3.3
         version: 12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0)
-      '@nestjs/core':
-        specifier: ^12.3.3
-        version: 12.3.3(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/platform-express@12.3.3)(@nestjs/websockets@12.3.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      '@nestjs/platform-express':
-        specifier: ^12.3.3
-        version: 12.3.3(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/core@12.3.3)(supports-color@7.2.0)
       '@opentelemetry/api':
         specifier: ^1.10.0
         version: 1.10.0
       '@vyrak/database':
         specifier: workspace:*
         version: link:../database
-      reflect-metadata:
-        specifier: ^0.2.2
-        version: 0.2.2
-      rxjs:
-        specifier: ^7.8.2
-        version: 7.8.2
     devDependencies:
       '@nestjs/testing':
         specifier: ^12.3.3
@@ -997,11 +907,8 @@ importers:
       js-yaml:
         specifier: ^5.5.0
         version: 5.5.0
-      reflect-metadata:
-        specifier: ^0.2.2
-        version: 0.2.2
       rxjs:
-        specifier: ^7.8.2
+        specifier: ^7.0.0
         version: 7.8.2
       zod:
         specifier: ^4.6.7
@@ -1026,7 +933,7 @@ importers:
         specifier: ^12.3.3
         version: 12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0)
       '@nestjs/core':
-        specifier: ^12.3.3
+        specifier: ^12.0.0
         version: 12.3.3(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/platform-express@12.3.3)(@nestjs/websockets@12.3.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@opentelemetry/api':
         specifier: ^1.10.0
@@ -1040,20 +947,11 @@ importers:
       nestjs-pino:
         specifier: ^5.3.1
         version: 5.3.1(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/core@12.3.3)(pino-http@11.0.0)(pino@10.4.0)(rxjs@7.8.2)
-      pino:
-        specifier: ^10.4.0
-        version: 10.4.0
-      pino-http:
-        specifier: ^11.0.0
-        version: 11.0.0
       pino-pretty:
         specifier: ^13.2.0
         version: 13.2.0
-      reflect-metadata:
-        specifier: ^0.2.2
-        version: 0.2.2
       rxjs:
-        specifier: ^7.8.2
+        specifier: ^7.0.0
         version: 7.8.2
       uuid:
         specifier: ^14.0.3
@@ -1077,12 +975,6 @@ importers:
       '@nestjs/common':
         specifier: ^12.3.3
         version: 12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0)
-      '@nestjs/core':
-        specifier: ^12.3.3
-        version: 12.3.3(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/platform-express@12.3.3)(@nestjs/websockets@12.3.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      '@nestjs/platform-express':
-        specifier: ^12.3.3
-        version: 12.3.3(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/core@12.3.3)(supports-color@7.2.0)
       '@opentelemetry/api':
         specifier: ^1.10.0
         version: 1.10.0
@@ -1101,12 +993,6 @@ importers:
       pg:
         specifier: 8.23.1
         version: 8.23.1
-      prisma:
-        specifier: ^7.10.1
-        version: 7.10.1(@types/node@26.6.6)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(magicast@0.5.5)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@7.0.2)
-      reflect-metadata:
-        specifier: ^0.2.2
-        version: 0.2.2
       rxjs:
         specifier: ^7.8.2
         version: 7.8.2
@@ -1138,11 +1024,8 @@ importers:
       ioredis:
         specifier: ^6.0.0
         version: 6.0.0(supports-color@7.2.0)
-      reflect-metadata:
-        specifier: ^0.2.2
-        version: 0.2.2
       rxjs:
-        specifier: ^7.8.2
+        specifier: ^7.0.0
         version: 7.8.2
       zod:
         specifier: ^4.6.7
@@ -1158,14 +1041,42 @@ importers:
         specifier: ^5.1.0
         version: 5.1.0(@opentelemetry/api@1.10.0)(@types/node@26.6.6)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(happy-dom@21.0.4)(jsdom@31.0.0(@noble/hashes@1.8.0))(msw@3.0.3(@types/node@26.6.6)(supports-color@7.2.0)(typescript@7.0.2)(vite@8.3.6(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)))(vite@8.3.6(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
 
+  libs/github-auth:
+    dependencies:
+      '@nestjs/common':
+        specifier: ^12.3.3
+        version: 12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0)
+      '@octokit/auth-app':
+        specifier: ^7.1.3
+        version: 7.2.2
+      '@vyrak/custom-config':
+        specifier: workspace:*
+        version: link:../custom-config
+      ioredis:
+        specifier: ^6.0.0
+        version: 6.0.0(supports-color@7.2.0)
+    devDependencies:
+      '@types/node':
+        specifier: ~26.6.6
+        version: 26.6.6
+      ioredis-mock:
+        specifier: ^8.9.0
+        version: 8.13.1(@types/ioredis-mock@8.2.8(ioredis@6.0.0(supports-color@7.2.0)))(ioredis@6.0.0(supports-color@7.2.0))
+      rolldown:
+        specifier: ^1.3.0
+        version: 1.3.0
+      typescript:
+        specifier: ~7.0.2
+        version: 7.0.2
+      vitest:
+        specifier: ^5.1.0
+        version: 5.1.0(@opentelemetry/api@1.10.0)(@types/node@26.6.6)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(happy-dom@21.0.4)(jsdom@31.0.0(@noble/hashes@1.8.0))(msw@3.0.3(@types/node@26.6.6)(supports-color@7.2.0)(typescript@7.0.2)(vite@8.3.6(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)))(vite@8.3.6(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
+
   libs/organization:
     dependencies:
       '@nestjs/common':
         specifier: ^12.3.3
         version: 12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0)
-      '@nestjs/core':
-        specifier: ^12.3.3
-        version: 12.3.3(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/platform-express@12.3.3)(@nestjs/websockets@12.3.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@nestjs/swagger':
         specifier: ^12.1.0
         version: 12.1.0(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/core@12.3.3)(reflect-metadata@0.2.2)(typescript@6.0.3)
@@ -1178,12 +1089,6 @@ importers:
       nestjs-zod:
         specifier: ^5.5.0
         version: 5.5.0(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/swagger@12.1.0(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/core@12.3.3)(reflect-metadata@0.2.2)(typescript@6.0.3))(rxjs@7.8.2)(zod@4.6.7)
-      reflect-metadata:
-        specifier: ^0.2.2
-        version: 0.2.2
-      rxjs:
-        specifier: ^7.8.2
-        version: 7.8.2
       zod:
         specifier: ^4.6.7
         version: 4.6.7
@@ -1197,9 +1102,6 @@ importers:
       '@nestjs/common':
         specifier: ^12.3.3
         version: 12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0)
-      '@nestjs/core':
-        specifier: ^12.3.3
-        version: 12.3.3(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/platform-express@12.3.3)(@nestjs/websockets@12.3.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@nestjs/swagger':
         specifier: ^12.1.0
         version: 12.1.0(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/core@12.3.3)(reflect-metadata@0.2.2)(typescript@6.0.3)
@@ -1212,15 +1114,12 @@ importers:
       '@vyrak/database':
         specifier: workspace:*
         version: link:../database
+      '@vyrak/github-auth':
+        specifier: workspace:*
+        version: link:../github-auth
       nestjs-zod:
         specifier: ^5.5.0
         version: 5.5.0(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/swagger@12.1.0(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/core@12.3.3)(reflect-metadata@0.2.2)(typescript@6.0.3))(rxjs@7.8.2)(zod@4.6.7)
-      reflect-metadata:
-        specifier: ^0.2.2
-        version: 0.2.2
-      rxjs:
-        specifier: ^7.8.2
-        version: 7.8.2
       zod:
         specifier: ^4.6.7
         version: 4.6.7
@@ -1228,6 +1127,19 @@ importers:
       vitest:
         specifier: ^5.1.0
         version: 5.1.0(@opentelemetry/api@1.10.0)(@types/node@26.6.6)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(happy-dom@21.0.4)(jsdom@31.0.0(@noble/hashes@1.8.0))(msw@3.0.3(@types/node@26.6.6)(supports-color@7.2.0)(typescript@7.0.2)(vite@8.3.6(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)))(vite@8.3.6(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
+
+  libs/repository:
+    dependencies:
+      '@nestjs/common':
+        specifier: ^12.3.3
+        version: 12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0)
+      '@vyrak/project':
+        specifier: workspace:*
+        version: link:../project
+    devDependencies:
+      typescript:
+        specifier: ~7.0.2
+        version: 7.0.2
 
   libs/shared:
     dependencies:
@@ -1237,9 +1149,6 @@ importers:
       '@opentelemetry/api':
         specifier: ^1.10.0
         version: 1.10.0
-      reflect-metadata:
-        specifier: ^0.2.2
-        version: 0.2.2
       rxjs:
         specifier: ^7.8.2
         version: 7.8.2
@@ -1265,12 +1174,6 @@ importers:
       '@vyrak/database':
         specifier: workspace:*
         version: link:../database
-      reflect-metadata:
-        specifier: ^0.2.2
-        version: 0.2.2
-      rxjs:
-        specifier: ^7.8.2
-        version: 7.8.2
     devDependencies:
       '@types/node':
         specifier: ~26.6.6
@@ -1290,18 +1193,9 @@ importers:
       '@nestjs/common':
         specifier: ^12.3.3
         version: 12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0)
-      '@nestjs/core':
-        specifier: ^12.3.3
-        version: 12.3.3(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/platform-express@12.3.3)(@nestjs/websockets@12.3.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@nestjs/swagger':
         specifier: ^12.1.0
         version: 12.1.0(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/core@12.3.3)(reflect-metadata@0.2.2)(typescript@7.0.2)
-      '@octokit/auth-app':
-        specifier: ^7.1.3
-        version: 7.2.2
-      '@octokit/types':
-        specifier: ^13.7.1
-        version: 13.10.0
       '@vyrak/artifact':
         specifier: workspace:*
         version: link:../artifact
@@ -1314,21 +1208,18 @@ importers:
       '@vyrak/database':
         specifier: workspace:*
         version: link:../database
+      '@vyrak/github-auth':
+        specifier: workspace:*
+        version: link:../github-auth
       '@vyrak/project':
         specifier: workspace:*
         version: link:../project
-      ioredis:
-        specifier: ^6.0.0
-        version: 6.0.0(supports-color@7.2.0)
+      '@vyrak/repository':
+        specifier: workspace:*
+        version: link:../repository
       nestjs-zod:
         specifier: ^5.5.0
         version: 5.5.0(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/swagger@12.1.0(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/core@12.3.3)(reflect-metadata@0.2.2)(typescript@7.0.2))(rxjs@7.8.2)(zod@4.6.7)
-      reflect-metadata:
-        specifier: ^0.2.2
-        version: 0.2.2
-      rxjs:
-        specifier: ^7.8.2
-        version: 7.8.2
       zod:
         specifier: ^4.6.7
         version: 4.6.7
@@ -1375,15 +1266,12 @@ importers:
       '@vyrak/database':
         specifier: workspace:*
         version: link:../database
+      '@vyrak/github-auth':
+        specifier: workspace:*
+        version: link:../github-auth
       '@vyrak/workflow-core':
         specifier: workspace:*
         version: link:../workflow-core
-      reflect-metadata:
-        specifier: ^0.2.2
-        version: 0.2.2
-      rxjs:
-        specifier: ^7.8.2
-        version: 7.8.2
       zod:
         specifier: ^4.6.7
         version: 4.6.7
@@ -1406,15 +1294,9 @@ importers:
 
   libs/workflow-planning:
     dependencies:
-      '@anthropic-ai/sdk':
-        specifier: ^1.5.0
-        version: 1.5.0(zod@4.6.7)
       '@nestjs/common':
         specifier: ^12.3.3
         version: 12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0)
-      '@nestjs/core':
-        specifier: ^12.3.3
-        version: 12.3.3(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/platform-express@12.3.3)(@nestjs/websockets@12.3.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@nestjs/swagger':
         specifier: ^12.1.0
         version: 12.1.0(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/core@12.3.3)(reflect-metadata@0.2.2)(typescript@7.0.2)
@@ -1445,12 +1327,6 @@ importers:
       nestjs-zod:
         specifier: ^5.5.0
         version: 5.5.0(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/swagger@12.1.0(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/core@12.3.3)(reflect-metadata@0.2.2)(typescript@7.0.2))(rxjs@7.8.2)(zod@4.6.7)
-      reflect-metadata:
-        specifier: ^0.2.2
-        version: 0.2.2
-      rxjs:
-        specifier: ^7.8.2
-        version: 7.8.2
       zod:
         specifier: ^4.6.7
         version: 4.6.7
@@ -2843,9 +2719,6 @@ packages:
     resolution: {integrity: sha512-Ev7K8bkYrYLhoOSZGVAGsLEscZQyq7XQONCBBAl2JdMg7IT3PQn/y8P0KjloPoYpI5UylqYrLeUcScaYWXwDvw==}
     engines: {node: '>= 18'}
 
-  '@octokit/openapi-types@24.2.0':
-    resolution: {integrity: sha512-9sIH3nSUttelJSXUrmGzl7QUBFul0/mB8HRYl3fOlgHbIWG+WnYDXU3v/2zMtAvuzZ/ed00Ei6on975FhBfzrg==}
-
   '@octokit/openapi-types@25.1.0':
     resolution: {integrity: sha512-idsIggNXUKkk0+BExUn1dQ92sfysJrje03Q0bv0e+KPLrvyqZF8MnBpFz8UNfYDwB3Ie7Z0TByjWfzxt7vseaA==}
 
@@ -2892,9 +2765,6 @@ packages:
   '@octokit/rest@22.0.1':
     resolution: {integrity: sha512-Jzbhzl3CEexhnivb1iQ0KJ7s5vvjMWcmRtq5aUsKmKDrRW6z3r84ngmiFKFvpZjpiU/9/S6ITPFRpn5s/3uQJw==}
     engines: {node: '>= 20'}
-
-  '@octokit/types@13.10.0':
-    resolution: {integrity: sha512-ifLaO34EbbPj0Xgro4G5lP5asESjwHracYJvVaPIyXMuiuXLlhic3S47cBdTb+jfODkTE5YtGCLt3Ay3+J97sA==}
 
   '@octokit/types@14.1.0':
     resolution: {integrity: sha512-1y6DgTy8Jomcpu33N+p5w58l6xyt55Ar2I91RPiIA0xCJBXyUAhXCcmZaDWSANiha7R9a6qJJ2CRomGPZ6f46g==}
@@ -6243,10 +6113,6 @@ packages:
   jiti@2.7.0:
     resolution: {integrity: sha512-AC/7JofJvZGrrneWNaEnJeOLUx+JlGt7tNa0wZiRPT4MY1wmfKjt2+6O2p2uz2+skll8OZZmJMNqeke7kKbNgQ==}
     hasBin: true
-
-  joi@18.3.1:
-    resolution: {integrity: sha512-mV9M4Llh4va3NT90p7KBtQhoZqjs8xLX7EWYE4y/GG3yLF6REbIBEHSUb0UX1JXRht2w5tiLSsvmpYc5akiqIw==}
-    engines: {node: '>= 20'}
 
   joi@18.3.2:
     resolution: {integrity: sha512-iUivApKYw5GpZmq2Sy6El99j7noo8QSUFZlyQtr3HCkosC/b5wKF6/Y3teiHIlaM8WI38sAT3P+51rB0lhAhJA==}
@@ -10036,8 +9902,6 @@ snapshots:
       '@octokit/request-error': 6.1.8
       '@octokit/types': 14.1.0
 
-  '@octokit/openapi-types@24.2.0': {}
-
   '@octokit/openapi-types@25.1.0': {}
 
   '@octokit/openapi-types@27.0.0': {}
@@ -10089,10 +9953,6 @@ snapshots:
       '@octokit/plugin-paginate-rest': 14.0.0(@octokit/core@7.0.8)
       '@octokit/plugin-request-log': 6.0.0(@octokit/core@7.0.8)
       '@octokit/plugin-rest-endpoint-methods': 17.0.0(@octokit/core@7.0.8)
-
-  '@octokit/types@13.10.0':
-    dependencies:
-      '@octokit/openapi-types': 24.2.0
 
   '@octokit/types@14.1.0':
     dependencies:
@@ -13301,16 +13161,6 @@ snapshots:
 
   jiti@2.7.0: {}
 
-  joi@18.3.1:
-    dependencies:
-      '@hapi/address': 5.1.1
-      '@hapi/formula': 3.0.2
-      '@hapi/hoek': 11.0.7
-      '@hapi/pinpoint': 2.0.1
-      '@hapi/tlds': 1.1.7
-      '@hapi/topo': 6.0.2
-      '@standard-schema/spec': 1.1.0
-
   joi@18.3.2:
     dependencies:
       '@hapi/address': 5.1.1
@@ -15791,7 +15641,7 @@ snapshots:
   wait-on@9.5.1(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0):
     dependencies:
       axios: 1.21.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
-      joi: 18.3.1
+      joi: 18.3.2
       lodash: 4.18.1
       rxjs: 7.8.2
     transitivePeerDependencies:

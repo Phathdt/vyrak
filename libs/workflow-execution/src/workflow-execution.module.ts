@@ -4,22 +4,18 @@ import { ConversationModule } from '@vyrak/conversation'
 import { CustomConfigModule } from '@vyrak/custom-config'
 import { EnhancedLogger } from '@vyrak/custom-logger'
 import { DatabaseModule } from '@vyrak/database'
-import {
-  RepositoryContextService,
-  SUBTASK_REPOSITORY,
-  GitHubAuthModule,
-  WorkflowCoreModule,
-} from '@vyrak/workflow-core'
+import { GitHubAuthModule } from '@vyrak/github-auth'
+import { SUBTASK_REPOSITORY, WorkflowCoreModule } from '@vyrak/workflow-core'
 
 import { WorkflowExecutionQueryService } from './application/services/workflow-execution-query.service'
-import { CODE_ANALYSIS_SERVICE, SOURCE_CODE_SCOUT, WORKFLOW_EXECUTION_QUERY_SERVICE } from './infras/di/di'
+import { CODE_ANALYSIS_SERVICE, WORKFLOW_EXECUTION_QUERY_SERVICE } from './infras/di/di'
 import { CodeAnalysisService } from './infras/scouts/code-analysis.service'
-import { RepositoryScoutService } from './infras/scouts/repository-scout.service'
 
 import type { ISubTaskRepository } from '@vyrak/workflow-core'
 
-// NOTE: This module DOES NOT provide WorkflowPhaseOrchestratorService
-// It is provided by apps/api-server/src/workflow/workflow-phase-automation.providers.ts
+// NOTE: This module DOES NOT provide WorkflowPhaseOrchestratorService or SOURCE_CODE_SCOUT
+// - WorkflowPhaseOrchestratorService is provided by apps/api-server/src/workflow/workflow-phase-automation.providers.ts
+// - SOURCE_CODE_SCOUT requires RepositoryContextService (worker-only) and should be provided by worker app
 //
 // WorkflowPhaseRunHandler is exported as a class for manual instantiation by worker
 
@@ -33,22 +29,13 @@ import type { ISubTaskRepository } from '@vyrak/workflow-core'
     ArtifactModule,
   ],
   providers: [
-    // Code Analysis Service - plain TypeScript class
+    // Code Analysis Service
     {
       provide: CODE_ANALYSIS_SERVICE,
       useFactory: () => new CodeAnalysisService(),
       inject: [],
     },
-    // Source Code Scout - plain TypeScript class
-    {
-      provide: SOURCE_CODE_SCOUT,
-      useFactory: (repoContextService: RepositoryContextService) => {
-        const resolveRepositoryPath = (workflowId: string) => repoContextService.resolveRepositoryPath(workflowId)
-        return new RepositoryScoutService(resolveRepositoryPath)
-      },
-      inject: [RepositoryContextService],
-    },
-    // Read-only execution state (sub-task status, code review and QA reports); runs no AI agent
+    // Read-only execution state query service
     {
       provide: WORKFLOW_EXECUTION_QUERY_SERVICE,
       useFactory: (subTaskRepository: ISubTaskRepository, artifactService: IArtifactService, logger: EnhancedLogger) =>
@@ -56,6 +43,6 @@ import type { ISubTaskRepository } from '@vyrak/workflow-core'
       inject: [SUBTASK_REPOSITORY, ARTIFACT_SERVICE, EnhancedLogger],
     },
   ],
-  exports: [SOURCE_CODE_SCOUT, CODE_ANALYSIS_SERVICE, WORKFLOW_EXECUTION_QUERY_SERVICE],
+  exports: [CODE_ANALYSIS_SERVICE, WORKFLOW_EXECUTION_QUERY_SERVICE],
 })
 export class WorkflowExecutionModule {}

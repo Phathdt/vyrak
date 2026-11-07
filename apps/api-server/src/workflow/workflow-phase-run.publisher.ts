@@ -1,10 +1,12 @@
 import { InjectQueue } from '@nestjs/bullmq'
+import { Injectable } from '@nestjs/common'
 import { Queue } from 'bullmq'
 
 import type { IWorkflowPhaseRunPublisher, WorkflowPhaseRunJob } from '@vyrak/workflow-execution'
 
 export const WORKFLOW_PHASE_RUN_QUEUE = 'workflow-execution'
 
+@Injectable()
 export class BullWorkflowPhaseRunPublisher implements IWorkflowPhaseRunPublisher {
   constructor(@InjectQueue(WORKFLOW_PHASE_RUN_QUEUE) private readonly queue: Queue) {}
 

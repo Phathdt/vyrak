@@ -6,7 +6,11 @@ import {
   WorkflowPhasePrismaRepository,
   WorkflowPrismaRepository,
 } from '@vyrak/workflow-core'
-import { WorkflowPhaseOrchestratorService } from '@vyrak/workflow-execution'
+import {
+  WORKFLOW_PHASE_ORCHESTRATOR,
+  WorkflowPhaseOrchestratorService,
+  type IWorkflowPhaseOrchestrator,
+} from '@vyrak/workflow-execution'
 
 import { BullWorkflowPhaseRunPublisher, WORKFLOW_PHASE_RUN_QUEUE } from './workflow-phase-run.publisher'
 
@@ -29,12 +33,12 @@ export const workflowPhaseAutomationProviders = [
     useExisting: BullWorkflowPhaseRunPublisher,
   },
   {
-    provide: WorkflowPhaseOrchestratorService,
+    provide: WORKFLOW_PHASE_ORCHESTRATOR,
     useFactory: (
       databaseService: DatabaseService,
       conversationService: IConversationService,
       publisher: BullWorkflowPhaseRunPublisher
-    ) =>
+    ): IWorkflowPhaseOrchestrator =>
       new WorkflowPhaseOrchestratorService(
         new WorkflowPrismaRepository(databaseService),
         new WorkflowPhasePrismaRepository(databaseService),

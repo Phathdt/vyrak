@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Inject, Post, Req, UseGuards } from '@nestjs/common'
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { AUTH_SERVICE, AuthResponseDto, CurrentUserResponseDto, IAuthService, LoginDto } from '@vyrak/auth'
 import { Request } from 'express'
 
@@ -19,6 +19,7 @@ export class AuthController {
 
   @Post('login')
   @ApiOperation({ summary: 'Login with email and password' })
+  @ApiBody({ type: LoginDto })
   @ApiResponse({ status: 201, description: 'Login successful', type: AuthResponseDto })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   async login(@Body() dto: LoginDto): Promise<AuthResponseDto> {

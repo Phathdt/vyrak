@@ -1,5 +1,5 @@
 import { Controller, Get, Inject, Param, Post, UseGuards } from '@nestjs/common'
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { INVITATION_SERVICE, InvitationResponse, type IInvitationService } from '@vyrak/organization'
 
 import { AuthGuard, CurrentUser } from '../../auth'
@@ -20,6 +20,7 @@ export class InvitationsController {
 
   @Post(':id/accept')
   @ApiOperation({ summary: 'Accept invitation' })
+  @ApiParam({ name: 'id', description: 'Invitation ID' })
   @ApiResponse({ status: 200, type: InvitationResponse })
   accept(@Param('id') id: string, @CurrentUser() userId: string) {
     return this.invitationsService.accept(id, userId)
@@ -27,6 +28,7 @@ export class InvitationsController {
 
   @Post(':id/reject')
   @ApiOperation({ summary: 'Reject invitation' })
+  @ApiParam({ name: 'id', description: 'Invitation ID' })
   @ApiResponse({ status: 200 })
   async reject(@Param('id') id: string, @CurrentUser() userId: string) {
     await this.invitationsService.reject(id, userId)

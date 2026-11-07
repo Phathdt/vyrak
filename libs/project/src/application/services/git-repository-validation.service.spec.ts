@@ -7,7 +7,7 @@ import {
 } from '../../domain/exceptions'
 import { GitRepositoryValidationService } from './git-repository-validation.service'
 
-import type { IGitHubAuthService } from '@vyrak/workflow-core'
+import type { IGitHubAuthService } from '@vyrak/github-auth'
 
 // Mock @octokit/rest
 vi.mock('@octokit/rest', () => {

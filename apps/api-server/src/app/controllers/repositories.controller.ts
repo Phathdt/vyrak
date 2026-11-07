@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Inject, Param, Post, UseGuards } from '@nestjs/common'
-import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
+import { ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger'
 import {
   CreateGitRepositoryDto,
   GIT_REPOSITORY_SERVICE,
@@ -19,6 +19,8 @@ export class RepositoriesController {
 
   @Get()
   @ApiOperation({ summary: 'List git repositories for a project' })
+  @ApiParam({ name: 'orgId', description: 'Organization ID' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
   @ApiResponse({
     status: 200,
     description: 'Repositories retrieved successfully',
@@ -50,6 +52,8 @@ export class RepositoriesController {
   @Post()
   @ApiOperation({ summary: 'Connect GitHub repository to project' })
   @ApiBody({ type: CreateGitRepositoryDto })
+  @ApiParam({ name: 'orgId', description: 'Organization ID' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
   @ApiResponse({
     status: 201,
     description: 'Repository connected successfully',
@@ -83,6 +87,9 @@ export class RepositoriesController {
   @Delete(':repoId')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Disconnect repository from project' })
+  @ApiParam({ name: 'orgId', description: 'Organization ID' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiParam({ name: 'repoId', description: 'Repository ID' })
   @ApiResponse({ status: 204, description: 'Repository disconnected successfully' })
   @ApiResponse({ status: 404, description: 'Repository not found' })
   async delete(

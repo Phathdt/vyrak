@@ -4,9 +4,9 @@ import path from 'node:path'
 
 import { InvalidRepositoryReferenceError, RepositoryCacheError } from '../../domain/exceptions/workflow.exceptions'
 
-import type { IGitHubAuthService } from '../../domain/interfaces/github-auth.interface'
-import type { EnsureRepoInput, IRepoCacheService, RunGitOptions } from '../../domain/interfaces/repo-cache.interface'
+import type { EnsureRepoRequest, IRepoCacheService, RunGitOptions } from '../../domain/interfaces/repo-cache.interface'
 import type { IConfigService } from '@vyrak/custom-config'
+import type { IGitHubAuthService } from '@vyrak/github-auth'
 
 export type GitExecResult = { stdout: string; stderr: string }
 
@@ -91,20 +91,21 @@ export class RepoCacheService implements IRepoCacheService {
     this.log = options.log ?? ((message) => console.log(message))
   }
 
-  async ensureRepo(input: EnsureRepoInput): Promise<string> {
+  async ensureRepo(input: EnsureRepoRequest): Promise<string> {
     this.assertSafeUrl(input.url)
-    this.assertSafeBranch(input.branch)
+    const branch = input.branch ?? 'main'
+    this.assertSafeBranch(branch)
     const repoPath = this.resolveRepoPath(input)
 
     return this.withLock(repoPath, async () => {
       if (await pathExists(path.join(repoPath, '.git'))) {
         if (this.autoFetch) {
-          await this.runGit(['fetch', 'origin', input.branch], { cwd: repoPath, remoteUrl: input.url })
+          await this.runGit(['fetch', 'origin', branch], { cwd: repoPath, remoteUrl: input.url })
         }
         return repoPath
       }
 
-      await this.clone(input, repoPath)
+      await this.clone({ ...input, branch }, repoPath)
       return repoPath
     })
   }
@@ -137,7 +138,7 @@ export class RepoCacheService implements IRepoCacheService {
     return path.resolve(mainReposPath)
   }
 
-  private resolveRepoPath(input: EnsureRepoInput): string {
+  private resolveRepoPath(input: EnsureRepoRequest): string {
     const segments: Array<[string, string]> = [
       ['organizationId', input.organizationId],
       ['projectId', input.projectId],
@@ -232,7 +233,7 @@ export class RepoCacheService implements IRepoCacheService {
     return Buffer.from(`x-access-token:${token}`).toString('base64')
   }
 
-  private async clone(input: EnsureRepoInput, repoPath: string): Promise<void> {
+  private async clone(input: EnsureRepoRequest & { branch: string }, repoPath: string): Promise<void> {
     await mkdir(path.dirname(repoPath), { recursive: true })
     // No ".git" here, so whatever exists is the leftover of an interrupted clone.
     await rm(repoPath, { recursive: true, force: true })

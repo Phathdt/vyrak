@@ -10,15 +10,13 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@nestjs/common": "^12.3.3",
     "@vyrak/custom-config": "workspace:*",
+    "@nestjs/common": "^12.3.3",
     "ioredis": "^6.0.0",
-    "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.2",
     "zod": "^4.6.7"
   },
   "peerDependencies": {
-    "@nestjs/common": "^11.0.0",
+    "@nestjs/common": "^12.0.0",
     "rxjs": "^7.0.0"
   },
   "devDependencies": {

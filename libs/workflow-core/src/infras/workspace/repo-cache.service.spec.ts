@@ -8,8 +8,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { InvalidRepositoryReferenceError, RepositoryCacheError } from '../../domain/exceptions/workflow.exceptions'
 import { RepoCacheService, type GitExecOptions, type GitExecResult, type GitExecutor } from './repo-cache.service'
 
-import type { IGitHubAuthService } from '../../domain/interfaces/github-auth.interface'
 import type { IConfigService } from '@vyrak/custom-config'
+import type { IGitHubAuthService } from '@vyrak/github-auth'
 
 const ORG_ID = '11111111-1111-4111-8111-111111111111'
 const PROJECT_ID = '22222222-2222-4222-8222-222222222222'

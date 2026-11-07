@@ -13,7 +13,8 @@ import { GitWorktreeService } from '../../infras/workspace/git-worktree.service'
 import type { PhaseExecutionMeta, WorkflowPhaseRunJob } from '../../domain/schemas/phase-execution.schemas'
 import type { IAIAgentService } from '@vyrak/ai-agent'
 import type { IConfigService } from '@vyrak/custom-config'
-import type { IGitHubAuthService, IRepoCacheService, RepositoryReference } from '@vyrak/workflow-core'
+import type { IGitHubAuthService } from '@vyrak/github-auth'
+import type { IRepoCacheService, RepositoryReference } from '@vyrak/workflow-core'
 
 type WorkflowRunContext = {
   projectId: string
@@ -138,10 +139,11 @@ export class WorkflowPhaseRunHandler {
     let pullRequestNumber: number | undefined
     if (pushSuccess) {
       this.logger.log(`[Implementation] Creating pull request: branch=${branch}`)
+      const baseBranch = context.repository.branch ?? 'main'
       const prResult = await this.createPullRequest(
         workspacePath,
         branch,
-        context.repository.branch,
+        baseBranch,
         job.workflowId,
         agentResult.content
       )
