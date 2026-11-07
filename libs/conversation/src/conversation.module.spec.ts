@@ -3,10 +3,9 @@ import { DatabaseService } from '@vyrak/database'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ConversationService } from './application'
-import { CONVERSATION_REPOSITORY, CONVERSATION_SERVICE } from './domain'
-import { ConversationPrismaRepository } from './infras'
+import { CONVERSATION_REPOSITORY, CONVERSATION_SERVICE, ConversationPrismaRepository } from './infras'
 
-describe.skip('ConversationModule', () => {
+describe('ConversationModule', () => {
   let module: TestingModule
 
   // Helper function to create testing module with mocks
