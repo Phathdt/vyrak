@@ -517,6 +517,70 @@ paths:
       summary: List git repositories for a project
       tags:
         - Repositories
+    post:
+      operationId: RepositoriesController_create
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: projectId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: string
+      responses:
+        '201':
+          description: Repository connected successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GitRepositoryResponse'
+        '400':
+          description: Invalid repository URL format
+        '403':
+          description: GitHub App cannot access this repository
+        '404':
+          description: Repository not found on GitHub
+        '409':
+          description: Repository already connected to this project
+      summary: Connect GitHub repository to project
+      tags:
+        - Repositories
+  /api/organizations/{orgId}/projects/{projectId}/repositories/{repoId}:
+    delete:
+      operationId: RepositoriesController_delete
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: projectId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: repoId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Repository disconnected successfully
+        '404':
+          description: Repository not found
+      summary: Disconnect repository from project
+      tags:
+        - Repositories
   /api/organizations/{orgId}/projects/{projectId}/workflows:
     post:
       operationId: WorkflowsController_create

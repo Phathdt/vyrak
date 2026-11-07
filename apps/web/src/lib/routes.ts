@@ -4,6 +4,7 @@ export const routes = {
   organizations: () => '/organizations',
   orgSettings: (orgId: string) => `/organizations/${orgId}/settings`,
   orgProjects: (orgId: string) => `/organizations/${orgId}/projects`,
+  projectDetail: (orgId: string, projectId: string) => `/organizations/${orgId}/projects/${projectId}`,
   projectWorkflows: (orgId: string, projectId: string) => `/organizations/${orgId}/projects/${projectId}/workflows`,
   workflowDetail: (orgId: string, projectId: string, workflowId: string) =>
     `/organizations/${orgId}/projects/${projectId}/workflows/${workflowId}`,

@@ -178,7 +178,7 @@ export function ProjectsPage() {
             <Card
               key={project.id}
               className='cursor-pointer transition-colors hover:border-primary'
-              onClick={() => orgId && navigate(routes.projectWorkflows(orgId, project.id))}
+              onClick={() => orgId && navigate(routes.projectDetail(orgId, project.id))}
             >
               <CardHeader className='pb-3'>
                 <div className='flex items-start justify-between'>

@@ -11,7 +11,7 @@ import { routes } from './lib/routes'
 import { LoginPage } from './pages/auth'
 import { DashboardPage } from './pages/dashboard'
 import { OrganizationsPage, OrganizationSettingsPage } from './pages/organizations'
-import { ProjectsPage } from './pages/projects'
+import { ProjectDetailPage, ProjectsPage } from './pages/projects'
 import { ImplementationWorkspacePage } from './pages/workflows/implementation-workspace'
 import { WorkflowDetailPage } from './pages/workflows/workflow-detail-page'
 import { WorkflowsPage } from './pages/workflows/workflows-page'
@@ -37,6 +37,7 @@ function App() {
               <Route path='/organizations/:orgId' element={<OrganizationScopedLayout />}>
                 <Route path='settings' element={<OrganizationSettingsPage />} />
                 <Route path='projects' element={<ProjectsPage />} />
+                <Route path='projects/:projectId' element={<ProjectDetailPage />} />
                 <Route path='projects/:projectId/workflows' element={<WorkflowsPage />} />
                 <Route path='projects/:projectId/workflows/:workflowId' element={<WorkflowDetailPage />} />
                 <Route
