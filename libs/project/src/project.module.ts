@@ -31,8 +31,13 @@ import {
     },
     {
       provide: GIT_REPOSITORY_SERVICE,
-      useFactory: (projectRepository, gitRepositoryRepository) =>
-        new GitRepositoryService(projectRepository, gitRepositoryRepository),
+      useFactory: (projectRepository, gitRepositoryRepository) => {
+        // TODO: Task 1.8 - Wire GitRepositoryValidationService properly with GitHubAuthService
+        const mockValidationService = {
+          validateAccess: async () => ({ owner: '', repo: '', defaultBranch: 'main', isPrivate: false }),
+        }
+        return new GitRepositoryService(projectRepository, gitRepositoryRepository, mockValidationService as never)
+      },
       inject: [PROJECT_REPOSITORY, GIT_REPOSITORY_REPOSITORY],
     },
   ],

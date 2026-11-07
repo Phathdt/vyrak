@@ -1,7 +1,10 @@
 import { BaseTenantRepository } from '@vyrak/database'
 
 import type { GitRepositoryEntity } from '../../domain/entities/git-repository.entity'
-import type { IGitRepositoryRepository } from '../../domain/interfaces/git-repository-repository.interface'
+import type {
+  CreateGitRepositoryData,
+  IGitRepositoryRepository,
+} from '../../domain/interfaces/git-repository-repository.interface'
 import type { GitRepository as PrismaGitRepository } from '@vyrak/database'
 
 export class GitRepositoryPrismaRepository extends BaseTenantRepository implements IGitRepositoryRepository {
@@ -48,6 +51,56 @@ export class GitRepositoryPrismaRepository extends BaseTenantRepository implemen
       }
 
       return this.mapToEntity(repository)
+    })
+  }
+
+  async findByUrl(projectId: string, url: string): Promise<GitRepositoryEntity | null> {
+    return this.withTenantContext(async (organizationId) => {
+      const repository = await this.prisma.client.gitRepository.findFirst({
+        where: {
+          projectId,
+          url,
+          organizationId,
+        },
+      })
+
+      if (!repository) {
+        return null
+      }
+
+      return this.mapToEntity(repository)
+    })
+  }
+
+  async create(data: CreateGitRepositoryData): Promise<GitRepositoryEntity> {
+    return this.withTenantContext(async (_organizationId) => {
+      const repository = await this.prisma.client.gitRepository.create({
+        data: {
+          organizationId: data.organizationId,
+          projectId: data.projectId,
+          name: data.name,
+          url: data.url,
+          branch: data.branch,
+          provider: data.provider,
+          status: data.status,
+        },
+      })
+
+      return this.mapToEntity(repository)
+    })
+  }
+
+  async updateStatus(id: string, status: string): Promise<void> {
+    await this.withTenantContext(async (organizationId) => {
+      await this.prisma.client.gitRepository.updateMany({
+        where: {
+          id,
+          organizationId,
+        },
+        data: {
+          status,
+        },
+      })
     })
   }
 }
